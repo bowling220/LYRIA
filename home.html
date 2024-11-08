@@ -88,8 +88,8 @@
             const li = document.createElement('li');
             const button = document.createElement('button');
             button.className = 'channel-btn';
-            button.textContent = `# ${channel}`;
-            button.onclick = () => loadMessages(channel);
+            button.textContent = `# ${channel.name}`;
+            button.onclick = () => loadMessages(channel.id);
             li.appendChild(button);
             channelsList.appendChild(li);
           });
@@ -109,13 +109,18 @@
       }
     }
 
-    function loadMessages(channel) {
-      currentChannel = channel;
-      document.getElementById('channel-title').textContent = `# ${channel}`;
+    function loadMessages(channelId) {
+      currentChannel = channelId;
+      db.collection('channels').doc(channelId).get().then(doc => {
+        if (doc.exists) {
+          document.getElementById('channel-title').textContent = `# ${doc.data().name}`;
+        }
+      });
+      
       const messagesContainer = document.getElementById('messages');
       messagesContainer.innerHTML = '';
       
-      db.collection('channels').doc(channel).collection('messages').orderBy('timestamp')
+      db.collection('channels').doc(channelId).collection('messages').orderBy('timestamp')
         .onSnapshot(snapshot => {
           messagesContainer.innerHTML = '';
           snapshot.forEach(doc => {
@@ -137,21 +142,29 @@
     document.getElementById('add-channel').onclick = () => {
       const channelName = prompt('Enter new channel name:');
       if (channelName) {
-        const userDocRef = db.collection('users').doc(currentUser.uid);
-        
-        userDocRef.update({
-          channels: firebase.firestore.FieldValue.arrayUnion(channelName)
-        }).then(() => {
-          const li = document.createElement('li');
-          const button = document.createElement('button');
-          button.className = 'channel-btn';
-          button.textContent = `# ${channelName}`;
-          button.onclick = () => loadMessages(channelName);
-          li.appendChild(button);
-          document.getElementById('channels-list').appendChild(li);
-        }).catch(error => {
-          console.error("Error adding channel:", error);
-        });
+        const channelId = db.collection('channels').doc().id;  // Generate a unique ID
+        const channelData = {
+          name: channelName,
+          joinCode: channelId  // Use channelId as join code
+        };
+
+        db.collection('channels').doc(channelId).set(channelData).then(() => {
+          const userDocRef = db.collection('users').doc(currentUser.uid);
+          
+          userDocRef.update({
+            channels: firebase.firestore.FieldValue.arrayUnion({id: channelId, name: channelName})
+          }).then(() => {
+            const li = document.createElement('li');
+            const button = document.createElement('button');
+            button.className = 'channel-btn';
+            button.textContent = `# ${channelName}`;
+            button.onclick = () => loadMessages(channelId);
+            li.appendChild(button);
+            document.getElementById('channels-list').appendChild(li);
+          }).catch(error => {
+            console.error("Error adding channel to user:", error);
+          });
+        }).catch(error => console.error("Error creating channel:", error));
       }
     };
 
@@ -160,18 +173,19 @@
       if (channelCode) {
         db.collection('channels').doc(channelCode).get().then(doc => {
           if (doc.exists) {
+            const channelData = doc.data();
             const userDocRef = db.collection('users').doc(currentUser.uid);
             userDocRef.update({
-              channels: firebase.firestore.FieldValue.arrayUnion(channelCode)
+              channels: firebase.firestore.FieldValue.arrayUnion({id: channelCode, name: channelData.name})
             }).then(() => {
               const li = document.createElement('li');
               const button = document.createElement('button');
               button.className = 'channel-btn';
-              button.textContent = `# ${channelCode}`;
+              button.textContent = `# ${channelData.name}`;
               button.onclick = () => loadMessages(channelCode);
               li.appendChild(button);
               document.getElementById('channels-list').appendChild(li);
-              alert(`Successfully joined channel: #${channelCode}`);
+              alert(`Successfully joined channel: #${channelData.name}`);
             }).catch(error => {
               console.error("Error joining channel:", error);
             });
@@ -184,28 +198,17 @@
       }
     };
 
-    // Copy the current channel join code
     document.getElementById('copy-join-code').onclick = () => {
-      if (currentChannel) {
-        navigator.clipboard.writeText(currentChannel).then(() => {
-          alert(`Join code copied: ${currentChannel}`);
-        }).catch(error => {
-          console.error("Error copying join code:", error);
-        });
-      }
+      navigator.clipboard.writeText(currentChannel).then(() => {
+        alert(`Join code copied: ${currentChannel}`);
+      }).catch(error => {
+        console.error("Error copying join code:", error);
+      });
     };
 
-    // Navigate to Settings page
     document.getElementById('settings-btn').onclick = () => {
       window.location.href = 'settings.html';
     };
-
-    // Listen for visibility changes to refresh user data on return
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible') {
-        loadUserData();
-      }
-    });
   </script>
 </body>
 </html>
