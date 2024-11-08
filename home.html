@@ -154,27 +154,29 @@
  
     function loadUserChannels() {
       const userDocRef = db.collection('users').doc(currentUser.uid);
-      userDocRef.get().then(doc => {
+      userDocRef.onSnapshot(doc => {
         if (doc.exists) {
           const data = doc.data();
           const channelsList = document.getElementById('channels-list');
           channelsList.innerHTML = '';
  
-          data.channels.forEach(channel => {
-            const li = document.createElement('li');
-            const button = document.createElement('button');
-            button.className = 'channel-btn';
-            button.textContent = `# ${channel.name}`;
-            button.onclick = () => {
-              loadMessages(channel.id);
-              loadChannelUsers(channel.id);
-              saveCurrentChannel(channel.id);
-            };
-            li.appendChild(button);
-            channelsList.appendChild(li);
-          });
+          if (data.channels && Array.isArray(data.channels)) {
+            data.channels.forEach(channel => {
+              const li = document.createElement('li');
+              const button = document.createElement('button');
+              button.className = 'channel-btn';
+              button.textContent = `# ${channel.name}`;
+              button.onclick = () => {
+                loadMessages(channel.id);
+                loadChannelUsers(channel.id);
+                saveCurrentChannel(channel.id);
+              };
+              li.appendChild(button);
+              channelsList.appendChild(li);
+            });
+          }
         }
-      }).catch(error => console.error("Error loading channels:", error));
+      });
     }
 
     function saveCurrentChannel(channelId) {
@@ -262,18 +264,6 @@
           const userDocRef = db.collection('users').doc(currentUser.uid);
           userDocRef.update({
             channels: firebase.firestore.FieldValue.arrayUnion({id: channelId, name: channelName})
-          }).then(() => {
-            const li = document.createElement('li');
-            const button = document.createElement('button');
-            button.className = 'channel-btn';
-            button.textContent = `# ${channelName}`;
-            button.onclick = () => {
-              loadMessages(channelId);
-              loadChannelUsers(channelId);
-              saveCurrentChannel(channelId);
-            };
-            li.appendChild(button);
-            document.getElementById('channels-list').appendChild(li);
           }).catch(error => console.error("Error adding channel to user:", error));
         }).catch(error => console.error("Error creating channel:", error));
       }
@@ -289,17 +279,6 @@
             userDocRef.update({
               channels: firebase.firestore.FieldValue.arrayUnion({id: channelCode, name: channelData.name})
             }).then(() => {
-              const li = document.createElement('li');
-              const button = document.createElement('button');
-              button.className = 'channel-btn';
-              button.textContent = `# ${channelData.name}`;
-              button.onclick = () => {
-                loadMessages(channelCode);
-                loadChannelUsers(channelCode);
-                saveCurrentChannel(channelCode);
-              };
-              li.appendChild(button);
-              document.getElementById('channels-list').appendChild(li);
               alert(`Successfully joined channel: #${channelData.name}`);
             }).catch(error => console.error("Error joining channel:", error));
           } else {
