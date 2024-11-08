@@ -6,162 +6,17 @@
     <title>User Settings</title>
     <link rel="stylesheet" href="styles.css">
     <style>
-        /* CSS Styling */
-        .settings-page {
-            background: #2c2f33;
-            min-height: 100vh;
-        }
-
-        .settings-container {
-            display: flex;
-            max-width: 1200px;
-            margin: 0 auto;
-            background: #36393f;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-        }
-
-        .settings-sidebar {
-            width: 250px;
-            background: #202225;
-            color: #fff;
-            padding: 20px 0;
-        }
-
-        .settings-header {
-            padding: 0 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .settings-categories li {
-            padding: 12px 20px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: #dcddde;
-            transition: background 0.3s ease;
-        }
-
-        .settings-categories li:hover {
-            background: #383b40;
-        }
-
-        .settings-categories li.active {
-            background: #404449;
-            font-weight: bold;
-        }
-
-        .settings-categories li.danger-zone {
-            color: #f04747;
-        }
-
-        .settings-content {
-            flex: 1;
-            padding: 30px;
-            color: #dcddde;
-        }
-
-        .settings-section {
-            max-width: 800px;
-            display: none; /* Initially hidden; show based on active category */
-        }
-
-        .settings-section.active {
-            display: block;
-            animation: fadeIn 0.5s ease; /* Animation for section appearance */
-        }
-
-        .profile-banner {
-            display: flex;
-            gap: 30px;
-            margin-bottom: 40px;
-        }
-
-        .profile-picture {
-            text-align: center;
-        }
-
-        .profile-picture img {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            margin-bottom: 10px;
-        }
-
-        .user-details input {
-            display: block;
-            width: 100%;
-            padding: 8px;
-            margin-bottom: 15px;
-            border: 1px solid #202225;
-            border-radius: 4px;
-            background: #40444b;
-            color: #dcddde;
-        }
-
-        button {
-            padding: 8px 16px;
-            border: none;
-            border-radius: 4px;
-            background: #7289da;
-            color: white;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background: #677bc4;
-        }
-
-        .theme-options, .notification-settings {
-            background: #2f3136;
-            padding: 20px;
-            border-radius: 8px;
-        }
-
-        h3 {
-            margin-bottom: 25px;
-            color: #fff;
-        }
-
-        h4 {
-            margin: 20px 0 15px;
-            color: #fff;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        .modal {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: #36393f;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
-            display: none;
-        }
-
-        .modal.active {
-            display: block;
-            animation: fadeIn 0.3s ease;
-        }
-
-        .modal h3 {
-            margin-top: 0;
-            color: #dcddde;
-        }
-
-        .modal button {
-            margin-top: 15px;
-            background: #f04747;
-        }
+        /* Existing CSS */
+        .settings-page { background: #2c2f33; min-height: 100vh; }
+        .settings-container { display: flex; max-width: 1200px; margin: 0 auto; background: #36393f; box-shadow: 0 2px 10px rgba(0,0,0,0.3); }
+        .settings-sidebar { width: 250px; background: #202225; color: #fff; padding: 20px 0; }
+        .settings-content { flex: 1; padding: 30px; color: #dcddde; }
+        .settings-section { max-width: 800px; display: none; }
+        .settings-section.active { display: block; }
+        .profile-picture img { width: 100px; height: 100px; border-radius: 50%; margin-bottom: 10px; }
+        .user-details input { display: block; width: 100%; padding: 8px; margin-bottom: 15px; border: 1px solid #202225; border-radius: 4px; background: #40444b; color: #dcddde; }
+        button { padding: 8px 16px; border: none; border-radius: 4px; background: #7289da; color: white; cursor: pointer; }
+        button:hover { background: #677bc4; }
     </style>
 </head>
 <body class="settings-page">
@@ -173,10 +28,6 @@
             </div>
             <ul class="settings-categories">
                 <li class="active" data-section="my-account"><i class="user-icon"></i>My Account</li>
-                <li data-section="profile"><i class="profile-icon"></i>Profile</li>
-                <li data-section="privacy"><i class="privacy-icon"></i>Privacy & Safety</li>
-                <li data-section="appearance"><i class="display-icon"></i>Appearance</li>
-                <li class="danger-zone" id="logout-btn"><i class="logout-icon"></i>Log Out</li>
             </ul>
         </nav>
 
@@ -186,89 +37,24 @@
                 <div class="account-info">
                     <div class="profile-banner">
                         <div class="profile-picture">
-                            <img src="default-avatar.png" alt="Profile picture">
-                            <button class="change-avatar">Change Avatar</button>
+                            <img id="user-avatar" src="default-avatar.png" alt="Profile picture">
+                            <button id="change-avatar">Change Avatar</button>
                         </div>
                         <div class="user-details">
-                            <input type="text" value="Username" aria-label="Username">
-                            <input type="email" value="email@example.com" aria-label="Email">
+                            <input type="text" id="username" placeholder="Username">
+                            <input type="email" id="email" placeholder="Email">
                         </div>
                     </div>
-                    <div class="password-section">
-                        <h4>Password and Authentication</h4>
-                        <button class="change-password">Change Password</button>
-                        <button class="enable-2fa">Enable Two-Factor Auth</button>
-                    </div>
-                </div>
-            </section>
-
-            <section id="appearance" class="settings-section">
-                <h3>Appearance</h3>
-                <div class="theme-options">
-                    <h4>Theme</h4>
-                    <button class="dark-mode-btn">Toggle Dark Mode</button>
-                    <div class="chat-settings">
-                        <h4>Chat Settings</h4>
-                        <label><input type="checkbox" checked> Show message timestamps</label>
-                        <label><input type="checkbox" checked> Show inline media</label>
-                    </div>
+                    <button id="save-profile">Save Changes</button>
                 </div>
             </section>
         </main>
     </div>
 
-    <!-- Modal for Log Out Confirmation -->
-    <div class="modal" id="logout-modal">
-        <h3>Are you sure you want to log out?</h3>
-        <button id="confirm-logout">Log Out</button>
-    </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const categories = document.querySelectorAll('.settings-categories li');
-            const sections = document.querySelectorAll('.settings-section');
-            const logoutBtn = document.getElementById('logout-btn');
-            const logoutModal = document.getElementById('logout-modal');
-            const confirmLogout = document.getElementById('confirm-logout');
-
-            // Switch sections on sidebar click
-            categories.forEach(category => {
-                category.addEventListener('click', () => {
-                    // Remove active class from all categories and sections
-                    categories.forEach(cat => cat.classList.remove('active'));
-                    sections.forEach(section => section.classList.remove('active'));
-
-                    // Add active class to clicked category and corresponding section
-                    category.classList.add('active');
-                    const sectionId = category.dataset.section;
-                    document.getElementById(sectionId).classList.add('active');
-                });
-            });
-
-            // Toggle Dark Mode
-            document.querySelector('.dark-mode-btn').addEventListener('click', () => {
-                document.body.classList.toggle('dark-mode');
-                alert(`Dark mode is now ${document.body.classList.contains('dark-mode') ? 'enabled' : 'disabled'}.`);
-            });
-
-            // Log Out Modal
-            logoutBtn.addEventListener('click', () => {
-                logoutModal.classList.add('active');
-            });
-
-            confirmLogout.addEventListener('click', () => {
-                // Placeholder for actual logout logic
-                alert('Logged out successfully.');
-                logoutModal.classList.remove('active');
-            });
-
-            // Close Modal when clicking outside
-            window.addEventListener('click', (e) => {
-                if (e.target === logoutModal) {
-                    logoutModal.classList.remove('active');
-                }
-            });
-        });
-    </script>
+    <!-- Firebase Setup -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <script src="settings.js"></script>
 </body>
 </html>
