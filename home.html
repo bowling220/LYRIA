@@ -16,7 +16,7 @@
     <div class="app-container">
         <nav class="sidebar">
             <div class="user-profile">
-                <img class="avatar" src="default-avatar.png" alt="User avatar">
+                <img class="avatar" src="https://via.placeholder.com/40" alt="User avatar">
                 <span class="username">Username</span>
                 <button class="settings-btn">Settings</button>
             </div>
@@ -74,7 +74,7 @@
             const messageDiv = document.createElement('div');
             messageDiv.className = 'message';
             messageDiv.innerHTML = `
-                <img class="avatar" src="default-avatar.png" alt="${sender}'s avatar">
+                <img class="avatar" src="https://via.placeholder.com/40" alt="${sender}'s avatar">
                 <div class="message-content">
                     <div class="message-header">
                         <span class="sender">${sender}</span>
@@ -90,7 +90,7 @@
             const message = messageInput.value.trim();
             if (message) {
                 const messageData = {
-                    sender: 'You', // Replace with logged-in user's name if needed
+                    sender: 'You', // Replace with the logged-in user's name if needed
                     message,
                     timestamp: firebase.firestore.FieldValue.serverTimestamp()
                 };
@@ -98,24 +98,27 @@
                 // Add message to Firestore under the current channel
                 channelsRef.doc(currentChannel).collection('messages').add(messageData)
                     .then(() => {
-                        messageInput.value = '';
-                        loadMessages(currentChannel); // Refresh messages
+                        messageInput.value = ''; // Clear the input field after sending
                     })
-                    .catch(error => console.error('Error sending message: ', error));
+                    .catch(error => console.error('Error sending message:', error));
             }
         }
 
         function loadMessages(channelName) {
             messagesContainer.innerHTML = '';
+
+            // Listen for real-time updates in the selected channel
             channelsRef.doc(channelName).collection('messages').orderBy('timestamp')
                 .onSnapshot(snapshot => {
-                    messagesContainer.innerHTML = '';
+                    messagesContainer.innerHTML = ''; // Clear previous messages
                     snapshot.forEach(doc => {
                         const data = doc.data();
                         const messageElement = createMessageElement(data.message, data.sender, data.timestamp);
                         messagesContainer.appendChild(messageElement);
                     });
-                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight; // Scroll to the bottom
+                }, error => {
+                    console.error('Error loading messages:', error);
                 });
         }
 
@@ -151,7 +154,7 @@
                         // Switch to the new channel
                         switchChannel(channelName);
                     })
-                    .catch(error => console.error('Error creating channel: ', error));
+                    .catch(error => console.error('Error creating channel:', error));
             }
         }
 
