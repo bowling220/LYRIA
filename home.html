@@ -9,9 +9,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
 <style>
-
     /* Button Styles */
-
     .add-channel-btn, .join-channel-btn, .copy-join-code-btn {
       background-color: #4CAF50;
       color: white;
@@ -22,21 +20,17 @@
       border-radius: 5px;
       font-weight: bold;
     }
-
     .add-channel-btn:hover, .join-channel-btn:hover, .copy-join-code-btn:hover {
       background-color: #45a049;
     }
-
     /* Join Code Button */
     .copy-join-code-btn {
       background-color: #2196F3;
       margin-left: 10px;
     }
-
     .copy-join-code-btn:hover {
       background-color: #0b7dda;
     }
-
     /* Channel Button */
     .channel-btn {
       padding: 8px;
@@ -47,14 +41,12 @@
       text-align: left;
       width: 100%;
     }
-
     /* Active Channel Styling */
     .active-channel {
       background-color: #45a049;
       color: white;
       font-weight: bold;
     }
-
 </style>
 </head>
 <body>
@@ -90,7 +82,6 @@
 </aside>
 </div>
 <script>
-
 const firebaseConfig = {
       apiKey: "AIzaSyDORsM0Dz9d_ZxqVd8zjNXwsEdR1_aVF7g",
       authDomain: "lyria-cfc06.firebaseapp.com",
@@ -112,10 +103,12 @@ let currentChannel = 'general';
 auth.onAuthStateChanged(user => {
   if (user) {
     currentUser = user;
+    console.log("User signed in:", user.uid);
     loadUserData();
     loadUserChannels();
     updateOnlineStatus(true);
   } else {
+    console.log("No user signed in, redirecting to login.");
     window.location.href = 'index.html';
   }
 });
@@ -221,6 +214,20 @@ function loadMessages(channelId) {
       });
       messagesContainer.scrollTop = messagesContainer.scrollHeight;
     });
+}
+
+// Function to send a message
+function sendMessage() {
+  const message = document.getElementById('message-input').value.trim();
+  if (message && currentUser) {
+    db.collection('channels').doc(currentChannel).collection('messages').add({
+      sender: currentUser.displayName || 'User',
+      message,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(() => {
+      document.getElementById('message-input').value = '';
+    }).catch(error => console.error("Error sending message:", error));
+  }
 }
 
 document.getElementById('send-button').onclick = sendMessage;
