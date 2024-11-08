@@ -16,16 +16,20 @@
       <div class="user-profile">
         <img class="avatar" id="user-avatar" src="https://via.placeholder.com/40" alt="User avatar">
         <span class="username" id="user-name">Username</span>
-        <button class="settings-btn">Settings</button>
+        <button class="settings-btn" id="settings-btn">Settings</button>
       </div>
       <div class="channels">
         <h3>Channels</h3>
         <ul class="channels-list" id="channels-list"></ul>
         <button class="add-channel-btn" id="add-channel">+ Add Channel</button>
+        <button class="join-channel-btn" id="join-channel">Join Channel by Code</button>
       </div>
     </nav>
     <main class="chat-area">
-      <header class="chat-header"><h2 id="channel-title"># general</h2></header>
+      <header class="chat-header">
+        <h2 id="channel-title"># general</h2>
+        <button id="copy-join-code" class="copy-join-code-btn">Copy Join Code</button>
+      </header>
       <div class="messages" id="messages"></div>
       <div class="message-input">
         <textarea id="message-input" placeholder="Type your message..."></textarea>
@@ -54,28 +58,23 @@
     auth.onAuthStateChanged(user => {
       if (user) {
         currentUser = user;
-        document.getElementById('user-name').textContent = user.displayName || 'User';
-        document.getElementById('user-avatar').src = user.photoURL || 'https://via.placeholder.com/40';
-        
-        // Check if the user's document exists in Firestore
-        const userDocRef = db.collection('users').doc(user.uid);
-        userDocRef.get().then(doc => {
-          if (!doc.exists) {
-            // If the user document doesn’t exist, create it with default values
-            userDocRef.set({
-              email: user.email,
-              displayName: user.displayName || 'User',
-              channels: ["general"]
-            });
-          }
-          
-          // Load channels after confirming the document exists
-          loadUserChannels();
-        }).catch(error => console.error("Error checking user document:", error));
+        loadUserData();
+        loadUserChannels();
       } else {
         window.location.href = 'index.html';
       }
     });
+
+    function loadUserData() {
+      const userDocRef = db.collection('users').doc(currentUser.uid);
+      userDocRef.get().then(doc => {
+        if (doc.exists) {
+          const data = doc.data();
+          document.getElementById('user-name').textContent = data.displayName || 'User';
+          document.getElementById('user-avatar').src = data.photoURL || 'https://via.placeholder.com/40';
+        }
+      }).catch(error => console.error("Error loading user data:", error));
+    }
 
     function loadUserChannels() {
       const userDocRef = db.collection('users').doc(currentUser.uid);
@@ -83,7 +82,7 @@
         if (doc.exists) {
           const data = doc.data();
           const channelsList = document.getElementById('channels-list');
-          channelsList.innerHTML = ''; // Clear existing list
+          channelsList.innerHTML = ''; 
 
           data.channels.forEach(channel => {
             const li = document.createElement('li');
@@ -134,6 +133,7 @@
     }
 
     document.getElementById('send-button').onclick = sendMessage;
+
     document.getElementById('add-channel').onclick = () => {
       const channelName = prompt('Enter new channel name:');
       if (channelName) {
@@ -154,6 +154,58 @@
         });
       }
     };
+
+    document.getElementById('join-channel').onclick = () => {
+      const channelCode = prompt('Enter channel code to join:');
+      if (channelCode) {
+        db.collection('channels').doc(channelCode).get().then(doc => {
+          if (doc.exists) {
+            const userDocRef = db.collection('users').doc(currentUser.uid);
+            userDocRef.update({
+              channels: firebase.firestore.FieldValue.arrayUnion(channelCode)
+            }).then(() => {
+              const li = document.createElement('li');
+              const button = document.createElement('button');
+              button.className = 'channel-btn';
+              button.textContent = `# ${channelCode}`;
+              button.onclick = () => loadMessages(channelCode);
+              li.appendChild(button);
+              document.getElementById('channels-list').appendChild(li);
+              alert(`Successfully joined channel: #${channelCode}`);
+            }).catch(error => {
+              console.error("Error joining channel:", error);
+            });
+          } else {
+            alert("Channel code not found. Please check and try again.");
+          }
+        }).catch(error => {
+          console.error("Error finding channel:", error);
+        });
+      }
+    };
+
+    // Copy the current channel join code
+    document.getElementById('copy-join-code').onclick = () => {
+      if (currentChannel) {
+        navigator.clipboard.writeText(currentChannel).then(() => {
+          alert(`Join code copied: ${currentChannel}`);
+        }).catch(error => {
+          console.error("Error copying join code:", error);
+        });
+      }
+    };
+
+    // Navigate to Settings page
+    document.getElementById('settings-btn').onclick = () => {
+      window.location.href = 'settings.html';
+    };
+
+    // Listen for visibility changes to refresh user data on return
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        loadUserData();
+      }
+    });
   </script>
 </body>
 </html>
