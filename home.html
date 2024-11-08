@@ -35,8 +35,7 @@
   </div>
   
   <script>
-        // Firebase configuration
-        const firebaseConfig = {
+    const firebaseConfig = {
       apiKey: "AIzaSyDORsM0Dz9d_ZxqVd8zjNXwsEdR1_aVF7g",
       authDomain: "lyria-cfc06.firebaseapp.com",
       projectId: "lyria-cfc06",
@@ -58,9 +57,34 @@
         document.getElementById('user-name').textContent = user.displayName || 'User';
         document.getElementById('user-avatar').src = user.photoURL || 'https://via.placeholder.com/40';
         
-        db.collection('users').doc(user.uid).get().then(doc => {
+        // Check if the user's document exists in Firestore
+        const userDocRef = db.collection('users').doc(user.uid);
+        userDocRef.get().then(doc => {
+          if (!doc.exists) {
+            // If the user document doesn’t exist, create it with default values
+            userDocRef.set({
+              email: user.email,
+              displayName: user.displayName || 'User',
+              channels: ["general"]
+            });
+          }
+          
+          // Load channels after confirming the document exists
+          loadUserChannels();
+        }).catch(error => console.error("Error checking user document:", error));
+      } else {
+        window.location.href = 'index.html';
+      }
+    });
+
+    function loadUserChannels() {
+      const userDocRef = db.collection('users').doc(currentUser.uid);
+      userDocRef.get().then(doc => {
+        if (doc.exists) {
           const data = doc.data();
           const channelsList = document.getElementById('channels-list');
+          channelsList.innerHTML = ''; // Clear existing list
+
           data.channels.forEach(channel => {
             const li = document.createElement('li');
             const button = document.createElement('button');
@@ -70,11 +94,9 @@
             li.appendChild(button);
             channelsList.appendChild(li);
           });
-        });
-      } else {
-        window.location.href = 'index.html';
-      }
-    });
+        }
+      }).catch(error => console.error("Error loading channels:", error));
+    }
 
     function sendMessage() {
       const message = document.getElementById('message-input').value;
@@ -115,7 +137,9 @@
     document.getElementById('add-channel').onclick = () => {
       const channelName = prompt('Enter new channel name:');
       if (channelName) {
-        db.collection('users').doc(currentUser.uid).update({
+        const userDocRef = db.collection('users').doc(currentUser.uid);
+        
+        userDocRef.update({
           channels: firebase.firestore.FieldValue.arrayUnion(channelName)
         }).then(() => {
           const li = document.createElement('li');
@@ -125,6 +149,8 @@
           button.onclick = () => loadMessages(channelName);
           li.appendChild(button);
           document.getElementById('channels-list').appendChild(li);
+        }).catch(error => {
+          console.error("Error adding channel:", error);
         });
       }
     };
