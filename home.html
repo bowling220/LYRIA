@@ -153,31 +153,38 @@
     }
  
     function loadUserChannels() {
-      const userDocRef = db.collection('users').doc(currentUser.uid);
-      userDocRef.onSnapshot(doc => {
-        if (doc.exists) {
-          const data = doc.data();
-          const channelsList = document.getElementById('channels-list');
-          channelsList.innerHTML = '';
- 
-          if (data.channels && Array.isArray(data.channels)) {
-            data.channels.forEach(channel => {
-              const li = document.createElement('li');
-              const button = document.createElement('button');
-              button.className = 'channel-btn';
-              button.textContent = `# ${channel.name}`;
-              button.onclick = () => {
-                loadMessages(channel.id);
-                loadChannelUsers(channel.id);
-                saveCurrentChannel(channel.id);
-              };
-              li.appendChild(button);
-              channelsList.appendChild(li);
-            });
-          }
-        }
-      });
+  const userDocRef = db.collection('users').doc(currentUser.uid);
+  userDocRef.onSnapshot(doc => {
+    if (doc.exists) {
+      const data = doc.data();
+      const channelsList = document.getElementById('channels-list');
+      channelsList.innerHTML = ''; // Clear existing channels
+      
+      if (data.channels && Array.isArray(data.channels)) {
+        data.channels.forEach(channel => {
+          const li = document.createElement('li');
+          const button = document.createElement('button');
+          button.className = 'channel-btn';
+          button.textContent = `# ${channel.name}`;
+          button.onclick = () => {
+            loadMessages(channel.id);
+            loadChannelUsers(channel.id);
+            saveCurrentChannel(channel.id);
+          };
+          li.appendChild(button);
+          channelsList.appendChild(li);
+        });
+      } else {
+        console.warn("No channels found for the user.");
+      }
+    } else {
+      console.error("User document does not exist!");
     }
+  }, error => {
+    console.error("Error loading channels:", error);
+  });
+}
+
 
     function saveCurrentChannel(channelId) {
       const userDocRef = db.collection('users').doc(currentUser.uid);
