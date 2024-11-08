@@ -7,87 +7,14 @@
         <title>LYRIA</title>
         <link rel="stylesheet" href="styles.css">
         <link rel="icon" type="image/png" href="favicon.png">
+        
+        <script>
+            // Redirect to login.html immediately upon loading index.html
+            window.onload = function() {
+                window.location.href = 'login.html';
+            };
+        </script>
     </head>
     
-<body>
-    <header class="top-header">
-        <h1>LYRIA</h1>
-    </header>
-    <div class="app-container">
-        <nav class="sidebar" aria-label="Main navigation">
-            <div class="user-profile">
-                <img class="avatar" src="default-avatar.png" alt="User avatar">
-                <span class="username">Username</span>
-                <button class="settings-btn" aria-label="User settings">
-                    <i class="settings-icon"></i>
-                </button>
-            </div>
-            <div class="channels">
-                <h3>Channels</h3>
-                <ul class="channels-list">
-                    <li><button class="channel-btn active" aria-current="true"># general</button></li>
-                    <li><button class="channel-btn"># gaming</button></li>
-                    <li><button class="channel-btn"># music</button></li>
-                    <li><button class="add-channel-btn" aria-label="Add new channel">+ Add Channel</button></li>
-                </ul>
-            </div>
-            <div class="direct-messages">
-                <h3>Direct Messages</h3>
-                <ul class="dm-list">
-                    <li><button class="dm-btn"><span class="status-indicator online"></span>Friend 1</button></li>
-                    <li><button class="dm-btn"><span class="status-indicator offline"></span>Friend 2</button></li>
-                </ul>
-            </div>
-        </nav>
-       
-        <main class="chat-area">
-            <header class="chat-header">
-                <h2># general</h2>
-                <div class="channel-actions">
-                    <button class="search-btn" aria-label="Search messages">
-                        <i class="search-icon"></i>
-                    </button>
-                    <button class="more-options-btn" aria-label="More options">
-                        <i class="more-icon"></i>
-                    </button>
-                </div>
-            </header>
-           
-            <div class="messages" role="log" aria-label="Message history">
-                <!-- Messages will be populated here -->
-            </div>
-           
-            <div class="message-input">
-                <textarea
-                    placeholder="Type your message..."
-                    aria-label="Message input"
-                    rows="1"
-                    maxlength="2000"
-                ></textarea>
-                <div class="message-actions">
-                    <button class="attach-btn" aria-label="Attach file">
-                        <i class="attach-icon"></i>
-                    </button>
-                    <button class="emoji-btn" aria-label="Add emoji">
-                        <i class="emoji-icon"></i>
-                    </button>
-                    <button class="send-btn" aria-label="Send message">Send</button>
-                </div>
-            </div>
-        </main>
-       
-        <aside class="members-list" aria-label="Online members">
-            <h3>Online Members</h3>
-            <div class="members-search">
-                <input type="search" placeholder="Search members" aria-label="Search members">
-            </div>
-            <ul class="members">
-                <li><span class="status-indicator online"></span>User 1</li>
-                <li><span class="status-indicator idle"></span>User 2</li>
-                <li><span class="status-indicator offline"></span>User 3</li>
-            </ul>
-        </aside>
-    </div>
-    <script src="app.js"></script>
-</body>
+
 </html>

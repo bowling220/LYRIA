@@ -129,6 +129,7 @@
     // Firebase authentication logic here
     const auth = firebase.auth();
 
+    // Handle Email/Password Login
     document.getElementById('login-form').addEventListener('submit', function(event) {
       event.preventDefault();
       
@@ -138,19 +139,20 @@
       auth.signInWithEmailAndPassword(email, password)
         .then(userCredential => {
           // Successful login
-          window.location.href = 'index.html';
+          window.location.href = 'home.html'; // Redirect to home.html
         })
         .catch(error => {
           document.getElementById('error-message').textContent = error.message;
         });
     });
 
+    // Handle Google Sign-In
     document.getElementById('google-signin').addEventListener('click', function() {
       const provider = new firebase.auth.GoogleAuthProvider();
       auth.signInWithPopup(provider)
         .then(result => {
           // Successful Google login
-          window.location.href = 'index.html';
+          window.location.href = 'home.html'; // Redirect to home.html
         })
         .catch(error => {
           document.getElementById('error-message').textContent = error.message;
