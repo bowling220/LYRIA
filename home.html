@@ -8,6 +8,47 @@
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+  <style>
+    .join-channel-btn {
+      background: #7289da;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: background 0.2s;
+      margin-top: 8px;
+      width: 100%;
+    }
+
+    .join-channel-btn:hover {
+      background: #5b73c7;
+    }
+
+    .copy-join-code-btn {
+      background: #43b581;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .copy-join-code-btn:hover {
+      background: #3ca374;
+      transform: translateY(-1px);
+    }
+
+    .copy-join-code-btn:active {
+      transform: translateY(0);
+    }
+  </style>
 </head>
 <body>
   <header class="top-header"><h1>LYRIA</h1></header>
