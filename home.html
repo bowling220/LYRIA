@@ -13,46 +13,48 @@
     /* Button Styles */
 
     .add-channel-btn, .join-channel-btn, .copy-join-code-btn {
-
       background-color: #4CAF50;
-
       color: white;
-
       border: none;
-
       padding: 8px 16px;
-
       margin-top: 10px;
-
       cursor: pointer;
-
       border-radius: 5px;
-
       font-weight: bold;
-
     }
 
     .add-channel-btn:hover, .join-channel-btn:hover, .copy-join-code-btn:hover {
-
       background-color: #45a049;
-
     }
 
     /* Join Code Button */
-
     .copy-join-code-btn {
-
       background-color: #2196F3;
-
       margin-left: 10px;
-
     }
 
     .copy-join-code-btn:hover {
-
       background-color: #0b7dda;
-
     }
+
+    /* Channel Button */
+    .channel-btn {
+      padding: 8px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      font-size: 16px;
+      text-align: left;
+      width: 100%;
+    }
+
+    /* Active Channel Styling */
+    .active-channel {
+      background-color: #45a049;
+      color: white;
+      font-weight: bold;
+    }
+
 </style>
 </head>
 <body>
@@ -99,311 +101,176 @@ const firebaseConfig = {
       measurementId: "G-0EMBBE255Z"
     };
 
-    firebase.initializeApp(firebaseConfig);
+firebase.initializeApp(firebaseConfig);
 
-    const auth = firebase.auth();
+const auth = firebase.auth();
+const db = firebase.firestore();
 
-    const db = firebase.firestore();
+let currentUser;
+let currentChannel = 'general';
 
-    let currentUser;
+auth.onAuthStateChanged(user => {
+  if (user) {
+    currentUser = user;
+    loadUserData();
+    loadUserChannels();
+    updateOnlineStatus(true);
+  } else {
+    window.location.href = 'index.html';
+  }
+});
 
-    let currentChannel = 'general';
-
-    auth.onAuthStateChanged(user => {
-
-      if (user) {
-
-        currentUser = user;
-
-        loadUserData();
-
-        loadUserChannels();
-
-        updateOnlineStatus(true);
-
-      } else {
-
-        window.location.href = 'index.html';
-
-      }
-
+function updateOnlineStatus(online) {
+  if (currentUser) {
+    const userStatusRef = db.collection('users').doc(currentUser.uid);
+    userStatusRef.update({
+      online: online,
+      lastSeen: firebase.firestore.FieldValue.serverTimestamp()
     });
+  }
+}
 
-    function updateOnlineStatus(online) {
+window.addEventListener('beforeunload', () => {
+  updateOnlineStatus(false);
+});
 
-      if (currentUser) {
-
-        const userStatusRef = db.collection('users').doc(currentUser.uid);
-
-        userStatusRef.update({
-
-          online: online,
-
-          lastSeen: firebase.firestore.FieldValue.serverTimestamp()
-
-        });
-
-      }
-
+function loadUserData() {
+  const userDocRef = db.collection('users').doc(currentUser.uid);
+  userDocRef.get().then(doc => {
+    if (doc.exists) {
+      const data = doc.data();
+      document.getElementById('user-name').textContent = data.displayName || 'User';
+      document.getElementById('user-avatar').src = data.photoURL || 'https://via.placeholder.com/40';
     }
+  }).catch(error => console.error("Error loading user data:", error));
+}
 
-    window.addEventListener('beforeunload', () => {
-
-      updateOnlineStatus(false);
-
-    });
-
-    function loadUserData() {
-
-      const userDocRef = db.collection('users').doc(currentUser.uid);
-
-      userDocRef.get().then(doc => {
-
-        if (doc.exists) {
-
-          const data = doc.data();
-
-          document.getElementById('user-name').textContent = data.displayName || 'User';
-
-          document.getElementById('user-avatar').src = data.photoURL || 'https://via.placeholder.com/40';
-
-        }
-
-      }).catch(error => console.error("Error loading user data:", error));
-
-    }
-
-    function loadUserChannels() {
-
-      const userDocRef = db.collection('users').doc(currentUser.uid);
-
-      userDocRef.get().then(doc => {
-
-        if (doc.exists) {
-
-          const data = doc.data();
-
-          const channelsList = document.getElementById('channels-list');
-
-          channelsList.innerHTML = ''; // Clear existing channels
-
-          if (data.channels && Array.isArray(data.channels)) {
-
-            data.channels.forEach(channel => {
-
-              displayChannel(channel.id, channel.name);
-
-            });
-
-          } else {
-
-            console.error("No channels found for the user.");
-
-          }
-
-        }
-
-      }).catch(error => console.error("Error loading channels:", error));
-
-    }
-
-    function displayChannel(channelId, channelName) {
-
+function loadUserChannels() {
+  const userDocRef = db.collection('users').doc(currentUser.uid);
+  userDocRef.get().then(doc => {
+    if (doc.exists) {
+      const data = doc.data();
       const channelsList = document.getElementById('channels-list');
-
-      const li = document.createElement('li');
-
-      const button = document.createElement('button');
-
-      button.className = 'channel-btn';
-
-      button.textContent = `# ${channelName}`;
-
-      button.onclick = () => {
-
-        loadMessages(channelId);
-
-        saveCurrentChannel(channelId); // Save last accessed channel
-
-      };
-
-      li.appendChild(button);
-
-      channelsList.appendChild(li);
-
-    }
-
-    function saveCurrentChannel(channelId) {
-
-      const userDocRef = db.collection('users').doc(currentUser.uid);
-
-      userDocRef.update({
-
-        currentChannel: channelId
-
-      }).catch(error => console.error("Error saving current channel:", error));
-
-    }
-
-    function sendMessage() {
-
-      const message = document.getElementById('message-input').value;
-
-      if (message) {
-
-        db.collection('channels').doc(currentChannel).collection('messages').add({
-
-          sender: currentUser.displayName || 'User',
-
-          message,
-
-          timestamp: firebase.firestore.FieldValue.serverTimestamp()
-
+      channelsList.innerHTML = ''; // Clear existing channels
+      if (data.channels && Array.isArray(data.channels)) {
+        data.channels.forEach(channel => {
+          displayChannel(channel.id, channel.name);
         });
-
-        document.getElementById('message-input').value = '';
-
+      } else {
+        console.error("No channels found for the user.");
       }
-
     }
+  }).catch(error => console.error("Error loading channels:", error));
+}
 
-    function loadMessages(channelId) {
+function displayChannel(channelId, channelName) {
+  const channelsList = document.getElementById('channels-list');
+  const li = document.createElement('li');
+  const button = document.createElement('button');
+  button.className = 'channel-btn';
+  button.textContent = `# ${channelName}`;
 
-      currentChannel = channelId;
+  button.onclick = () => {
+    loadMessages(channelId);
+    setActiveChannel(channelId);
+    saveCurrentChannel(channelId);
+  };
 
-      db.collection('channels').doc(channelId).get().then(doc => {
+  li.appendChild(button);
+  li.dataset.channelId = channelId; // Set a data attribute for easy reference
+  channelsList.appendChild(li);
+}
 
-        if (doc.exists) {
+function setActiveChannel(channelId) {
+  const channelButtons = document.querySelectorAll('.channels-list li button');
+  channelButtons.forEach(btn => btn.classList.remove('active-channel'));
 
-          document.getElementById('channel-title').textContent = `# ${doc.data().name}`;
+  const activeButton = [...channelButtons].find(btn =>
+    btn.closest('li').dataset.channelId === channelId
+  );
 
-        }
+  if (activeButton) {
+    activeButton.classList.add('active-channel');
+  }
+}
 
-      });
+function loadMessages(channelId) {
+  currentChannel = channelId;
+  db.collection('channels').doc(channelId).get().then(doc => {
+    if (doc.exists) {
+      document.getElementById('channel-title').textContent = `# ${doc.data().name}`;
+    }
+  });
 
-      const messagesContainer = document.getElementById('messages');
+  const messagesContainer = document.getElementById('messages');
+  messagesContainer.innerHTML = '';
 
+  db.collection('channels').doc(channelId).collection('messages').orderBy('timestamp')
+    .onSnapshot(snapshot => {
       messagesContainer.innerHTML = '';
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const messageElement = document.createElement('div');
+        messageElement.className = 'message';
+        messageElement.innerHTML = `
+          <div class="message-content">
+            <span class="sender">${data.sender}</span>
+            <p>${data.message}</p>
+          </div>`;
+        messagesContainer.appendChild(messageElement);
+      });
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    });
+}
 
-      db.collection('channels').doc(channelId).collection('messages').orderBy('timestamp')
+document.getElementById('send-button').onclick = sendMessage;
 
-        .onSnapshot(snapshot => {
+document.getElementById('add-channel').onclick = () => {
+  const channelName = prompt('Enter new channel name:');
+  if (channelName) {
+    const channelId = db.collection('channels').doc().id;
+    const channelData = { name: channelName, joinCode: channelId };
+    db.collection('channels').doc(channelId).set(channelData).then(() => {
+      const userDocRef = db.collection('users').doc(currentUser.uid);
+      userDocRef.update({
+        channels: firebase.firestore.FieldValue.arrayUnion({id: channelId, name: channelName})
+      }).then(() => {
+        displayChannel(channelId, channelName);
+      }).catch(error => console.error("Error adding channel to user:", error));
+    }).catch(error => console.error("Error creating channel:", error));
+  }
+};
 
-          messagesContainer.innerHTML = '';
-
-          snapshot.forEach(doc => {
-
-            const data = doc.data();
-
-            const messageElement = document.createElement('div');
-
-            messageElement.className = 'message';
-
-            messageElement.innerHTML = `
-<div class="message-content">
-<span class="sender">${data.sender}</span>
-<p>${data.message}</p>
-</div>`;
-
-            messagesContainer.appendChild(messageElement);
-
-          });
-
-        });
-
-    }
-
-    document.getElementById('send-button').onclick = sendMessage;
-
-    document.getElementById('add-channel').onclick = () => {
-
-      const channelName = prompt('Enter new channel name:');
-
-      if (channelName) {
-
-        const channelId = db.collection('channels').doc().id;
-
-        const channelData = {
-
-          name: channelName,
-
-          joinCode: channelId
-
-        };
-
-        db.collection('channels').doc(channelId).set(channelData).then(() => {
-
-          const userDocRef = db.collection('users').doc(currentUser.uid);
-
-          userDocRef.update({
-
-            channels: firebase.firestore.FieldValue.arrayUnion({id: channelId, name: channelName})
-
-          }).then(() => {
-
-            displayChannel(channelId, channelName); // Display the newly created channel
-
-          }).catch(error => console.error("Error adding channel to user:", error));
-
-        }).catch(error => console.error("Error creating channel:", error));
-
+document.getElementById('join-channel').onclick = () => {
+  const channelCode = prompt('Enter channel code to join:');
+  if (channelCode) {
+    db.collection('channels').doc(channelCode).get().then(doc => {
+      if (doc.exists) {
+        const channelData = doc.data();
+        const userDocRef = db.collection('users').doc(currentUser.uid);
+        userDocRef.update({
+          channels: firebase.firestore.FieldValue.arrayUnion({id: channelCode, name: channelData.name})
+        }).then(() => {
+          displayChannel(channelCode, channelData.name);
+          alert(`Successfully joined channel: #${channelData.name}`);
+        }).catch(error => console.error("Error joining channel:", error));
+      } else {
+        alert("Channel code not found. Please check and try again.");
       }
+    }).catch(error => console.error("Error finding channel:", error));
+  }
+};
 
-    };
+document.getElementById('copy-join-code').onclick = () => {
+  navigator.clipboard.writeText(currentChannel).then(() => {
+    alert(`Join code copied: ${currentChannel}`);
+  }).catch(error => console.error("Error copying join code:", error));
+};
 
-    document.getElementById('join-channel').onclick = () => {
+document.getElementById('settings-btn').onclick = () => {
+  window.location.href = 'settings.html';
+};
 
-      const channelCode = prompt('Enter channel code to join:');
-
-      if (channelCode) {
-
-        db.collection('channels').doc(channelCode).get().then(doc => {
-
-          if (doc.exists) {
-
-            const channelData = doc.data();
-
-            const userDocRef = db.collection('users').doc(currentUser.uid);
-
-            userDocRef.update({
-
-              channels: firebase.firestore.FieldValue.arrayUnion({id: channelCode, name: channelData.name})
-
-            }).then(() => {
-
-              displayChannel(channelCode, channelData.name); // Display the joined channel
-
-              alert(`Successfully joined channel: #${channelData.name}`);
-
-            }).catch(error => console.error("Error joining channel:", error));
-
-          } else {
-
-            alert("Channel code not found. Please check and try again.");
-
-          }
-
-        }).catch(error => console.error("Error finding channel:", error));
-
-      }
-
-    };
-
-    document.getElementById('copy-join-code').onclick = () => {
-
-      navigator.clipboard.writeText(currentChannel).then(() => {
-
-        alert(`Join code copied: ${currentChannel}`);
-
-      }).catch(error => console.error("Error copying join code:", error));
-
-    };
-
-    document.getElementById('settings-btn').onclick = () => {
-
-      window.location.href = 'settings.html';
-
-    };
 </script>
 </body>
 </html>
