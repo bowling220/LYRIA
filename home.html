@@ -36,8 +36,12 @@
         <button id="send-button" class="send-btn">Send</button>
       </div>
     </main>
+    <aside class="users-sidebar">
+      <h3>Online Users</h3>
+      <ul id="users-list" class="users-list"></ul>
+    </aside>
   </div>
-  
+ 
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyDORsM0Dz9d_ZxqVd8zjNXwsEdR1_aVF7g",
@@ -51,20 +55,35 @@
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
-
+ 
     let currentUser;
     let currentChannel = 'general';
-
+ 
     auth.onAuthStateChanged(user => {
       if (user) {
         currentUser = user;
         loadUserData();
         loadUserChannels();
+        updateOnlineStatus(true);
       } else {
         window.location.href = 'index.html';
       }
     });
 
+    function updateOnlineStatus(online) {
+      if (currentUser) {
+        const userStatusRef = db.collection('users').doc(currentUser.uid);
+        userStatusRef.update({
+          online: online,
+          lastSeen: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      }
+    }
+ 
+    window.addEventListener('beforeunload', () => {
+      updateOnlineStatus(false);
+    });
+ 
     function loadUserData() {
       const userDocRef = db.collection('users').doc(currentUser.uid);
       userDocRef.get().then(doc => {
@@ -75,28 +94,54 @@
         }
       }).catch(error => console.error("Error loading user data:", error));
     }
-
+ 
     function loadUserChannels() {
       const userDocRef = db.collection('users').doc(currentUser.uid);
       userDocRef.get().then(doc => {
         if (doc.exists) {
           const data = doc.data();
           const channelsList = document.getElementById('channels-list');
-          channelsList.innerHTML = ''; 
-
+          channelsList.innerHTML = '';
+ 
           data.channels.forEach(channel => {
             const li = document.createElement('li');
             const button = document.createElement('button');
             button.className = 'channel-btn';
             button.textContent = `# ${channel.name}`;
-            button.onclick = () => loadMessages(channel.id);
+            button.onclick = () => {
+              loadMessages(channel.id);
+              loadChannelUsers(channel.id);
+            };
             li.appendChild(button);
             channelsList.appendChild(li);
           });
         }
       }).catch(error => console.error("Error loading channels:", error));
     }
-
+ 
+    function loadChannelUsers(channelId) {
+      const usersList = document.getElementById('users-list');
+      usersList.innerHTML = '';
+     
+      db.collection('users').where('channels', 'array-contains', {id: channelId})
+        .onSnapshot(snapshot => {
+          usersList.innerHTML = '';
+          snapshot.forEach(doc => {
+            const userData = doc.data();
+            const userElement = document.createElement('li');
+            userElement.className = 'user-item';
+            userElement.innerHTML = `
+              <div class="user-info">
+                <img class="user-avatar" src="${userData.photoURL || 'https://via.placeholder.com/30'}" alt="${userData.displayName}'s avatar">
+                <span class="user-name">${userData.displayName || 'User'}</span>
+                <span class="status-indicator ${userData.online ? 'online' : 'offline'}"></span>
+              </div>
+            `;
+            usersList.appendChild(userElement);
+          });
+        });
+    }
+ 
     function sendMessage() {
       const message = document.getElementById('message-input').value;
       if (message) {
@@ -108,7 +153,7 @@
         document.getElementById('message-input').value = '';
       }
     }
-
+ 
     function loadMessages(channelId) {
       currentChannel = channelId;
       db.collection('channels').doc(channelId).get().then(doc => {
@@ -116,10 +161,10 @@
           document.getElementById('channel-title').textContent = `# ${doc.data().name}`;
         }
       });
-      
+     
       const messagesContainer = document.getElementById('messages');
       messagesContainer.innerHTML = '';
-      
+     
       db.collection('channels').doc(channelId).collection('messages').orderBy('timestamp')
         .onSnapshot(snapshot => {
           messagesContainer.innerHTML = '';
@@ -136,9 +181,9 @@
           });
         });
     }
-
+ 
     document.getElementById('send-button').onclick = sendMessage;
-
+ 
     document.getElementById('add-channel').onclick = () => {
       const channelName = prompt('Enter new channel name:');
       if (channelName) {
@@ -147,10 +192,10 @@
           name: channelName,
           joinCode: channelId  // Use channelId as join code
         };
-
+ 
         db.collection('channels').doc(channelId).set(channelData).then(() => {
           const userDocRef = db.collection('users').doc(currentUser.uid);
-          
+         
           userDocRef.update({
             channels: firebase.firestore.FieldValue.arrayUnion({id: channelId, name: channelName})
           }).then(() => {
@@ -158,7 +203,10 @@
             const button = document.createElement('button');
             button.className = 'channel-btn';
             button.textContent = `# ${channelName}`;
-            button.onclick = () => loadMessages(channelId);
+            button.onclick = () => {
+              loadMessages(channelId);
+              loadChannelUsers(channelId);
+            };
             li.appendChild(button);
             document.getElementById('channels-list').appendChild(li);
           }).catch(error => {
@@ -167,7 +215,7 @@
         }).catch(error => console.error("Error creating channel:", error));
       }
     };
-
+ 
     document.getElementById('join-channel').onclick = () => {
       const channelCode = prompt('Enter channel code to join:');
       if (channelCode) {
@@ -182,7 +230,10 @@
               const button = document.createElement('button');
               button.className = 'channel-btn';
               button.textContent = `# ${channelData.name}`;
-              button.onclick = () => loadMessages(channelCode);
+              button.onclick = () => {
+                loadMessages(channelCode);
+                loadChannelUsers(channelCode);
+              };
               li.appendChild(button);
               document.getElementById('channels-list').appendChild(li);
               alert(`Successfully joined channel: #${channelData.name}`);
@@ -197,7 +248,7 @@
         });
       }
     };
-
+ 
     document.getElementById('copy-join-code').onclick = () => {
       navigator.clipboard.writeText(currentChannel).then(() => {
         alert(`Join code copied: ${currentChannel}`);
@@ -205,7 +256,7 @@
         console.error("Error copying join code:", error);
       });
     };
-
+ 
     document.getElementById('settings-btn').onclick = () => {
       window.location.href = 'settings.html';
     };
