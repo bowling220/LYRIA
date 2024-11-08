@@ -42,6 +42,7 @@
             align-items: center;
             gap: 10px;
             color: #dcddde;
+            transition: background 0.3s ease;
         }
 
         .settings-categories li:hover {
@@ -50,6 +51,7 @@
 
         .settings-categories li.active {
             background: #404449;
+            font-weight: bold;
         }
 
         .settings-categories li.danger-zone {
@@ -64,6 +66,12 @@
 
         .settings-section {
             max-width: 800px;
+            display: none; /* Initially hidden; show based on active category */
+        }
+
+        .settings-section.active {
+            display: block;
+            animation: fadeIn 0.5s ease; /* Animation for section appearance */
         }
 
         .profile-banner {
@@ -113,10 +121,6 @@
             border-radius: 8px;
         }
 
-        .hidden {
-            display: none;
-        }
-
         h3 {
             margin-bottom: 25px;
             color: #fff;
@@ -125,6 +129,38 @@
         h4 {
             margin: 20px 0 15px;
             color: #fff;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #36393f;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            display: none;
+        }
+
+        .modal.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal h3 {
+            margin-top: 0;
+            color: #dcddde;
+        }
+
+        .modal button {
+            margin-top: 15px;
+            background: #f04747;
         }
     </style>
 </head>
@@ -135,19 +171,17 @@
                 <h2>User Settings</h2>
                 <button class="close-settings" aria-label="Close settings">✕</button>
             </div>
-            
             <ul class="settings-categories">
-                <li class="active"><i class="user-icon"></i>My Account</li>
-                <li><i class="profile-icon"></i>Profile</li>
-                <li><i class="privacy-icon"></i>Privacy & Safety</li>
-                <li><i class="display-icon"></i>Appearance</li>
-                <li class="danger-zone"><i class="logout-icon"></i>Log Out</li>
+                <li class="active" data-section="my-account"><i class="user-icon"></i>My Account</li>
+                <li data-section="profile"><i class="profile-icon"></i>Profile</li>
+                <li data-section="privacy"><i class="privacy-icon"></i>Privacy & Safety</li>
+                <li data-section="appearance"><i class="display-icon"></i>Appearance</li>
+                <li class="danger-zone" id="logout-btn"><i class="logout-icon"></i>Log Out</li>
             </ul>
         </nav>
 
         <main class="settings-content">
-            <!-- My Account Section -->
-            <section id="my-account" class="settings-section">
+            <section id="my-account" class="settings-section active">
                 <h3>My Account</h3>
                 <div class="account-info">
                     <div class="profile-banner">
@@ -160,7 +194,6 @@
                             <input type="email" value="email@example.com" aria-label="Email">
                         </div>
                     </div>
-                    
                     <div class="password-section">
                         <h4>Password and Authentication</h4>
                         <button class="change-password">Change Password</button>
@@ -169,25 +202,73 @@
                 </div>
             </section>
 
-            <!-- Appearance Section -->
-            <section id="appearance" class="settings-section hidden">
+            <section id="appearance" class="settings-section">
                 <h3>Appearance</h3>
                 <div class="theme-options">
+                    <h4>Theme</h4>
+                    <button class="dark-mode-btn">Toggle Dark Mode</button>
                     <div class="chat-settings">
                         <h4>Chat Settings</h4>
-                        <label>
-                            <input type="checkbox" checked>
-                            Show message timestamps
-                        </label>
-                        <label>
-                            <input type="checkbox" checked>
-                            Show inline media
-                        </label>
+                        <label><input type="checkbox" checked> Show message timestamps</label>
+                        <label><input type="checkbox" checked> Show inline media</label>
                     </div>
                 </div>
             </section>
         </main>
     </div>
-    <script src="settings.js"></script>
+
+    <!-- Modal for Log Out Confirmation -->
+    <div class="modal" id="logout-modal">
+        <h3>Are you sure you want to log out?</h3>
+        <button id="confirm-logout">Log Out</button>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const categories = document.querySelectorAll('.settings-categories li');
+            const sections = document.querySelectorAll('.settings-section');
+            const logoutBtn = document.getElementById('logout-btn');
+            const logoutModal = document.getElementById('logout-modal');
+            const confirmLogout = document.getElementById('confirm-logout');
+
+            // Switch sections on sidebar click
+            categories.forEach(category => {
+                category.addEventListener('click', () => {
+                    // Remove active class from all categories and sections
+                    categories.forEach(cat => cat.classList.remove('active'));
+                    sections.forEach(section => section.classList.remove('active'));
+
+                    // Add active class to clicked category and corresponding section
+                    category.classList.add('active');
+                    const sectionId = category.dataset.section;
+                    document.getElementById(sectionId).classList.add('active');
+                });
+            });
+
+            // Toggle Dark Mode
+            document.querySelector('.dark-mode-btn').addEventListener('click', () => {
+                document.body.classList.toggle('dark-mode');
+                alert(`Dark mode is now ${document.body.classList.contains('dark-mode') ? 'enabled' : 'disabled'}.`);
+            });
+
+            // Log Out Modal
+            logoutBtn.addEventListener('click', () => {
+                logoutModal.classList.add('active');
+            });
+
+            confirmLogout.addEventListener('click', () => {
+                // Placeholder for actual logout logic
+                alert('Logged out successfully.');
+                logoutModal.classList.remove('active');
+            });
+
+            // Close Modal when clicking outside
+            window.addEventListener('click', (e) => {
+                if (e.target === logoutModal) {
+                    logoutModal.classList.remove('active');
+                }
+            });
+        });
+    </script>
 </body>
 </html>
