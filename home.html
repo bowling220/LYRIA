@@ -1,47 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LYRIA</title>
-    <link rel="stylesheet" href="styles.css">
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LYRIA Chat</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
 </head>
-
 <body>
-    <header class="top-header">
-        <h1>LYRIA</h1>
-    </header>
-    <div class="app-container">
-        <nav class="sidebar">
-            <div class="user-profile">
-                <img class="avatar" src="https://via.placeholder.com/40" alt="User avatar">
-                <span class="username">Username</span>
-                <button class="settings-btn">Settings</button>
-            </div>
-            <div class="channels">
-                <h3>Channels</h3>
-                <ul class="channels-list">
-                    <li><button class="channel-btn active" aria-current="true"># general</button></li>
-                    <li><button class="add-channel-btn">+ Add Channel</button></li>
-                </ul>
-            </div>
-        </nav>
-
-        <main class="chat-area">
-            <header class="chat-header">
-                <h2># general</h2>
-            </header>
-            <div class="messages" role="log"></div>
-            <div class="message-input">
-                <textarea placeholder="Type your message..."></textarea>
-                <button class="send-btn">Send</button>
-            </div>
-        </main>
-    </div>
-    
-    <script>
+  <header class="top-header"><h1>LYRIA</h1></header>
+  <div class="app-container">
+    <nav class="sidebar">
+      <div class="user-profile">
+        <img class="avatar" id="user-avatar" src="https://via.placeholder.com/40" alt="User avatar">
+        <span class="username" id="user-name">Username</span>
+        <button class="settings-btn">Settings</button>
+      </div>
+      <div class="channels">
+        <h3>Channels</h3>
+        <ul class="channels-list" id="channels-list"></ul>
+        <button class="add-channel-btn" id="add-channel">+ Add Channel</button>
+      </div>
+    </nav>
+    <main class="chat-area">
+      <header class="chat-header"><h2 id="channel-title"># general</h2></header>
+      <div class="messages" id="messages"></div>
+      <div class="message-input">
+        <textarea id="message-input" placeholder="Type your message..."></textarea>
+        <button id="send-button" class="send-btn">Send</button>
+      </div>
+    </main>
+  </div>
+  
+  <script>
         // Firebase configuration
         const firebaseConfig = {
       apiKey: "AIzaSyDORsM0Dz9d_ZxqVd8zjNXwsEdR1_aVF7g",
@@ -52,128 +45,89 @@
       appId: "1:309881717815:web:c8e9a4007341ab17ecebb2",
       measurementId: "G-0EMBBE255Z"
     };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
 
-        // DOM Elements
-        const messageInput = document.querySelector('.message-input textarea');
-        const sendButton = document.querySelector('.send-btn');
-        const messagesContainer = document.querySelector('.messages');
-        const channelTitle = document.querySelector('.chat-header h2');
-        const channelsList = document.querySelector('.channels-list');
-        const addChannelButton = document.querySelector('.add-channel-btn');
+    let currentUser;
+    let currentChannel = 'general';
+
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        currentUser = user;
+        document.getElementById('user-name').textContent = user.displayName || 'User';
+        document.getElementById('user-avatar').src = user.photoURL || 'https://via.placeholder.com/40';
         
-        // State
-        let currentChannel = 'general';
-
-        // Firestore References
-        const channelsRef = db.collection('channels');
-
-        // Message handling
-        function createMessageElement(message, sender, timestamp) {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = 'message';
-            messageDiv.innerHTML = `
-                <img class="avatar" src="https://via.placeholder.com/40" alt="${sender}'s avatar">
-                <div class="message-content">
-                    <div class="message-header">
-                        <span class="sender">${sender}</span>
-                        <span class="timestamp">${new Date(timestamp.seconds * 1000).toLocaleTimeString()}</span>
-                    </div>
-                    <p class="message-text">${message}</p>
-                </div>
-            `;
-            return messageDiv;
-        }
-
-        function sendMessage() {
-            const message = messageInput.value.trim();
-            if (message) {
-                const messageData = {
-                    sender: 'You', // Replace with the logged-in user's name if needed
-                    message,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                };
-
-                // Add message to Firestore under the current channel
-                channelsRef.doc(currentChannel).collection('messages').add(messageData)
-                    .then(() => {
-                        messageInput.value = ''; // Clear the input field after sending
-                    })
-                    .catch(error => console.error('Error sending message:', error));
-            }
-        }
-
-        function loadMessages(channelName) {
-            messagesContainer.innerHTML = '';
-
-            // Listen for real-time updates in the selected channel
-            channelsRef.doc(channelName).collection('messages').orderBy('timestamp')
-                .onSnapshot(snapshot => {
-                    messagesContainer.innerHTML = ''; // Clear previous messages
-                    snapshot.forEach(doc => {
-                        const data = doc.data();
-                        const messageElement = createMessageElement(data.message, data.sender, data.timestamp);
-                        messagesContainer.appendChild(messageElement);
-                    });
-                    messagesContainer.scrollTop = messagesContainer.scrollHeight; // Scroll to the bottom
-                }, error => {
-                    console.error('Error loading messages:', error);
-                });
-        }
-
-        function switchChannel(channelName) {
-            currentChannel = channelName;
-            channelTitle.textContent = `# ${channelName}`;
-
-            document.querySelectorAll('.channel-btn').forEach(button => {
-                button.classList.remove('active');
-                button.setAttribute('aria-current', 'false');
-                if (button.textContent === `# ${channelName}`) {
-                    button.classList.add('active');
-                    button.setAttribute('aria-current', 'true');
-                }
-            });
-
-            loadMessages(channelName);
-        }
-
-        function addNewChannel() {
-            const channelName = prompt('Enter new channel name:');
-            if (channelName) {
-                channelsRef.doc(channelName).set({})
-                    .then(() => {
-                        const li = document.createElement('li');
-                        const button = document.createElement('button');
-                        button.className = 'channel-btn';
-                        button.textContent = `# ${channelName}`;
-                        button.addEventListener('click', () => switchChannel(channelName));
-                        li.appendChild(button);
-                        channelsList.insertBefore(li, addChannelButton.parentElement);
-                        
-                        // Switch to the new channel
-                        switchChannel(channelName);
-                    })
-                    .catch(error => console.error('Error creating channel:', error));
-            }
-        }
-
-        // Event Listeners
-        sendButton.addEventListener('click', sendMessage);
-        messageInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                sendMessage();
-            }
+        db.collection('users').doc(user.uid).get().then(doc => {
+          const data = doc.data();
+          const channelsList = document.getElementById('channels-list');
+          data.channels.forEach(channel => {
+            const li = document.createElement('li');
+            const button = document.createElement('button');
+            button.className = 'channel-btn';
+            button.textContent = `# ${channel}`;
+            button.onclick = () => loadMessages(channel);
+            li.appendChild(button);
+            channelsList.appendChild(li);
+          });
         });
-        addChannelButton.addEventListener('click', addNewChannel);
-        document.querySelectorAll('.channel-btn').forEach(button => {
-            const channelName = button.textContent.substring(2); // Remove "# " prefix
-            button.addEventListener('click', () => switchChannel(channelName));
-        });
+      } else {
+        window.location.href = 'index.html';
+      }
+    });
 
-        // Initialize with default channel
-        switchChannel('general');
-    </script>
+    function sendMessage() {
+      const message = document.getElementById('message-input').value;
+      if (message) {
+        db.collection('channels').doc(currentChannel).collection('messages').add({
+          sender: currentUser.displayName || 'User',
+          message,
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        document.getElementById('message-input').value = '';
+      }
+    }
+
+    function loadMessages(channel) {
+      currentChannel = channel;
+      document.getElementById('channel-title').textContent = `# ${channel}`;
+      const messagesContainer = document.getElementById('messages');
+      messagesContainer.innerHTML = '';
+      
+      db.collection('channels').doc(channel).collection('messages').orderBy('timestamp')
+        .onSnapshot(snapshot => {
+          messagesContainer.innerHTML = '';
+          snapshot.forEach(doc => {
+            const data = doc.data();
+            const messageElement = document.createElement('div');
+            messageElement.className = 'message';
+            messageElement.innerHTML = `
+              <div class="message-content">
+                <span class="sender">${data.sender}</span>
+                <p>${data.message}</p>
+              </div>`;
+            messagesContainer.appendChild(messageElement);
+          });
+        });
+    }
+
+    document.getElementById('send-button').onclick = sendMessage;
+    document.getElementById('add-channel').onclick = () => {
+      const channelName = prompt('Enter new channel name:');
+      if (channelName) {
+        db.collection('users').doc(currentUser.uid).update({
+          channels: firebase.firestore.FieldValue.arrayUnion(channelName)
+        }).then(() => {
+          const li = document.createElement('li');
+          const button = document.createElement('button');
+          button.className = 'channel-btn';
+          button.textContent = `# ${channelName}`;
+          button.onclick = () => loadMessages(channelName);
+          li.appendChild(button);
+          document.getElementById('channels-list').appendChild(li);
+        });
+      }
+    };
+  </script>
 </body>
 </html>
