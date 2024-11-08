@@ -57,15 +57,14 @@
     const db = firebase.firestore();
  
     let currentUser;
-    let currentChannel;
-
+    let currentChannel = 'general';
+ 
     auth.onAuthStateChanged(user => {
       if (user) {
         currentUser = user;
         loadUserData();
         loadUserChannels();
         updateOnlineStatus(true);
-        loadSavedChannel();
       } else {
         window.location.href = 'index.html';
       }
@@ -80,11 +79,11 @@
         });
       }
     }
- 
+
     window.addEventListener('beforeunload', () => {
       updateOnlineStatus(false);
     });
- 
+
     function loadUserData() {
       const userDocRef = db.collection('users').doc(currentUser.uid);
       userDocRef.get().then(doc => {
@@ -95,15 +94,16 @@
         }
       }).catch(error => console.error("Error loading user data:", error));
     }
- 
+
     function loadUserChannels() {
       const userDocRef = db.collection('users').doc(currentUser.uid);
       userDocRef.get().then(doc => {
         if (doc.exists) {
           const data = doc.data();
           const channelsList = document.getElementById('channels-list');
-          channelsList.innerHTML = '';
- 
+          channelsList.innerHTML = ''; // Clear existing channels
+
+          // Load channels from the user's document
           data.channels.forEach(channel => {
             const li = document.createElement('li');
             const button = document.createElement('button');
@@ -111,8 +111,7 @@
             button.textContent = `# ${channel.name}`;
             button.onclick = () => {
               loadMessages(channel.id);
-              loadChannelUsers(channel.id);
-              saveCurrentChannel(channel.id);
+              saveCurrentChannel(channel.id); // Save last accessed channel
             };
             li.appendChild(button);
             channelsList.appendChild(li);
@@ -121,51 +120,13 @@
       }).catch(error => console.error("Error loading channels:", error));
     }
 
-    function loadSavedChannel() {
-      const userDocRef = db.collection('users').doc(currentUser.uid);
-      userDocRef.get().then(doc => {
-        if (doc.exists && doc.data().currentChannel) {
-          currentChannel = doc.data().currentChannel;
-          loadMessages(currentChannel);
-          loadChannelUsers(currentChannel);
-        } else {
-          currentChannel = 'general';
-          loadMessages(currentChannel);
-          loadChannelUsers(currentChannel);
-        }
-      }).catch(error => console.error("Error loading saved channel:", error));
-    }
-
     function saveCurrentChannel(channelId) {
       const userDocRef = db.collection('users').doc(currentUser.uid);
       userDocRef.update({
         currentChannel: channelId
       }).catch(error => console.error("Error saving current channel:", error));
     }
- 
-    function loadChannelUsers(channelId) {
-      const usersList = document.getElementById('users-list');
-      usersList.innerHTML = '';
-     
-      db.collection('users').where('channels', 'array-contains', {id: channelId})
-        .onSnapshot(snapshot => {
-          usersList.innerHTML = '';
-          snapshot.forEach(doc => {
-            const userData = doc.data();
-            const userElement = document.createElement('li');
-            userElement.className = 'user-item';
-            userElement.innerHTML = `
-              <div class="user-info">
-                <img class="user-avatar" src="${userData.photoURL || 'https://via.placeholder.com/30'}" alt="${userData.displayName}'s avatar">
-                <span class="user-name">${userData.displayName || 'User'}</span>
-                <span class="status-indicator ${userData.online ? 'online' : 'offline'}"></span>
-              </div>
-            `;
-            usersList.appendChild(userElement);
-          });
-        });
-    }
- 
+
     function sendMessage() {
       const message = document.getElementById('message-input').value;
       if (message) {
@@ -177,7 +138,7 @@
         document.getElementById('message-input').value = '';
       }
     }
- 
+
     function loadMessages(channelId) {
       currentChannel = channelId;
       db.collection('channels').doc(channelId).get().then(doc => {
@@ -185,10 +146,10 @@
           document.getElementById('channel-title').textContent = `# ${doc.data().name}`;
         }
       });
-     
+
       const messagesContainer = document.getElementById('messages');
       messagesContainer.innerHTML = '';
-     
+
       db.collection('channels').doc(channelId).collection('messages').orderBy('timestamp')
         .onSnapshot(snapshot => {
           messagesContainer.innerHTML = '';
@@ -216,7 +177,7 @@
           name: channelName,
           joinCode: channelId
         };
- 
+
         db.collection('channels').doc(channelId).set(channelData).then(() => {
           const userDocRef = db.collection('users').doc(currentUser.uid);
           userDocRef.update({
@@ -228,7 +189,6 @@
             button.textContent = `# ${channelName}`;
             button.onclick = () => {
               loadMessages(channelId);
-              loadChannelUsers(channelId);
               saveCurrentChannel(channelId);
             };
             li.appendChild(button);
@@ -254,7 +214,6 @@
               button.textContent = `# ${channelData.name}`;
               button.onclick = () => {
                 loadMessages(channelCode);
-                loadChannelUsers(channelCode);
                 saveCurrentChannel(channelCode);
               };
               li.appendChild(button);
