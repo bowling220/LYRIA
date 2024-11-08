@@ -57,18 +57,34 @@
     const db = firebase.firestore();
  
     let currentUser;
-    let currentChannel = 'general';
- 
+    let currentChannel;
+
     auth.onAuthStateChanged(user => {
       if (user) {
         currentUser = user;
         loadUserData();
         loadUserChannels();
         updateOnlineStatus(true);
+        loadSavedChannel();
       } else {
         window.location.href = 'index.html';
       }
     });
+
+    function loadSavedChannel() {
+      const userDocRef = db.collection('users').doc(currentUser.uid);
+      userDocRef.get().then(doc => {
+        if (doc.exists && doc.data().currentChannel) {
+          currentChannel = doc.data().currentChannel;
+          loadMessages(currentChannel);
+          loadChannelUsers(currentChannel);
+        } else {
+          currentChannel = 'general';
+          loadMessages(currentChannel);
+          loadChannelUsers(currentChannel);
+        }
+      }).catch(error => console.error("Error loading saved channel:", error));
+    }
 
     function updateOnlineStatus(online) {
       if (currentUser) {
@@ -111,12 +127,20 @@
             button.onclick = () => {
               loadMessages(channel.id);
               loadChannelUsers(channel.id);
+              saveCurrentChannel(channel.id);
             };
             li.appendChild(button);
             channelsList.appendChild(li);
           });
         }
       }).catch(error => console.error("Error loading channels:", error));
+    }
+
+    function saveCurrentChannel(channelId) {
+      const userDocRef = db.collection('users').doc(currentUser.uid);
+      userDocRef.update({
+        currentChannel: channelId
+      }).catch(error => console.error("Error saving current channel:", error));
     }
  
     function loadChannelUsers(channelId) {
@@ -181,21 +205,20 @@
           });
         });
     }
- 
+
     document.getElementById('send-button').onclick = sendMessage;
- 
+
     document.getElementById('add-channel').onclick = () => {
       const channelName = prompt('Enter new channel name:');
       if (channelName) {
-        const channelId = db.collection('channels').doc().id;  // Generate a unique ID
+        const channelId = db.collection('channels').doc().id;
         const channelData = {
           name: channelName,
-          joinCode: channelId  // Use channelId as join code
+          joinCode: channelId
         };
  
         db.collection('channels').doc(channelId).set(channelData).then(() => {
           const userDocRef = db.collection('users').doc(currentUser.uid);
-         
           userDocRef.update({
             channels: firebase.firestore.FieldValue.arrayUnion({id: channelId, name: channelName})
           }).then(() => {
@@ -206,16 +229,15 @@
             button.onclick = () => {
               loadMessages(channelId);
               loadChannelUsers(channelId);
+              saveCurrentChannel(channelId);
             };
             li.appendChild(button);
             document.getElementById('channels-list').appendChild(li);
-          }).catch(error => {
-            console.error("Error adding channel to user:", error);
-          });
+          }).catch(error => console.error("Error adding channel to user:", error));
         }).catch(error => console.error("Error creating channel:", error));
       }
     };
- 
+
     document.getElementById('join-channel').onclick = () => {
       const channelCode = prompt('Enter channel code to join:');
       if (channelCode) {
@@ -233,30 +255,25 @@
               button.onclick = () => {
                 loadMessages(channelCode);
                 loadChannelUsers(channelCode);
+                saveCurrentChannel(channelCode);
               };
               li.appendChild(button);
               document.getElementById('channels-list').appendChild(li);
               alert(`Successfully joined channel: #${channelData.name}`);
-            }).catch(error => {
-              console.error("Error joining channel:", error);
-            });
+            }).catch(error => console.error("Error joining channel:", error));
           } else {
             alert("Channel code not found. Please check and try again.");
           }
-        }).catch(error => {
-          console.error("Error finding channel:", error);
-        });
+        }).catch(error => console.error("Error finding channel:", error));
       }
     };
- 
+
     document.getElementById('copy-join-code').onclick = () => {
       navigator.clipboard.writeText(currentChannel).then(() => {
         alert(`Join code copied: ${currentChannel}`);
-      }).catch(error => {
-        console.error("Error copying join code:", error);
-      });
+      }).catch(error => console.error("Error copying join code:", error));
     };
- 
+
     document.getElementById('settings-btn').onclick = () => {
       window.location.href = 'settings.html';
     };
