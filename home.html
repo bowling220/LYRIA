@@ -8,6 +8,33 @@
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+  <style>
+    /* Button Styles */
+    .add-channel-btn, .join-channel-btn, .copy-join-code-btn {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      margin-top: 10px;
+      cursor: pointer;
+      border-radius: 5px;
+      font-weight: bold;
+    }
+
+    .add-channel-btn:hover, .join-channel-btn:hover, .copy-join-code-btn:hover {
+      background-color: #45a049;
+    }
+
+    /* Join Code Button */
+    .copy-join-code-btn {
+      background-color: #2196F3;
+      margin-left: 10px;
+    }
+
+    .copy-join-code-btn:hover {
+      background-color: #0b7dda;
+    }
+  </style>
 </head>
 <body>
   <header class="top-header"><h1>LYRIA</h1></header>
@@ -103,19 +130,22 @@
           const channelsList = document.getElementById('channels-list');
           channelsList.innerHTML = ''; // Clear existing channels
 
-          // Load channels from the user's document
-          data.channels.forEach(channel => {
-            const li = document.createElement('li');
-            const button = document.createElement('button');
-            button.className = 'channel-btn';
-            button.textContent = `# ${channel.name}`;
-            button.onclick = () => {
-              loadMessages(channel.id);
-              saveCurrentChannel(channel.id); // Save last accessed channel
-            };
-            li.appendChild(button);
-            channelsList.appendChild(li);
-          });
+          if (data.channels && Array.isArray(data.channels)) {
+            data.channels.forEach(channel => {
+              const li = document.createElement('li');
+              const button = document.createElement('button');
+              button.className = 'channel-btn';
+              button.textContent = `# ${channel.name}`;
+              button.onclick = () => {
+                loadMessages(channel.id);
+                saveCurrentChannel(channel.id); // Save last accessed channel
+              };
+              li.appendChild(button);
+              channelsList.appendChild(li);
+            });
+          } else {
+            console.error("No channels found for the user.");
+          }
         }
       }).catch(error => console.error("Error loading channels:", error));
     }
@@ -183,16 +213,7 @@
           userDocRef.update({
             channels: firebase.firestore.FieldValue.arrayUnion({id: channelId, name: channelName})
           }).then(() => {
-            const li = document.createElement('li');
-            const button = document.createElement('button');
-            button.className = 'channel-btn';
-            button.textContent = `# ${channelName}`;
-            button.onclick = () => {
-              loadMessages(channelId);
-              saveCurrentChannel(channelId);
-            };
-            li.appendChild(button);
-            document.getElementById('channels-list').appendChild(li);
+            loadUserChannels();
           }).catch(error => console.error("Error adding channel to user:", error));
         }).catch(error => console.error("Error creating channel:", error));
       }
@@ -208,16 +229,7 @@
             userDocRef.update({
               channels: firebase.firestore.FieldValue.arrayUnion({id: channelCode, name: channelData.name})
             }).then(() => {
-              const li = document.createElement('li');
-              const button = document.createElement('button');
-              button.className = 'channel-btn';
-              button.textContent = `# ${channelData.name}`;
-              button.onclick = () => {
-                loadMessages(channelCode);
-                saveCurrentChannel(channelCode);
-              };
-              li.appendChild(button);
-              document.getElementById('channels-list').appendChild(li);
+              loadUserChannels();
               alert(`Successfully joined channel: #${channelData.name}`);
             }).catch(error => console.error("Error joining channel:", error));
           } else {
