@@ -91,7 +91,39 @@
 </div>
 <div class="channels">
 <h3>Channels</h3>
-<ul class="channels-list" id="channels-list"></ul>
+<ul class="channels-list" id="channels-list">
+  <script>
+    // Get channels from Firestore
+    db.collection('channels').onSnapshot(snapshot => {
+      const channelsList = document.getElementById('channels-list');
+      channelsList.innerHTML = '';
+      
+      snapshot.forEach(doc => {
+        const channel = doc.data();
+        const li = document.createElement('li');
+        li.setAttribute('data-channel-id', doc.id);
+        li.className = 'channel-item';
+        if(currentChannel === doc.id) {
+          li.classList.add('active-channel');
+        }
+        li.innerHTML = `# ${channel.name}`;
+        
+        li.addEventListener('click', () => {
+          currentChannel = doc.id;
+          document.getElementById('channel-title').textContent = `# ${channel.name}`;
+          document.querySelectorAll('.channel-item').forEach(item => {
+            item.classList.remove('active-channel');
+          });
+          li.classList.add('active-channel');
+          // Load messages for this channel
+          loadChannelMessages(doc.id);
+        });
+        
+        channelsList.appendChild(li);
+      });
+    });
+  </script>
+</ul>
 <button class="add-channel-btn" id="add-channel">+ Add Channel</button>
 <button class="join-channel-btn" id="join-channel">Join Channel by Code</button>
 </div>
