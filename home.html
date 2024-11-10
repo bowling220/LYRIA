@@ -12,70 +12,84 @@
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 <style>
     :root {
-      --primary-color: #2c3e50;
-      --secondary-color: #3498db;
-      --accent-color: #e74c3c;
-      --text-color: #ecf0f1;
-      --background-color: #34495e;
+      --primary-color: #36393f;
+      --secondary-color: #7289da;
+      --accent-color: #43b581;
+      --text-color: #dcddde;
+      --background-color: #2f3136;
+      --channel-hover: #42464d;
+      --message-hover: #32353b;
+      --sidebar-color: #2f3136;
+      --chat-input-color: #40444b;
     }
 
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: 'Whitney', 'Helvetica Neue', Helvetica, Arial, sans-serif;
       margin: 0;
       padding: 0;
-      background-color: var(--background-color);
+      background-color: var(--primary-color);
       color: var(--text-color);
+      height: 100vh;
     }
 
     .top-header {
       background-color: var(--primary-color);
-      padding: 1rem;
-      text-align: center;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      padding: 0.8rem;
+      border-bottom: 1px solid #202225;
     }
 
     .top-header h1 {
       margin: 0;
-      font-size: 2rem;
-      color: var(--secondary-color);
+      font-size: 1.3rem;
+      color: #fff;
+      font-weight: 600;
     }
 
     .app-container {
       display: grid;
-      grid-template-columns: 250px 1fr;
-      height: calc(100vh - 70px);
+      grid-template-columns: 240px 1fr;
+      height: calc(100vh - 48px);
     }
 
     .sidebar {
-      background-color: var(--primary-color);
-      padding: 1rem;
-      border-right: 1px solid rgba(255,255,255,0.1);
+      background-color: var(--sidebar-color);
+      border-right: 1px solid #202225;
+      display: flex;
+      flex-direction: column;
     }
 
     .user-profile {
+      padding: 1rem;
+      background-color: #292b2f;
+      margin-top: auto;
       display: flex;
       align-items: center;
-      padding: 1rem;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
-      margin-bottom: 1rem;
+      gap: 0.5rem;
     }
 
     .avatar {
-      width: 40px;
-      height: 40px;
+      width: 32px;
+      height: 32px;
       border-radius: 50%;
-      margin-right: 1rem;
-      border: 2px solid var(--secondary-color);
     }
 
     .username {
-      font-weight: bold;
       color: var(--text-color);
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .channels {
+      padding: 0 0.8rem;
+      flex: 1;
     }
 
     .channels h3 {
-      color: var(--secondary-color);
-      margin-bottom: 1rem;
+      color: #8e9297;
+      text-transform: uppercase;
+      font-size: 0.8rem;
+      padding: 1rem 0.5rem;
+      margin: 0;
     }
 
     .channels-list {
@@ -85,92 +99,105 @@
     }
 
     .channel-btn {
-      padding: 0.8rem;
+      padding: 0.5rem;
       border: none;
       background: none;
       cursor: pointer;
       font-size: 0.9rem;
-      text-align: left;
-      width: 85%;
-      color: var(--text-color);
+      width: 100%;
+      color: #8e9297;
       border-radius: 4px;
-      transition: background-color 0.2s;
+      text-align: left;
+      display: flex;
+      align-items: center;
     }
 
     .channel-btn:hover {
-      background-color: rgba(255,255,255,0.1);
+      background-color: var(--channel-hover);
+      color: var(--text-color);
     }
 
     .active-channel {
-      background-color: var(--secondary-color) !important;
-      color: white;
-      font-weight: bold;
+      background-color: var(--channel-hover) !important;
+      color: var(--text-color) !important;
     }
 
     .pin-btn {
-      padding: 4px 8px;
+      opacity: 0;
+      padding: 4px;
       border: none;
-      background: rgba(255,255,255,0.1);
-      color: var(--text-color);
+      background: transparent;
+      color: #8e9297;
       cursor: pointer;
-      border-radius: 3px;
-      margin-left: 5px;
       font-size: 12px;
-      transition: background-color 0.2s;
+      margin-left: auto;
+    }
+
+    li:hover .pin-btn {
+      opacity: 1;
     }
 
     .pin-btn.pinned {
-      background: var(--accent-color);
+      opacity: 1;
+      color: var(--secondary-color);
     }
 
     .add-channel-btn, .join-channel-btn, .copy-join-code-btn {
-      background-color: var(--secondary-color);
-      color: white;
+      background-color: transparent;
+      color: #8e9297;
       border: none;
-      padding: 0.8rem 1rem;
-      margin-top: 1rem;
+      padding: 0.5rem;
+      margin: 0.2rem 0;
       cursor: pointer;
       border-radius: 4px;
-      font-weight: bold;
-      transition: background-color 0.2s;
+      font-size: 0.9rem;
+      text-align: left;
       width: 100%;
+      transition: background-color 0.2s;
     }
 
     .add-channel-btn:hover, .join-channel-btn:hover {
-      background-color: #2980b9;
+      background-color: var(--channel-hover);
+      color: var(--text-color);
     }
 
     .chat-area {
       display: flex;
       flex-direction: column;
-      background-color: var(--background-color);
+      background-color: var(--primary-color);
     }
 
     .chat-header {
-      padding: 1rem;
+      padding: 0.8rem 1rem;
       background-color: var(--primary-color);
+      border-bottom: 1px solid #202225;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
     }
 
     .chat-header h2 {
       margin: 0;
-      color: var(--secondary-color);
+      font-size: 1rem;
+      color: var(--text-color);
+      font-weight: 600;
     }
 
     .messages {
       flex-grow: 1;
       padding: 1rem;
       overflow-y: auto;
+      background-color: var(--primary-color);
     }
 
     .message {
       margin-bottom: 1rem;
-      padding: 0.8rem;
-      background-color: rgba(255,255,255,0.05);
+      padding: 0.5rem;
       border-radius: 4px;
+    }
+
+    .message:hover {
+      background-color: var(--message-hover);
     }
 
     .message-content {
@@ -178,60 +205,52 @@
     }
 
     .sender {
-      font-weight: bold;
-      color: var(--secondary-color);
-      margin-bottom: 0.5rem;
-      display: block;
+      font-weight: 500;
+      color: #fff;
+      margin-bottom: 0.2rem;
+      font-size: 1rem;
     }
 
     .message-input {
       padding: 1rem;
       background-color: var(--primary-color);
-      display: flex;
-      gap: 1rem;
+      margin: 0 1rem 1rem;
     }
 
     textarea {
-      flex-grow: 1;
+      width: 100%;
       padding: 0.8rem;
       border: none;
-      border-radius: 4px;
-      background-color: rgba(255,255,255,0.1);
+      border-radius: 8px;
+      background-color: var(--chat-input-color);
       color: var(--text-color);
       resize: none;
-      height: 40px;
+      font-size: 0.9rem;
+    }
+
+    textarea::placeholder {
+      color: #72767d;
     }
 
     .send-btn {
-      padding: 0.8rem 1.5rem;
-      background-color: var(--secondary-color);
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: background-color 0.2s;
+      display: none;
     }
 
-    .send-btn:hover {
-      background-color: #2980b9;
-    }
-
-    /* Scrollbar Styling */
     ::-webkit-scrollbar {
       width: 8px;
     }
 
     ::-webkit-scrollbar-track {
-      background: rgba(255,255,255,0.1);
+      background: transparent;
     }
 
     ::-webkit-scrollbar-thumb {
-      background: var(--secondary-color);
+      background: #202225;
       border-radius: 4px;
     }
 
     ::-webkit-scrollbar-thumb:hover {
-      background: #2980b9;
+      background: #2f3136;
     }
 </style>
 </head>
@@ -239,25 +258,25 @@
 <header class="top-header"><h1>LYRIA</h1></header>
 <div class="app-container">
 <nav class="sidebar">
+<div class="channels">
+<h3>Text Channels</h3>
+<ul class="channels-list" id="channels-list"></ul>
+<button class="add-channel-btn" id="add-channel">+ Create Channel</button>
+<button class="join-channel-btn" id="join-channel">Join Channel</button>
+</div>
 <div class="user-profile">
 <img class="avatar" id="user-avatar" src="https://via.placeholder.com/40" alt="User avatar">
 <span class="username" id="user-name">Username</span>
-</div>
-<div class="channels">
-<h3>Channels</h3>
-<ul class="channels-list" id="channels-list"></ul>
-<button class="add-channel-btn" id="add-channel">+ Add Channel</button>
-<button class="join-channel-btn" id="join-channel">Join Channel by Code</button>
 </div>
 </nav>
 <main class="chat-area">
 <header class="chat-header">
 <h2 id="channel-title"># general</h2>
-<button id="copy-join-code" class="copy-join-code-btn">Copy Join Code</button>
+<button id="copy-join-code" class="copy-join-code-btn">Copy Invite Code</button>
 </header>
 <div class="messages" id="messages"></div>
 <div class="message-input">
-<textarea id="message-input" placeholder="Type your message..."></textarea>
+<textarea id="message-input" placeholder="Message #general"></textarea>
 <button id="send-button" class="send-btn">Send</button>
 </div>
 </main>
@@ -418,6 +437,7 @@ function loadMessages(channelId) {
   db.collection('channels').doc(channelId).get().then(doc => {
     if (doc.exists) {
       document.getElementById('channel-title').textContent = `# ${doc.data().name}`;
+      document.getElementById('message-input').placeholder = `Message #${doc.data().name}`;
     }
   });
 
@@ -456,6 +476,13 @@ function sendMessage() {
 }
 
 document.getElementById('send-button').onclick = sendMessage;
+
+document.getElementById('message-input').addEventListener('keypress', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+});
 
 document.getElementById('add-channel').onclick = () => {
   const channelName = prompt('Enter new channel name:');
