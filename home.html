@@ -11,86 +11,227 @@
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 <style>
+    :root {
+      --primary-color: #2c3e50;
+      --secondary-color: #3498db;
+      --accent-color: #e74c3c;
+      --text-color: #ecf0f1;
+      --background-color: #34495e;
+    }
+
     body {
-      font-family: Arial, sans-serif;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: var(--background-color);
+      color: var(--text-color);
     }
-    .add-channel-btn, .join-channel-btn, .copy-join-code-btn {
-      background-color: #4CAF50;
-      color: white;
-      border: none;
-      padding: 8px 16px;
-      margin-top: 10px;
-      cursor: pointer;
-      border-radius: 5px;
+
+    .top-header {
+      background-color: var(--primary-color);
+      padding: 1rem;
+      text-align: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+
+    .top-header h1 {
+      margin: 0;
+      font-size: 2rem;
+      color: var(--secondary-color);
+    }
+
+    .app-container {
+      display: grid;
+      grid-template-columns: 250px 1fr;
+      height: calc(100vh - 70px);
+    }
+
+    .sidebar {
+      background-color: var(--primary-color);
+      padding: 1rem;
+      border-right: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .user-profile {
+      display: flex;
+      align-items: center;
+      padding: 1rem;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      margin-bottom: 1rem;
+    }
+
+    .avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      margin-right: 1rem;
+      border: 2px solid var(--secondary-color);
+    }
+
+    .username {
       font-weight: bold;
+      color: var(--text-color);
     }
-    .add-channel-btn:hover, .join-channel-btn:hover, .copy-join-code-btn:hover {
-      background-color: #45a049;
+
+    .channels h3 {
+      color: var(--secondary-color);
+      margin-bottom: 1rem;
     }
-    .copy-join-code-btn {
-      background-color: #2196F3;
-      margin-left: 10px;
+
+    .channels-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
     }
-    .copy-join-code-btn:hover {
-      background-color: #0b7dda;
-    }
+
     .channel-btn {
-      padding: 8px;
+      padding: 0.8rem;
       border: none;
       background: none;
       cursor: pointer;
-      font-size: 16px;
+      font-size: 0.9rem;
       text-align: left;
       width: 85%;
+      color: var(--text-color);
+      border-radius: 4px;
+      transition: background-color 0.2s;
     }
+
+    .channel-btn:hover {
+      background-color: rgba(255,255,255,0.1);
+    }
+
+    .active-channel {
+      background-color: var(--secondary-color) !important;
+      color: white;
+      font-weight: bold;
+    }
+
     .pin-btn {
       padding: 4px 8px;
       border: none;
-      background: #666;
-      color: white;
+      background: rgba(255,255,255,0.1);
+      color: var(--text-color);
       cursor: pointer;
       border-radius: 3px;
       margin-left: 5px;
       font-size: 12px;
+      transition: background-color 0.2s;
     }
+
     .pin-btn.pinned {
-      background: #f1c40f;
+      background: var(--accent-color);
     }
-    .active-channel {
-      background-color: #525e53;
+
+    .add-channel-btn, .join-channel-btn, .copy-join-code-btn {
+      background-color: var(--secondary-color);
       color: white;
+      border: none;
+      padding: 0.8rem 1rem;
+      margin-top: 1rem;
+      cursor: pointer;
+      border-radius: 4px;
       font-weight: bold;
+      transition: background-color 0.2s;
+      width: 100%;
     }
-    /* Online Users Styling */
-    .users-sidebar {
-      padding: 10px;
+
+    .add-channel-btn:hover, .join-channel-btn:hover {
+      background-color: #2980b9;
     }
-    .users-list {
-      list-style-type: none;
-      padding: 0;
-      margin: 0;
+
+    .chat-area {
+      display: flex;
+      flex-direction: column;
+      background-color: var(--background-color);
     }
-    .user-item {
+
+    .chat-header {
+      padding: 1rem;
+      background-color: var(--primary-color);
       display: flex;
       align-items: center;
-      margin-bottom: 10px;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
     }
-    .user-item img {
-      width: 30px;
-      height: 30px;
-      border-radius: 50%;
-      margin-right: 10px;
+
+    .chat-header h2 {
+      margin: 0;
+      color: var(--secondary-color);
     }
-    .user-status {
+
+    .messages {
+      flex-grow: 1;
+      padding: 1rem;
+      overflow-y: auto;
+    }
+
+    .message {
+      margin-bottom: 1rem;
+      padding: 0.8rem;
+      background-color: rgba(255,255,255,0.05);
+      border-radius: 4px;
+    }
+
+    .message-content {
+      color: var(--text-color);
+    }
+
+    .sender {
+      font-weight: bold;
+      color: var(--secondary-color);
+      margin-bottom: 0.5rem;
+      display: block;
+    }
+
+    .message-input {
+      padding: 1rem;
+      background-color: var(--primary-color);
+      display: flex;
+      gap: 1rem;
+    }
+
+    textarea {
+      flex-grow: 1;
+      padding: 0.8rem;
+      border: none;
+      border-radius: 4px;
+      background-color: rgba(255,255,255,0.1);
+      color: var(--text-color);
+      resize: none;
+      height: 40px;
+    }
+
+    .send-btn {
+      padding: 0.8rem 1.5rem;
+      background-color: var(--secondary-color);
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .send-btn:hover {
+      background-color: #2980b9;
+    }
+
+    /* Scrollbar Styling */
+    ::-webkit-scrollbar {
       width: 8px;
-      height: 8px;
-      background-color: #34c759;
-      border-radius: 50%;
-      margin-right: 5px;
     }
-    .user-name {
-      font-size: 14px;
-      font-weight: 500;
+
+    ::-webkit-scrollbar-track {
+      background: rgba(255,255,255,0.1);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--secondary-color);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #2980b9;
     }
 </style>
 </head>
@@ -120,10 +261,6 @@
 <button id="send-button" class="send-btn">Send</button>
 </div>
 </main>
-<aside class="users-sidebar">
-<h3>Online Users</h3>
-<ul id="users-list" class="users-list"></ul>
-</aside>
 </div>
 <script>
 const firebaseConfig = {
@@ -149,73 +286,23 @@ let currentChannel = 'general';
 auth.onAuthStateChanged(user => {
   if (user) {
     currentUser = user;
-    // Create user document if it doesn't exist
     const userDocRef = db.collection('users').doc(user.uid);
     userDocRef.get().then(doc => {
       if (!doc.exists) {
         userDocRef.set({
           displayName: user.displayName || 'User',
           photoURL: user.photoURL || 'https://via.placeholder.com/40',
-          channels: [{id: 'general', name: 'general', pinned: true}], // Add default general channel as pinned
-          pinnedChannels: ['general'] // Add pinnedChannels array
+          channels: [{id: 'general', name: 'general', pinned: true}],
+          pinnedChannels: ['general']
         });
       }
       loadUserData();
       loadUserChannels();
-      updateOnlineStatus(true);
-      listenForOnlineUsers();
     });
   } else {
     window.location.href = 'index.html';
   }
 });
-
-function updateOnlineStatus(online) {
-  if (currentUser) {
-    const userStatusRef = rtdb.ref(`status/${currentUser.uid}`);
-    userStatusRef.set({
-      online: online,
-      lastSeen: firebase.database.ServerValue.TIMESTAMP
-    });
-    userStatusRef.onDisconnect().set({
-      online: false,
-      lastSeen: firebase.database.ServerValue.TIMESTAMP
-    });
-  }
-}
-
-window.addEventListener('beforeunload', () => {
-  updateOnlineStatus(false);
-});
-
-function listenForOnlineUsers() {
-  rtdb.ref("status").on("value", (snapshot) => {
-    const usersList = document.getElementById("users-list");
-    usersList.innerHTML = "";
-    snapshot.forEach(userSnapshot => {
-      const userStatus = userSnapshot.val();
-      if (userStatus.online) {
-        const li = document.createElement("li");
-        li.className = "user-item";
-        const statusDot = document.createElement("span");
-        statusDot.className = "user-status";
-
-        const avatar = document.createElement("img");
-        avatar.src = "https://via.placeholder.com/30";
-        avatar.alt = "User avatar";
-
-        const nameSpan = document.createElement("span");
-        nameSpan.className = "user-name";
-        nameSpan.textContent = userSnapshot.key;
-
-        li.appendChild(statusDot);
-        li.appendChild(avatar);
-        li.appendChild(nameSpan);
-        usersList.appendChild(li);
-      }
-    });
-  });
-}
 
 function loadUserData() {
   const userDocRef = db.collection('users').doc(currentUser.uid);
@@ -236,19 +323,16 @@ function loadUserChannels() {
       const channelsList = document.getElementById('channels-list');
       channelsList.innerHTML = '';
       
-      // First display pinned channels
       if (data.channels && Array.isArray(data.channels)) {
         const pinnedChannels = data.channels.filter(channel => channel.pinned);
         const unpinnedChannels = data.channels.filter(channel => !channel.pinned);
         
-        // Display pinned channels first
         pinnedChannels.forEach(channel => {
           if (channel && channel.id && channel.name) {
             displayChannel(channel.id, channel.name, true);
           }
         });
         
-        // Then display unpinned channels
         unpinnedChannels.forEach(channel => {
           if (channel && channel.id && channel.name) {
             displayChannel(channel.id, channel.name, false);
@@ -256,7 +340,6 @@ function loadUserChannels() {
         });
       }
       
-      // Load last active channel if exists
       if (data.currentChannel) {
         loadMessages(data.currentChannel);
         setActiveChannel(data.currentChannel);
