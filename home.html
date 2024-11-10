@@ -221,8 +221,8 @@
         <div class="channels">
             <h3>Text Channels</h3>
             <ul class="channels-list" id="channels-list"></ul>
-            <button class="add-channel-btn" id="add-channel" disabled>Add Channel</button>
-            <button class="join-channel-btn" id="join-channel" disabled>Join Channel</button>
+            <button class="add-channel-btn" id="add-channel">Add Channel</button>
+            <button class="join-channel-btn" id="join-channel">Join Channel</button>
         </div>
         <div class="user-profile">
             <img class="avatar" id="user-avatar" src="https://via.placeholder.com/40" alt="User avatar">
@@ -257,6 +257,7 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 
 let currentUser;
+let currentChannel = 'general';
 
 auth.onAuthStateChanged(user => {
   if (user) {
@@ -281,6 +282,10 @@ auth.onAuthStateChanged(user => {
       
       document.getElementById('user-name').textContent = userData.displayName;
       document.getElementById('user-avatar').src = userData.photoURL;
+      
+      // Enable buttons after user is authenticated
+      document.getElementById('add-channel').removeAttribute('disabled');
+      document.getElementById('join-channel').removeAttribute('disabled');
     }).catch(error => {
       console.error("Error handling user data:", error);
     });
@@ -299,7 +304,9 @@ function loadChannels() {
     if (snapshot.empty) {
       return db.collection('channels').doc('general').set({
         name: 'general',
-        id: 'general'
+        id: 'general',
+        createdBy: currentUser.uid,
+        joinCode: generateJoinCode()
       }).then(() => db.collection('channels').get());
     }
     return snapshot;
@@ -310,6 +317,13 @@ function loadChannels() {
       const button = document.createElement('button');
       button.className = 'channel-btn';
       button.textContent = `# ${channel.name}`;
+      button.onclick = () => {
+        currentChannel = channel.id;
+        loadMessages(channel.id);
+        // Update active channel styling
+        document.querySelectorAll('.channel-btn').forEach(btn => btn.classList.remove('active-channel'));
+        button.classList.add('active-channel');
+      };
       channelElement.appendChild(button);
       channelsList.appendChild(channelElement);
     });
@@ -318,6 +332,60 @@ function loadChannels() {
     console.error("Error loading channels:", error);
   });
 }
+
+function generateJoinCode() {
+  return Math.random().toString(36).substring(2, 8).toUpperCase();
+}
+
+document.getElementById('add-channel').addEventListener('click', () => {
+  const channelName = prompt('Enter channel name:');
+  if (channelName) {
+    const channelId = channelName.toLowerCase().replace(/\s+/g, '-');
+    db.collection('channels').doc(channelId).set({
+      name: channelName,
+      id: channelId,
+      createdBy: currentUser.uid,
+      joinCode: generateJoinCode()
+    }).then(() => {
+      loadChannels();
+    }).catch(error => {
+      console.error("Error creating channel:", error);
+    });
+  }
+});
+
+document.getElementById('join-channel').addEventListener('click', () => {
+  const joinCode = prompt('Enter channel join code:');
+  if (joinCode) {
+    db.collection('channels').where('joinCode', '==', joinCode).get()
+      .then(snapshot => {
+        if (!snapshot.empty) {
+          const channel = snapshot.docs[0].data();
+          currentChannel = channel.id;
+          loadMessages(channel.id);
+          loadChannels();
+        } else {
+          alert('Invalid join code');
+        }
+      }).catch(error => {
+        console.error("Error joining channel:", error);
+      });
+  }
+});
+
+document.getElementById('copy-join-code').addEventListener('click', () => {
+  db.collection('channels').doc(currentChannel).get()
+    .then(doc => {
+      if (doc.exists) {
+        const joinCode = doc.data().joinCode;
+        navigator.clipboard.writeText(joinCode).then(() => {
+          alert('Join code copied to clipboard: ' + joinCode);
+        });
+      }
+    }).catch(error => {
+      console.error("Error copying join code:", error);
+    });
+});
 
 function loadMessages(channelId) {
   const messagesContainer = document.getElementById('messages');
@@ -350,6 +418,33 @@ function loadMessages(channelId) {
       console.error("Error loading messages:", error);
     });
 }
+
+// Add message sending functionality
+document.getElementById('send-button').addEventListener('click', () => {
+  const messageInput = document.getElementById('message-input');
+  const message = messageInput.value.trim();
+  
+  if (message && currentChannel) {
+    db.collection('channels').doc(currentChannel)
+      .collection('messages').add({
+        message: message,
+        sender: currentUser.displayName || 'User',
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(() => {
+        messageInput.value = '';
+      }).catch(error => {
+        console.error("Error sending message:", error);
+      });
+  }
+});
+
+// Allow sending messages with Enter key
+document.getElementById('message-input').addEventListener('keypress', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    document.getElementById('send-button').click();
+  }
+});
 </script>
 </body>
 </html>
