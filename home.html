@@ -41,7 +41,20 @@
       cursor: pointer;
       font-size: 16px;
       text-align: left;
-      width: 100%;
+      width: 85%;
+    }
+    .pin-btn {
+      padding: 4px 8px;
+      border: none;
+      background: #666;
+      color: white;
+      cursor: pointer;
+      border-radius: 3px;
+      margin-left: 5px;
+      font-size: 12px;
+    }
+    .pin-btn.pinned {
+      background: #f1c40f;
     }
     .active-channel {
       background-color: #525e53;
@@ -143,7 +156,8 @@ auth.onAuthStateChanged(user => {
         userDocRef.set({
           displayName: user.displayName || 'User',
           photoURL: user.photoURL || 'https://via.placeholder.com/40',
-          channels: [{id: 'general', name: 'general'}] // Add default general channel
+          channels: [{id: 'general', name: 'general', pinned: true}], // Add default general channel as pinned
+          pinnedChannels: ['general'] // Add pinnedChannels array
         });
       }
       loadUserData();
@@ -216,22 +230,32 @@ function loadUserData() {
 
 function loadUserChannels() {
   const userDocRef = db.collection('users').doc(currentUser.uid);
-  userDocRef.onSnapshot(doc => { // Use onSnapshot instead of get() to listen for changes
+  userDocRef.onSnapshot(doc => {
     if (doc.exists) {
       const data = doc.data();
       const channelsList = document.getElementById('channels-list');
       channelsList.innerHTML = '';
+      
+      // First display pinned channels
       if (data.channels && Array.isArray(data.channels)) {
-        data.channels.forEach(channel => {
-          if (channel && channel.id && channel.name) { // Add validation
-            displayChannel(channel.id, channel.name);
-            // If this is the last active channel, mark it as active in the channels list
-            if (data.currentChannel === channel.id) {
-              setActiveChannel(channel.id);
-            }
+        const pinnedChannels = data.channels.filter(channel => channel.pinned);
+        const unpinnedChannels = data.channels.filter(channel => !channel.pinned);
+        
+        // Display pinned channels first
+        pinnedChannels.forEach(channel => {
+          if (channel && channel.id && channel.name) {
+            displayChannel(channel.id, channel.name, true);
+          }
+        });
+        
+        // Then display unpinned channels
+        unpinnedChannels.forEach(channel => {
+          if (channel && channel.id && channel.name) {
+            displayChannel(channel.id, channel.name, false);
           }
         });
       }
+      
       // Load last active channel if exists
       if (data.currentChannel) {
         loadMessages(data.currentChannel);
@@ -244,12 +268,21 @@ function loadUserChannels() {
   });
 }
 
-function displayChannel(channelId, channelName) {
+function displayChannel(channelId, channelName, isPinned) {
   const channelsList = document.getElementById('channels-list');
   const li = document.createElement('li');
   const button = document.createElement('button');
   button.className = 'channel-btn';
   button.textContent = `# ${channelName}`;
+
+  const pinButton = document.createElement('button');
+  pinButton.className = `pin-btn ${isPinned ? 'pinned' : ''}`;
+  pinButton.textContent = isPinned ? '📌' : '📍';
+  
+  pinButton.onclick = (e) => {
+    e.stopPropagation();
+    toggleChannelPin(channelId, !isPinned);
+  };
 
   button.onclick = () => {
     loadMessages(channelId);
@@ -258,12 +291,32 @@ function displayChannel(channelId, channelName) {
   };
 
   li.appendChild(button);
+  li.appendChild(pinButton);
   li.dataset.channelId = channelId;
   channelsList.appendChild(li);
 }
 
+function toggleChannelPin(channelId, pinned) {
+  const userDocRef = db.collection('users').doc(currentUser.uid);
+  userDocRef.get().then(doc => {
+    if (doc.exists) {
+      const data = doc.data();
+      const updatedChannels = data.channels.map(channel => {
+        if (channel.id === channelId) {
+          return {...channel, pinned: pinned};
+        }
+        return channel;
+      });
+      
+      userDocRef.update({
+        channels: updatedChannels
+      });
+    }
+  });
+}
+
 function setActiveChannel(channelId) {
-  const channelButtons = document.querySelectorAll('.channels-list li button');
+  const channelButtons = document.querySelectorAll('.channels-list li button.channel-btn');
   channelButtons.forEach(btn => btn.classList.remove('active-channel'));
 
   const activeButton = [...channelButtons].find(btn =>
@@ -276,7 +329,7 @@ function setActiveChannel(channelId) {
 }
 
 function loadMessages(channelId) {
-  if (!channelId) return; // Add validation
+  if (!channelId) return;
   
   currentChannel = channelId;
   db.collection('channels').doc(channelId).get().then(doc => {
@@ -329,9 +382,9 @@ document.getElementById('add-channel').onclick = () => {
     db.collection('channels').doc(channelId).set(channelData).then(() => {
       const userDocRef = db.collection('users').doc(currentUser.uid);
       userDocRef.update({
-        channels: firebase.firestore.FieldValue.arrayUnion({id: channelId, name: channelName})
+        channels: firebase.firestore.FieldValue.arrayUnion({id: channelId, name: channelName, pinned: false})
       }).then(() => {
-        displayChannel(channelId, channelName);
+        displayChannel(channelId, channelName, false);
       });
     });
   }
@@ -345,9 +398,9 @@ document.getElementById('join-channel').onclick = () => {
         const channelData = doc.data();
         const userDocRef = db.collection('users').doc(currentUser.uid);
         userDocRef.update({
-          channels: firebase.firestore.FieldValue.arrayUnion({id: channelCode, name: channelData.name})
+          channels: firebase.firestore.FieldValue.arrayUnion({id: channelCode, name: channelData.name, pinned: false})
         }).then(() => {
-          displayChannel(channelCode, channelData.name);
+          displayChannel(channelCode, channelData.name, false);
           alert(`Successfully joined channel: #${channelData.name}`);
         });
       } else {
