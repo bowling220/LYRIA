@@ -8,8 +8,8 @@
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 <style>
-    /* Button Styles */
     .add-channel-btn, .join-channel-btn, .copy-join-code-btn {
       background-color: #4CAF50;
       color: white;
@@ -23,7 +23,6 @@
     .add-channel-btn:hover, .join-channel-btn:hover, .copy-join-code-btn:hover {
       background-color: #45a049;
     }
-    /* Join Code Button */
     .copy-join-code-btn {
       background-color: #2196F3;
       margin-left: 10px;
@@ -31,7 +30,6 @@
     .copy-join-code-btn:hover {
       background-color: #0b7dda;
     }
-    /* Channel Button */
     .channel-btn {
       padding: 8px;
       border: none;
@@ -41,7 +39,6 @@
       text-align: left;
       width: 100%;
     }
-    /* Active Channel Styling */
     .active-channel {
       background-color: #525e53;
       color: white;
@@ -88,13 +85,15 @@ const firebaseConfig = {
       storageBucket: "lyria-cfc06.appspot.com",
       messagingSenderId: "309881717815",
       appId: "1:309881717815:web:c8e9a4007341ab17ecebb2",
-      measurementId: "G-0EMBBE255Z"
+      measurementId: "G-0EMBBE255Z",
+      databaseURL: "https://lyria-cfc06-default-rtdb.firebaseio.com"
     };
 
 firebase.initializeApp(firebaseConfig);
 
 const auth = firebase.auth();
 const db = firebase.firestore();
+const rtdb = firebase.database();
 
 let currentUser;
 let currentChannel = 'general';
@@ -102,22 +101,25 @@ let currentChannel = 'general';
 auth.onAuthStateChanged(user => {
   if (user) {
     currentUser = user;
-    console.log("User signed in:", user.uid);
     loadUserData();
     loadUserChannels();
     updateOnlineStatus(true);
+    listenForOnlineUsers();
   } else {
-    console.log("No user signed in, redirecting to login.");
     window.location.href = 'index.html';
   }
 });
 
 function updateOnlineStatus(online) {
   if (currentUser) {
-    const userStatusRef = db.collection('users').doc(currentUser.uid);
-    userStatusRef.update({
+    const userStatusRef = rtdb.ref(`status/${currentUser.uid}`);
+    userStatusRef.set({
       online: online,
-      lastSeen: firebase.firestore.FieldValue.serverTimestamp()
+      lastSeen: firebase.database.ServerValue.TIMESTAMP
+    });
+    userStatusRef.onDisconnect().set({
+      online: false,
+      lastSeen: firebase.database.ServerValue.TIMESTAMP
     });
   }
 }
@@ -125,6 +127,21 @@ function updateOnlineStatus(online) {
 window.addEventListener('beforeunload', () => {
   updateOnlineStatus(false);
 });
+
+function listenForOnlineUsers() {
+  rtdb.ref("status").on("value", (snapshot) => {
+    const usersList = document.getElementById("users-list");
+    usersList.innerHTML = "";
+    snapshot.forEach(userSnapshot => {
+      const userStatus = userSnapshot.val();
+      if (userStatus.online) {
+        const li = document.createElement("li");
+        li.textContent = userSnapshot.key;
+        usersList.appendChild(li);
+      }
+    });
+  });
+}
 
 function loadUserData() {
   const userDocRef = db.collection('users').doc(currentUser.uid);
@@ -134,7 +151,7 @@ function loadUserData() {
       document.getElementById('user-name').textContent = data.displayName || 'User';
       document.getElementById('user-avatar').src = data.photoURL || 'https://via.placeholder.com/40';
     }
-  }).catch(error => console.error("Error loading user data:", error));
+  });
 }
 
 function loadUserChannels() {
@@ -143,16 +160,14 @@ function loadUserChannels() {
     if (doc.exists) {
       const data = doc.data();
       const channelsList = document.getElementById('channels-list');
-      channelsList.innerHTML = ''; // Clear existing channels
+      channelsList.innerHTML = '';
       if (data.channels && Array.isArray(data.channels)) {
         data.channels.forEach(channel => {
           displayChannel(channel.id, channel.name);
         });
-      } else {
-        console.error("No channels found for the user.");
       }
     }
-  }).catch(error => console.error("Error loading channels:", error));
+  });
 }
 
 function displayChannel(channelId, channelName) {
@@ -169,7 +184,7 @@ function displayChannel(channelId, channelName) {
   };
 
   li.appendChild(button);
-  li.dataset.channelId = channelId; // Set a data attribute for easy reference
+  li.dataset.channelId = channelId;
   channelsList.appendChild(li);
 }
 
@@ -215,7 +230,6 @@ function loadMessages(channelId) {
     });
 }
 
-// Function to send a message
 function sendMessage() {
   const message = document.getElementById('message-input').value.trim();
   if (message && currentUser) {
@@ -225,7 +239,7 @@ function sendMessage() {
       timestamp: firebase.firestore.FieldValue.serverTimestamp()
     }).then(() => {
       document.getElementById('message-input').value = '';
-    }).catch(error => console.error("Error sending message:", error));
+    });
   }
 }
 
@@ -242,8 +256,8 @@ document.getElementById('add-channel').onclick = () => {
         channels: firebase.firestore.FieldValue.arrayUnion({id: channelId, name: channelName})
       }).then(() => {
         displayChannel(channelId, channelName);
-      }).catch(error => console.error("Error adding channel to user:", error));
-    }).catch(error => console.error("Error creating channel:", error));
+      });
+    });
   }
 };
 
@@ -259,22 +273,18 @@ document.getElementById('join-channel').onclick = () => {
         }).then(() => {
           displayChannel(channelCode, channelData.name);
           alert(`Successfully joined channel: #${channelData.name}`);
-        }).catch(error => console.error("Error joining channel:", error));
+        });
       } else {
         alert("Channel code not found. Please check and try again.");
       }
-    }).catch(error => console.error("Error finding channel:", error));
+    });
   }
 };
 
 document.getElementById('copy-join-code').onclick = () => {
   navigator.clipboard.writeText(currentChannel).then(() => {
     alert(`Join code copied: ${currentChannel}`);
-  }).catch(error => console.error("Error copying join code:", error));
-};
-
-document.getElementById('settings-btn').onclick = () => {
-  window.location.href = 'settings.html';
+  });
 };
 
 </script>
