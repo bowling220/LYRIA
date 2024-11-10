@@ -13,7 +13,7 @@
 <style>
     :root {
       --primary-color: #36393f;
-      --secondary-color: #7289da;
+      --secondary-color: #5865f2;
       --accent-color: #43b581;
       --text-color: #dcddde;
       --background-color: #2f3136;
@@ -30,24 +30,26 @@
       background-color: var(--primary-color);
       color: var(--text-color);
       height: 100vh;
+      overflow: hidden;
     }
 
     .top-header {
       background-color: var(--primary-color);
       padding: 0.8rem;
       border-bottom: 1px solid #202225;
+      text-align: center;
     }
 
     .top-header h1 {
       margin: 0;
-      font-size: 1.3rem;
+      font-size: 1.4rem;
       color: #fff;
       font-weight: 600;
     }
 
     .app-container {
       display: grid;
-      grid-template-columns: 240px 1fr;
+      grid-template-columns: 250px 1fr;
       height: calc(100vh - 48px);
     }
 
@@ -61,16 +63,17 @@
     .user-profile {
       padding: 1rem;
       background-color: #292b2f;
-      margin-top: auto;
       display: flex;
       align-items: center;
       gap: 0.5rem;
+      border-top: 1px solid #202225;
     }
 
     .avatar {
       width: 32px;
       height: 32px;
       border-radius: 50%;
+      border: 2px solid var(--secondary-color);
     }
 
     .username {
@@ -80,15 +83,15 @@
     }
 
     .channels {
-      padding: 0 0.8rem;
+      padding: 0 1rem;
       flex: 1;
     }
 
     .channels h3 {
       color: #8e9297;
       text-transform: uppercase;
-      font-size: 0.8rem;
-      padding: 1rem 0.5rem;
+      font-size: 0.85rem;
+      padding: 1rem 0 0.5rem;
       margin: 0;
     }
 
@@ -112,14 +115,9 @@
       align-items: center;
     }
 
-    .channel-btn:hover {
+    .channel-btn:hover, .active-channel {
       background-color: var(--channel-hover);
       color: var(--text-color);
-    }
-
-    .active-channel {
-      background-color: var(--channel-hover) !important;
-      color: var(--text-color) !important;
     }
 
     .pin-btn {
@@ -142,7 +140,7 @@
       color: var(--secondary-color);
     }
 
-    .add-channel-btn, .join-channel-btn, .copy-join-code-btn {
+    .add-channel-btn, .join-channel-btn {
       background-color: transparent;
       color: #8e9297;
       border: none;
@@ -178,7 +176,7 @@
 
     .chat-header h2 {
       margin: 0;
-      font-size: 1rem;
+      font-size: 1.1rem;
       color: var(--text-color);
       font-weight: 600;
     }
@@ -194,6 +192,7 @@
       margin-bottom: 1rem;
       padding: 0.5rem;
       border-radius: 4px;
+      transition: background-color 0.3s;
     }
 
     .message:hover {
@@ -202,6 +201,7 @@
 
     .message-content {
       color: var(--text-color);
+      line-height: 1.4;
     }
 
     .sender {
@@ -214,7 +214,9 @@
     .message-input {
       padding: 1rem;
       background-color: var(--primary-color);
-      margin: 0 1rem 1rem;
+      border-top: 1px solid #202225;
+      display: flex;
+      gap: 0.5rem;
     }
 
     textarea {
@@ -233,7 +235,18 @@
     }
 
     .send-btn {
-      display: none;
+      padding: 0.8rem 1rem;
+      background-color: var(--secondary-color);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    .send-btn:hover {
+      background-color: #4a5de2;
     }
 
     ::-webkit-scrollbar {
