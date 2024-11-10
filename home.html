@@ -10,6 +10,9 @@
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 <style>
+    body {
+      font-family: Arial, sans-serif;
+    }
     .add-channel-btn, .join-channel-btn, .copy-join-code-btn {
       background-color: #4CAF50;
       color: white;
@@ -43,6 +46,37 @@
       background-color: #525e53;
       color: white;
       font-weight: bold;
+    }
+    /* Online Users Styling */
+    .users-sidebar {
+      padding: 10px;
+    }
+    .users-list {
+      list-style-type: none;
+      padding: 0;
+      margin: 0;
+    }
+    .user-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .user-item img {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      margin-right: 10px;
+    }
+    .user-status {
+      width: 8px;
+      height: 8px;
+      background-color: #34c759;
+      border-radius: 50%;
+      margin-right: 5px;
+    }
+    .user-name {
+      font-size: 14px;
+      font-weight: 500;
     }
 </style>
 </head>
@@ -136,7 +170,21 @@ function listenForOnlineUsers() {
       const userStatus = userSnapshot.val();
       if (userStatus.online) {
         const li = document.createElement("li");
-        li.textContent = userSnapshot.key;
+        li.className = "user-item";
+        const statusDot = document.createElement("span");
+        statusDot.className = "user-status";
+
+        const avatar = document.createElement("img");
+        avatar.src = "https://via.placeholder.com/30"; // Placeholder; replace with user photoURL if available
+        avatar.alt = "User avatar";
+
+        const nameSpan = document.createElement("span");
+        nameSpan.className = "user-name";
+        nameSpan.textContent = userSnapshot.key;
+
+        li.appendChild(statusDot);
+        li.appendChild(avatar);
+        li.appendChild(nameSpan);
         usersList.appendChild(li);
       }
     });
@@ -286,6 +334,13 @@ document.getElementById('copy-join-code').onclick = () => {
     alert(`Join code copied: ${currentChannel}`);
   });
 };
+
+function saveCurrentChannel(channelId) {
+  const userDocRef = db.collection('users').doc(currentUser.uid);
+  userDocRef.update({
+    currentChannel: channelId
+  }).catch(error => console.error("Error saving current channel:", error));
+}
 
 </script>
 </body>
