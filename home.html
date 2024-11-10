@@ -3,277 +3,243 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self' https://*.googleapis.com https://*.gstatic.com https://*.firebaseio.com wss://*.firebaseio.com; connect-src 'self' https://*.googleapis.com https://*.gstatic.com https://*.firebaseio.com wss://*.firebaseio.com https://firestore.googleapis.com https://*.firestore.googleapis.com https://apis.google.com https://lyria-cfc06-default-rtdb.firebaseio.com https://*.firebaseapp.com https://*.cloudfunctions.net https://*.s-usc1b-nss-2156.firebaseio.com https://securetoken.googleapis.com https://*.firebase.googleapis.com; script-src 'self' 'unsafe-inline' https://*.googleapis.com https://*.gstatic.com https://apis.google.com https://*.firebaseio.com https://*.firebaseapp.com; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; frame-src 'self' https://*.firebaseapp.com https://*.firebaseio.com;">
-<title>LYRIA Chat</title>
-<link rel="stylesheet" href="styles.css">
+<title>LYRIA Chat - Home</title>
+<link rel="stylesheet" href="style.css">
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 <style>
-    :root {
-        --primary-color: #36393f;
-        --secondary-color: #5865f2;
-        --accent-color: #43b581;
-        --text-color: #dcddde;
-        --background-color: #2f3136;
-        --channel-hover: #42464d;
-        --message-hover: #32353b;
-        --sidebar-color: #202225;
-        --input-bg-color: #40444b;
-    }
+  /* Basic styling for chat interface */
+  :root {
+    --primary-color: #36393f;
+    --secondary-color: #5865f2;
+    --accent-color: #43b581;
+    --text-color: #dcddde;
+    --background-color: #2f3136;
+    --channel-hover: #42464d;
+    --message-hover: #32353b;
+    --sidebar-color: #202225;
+  }
 
-    body {
-        font-family: 'Whitney', Arial, sans-serif;
-        margin: 0;
-        background-color: var(--primary-color);
-        color: var(--text-color);
-        display: flex;
-        flex-direction: column;
-        height: 100vh;
-        overflow: hidden;
-    }
+  body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    background-color: var(--primary-color);
+    color: var(--text-color);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+  }
 
-    .top-header {
-        background-color: var(--sidebar-color);
-        color: #fff;
-        text-align: center;
-        padding: 1rem;
-        font-size: 1.5rem;
-        font-weight: bold;
-    }
+  .top-header {
+    background-color: var(--sidebar-color);
+    color: #fff;
+    text-align: center;
+    padding: 1rem;
+    font-size: 1.5rem;
+    font-weight: bold;
+  }
 
-    .app-container {
-        display: flex;
-        height: 100%;
-    }
+  .app-container {
+    display: flex;
+    height: 100%;
+  }
 
-    /* Sidebar */
-    .sidebar {
-        background-color: var(--sidebar-color);
-        width: 250px;
-        display: flex;
-        flex-direction: column;
-        overflow: auto;
-    }
+  /* Sidebar */
+  .sidebar {
+    background-color: var(--sidebar-color);
+    width: 250px;
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+  }
 
-    .channels {
-        flex: 1;
-        padding: 1rem;
-    }
+  .channels {
+    flex: 1;
+    padding: 1rem;
+  }
 
-    .channels h3 {
-        font-size: 1rem;
-        color: #8e9297;
-        margin-bottom: 1rem;
-        border-bottom: 1px solid #292b2f;
-        padding-bottom: 0.5rem;
-        text-transform: uppercase;
-    }
+  .channels h3 {
+    font-size: 1rem;
+    color: #8e9297;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid #292b2f;
+    padding-bottom: 0.5rem;
+    text-transform: uppercase;
+  }
 
-    .channels-list {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-    }
+  .channels-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
 
-    .channel-btn {
-        display: flex;
-        align-items: center;
-        padding: 0.6rem 1rem;
-        color: #8e9297;
-        background: none;
-        border: none;
-        cursor: pointer;
-        border-radius: 4px;
-        font-size: 1rem;
-        width: 100%;
-        transition: background 0.3s;
-    }
+  .channel-btn {
+    display: flex;
+    align-items: center;
+    padding: 0.6rem 1rem;
+    color: #8e9297;
+    background: none;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 1rem;
+    width: 100%;
+    transition: background 0.3s;
+  }
 
-    .channel-btn:hover, .channel-btn.active-channel {
-        background-color: var(--channel-hover);
-        color: var(--text-color);
-    }
+  .channel-btn:hover, .channel-btn.active-channel {
+    background-color: var(--channel-hover);
+    color: var(--text-color);
+  }
 
-    .pin-btn {
-        margin-left: auto;
-        opacity: 0;
-        font-size: 0.8rem;
-        color: #8e9297;
-        transition: opacity 0.2s;
-    }
+  .add-channel-btn, .join-channel-btn {
+    width: 100%;
+    padding: 0.5rem;
+    background-color: var(--background-color);
+    color: #8e9297;
+    border: none;
+    border-radius: 4px;
+    margin-top: 1rem;
+    cursor: pointer;
+    transition: background 0.3s;
+    font-size: 1rem;
+    text-align: left;
+  }
 
-    .channel-btn:hover .pin-btn, .pin-btn.pinned {
-        opacity: 1;
-        color: var(--secondary-color);
-    }
+  .add-channel-btn:hover, .join-channel-btn:hover {
+    background-color: var(--channel-hover);
+    color: var(--text-color);
+  }
 
-    .add-channel-btn, .join-channel-btn {
-        width: 100%;
-        padding: 0.5rem;
-        background-color: var(--input-bg-color);
-        color: #8e9297;
-        border: none;
-        border-radius: 4px;
-        margin-top: 1rem;
-        cursor: pointer;
-        transition: background 0.3s;
-        font-size: 1rem;
-        text-align: left;
-    }
+  .user-profile {
+    padding: 1rem;
+    background-color: #292b2f;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
 
-    .add-channel-btn:hover, .join-channel-btn:hover {
-        background-color: var(--channel-hover);
-        color: var(--text-color);
-    }
+  .avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid var(--secondary-color);
+  }
 
-    .user-profile {
-        padding: 1rem;
-        background-color: #292b2f;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
+  .username {
+    font-weight: bold;
+    font-size: 1rem;
+  }
 
-    .avatar {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        border: 2px solid var(--secondary-color);
-    }
+  /* Main Chat Area */
+  .chat-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--background-color);
+  }
 
-    .username {
-        font-weight: bold;
-        font-size: 1rem;
-    }
+  .chat-header {
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #202225;
+    background-color: var(--primary-color);
+    color: var(--text-color);
+    font-weight: bold;
+  }
 
-    /* Main Chat Area */
-    .chat-area {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        background-color: var(--background-color);
-    }
+  .messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+    background-color: var(--primary-color);
+  }
 
-    .chat-header {
-        padding: 1rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border-bottom: 1px solid #202225;
-        background-color: var(--primary-color);
-        color: var(--text-color);
-        font-weight: bold;
-    }
+  .message {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 1rem;
+    padding: 0.5rem;
+    background-color: var(--message-hover);
+    border-radius: 5px;
+  }
 
-    .messages {
-        flex: 1;
-        overflow-y: auto;
-        padding: 1rem;
-        background-color: var(--primary-color);
-    }
+  .sender {
+    font-weight: bold;
+    font-size: 1rem;
+    color: var(--secondary-color);
+    margin-bottom: 0.2rem;
+  }
 
-    .message {
-        display: flex;
-        flex-direction: column;
-        margin-bottom: 1rem;
-        padding: 0.5rem;
-        background-color: var(--message-hover);
-        border-radius: 5px;
-    }
+  .message-content {
+    font-size: 0.95rem;
+  }
 
-    .sender {
-        font-weight: bold;
-        font-size: 1rem;
-        color: var(--secondary-color);
-        margin-bottom: 0.2rem;
-    }
+  .message-input {
+    display: flex;
+    padding: 1rem;
+    border-top: 1px solid #202225;
+    background-color: var(--primary-color);
+  }
 
-    .message-content {
-        font-size: 0.95rem;
-    }
+  textarea {
+    flex: 1;
+    padding: 0.8rem;
+    background-color: var(--background-color);
+    border: none;
+    border-radius: 8px;
+    color: var(--text-color);
+    font-size: 1rem;
+    resize: none;
+  }
 
-    .message-input {
-        display: flex;
-        padding: 1rem;
-        border-top: 1px solid #202225;
-        background-color: var(--primary-color);
-    }
+  .send-btn {
+    background-color: var(--secondary-color);
+    color: #fff;
+    padding: 0.8rem 1rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    margin-left: 0.5rem;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
 
-    textarea {
-        flex: 1;
-        padding: 0.8rem;
-        background-color: var(--input-bg-color);
-        border: none;
-        border-radius: 8px;
-        color: var(--text-color);
-        font-size: 1rem;
-        resize: none;
-        transition: background 0.3s;
-    }
-
-    .send-btn {
-        background-color: var(--secondary-color);
-        color: #fff;
-        padding: 0.8rem 1rem;
-        border: none;
-        border-radius: 8px;
-        font-weight: bold;
-        margin-left: 0.5rem;
-        cursor: pointer;
-        transition: background 0.3s;
-    }
-
-    .send-btn:hover {
-        background-color: #4a5de2;
-    }
-
-    /* Scrollbar styling */
-    ::-webkit-scrollbar {
-        width: 10px;
-    }
-
-    ::-webkit-scrollbar-track {
-        background: #2f3136;
-    }
-
-    ::-webkit-scrollbar-thumb {
-        background: #202225;
-        border-radius: 4px;
-    }
-
-    ::-webkit-scrollbar-thumb:hover {
-        background: #5865f2;
-    }
+  .send-btn:hover {
+    background-color: #4a5de2;
+  }
 </style>
 </head>
 <body>
-<header class="top-header"><h1>LYRIA</h1></header>
+<header class="top-header">LYRIA Chat</header>
 <div class="app-container">
-<nav class="sidebar">
-<div class="channels">
-<h3>Text Channels</h3>
-<ul class="channels-list" id="channels-list"></ul>
-<button class="add-channel-btn" id="add-channel">+ Create Channel</button>
-<button class="join-channel-btn" id="join-channel">Join Channel</button>
-</div>
-<div class="user-profile">
-<img class="avatar" id="user-avatar" src="https://via.placeholder.com/40" alt="User avatar">
-<span class="username" id="user-name">Username</span>
-</div>
-</nav>
-<main class="chat-area">
-<header class="chat-header">
-<h2 id="channel-title"># general</h2>
-<button id="copy-join-code" class="copy-join-code-btn">Copy Invite Code</button>
-</header>
-<div class="messages" id="messages"></div>
-<div class="message-input">
-<textarea id="message-input" placeholder="Message #general"></textarea>
-<button id="send-button" class="send-btn">Send</button>
-</div>
-</main>
+    <nav class="sidebar">
+        <div class="channels">
+            <h3>Text Channels</h3>
+            <ul class="channels-list" id="channels-list"></ul>
+            <button class="add-channel-btn" id="add-channel" disabled>Add Channel</button>
+            <button class="join-channel-btn" id="join-channel" disabled>Join Channel</button>
+        </div>
+        <div class="user-profile">
+            <img class="avatar" id="user-avatar" src="https://via.placeholder.com/40" alt="User avatar">
+            <span class="username" id="user-name">Username</span>
+        </div>
+    </nav>
+    <main class="chat-area">
+        <header class="chat-header">
+            <h2 id="channel-title"># general</h2>
+            <button id="copy-join-code" class="copy-join-code-btn">Copy Invite Code</button>
+        </header>
+        <div class="messages" id="messages"></div>
+        <div class="message-input">
+            <textarea id="message-input" placeholder="Message #general"></textarea>
+            <button id="send-button" class="send-btn">Send</button>
+        </div>
+    </main>
 </div>
 <script>
 const firebaseConfig = {
@@ -286,247 +252,81 @@ const firebaseConfig = {
       measurementId: "G-0EMBBE255Z",
       databaseURL: "https://lyria-cfc06-default-rtdb.firebaseio.com"
     };
-
 firebase.initializeApp(firebaseConfig);
-
 const auth = firebase.auth();
 const db = firebase.firestore();
-const rtdb = firebase.database();
 
 let currentUser;
-let currentChannel = 'general';
 
 auth.onAuthStateChanged(user => {
   if (user) {
     currentUser = user;
     const userDocRef = db.collection('users').doc(user.uid);
     userDocRef.get().then(doc => {
-      if (!doc.exists) {
-        userDocRef.set({
-          displayName: user.displayName || 'User',
-          photoURL: user.photoURL || 'https://via.placeholder.com/40',
-          channels: [{id: 'general', name: 'general', pinned: true}],
-          pinnedChannels: ['general']
-        });
+      const userData = doc.data();
+      document.getElementById('user-name').textContent = userData.displayName || 'User';
+      document.getElementById('user-avatar').src = userData.photoURL || 'https://via.placeholder.com/40';
+
+      // If the user is a guest, disable specific features
+      if (userData.role === 'guest') {
+        document.getElementById('add-channel').disabled = true;
+        document.getElementById('join-channel').disabled = true;
+        document.getElementById('send-button').textContent = 'Send as Guest';
+      } else {
+        document.getElementById('add-channel').disabled = false;
+        document.getElementById('join-channel').disabled = false;
       }
-      loadUserData();
-      loadUserChannels();
     });
+    loadChannels();
   } else {
-    window.location.href = 'index.html';
+    window.location.href = 'login.html';
   }
 });
 
-function loadUserData() {
-  const userDocRef = db.collection('users').doc(currentUser.uid);
-  userDocRef.get().then(doc => {
-    if (doc.exists) {
-      const data = doc.data();
-      document.getElementById('user-name').textContent = data.displayName || 'User';
-      document.getElementById('user-avatar').src = data.photoURL || 'https://via.placeholder.com/40';
-    }
-  });
-}
-
-function loadUserChannels() {
-  const userDocRef = db.collection('users').doc(currentUser.uid);
-  userDocRef.onSnapshot(doc => {
-    if (doc.exists) {
-      const data = doc.data();
-      const channelsList = document.getElementById('channels-list');
-      channelsList.innerHTML = '';
-      
-      if (data.channels && Array.isArray(data.channels)) {
-        const pinnedChannels = data.channels.filter(channel => channel.pinned);
-        const unpinnedChannels = data.channels.filter(channel => !channel.pinned);
-        
-        pinnedChannels.forEach(channel => {
-          if (channel && channel.id && channel.name) {
-            displayChannel(channel.id, channel.name, true);
-          }
-        });
-        
-        unpinnedChannels.forEach(channel => {
-          if (channel && channel.id && channel.name) {
-            displayChannel(channel.id, channel.name, false);
-          }
-        });
-      }
-      
-      if (data.currentChannel) {
-        loadMessages(data.currentChannel);
-        setActiveChannel(data.currentChannel);
-      } else {
-        loadMessages('general');
-        setActiveChannel('general');
-      }
-    }
-  });
-}
-
-function displayChannel(channelId, channelName, isPinned) {
+function loadChannels() {
   const channelsList = document.getElementById('channels-list');
-  const li = document.createElement('li');
-  const button = document.createElement('button');
-  button.className = 'channel-btn';
-  button.textContent = `# ${channelName}`;
-
-  const pinButton = document.createElement('button');
-  pinButton.className = `pin-btn ${isPinned ? 'pinned' : ''}`;
-  pinButton.textContent = isPinned ? '📌' : '📍';
-  
-  pinButton.onclick = (e) => {
-    e.stopPropagation();
-    toggleChannelPin(channelId, !isPinned);
-  };
-
-  button.onclick = () => {
-    loadMessages(channelId);
-    setActiveChannel(channelId);
-    saveCurrentChannel(channelId);
-  };
-
-  li.appendChild(button);
-  li.appendChild(pinButton);
-  li.dataset.channelId = channelId;
-  channelsList.appendChild(li);
-}
-
-function toggleChannelPin(channelId, pinned) {
-  const userDocRef = db.collection('users').doc(currentUser.uid);
-  userDocRef.get().then(doc => {
-    if (doc.exists) {
-      const data = doc.data();
-      const updatedChannels = data.channels.map(channel => {
-        if (channel.id === channelId) {
-          return {...channel, pinned: pinned};
-        }
-        return channel;
-      });
-      
-      userDocRef.update({
-        channels: updatedChannels
-      });
-    }
+  db.collection('channels').get().then(snapshot => {
+    snapshot.forEach(doc => {
+      const channel = doc.data();
+      const channelElement = document.createElement('li');
+      const button = document.createElement('button');
+      button.className = 'channel-btn';
+      button.textContent = `# ${channel.name}`;
+      button.onclick = () => loadMessages(channel.id);
+      channelElement.appendChild(button);
+      channelsList.appendChild(channelElement);
+    });
   });
-}
-
-function setActiveChannel(channelId) {
-  const channelButtons = document.querySelectorAll('.channels-list li button.channel-btn');
-  channelButtons.forEach(btn => btn.classList.remove('active-channel'));
-
-  const activeButton = [...channelButtons].find(btn =>
-    btn.closest('li').dataset.channelId === channelId
-  );
-
-  if (activeButton) {
-    activeButton.classList.add('active-channel');
-  }
 }
 
 function loadMessages(channelId) {
-  if (!channelId) return;
-  
-  currentChannel = channelId;
-  db.collection('channels').doc(channelId).get().then(doc => {
-    if (doc.exists) {
-      document.getElementById('channel-title').textContent = `# ${doc.data().name}`;
-      document.getElementById('message-input').placeholder = `Message #${doc.data().name}`;
-    }
-  });
-
   const messagesContainer = document.getElementById('messages');
   messagesContainer.innerHTML = '';
-
-  db.collection('channels').doc(channelId).collection('messages').orderBy('timestamp')
-    .onSnapshot(snapshot => {
-      messagesContainer.innerHTML = '';
-      snapshot.forEach(doc => {
-        const data = doc.data();
-        const messageElement = document.createElement('div');
-        messageElement.className = 'message';
-        messageElement.innerHTML = `
-          <div class="message-content">
-            <span class="sender">${data.sender}</span>
-            <p>${data.message}</p>
-          </div>`;
-        messagesContainer.appendChild(messageElement);
-      });
-      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  db.collection('channels').doc(channelId).collection('messages').orderBy('timestamp').onSnapshot(snapshot => {
+    snapshot.forEach(doc => {
+      const message = doc.data();
+      const messageElement = document.createElement('div');
+      messageElement.className = 'message';
+      messageElement.innerHTML = `<div class="sender">${message.sender}</div><div class="message-content">${message.message}</div>`;
+      messagesContainer.appendChild(messageElement);
     });
-}
-
-function sendMessage() {
-  const message = document.getElementById('message-input').value.trim();
-  if (message && currentUser && currentChannel) {
-    db.collection('channels').doc(currentChannel).collection('messages').add({
-      sender: currentUser.displayName || 'User',
-      message,
-      timestamp: firebase.firestore.FieldValue.serverTimestamp()
-    }).then(() => {
-      document.getElementById('message-input').value = '';
-    });
-  }
-}
-
-document.getElementById('send-button').onclick = sendMessage;
-
-document.getElementById('message-input').addEventListener('keypress', (e) => {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    sendMessage();
-  }
-});
-
-document.getElementById('add-channel').onclick = () => {
-  const channelName = prompt('Enter new channel name:');
-  if (channelName) {
-    const channelId = db.collection('channels').doc().id;
-    const channelData = { name: channelName, joinCode: channelId };
-    db.collection('channels').doc(channelId).set(channelData).then(() => {
-      const userDocRef = db.collection('users').doc(currentUser.uid);
-      userDocRef.update({
-        channels: firebase.firestore.FieldValue.arrayUnion({id: channelId, name: channelName, pinned: false})
-      }).then(() => {
-        displayChannel(channelId, channelName, false);
-      });
-    });
-  }
-};
-
-document.getElementById('join-channel').onclick = () => {
-  const channelCode = prompt('Enter channel code to join:');
-  if (channelCode) {
-    db.collection('channels').doc(channelCode).get().then(doc => {
-      if (doc.exists) {
-        const channelData = doc.data();
-        const userDocRef = db.collection('users').doc(currentUser.uid);
-        userDocRef.update({
-          channels: firebase.firestore.FieldValue.arrayUnion({id: channelCode, name: channelData.name, pinned: false})
-        }).then(() => {
-          displayChannel(channelCode, channelData.name, false);
-          alert(`Successfully joined channel: #${channelData.name}`);
-        });
-      } else {
-        alert("Channel code not found. Please check and try again.");
-      }
-    });
-  }
-};
-
-document.getElementById('copy-join-code').onclick = () => {
-  navigator.clipboard.writeText(currentChannel).then(() => {
-    alert(`Join code copied: ${currentChannel}`);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
   });
-};
-
-function saveCurrentChannel(channelId) {
-  const userDocRef = db.collection('users').doc(currentUser.uid);
-  userDocRef.update({
-    currentChannel: channelId
-  }).catch(error => console.error("Error saving current channel:", error));
 }
 
+document.getElementById('send-button').onclick = function() {
+  const messageInput = document.getElementById('message-input');
+  const message = messageInput.value.trim();
+  if (message && currentUser) {
+    const sender = currentUser.displayName || 'Guest';
+    db.collection('channels').doc('general').collection('messages').add({
+      sender: sender,
+      message: message,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    messageInput.value = '';
+  }
+};
 </script>
 </body>
 </html>

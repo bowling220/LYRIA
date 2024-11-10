@@ -34,180 +34,43 @@
       backdrop-filter: blur(10px); /* Blur for glass effect */
       border: 1px solid rgba(255, 255, 255, 0.3);
     }
-    h2 { margin-bottom: 1rem; color: #333; }
-    .google-button { 
+    h2 { margin-bottom: 1rem; color: #fff; }
+    .google-button, .guest-button { 
       width: 100%; 
       padding: 0.75rem; 
       font-weight: bold; 
       color: #ffffff; 
-      background-color: #db4437; 
       border: none; 
       cursor: pointer; 
       border-radius: 4px; 
       transition: background-color 0.3s; 
       margin-top: 1rem;
     }
+    .google-button { background-color: #db4437; }
     .google-button:hover { background-color: #c33b2e; }
+    .guest-button { background-color: #3c3f42; }
+    .guest-button:hover { background-color: #2f3236; }
     #error-message { color: red; font-size: 0.9rem; margin-top: 1rem; }
-
-    /*login page css*/
-
-
-@import url("https://fonts.googleapis.com/css2?family=Open+Sans:wght@200;300;400;500;600;700&display=swap");
-
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: "Open Sans", sans-serif;
-}
-
-body {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  width: 100%;
-  padding: 0 10px;
-}
-
-body::before {
-  content: "";
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  background: url("https://files.oaiusercontent.com/file-nPkk9Q6XDd78Ipvt500ix773?se=2024-11-09T00%3A00%3A41Z&sp=r&sv=2024-08-04&sr=b&rscc=max-age%3D604800%2C%20immutable%2C%20private&rscd=attachment%3B%20filename%3D3abe8c8f-bc8a-4b85-b637-64238e493ef7.webp&sig=4xGpCCYvQFhfW66Yq3rYHAvh1K9hF9Kj326kTbJt9%2Bo%3D"), #000;
-  background-position: center;
-  background-size: cover;
-}
-
-.wrapper {
-  width: 400px;
-  border-radius: 8px;
-  padding: 30px;
-  text-align: center;
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  backdrop-filter: blur(9px);
-  -webkit-backdrop-filter: blur(9px);
-}
-
-form {
-  display: flex;
-  flex-direction: column;
-}
-
-h2 {
-  font-size: 2rem;
-  margin-bottom: 20px;
-  color: #fff;
-}
-
-.input-field {
-  position: relative;
-  border-bottom: 2px solid #ccc;
-  margin: 15px 0;
-}
-
-.input-field label {
-  position: absolute;
-  top: 50%;
-  left: 0;
-  transform: translateY(-50%);
-  color: #fff;
-  font-size: 16px;
-  pointer-events: none;
-  transition: 0.15s ease;
-}
-
-.input-field input {
-  width: 100%;
-  height: 40px;
-  background: transparent;
-  border: none;
-  outline: none;
-  font-size: 16px;
-  color: #fff;
-}
-
-.input-field input:focus~label,
-.input-field input:valid~label {
-  font-size: 0.8rem;
-  top: 10px;
-  transform: translateY(-120%);
-}
-
-.forget {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin: 25px 0 35px 0;
-  color: #fff;
-}
-
-#remember {
-  accent-color: #fff;
-}
-
-.forget label {
-  display: flex;
-  align-items: center;
-}
-
-.forget label p {
-  margin-left: 8px;
-}
-
-.wrapper a {
-  color: #efefef;
-  text-decoration: none;
-}
-
-.wrapper a:hover {
-  text-decoration: underline;
-}
-
-button {
-  background: #fff;
-  color: #000;
-  font-weight: 600;
-  border: none;
-  padding: 12px 20px;
-  cursor: pointer;
-  border-radius: 3px;
-  font-size: 16px;
-  border: 2px solid transparent;
-  transition: 0.3s ease;
-}
-
-button:hover {
-  color: #fff;
-  border-color: #fff;
-  background: rgba(255, 255, 255, 0.15);
-}
-
-.register {
-  text-align: center;
-  margin-top: 30px;
-  color: #fff;
-}
   </style>
 </head>
 <body>
   <div class="wrapper">
-    <h2>Login with Google</h2>
+    <h2>Welcome to LYRIA Chat</h2>
     <button id="google-signin" class="google-button">Login with Google</button>
+    <button id="guest-login" class="guest-button">Continue as Guest</button>
     <p id="error-message"></p>
   </div>
 
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyDORsM0Dz9d_ZxqVd8zjNXwsEdR1_aVF7g",
-      authDomain: "lyria-cfc06.firebaseapp.com",
+      authDomain: "lyria-cfc06.firebaseapp.com", 
       projectId: "lyria-cfc06",
       storageBucket: "lyria-cfc06.appspot.com",
       messagingSenderId: "309881717815",
       appId: "1:309881717815:web:c8e9a4007341ab17ecebb2",
-      measurementId: "G-0EMBBE255Z"
+      measurementId: "G-0EMBBE255Z",
+      databaseURL: "https://lyria-cfc06-default-rtdb.firebaseio.com"
     };
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
@@ -223,8 +86,26 @@ button:hover {
             email: user.email,
             displayName: user.displayName,
             photoURL: user.photoURL,
+            channels: ["general"],
+            role: "user"
+          }, { merge: true }).then(() => window.location.href = 'chat.html');
+        })
+        .catch(error => {
+          document.getElementById('error-message').textContent = error.message;
+        });
+    });
+
+    // Guest Login Button Event
+    document.getElementById('guest-login').addEventListener('click', function() {
+      auth.signInAnonymously()
+        .then(() => {
+          const user = auth.currentUser;
+          db.collection('users').doc(user.uid).set({
+            displayName: "Guest",
+            role: "guest",
             channels: ["general"]
-          }, { merge: true }).then(() => window.location.href = 'home.html');
+          });
+          window.location.href = 'chat.html';
         })
         .catch(error => {
           document.getElementById('error-message').textContent = error.message;
