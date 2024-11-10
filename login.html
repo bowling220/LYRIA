@@ -82,13 +82,19 @@
       auth.signInWithPopup(provider)
         .then(result => {
           const user = result.user;
-          db.collection('users').doc(user.uid).set({
-            email: user.email,
-            displayName: user.displayName,
-            photoURL: user.photoURL,
-            channels: ["general"],
-            role: "user"
-          }, { merge: true }).then(() => window.location.href = 'home.html');
+          // First check if user document already exists
+          db.collection('users').doc(user.uid).get().then(doc => {
+            if (!doc.exists) {
+              // Only create new document if it doesn't exist
+              return db.collection('users').doc(user.uid).set({
+                email: user.email,
+                displayName: user.displayName,
+                photoURL: user.photoURL,
+                channels: ["general"],
+                role: "user"
+              });
+            }
+          }).then(() => window.location.href = 'home.html');
         })
         .catch(error => {
           document.getElementById('error-message').textContent = error.message;
@@ -100,12 +106,17 @@
       auth.signInAnonymously()
         .then(() => {
           const user = auth.currentUser;
-          db.collection('users').doc(user.uid).set({
-            displayName: "Guest",
-            role: "guest",
-            channels: ["general"]
-          });
-          window.location.href = 'chat.html';
+          // First check if user document already exists
+          db.collection('users').doc(user.uid).get().then(doc => {
+            if (!doc.exists) {
+              // Only create new document if it doesn't exist
+              return db.collection('users').doc(user.uid).set({
+                displayName: "Guest",
+                role: "guest",
+                channels: ["general"]
+              });
+            }
+          }).then(() => window.location.href = 'home.html');
         })
         .catch(error => {
           document.getElementById('error-message').textContent = error.message;
