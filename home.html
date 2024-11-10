@@ -135,10 +135,21 @@ let currentChannel = 'general';
 auth.onAuthStateChanged(user => {
   if (user) {
     currentUser = user;
-    loadUserData();
-    loadUserChannels();
-    updateOnlineStatus(true);
-    listenForOnlineUsers();
+    // Create user document if it doesn't exist
+    const userDocRef = db.collection('users').doc(user.uid);
+    userDocRef.get().then(doc => {
+      if (!doc.exists) {
+        userDocRef.set({
+          displayName: user.displayName || 'User',
+          photoURL: user.photoURL || 'https://via.placeholder.com/40',
+          channels: [{id: 'general', name: 'general'}] // Add default general channel
+        });
+      }
+      loadUserData();
+      loadUserChannels();
+      updateOnlineStatus(true);
+      listenForOnlineUsers();
+    });
   } else {
     window.location.href = 'index.html';
   }
@@ -175,7 +186,7 @@ function listenForOnlineUsers() {
         statusDot.className = "user-status";
 
         const avatar = document.createElement("img");
-        avatar.src = "https://via.placeholder.com/30"; // Placeholder; replace with user photoURL if available
+        avatar.src = "https://via.placeholder.com/30";
         avatar.alt = "User avatar";
 
         const nameSpan = document.createElement("span");
@@ -204,15 +215,25 @@ function loadUserData() {
 
 function loadUserChannels() {
   const userDocRef = db.collection('users').doc(currentUser.uid);
-  userDocRef.get().then(doc => {
+  userDocRef.onSnapshot(doc => { // Use onSnapshot instead of get() to listen for changes
     if (doc.exists) {
       const data = doc.data();
       const channelsList = document.getElementById('channels-list');
       channelsList.innerHTML = '';
       if (data.channels && Array.isArray(data.channels)) {
         data.channels.forEach(channel => {
-          displayChannel(channel.id, channel.name);
+          if (channel && channel.id && channel.name) { // Add validation
+            displayChannel(channel.id, channel.name);
+          }
         });
+      }
+      // Load last active channel if exists
+      if (data.currentChannel) {
+        loadMessages(data.currentChannel);
+        setActiveChannel(data.currentChannel);
+      } else {
+        loadMessages('general');
+        setActiveChannel('general');
       }
     }
   });
@@ -250,6 +271,8 @@ function setActiveChannel(channelId) {
 }
 
 function loadMessages(channelId) {
+  if (!channelId) return; // Add validation
+  
   currentChannel = channelId;
   db.collection('channels').doc(channelId).get().then(doc => {
     if (doc.exists) {
@@ -280,7 +303,7 @@ function loadMessages(channelId) {
 
 function sendMessage() {
   const message = document.getElementById('message-input').value.trim();
-  if (message && currentUser) {
+  if (message && currentUser && currentChannel) {
     db.collection('channels').doc(currentChannel).collection('messages').add({
       sender: currentUser.displayName || 'User',
       message,
