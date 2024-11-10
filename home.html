@@ -263,7 +263,6 @@ auth.onAuthStateChanged(user => {
     currentUser = user;
     const userDocRef = db.collection('users').doc(user.uid);
     
-    // Create user document if it doesn't exist (for Google sign-in)
     userDocRef.get().then(doc => {
       if (!doc.exists) {
         return userDocRef.set({
@@ -282,15 +281,6 @@ auth.onAuthStateChanged(user => {
       
       document.getElementById('user-name').textContent = userData.displayName;
       document.getElementById('user-avatar').src = userData.photoURL;
-
-      if (userData.role === 'guest') {
-        document.getElementById('add-channel').disabled = true;
-        document.getElementById('join-channel').disabled = true;
-        document.getElementById('send-button').textContent = 'Send as Guest';
-      } else {
-        document.getElementById('add-channel').disabled = false;
-        document.getElementById('join-channel').disabled = false;
-      }
     }).catch(error => {
       console.error("Error handling user data:", error);
     });
@@ -303,11 +293,10 @@ auth.onAuthStateChanged(user => {
 
 function loadChannels() {
   const channelsList = document.getElementById('channels-list');
-  channelsList.innerHTML = ''; // Clear existing channels
+  channelsList.innerHTML = '';
   
   db.collection('channels').get().then(snapshot => {
     if (snapshot.empty) {
-      // Create default general channel if no channels exist
       return db.collection('channels').doc('general').set({
         name: 'general',
         id: 'general'
@@ -321,11 +310,9 @@ function loadChannels() {
       const button = document.createElement('button');
       button.className = 'channel-btn';
       button.textContent = `# ${channel.name}`;
-      button.onclick = () => loadMessages(doc.id);
       channelElement.appendChild(button);
       channelsList.appendChild(channelElement);
     });
-    // Load general channel by default
     loadMessages('general');
   }).catch(error => {
     console.error("Error loading channels:", error);
@@ -337,7 +324,6 @@ function loadMessages(channelId) {
   messagesContainer.innerHTML = '';
   const channelTitle = document.getElementById('channel-title');
   
-  // Update channel title
   db.collection('channels').doc(channelId).get().then(doc => {
     if (doc.exists) {
       channelTitle.textContent = `# ${doc.data().name}`;
@@ -364,24 +350,6 @@ function loadMessages(channelId) {
       console.error("Error loading messages:", error);
     });
 }
-
-document.getElementById('send-button').onclick = function() {
-  const messageInput = document.getElementById('message-input');
-  const message = messageInput.value.trim();
-  const channelId = document.getElementById('channel-title').textContent.replace('# ', '');
-  
-  if (message && currentUser) {
-    const sender = currentUser.displayName || 'Guest';
-    db.collection('channels').doc(channelId).collection('messages').add({
-      sender: sender,
-      message: message,
-      timestamp: firebase.firestore.FieldValue.serverTimestamp()
-    }).catch(error => {
-      console.error("Error sending message:", error);
-    });
-    messageInput.value = '';
-  }
-};
 </script>
 </body>
 </html>
