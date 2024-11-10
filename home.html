@@ -389,18 +389,24 @@ document.getElementById('join-channel').addEventListener('click', () => {
   }
 });
 
-document.getElementById('copy-join-code').addEventListener('click', () => {
-  db.collection('channels').doc(currentChannel).get()
-    .then(doc => {
-      if (doc.exists) {
-        const joinCode = doc.data().joinCode;
-        navigator.clipboard.writeText(joinCode).then(() => {
-          alert('Join code copied to clipboard: ' + joinCode);
-        });
-      }
-    }).catch(error => {
-      console.error("Error copying join code:", error);
-    });
+document.getElementById('copy-join-code').addEventListener('click', async () => {
+  try {
+    const doc = await db.collection('channels').doc(currentChannel).get();
+    if (doc.exists) {
+      const joinCode = doc.data().joinCode;
+      // Create a temporary input element
+      const tempInput = document.createElement('input');
+      tempInput.value = joinCode;
+      document.body.appendChild(tempInput);
+      tempInput.select();
+      document.execCommand('copy');
+      document.body.removeChild(tempInput);
+      alert('Join code copied to clipboard: ' + joinCode);
+    }
+  } catch (error) {
+    console.error("Error copying join code:", error);
+    alert('Failed to copy join code');
+  }
 });
 
 function loadMessages(channelId) {
