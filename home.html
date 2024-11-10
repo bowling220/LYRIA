@@ -271,7 +271,7 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 
 let currentUser;
-let currentChannel = 'general';
+let currentChannel;
 
 auth.onAuthStateChanged(user => {
   if (user) {
@@ -280,12 +280,23 @@ auth.onAuthStateChanged(user => {
     
     userDocRef.get().then(doc => {
       if (!doc.exists) {
-        return userDocRef.set({
-          displayName: user.displayName || 'User',
-          photoURL: user.photoURL || 'https://via.placeholder.com/40',
-          role: 'user',
-          channels: ['general'] // Initialize with general channel
-        });
+        // Create a personal channel for new users
+        const personalChannelId = `personal-${user.uid}`;
+        return Promise.all([
+          userDocRef.set({
+            displayName: user.displayName || 'User',
+            photoURL: user.photoURL || 'https://via.placeholder.com/40',
+            role: 'user',
+            channels: [personalChannelId]
+          }),
+          db.collection('channels').doc(personalChannelId).set({
+            name: 'My Personal Channel',
+            id: personalChannelId,
+            createdBy: user.uid,
+            joinCode: generateJoinCode(),
+            members: [user.uid]
+          })
+        ]);
       }
       return doc;
     }).then(doc => {
@@ -293,15 +304,17 @@ auth.onAuthStateChanged(user => {
         displayName: user.displayName || 'User',
         photoURL: user.photoURL || 'https://via.placeholder.com/40',
         role: 'user',
-        channels: ['general']
+        channels: [`personal-${user.uid}`]
       };
       
       document.getElementById('user-name').textContent = userData.displayName;
       document.getElementById('user-avatar').src = userData.photoURL;
       
-      // Enable buttons after user is authenticated
       document.getElementById('add-channel').removeAttribute('disabled');
       document.getElementById('join-channel').removeAttribute('disabled');
+      
+      // Set initial channel to user's personal channel
+      currentChannel = `personal-${user.uid}`;
     }).catch(error => {
       console.error("Error handling user data:", error);
     });
@@ -316,30 +329,12 @@ function loadChannels() {
   const channelsList = document.getElementById('channels-list');
   channelsList.innerHTML = '';
   
-  // Get user's channels
-  db.collection('users').doc(currentUser.uid).get().then(doc => {
-    const userData = doc.data();
-    const userChannels = userData.channels || ['general'];
-    
-    // Create general channel if it doesn't exist
-    return db.collection('channels').doc('general').get().then(generalDoc => {
-      if (!generalDoc.exists) {
-        return db.collection('channels').doc('general').set({
-          name: 'general',
-          id: 'general',
-          createdBy: currentUser.uid,
-          joinCode: generateJoinCode()
-        });
-      }
-    }).then(() => {
-      // Get only the channels the user has joined
-      return Promise.all(userChannels.map(channelId => 
-        db.collection('channels').doc(channelId).get()
-      ));
-    });
-  }).then(channelDocs => {
-    channelDocs.forEach(doc => {
-      if (doc.exists) {
+  // Get channels where user is a member
+  db.collection('channels')
+    .where('members', 'array-contains', currentUser.uid)
+    .get()
+    .then(snapshot => {
+      snapshot.forEach(doc => {
         const channel = doc.data();
         const channelElement = document.createElement('li');
         const button = document.createElement('button');
@@ -348,20 +343,20 @@ function loadChannels() {
         button.onclick = () => {
           currentChannel = channel.id;
           loadMessages(channel.id);
-          // Update active channel styling
           document.querySelectorAll('.channel-btn').forEach(btn => btn.classList.remove('active-channel'));
           button.classList.add('active-channel');
-          // Update message input placeholder
           document.getElementById('message-input').placeholder = `Message #${channel.name}`;
         };
         channelElement.appendChild(button);
         channelsList.appendChild(channelElement);
-      }
+      });
+      
+      // Load messages for personal channel by default
+      loadMessages(`personal-${currentUser.uid}`);
+    })
+    .catch(error => {
+      console.error("Error loading channels:", error);
     });
-    loadMessages('general');
-  }).catch(error => {
-    console.error("Error loading channels:", error);
-  });
 }
 
 function generateJoinCode() {
@@ -371,17 +366,13 @@ function generateJoinCode() {
 document.getElementById('add-channel').addEventListener('click', () => {
   const channelName = prompt('Enter channel name:');
   if (channelName) {
-    const channelId = channelName.toLowerCase().replace(/\s+/g, '-');
+    const channelId = `${Date.now()}-${currentUser.uid}`;
     db.collection('channels').doc(channelId).set({
       name: channelName,
       id: channelId,
       createdBy: currentUser.uid,
-      joinCode: generateJoinCode()
-    }).then(() => {
-      // Add channel to user's channels list
-      return db.collection('users').doc(currentUser.uid).update({
-        channels: firebase.firestore.FieldValue.arrayUnion(channelId)
-      });
+      joinCode: generateJoinCode(),
+      members: [currentUser.uid]
     }).then(() => {
       loadChannels();
     }).catch(error => {
@@ -396,10 +387,12 @@ document.getElementById('join-channel').addEventListener('click', () => {
     db.collection('channels').where('joinCode', '==', joinCode).get()
       .then(snapshot => {
         if (!snapshot.empty) {
-          const channel = snapshot.docs[0].data();
-          // Add channel to user's channels list
-          return db.collection('users').doc(currentUser.uid).update({
-            channels: firebase.firestore.FieldValue.arrayUnion(channel.id)
+          const channelDoc = snapshot.docs[0];
+          const channel = channelDoc.data();
+          
+          // Add user to channel members
+          return db.collection('channels').doc(channel.id).update({
+            members: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
           }).then(() => {
             currentChannel = channel.id;
             loadMessages(channel.id);
@@ -419,7 +412,6 @@ document.getElementById('copy-join-code').addEventListener('click', async () => 
     const doc = await db.collection('channels').doc(currentChannel).get();
     if (doc.exists) {
       const joinCode = doc.data().joinCode;
-      // Create a temporary input element
       const tempInput = document.createElement('input');
       tempInput.value = joinCode;
       document.body.appendChild(tempInput);
@@ -468,7 +460,6 @@ function loadMessages(channelId) {
     });
 }
 
-// Add message sending functionality
 document.getElementById('send-button').addEventListener('click', () => {
   const messageInput = document.getElementById('message-input');
   const message = messageInput.value.trim();
@@ -487,7 +478,6 @@ document.getElementById('send-button').addEventListener('click', () => {
   }
 });
 
-// Allow sending messages with Enter key
 document.getElementById('message-input').addEventListener('keypress', (e) => {
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault();
