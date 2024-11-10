@@ -225,6 +225,10 @@ function loadUserChannels() {
         data.channels.forEach(channel => {
           if (channel && channel.id && channel.name) { // Add validation
             displayChannel(channel.id, channel.name);
+            // If this is the last active channel, mark it as active in the channels list
+            if (data.currentChannel === channel.id) {
+              setActiveChannel(channel.id);
+            }
           }
         });
       }
