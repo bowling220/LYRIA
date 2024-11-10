@@ -236,7 +236,7 @@
         </header>
         <div class="messages" id="messages"></div>
         <div class="message-input">
-            <textarea id="message-input" placeholder="Message #general"></textarea>
+            <textarea id="message-input" placeholder="Message #"></textarea>
             <button id="send-button" class="send-btn">Send</button>
         </div>
     </main>
@@ -323,6 +323,8 @@ function loadChannels() {
         // Update active channel styling
         document.querySelectorAll('.channel-btn').forEach(btn => btn.classList.remove('active-channel'));
         button.classList.add('active-channel');
+        // Update message input placeholder
+        document.getElementById('message-input').placeholder = `Message #${channel.name}`;
       };
       channelElement.appendChild(button);
       channelsList.appendChild(channelElement);
@@ -394,7 +396,9 @@ function loadMessages(channelId) {
   
   db.collection('channels').doc(channelId).get().then(doc => {
     if (doc.exists) {
-      channelTitle.textContent = `# ${doc.data().name}`;
+      const channelName = doc.data().name;
+      channelTitle.textContent = `# ${channelName}`;
+      document.getElementById('message-input').placeholder = `Message #${channelName}`;
     }
   });
   
