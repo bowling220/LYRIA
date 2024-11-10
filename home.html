@@ -262,12 +262,27 @@ auth.onAuthStateChanged(user => {
   if (user) {
     currentUser = user;
     const userDocRef = db.collection('users').doc(user.uid);
+    
+    // Create user document if it doesn't exist (for Google sign-in)
     userDocRef.get().then(doc => {
-      const userData = doc.data();
-      document.getElementById('user-name').textContent = userData.displayName || 'User';
-      document.getElementById('user-avatar').src = userData.photoURL || 'https://via.placeholder.com/40';
+      if (!doc.exists) {
+        return userDocRef.set({
+          displayName: user.displayName || 'User',
+          photoURL: user.photoURL || 'https://via.placeholder.com/40',
+          role: 'user'
+        });
+      }
+      return doc;
+    }).then(doc => {
+      const userData = doc.exists ? doc.data() : {
+        displayName: user.displayName || 'User',
+        photoURL: user.photoURL || 'https://via.placeholder.com/40',
+        role: 'user'
+      };
+      
+      document.getElementById('user-name').textContent = userData.displayName;
+      document.getElementById('user-avatar').src = userData.photoURL;
 
-      // If the user is a guest, disable specific features
       if (userData.role === 'guest') {
         document.getElementById('add-channel').disabled = true;
         document.getElementById('join-channel').disabled = true;
@@ -276,7 +291,10 @@ auth.onAuthStateChanged(user => {
         document.getElementById('add-channel').disabled = false;
         document.getElementById('join-channel').disabled = false;
       }
+    }).catch(error => {
+      console.error("Error handling user data:", error);
     });
+    
     loadChannels();
   } else {
     window.location.href = 'login.html';
@@ -285,44 +303,81 @@ auth.onAuthStateChanged(user => {
 
 function loadChannels() {
   const channelsList = document.getElementById('channels-list');
+  channelsList.innerHTML = ''; // Clear existing channels
+  
   db.collection('channels').get().then(snapshot => {
+    if (snapshot.empty) {
+      // Create default general channel if no channels exist
+      return db.collection('channels').doc('general').set({
+        name: 'general',
+        id: 'general'
+      }).then(() => db.collection('channels').get());
+    }
+    return snapshot;
+  }).then(snapshot => {
     snapshot.forEach(doc => {
       const channel = doc.data();
       const channelElement = document.createElement('li');
       const button = document.createElement('button');
       button.className = 'channel-btn';
       button.textContent = `# ${channel.name}`;
-      button.onclick = () => loadMessages(channel.id);
+      button.onclick = () => loadMessages(doc.id);
       channelElement.appendChild(button);
       channelsList.appendChild(channelElement);
     });
+    // Load general channel by default
+    loadMessages('general');
+  }).catch(error => {
+    console.error("Error loading channels:", error);
   });
 }
 
 function loadMessages(channelId) {
   const messagesContainer = document.getElementById('messages');
   messagesContainer.innerHTML = '';
-  db.collection('channels').doc(channelId).collection('messages').orderBy('timestamp').onSnapshot(snapshot => {
-    snapshot.forEach(doc => {
-      const message = doc.data();
-      const messageElement = document.createElement('div');
-      messageElement.className = 'message';
-      messageElement.innerHTML = `<div class="sender">${message.sender}</div><div class="message-content">${message.message}</div>`;
-      messagesContainer.appendChild(messageElement);
-    });
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  const channelTitle = document.getElementById('channel-title');
+  
+  // Update channel title
+  db.collection('channels').doc(channelId).get().then(doc => {
+    if (doc.exists) {
+      channelTitle.textContent = `# ${doc.data().name}`;
+    }
   });
+  
+  db.collection('channels').doc(channelId).collection('messages')
+    .orderBy('timestamp')
+    .onSnapshot(snapshot => {
+      snapshot.docChanges().forEach(change => {
+        if (change.type === 'added') {
+          const message = change.doc.data();
+          const messageElement = document.createElement('div');
+          messageElement.className = 'message';
+          messageElement.innerHTML = `
+            <div class="sender">${message.sender}</div>
+            <div class="message-content">${message.message}</div>
+          `;
+          messagesContainer.appendChild(messageElement);
+        }
+      });
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }, error => {
+      console.error("Error loading messages:", error);
+    });
 }
 
 document.getElementById('send-button').onclick = function() {
   const messageInput = document.getElementById('message-input');
   const message = messageInput.value.trim();
+  const channelId = document.getElementById('channel-title').textContent.replace('# ', '');
+  
   if (message && currentUser) {
     const sender = currentUser.displayName || 'Guest';
-    db.collection('channels').doc('general').collection('messages').add({
+    db.collection('channels').doc(channelId).collection('messages').add({
       sender: sender,
       message: message,
       timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    }).catch(error => {
+      console.error("Error sending message:", error);
     });
     messageInput.value = '';
   }
