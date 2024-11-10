@@ -88,7 +88,7 @@
             photoURL: user.photoURL,
             channels: ["general"],
             role: "user"
-          }, { merge: true }).then(() => window.location.href = 'chat.html');
+          }, { merge: true }).then(() => window.location.href = 'home.html');
         })
         .catch(error => {
           document.getElementById('error-message').textContent = error.message;
