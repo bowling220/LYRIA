@@ -26,6 +26,10 @@
         <div class="user-profile">
             <img class="avatar" id="user-avatar" src="https://s1.ezgif.com/tmp/ezgif-1-89965b355d.png" alt="User avatar">
             <span class="username" id="user-name">Username</span>
+            <span id="user-badges">
+                <span class="verified-badge" style="display: none;">✓</span>
+                <span class="admin-badge" style="display: none;">👑</span>
+            </span>
             <button class="settings-btn" id="settings-btn">Settings</button>
         </div>
     </nav>
@@ -42,6 +46,7 @@
                 <div class="message-content">
                     <div class="message-header">
                         <span class="message-username">Username</span>
+                        <span class="verified-badge" style="display: none;">✓</span>
                         <span class="admin-badge" style="display: none;">👑 Admin</span>
                     </div>
                     <div class="message-text">Message content</div>
@@ -83,6 +88,55 @@
         <button id="close-modal" class="close-modal">Close</button>
     </div>
 </div>
+<script>
+// Firebase config and initialization from your existing code
+const firebaseConfig = {
+    apiKey: "AIzaSyDORsM0Dz9d_ZxqVd8zjNXwsEdR1_aVF7g",
+    authDomain: "lyria-cfc06.firebaseapp.com",
+    projectId: "lyria-cfc06",
+    storageBucket: "lyria-cfc06.appspot.com",
+    messagingSenderId: "309881717815",
+    appId: "1:309881717815:web:c8e9a4007341ab17ecebb2",
+    measurementId: "G-0EMBBE255Z",
+    databaseURL: "https://lyria-cfc06-default-rtdb.firebaseio.com"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+let currentUser;
+let currentChannel;
+let darkMode = false;
+let notificationsEnabled = false;
+let isAdmin = false;
+
+auth.onAuthStateChanged(user => {
+    if (user) {
+        currentUser = user;
+        
+        // Update user badges
+        const verifiedBadge = document.querySelector('.verified-badge');
+        const adminBadge = document.querySelector('.admin-badge');
+        
+        // Show verified badge for Google users
+        if (user.providerData[0].providerId === 'google.com') {
+            verifiedBadge.style.display = 'inline';
+        }
+        
+        // Show admin badge for Blaine Oler
+        if (user.displayName === 'Blaine Oler') {
+            adminBadge.style.display = 'inline';
+            isAdmin = true;
+        }
+        
+        // Update UI with user info
+        document.getElementById('user-name').textContent = user.displayName || 'User';
+        if (user.photoURL) {
+            document.getElementById('user-avatar').src = user.photoURL;
+        }
+    }
+});
+</script>
 <script src="chat.js"></script>
 </body>
 </html>
