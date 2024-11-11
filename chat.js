@@ -16,6 +16,7 @@ const firebaseConfig = {
   let currentChannel;
   let darkMode = false;
   let notificationsEnabled = false;
+  let isAdmin = false;
   
   // Mobile menu toggle
   document.querySelector('.menu-toggle').addEventListener('click', () => {
@@ -42,15 +43,16 @@ const firebaseConfig = {
   userDocRef.get().then(doc => {
     if (!doc.exists) {
       // Create a personal channel for new users
-      const personalChannelId = `personal-${user.uid}`; // Fixed: Added template literal syntax
+      const personalChannelId = `personal-${user.uid}`;
       return Promise.all([
         userDocRef.set({
           displayName: user.displayName || 'User',
           photoURL: user.photoURL || 'https://s1.ezgif.com/tmp/ezgif-1-89965b355d.png',
           role: 'user',
-          channels: [personalChannelId], // Fixed: Use the variable instead of template literal
+          channels: [personalChannelId],
           darkMode: false,
-          notificationsEnabled: false
+          notificationsEnabled: false,
+          isAdmin: false
         }),
         db.collection('channels').doc(personalChannelId).set({
           name: 'My Personal Channel',
@@ -67,11 +69,13 @@ const firebaseConfig = {
       displayName: user.displayName || 'User',
       photoURL: user.photoURL || 'https://s1.ezgif.com/tmp/ezgif-1-89965b355d.png',
       role: 'user',
-      channels: [`personal-${user.uid}`], // Fixed: Added template literal syntax
+      channels: [`personal-${user.uid}`],
       darkMode: false,
-      notificationsEnabled: false
+      notificationsEnabled: false,
+      isAdmin: false
     };
     
+    isAdmin = userData.isAdmin || false;
     document.getElementById('user-name').textContent = userData.displayName;
     document.getElementById('user-avatar').src = userData.photoURL;
     
@@ -151,7 +155,7 @@ const firebaseConfig = {
     document.getElementById('logout-btn').addEventListener('click', logout);
     
     // Set initial channel to user's personal channel
-    currentChannel = `personal-${user.uid}`; // Fixed: Added template literal syntax
+    currentChannel = `personal-${user.uid}`;
   }).catch(error => {
     console.error("Error handling user data:", error);
   });
@@ -176,13 +180,13 @@ const firebaseConfig = {
       const channelElement = document.createElement('li');
       const button = document.createElement('button');
       button.className = 'channel-btn';
-      button.textContent = `#${channel.name}`; // Fixed: Added template literal syntax
+      button.textContent = `#${channel.name}`;
       button.onclick = () => {
         currentChannel = channel.id;
         loadMessages(channel.id);
         document.querySelectorAll('.channel-btn').forEach(btn => btn.classList.remove('active-channel'));
         button.classList.add('active-channel');
-        document.getElementById('message-input').placeholder = `Message #${channel.name}`; // Fixed: Added template literal syntax
+        document.getElementById('message-input').placeholder = `Message #${channel.name}`;
         // Close sidebar on mobile after channel selection
         if (window.innerWidth <= 768) {
           document.querySelector('.sidebar').classList.remove('active');
@@ -193,7 +197,7 @@ const firebaseConfig = {
     });
     
     // Load messages for personal channel by default
-    loadMessages(`personal-${currentUser.uid}`); // Fixed: Added template literal syntax
+    loadMessages(`personal-${currentUser.uid}`);
   })
   .catch(error => {
     console.error("Error loading channels:", error);
@@ -207,7 +211,7 @@ const firebaseConfig = {
   document.getElementById('add-channel').addEventListener('click', () => {
   const channelName = prompt('Enter channel name:');
   if (channelName) {
-  const channelId = `${Date.now()}-${currentUser.uid}`; // Fixed: Added template literal syntax
+  const channelId = `${Date.now()}-${currentUser.uid}`;
   db.collection('channels').doc(channelId).set({
     name: channelName,
     id: channelId,
@@ -275,8 +279,8 @@ const firebaseConfig = {
   db.collection('channels').doc(channelId).get().then(doc => {
   if (doc.exists) {
     const channelName = doc.data().name;
-    channelTitle.textContent = `#${channelName}`; // Fixed: Added template literal syntax
-    document.getElementById('message-input').placeholder = `Message #${channelName}`; // Fixed: Added template literal syntax
+    channelTitle.textContent = `#${channelName}`;
+    document.getElementById('message-input').placeholder = `Message #${channelName}`;
   }
   });
   
@@ -288,16 +292,29 @@ const firebaseConfig = {
         const message = change.doc.data();
         const messageElement = document.createElement('div');
         messageElement.className = 'message';
+        
+        let adminBadge = '';
+        if(message.isAdmin) {
+          adminBadge = '<span class="admin-badge">👑 Admin</span>';
+        }
+        
         messageElement.innerHTML = `
-          <div class="sender">${message.sender}</div>
-          <div class="message-content">${message.message}</div>
-        `; // Fixed: Added template literal syntax
+          <img class="message-avatar" src="${message.photoURL || 'https://s1.ezgif.com/tmp/ezgif-1-89965b355d.png'}" alt="User avatar">
+          <div class="message-content">
+            <div class="message-header">
+              <span class="message-username">${message.sender}</span>
+              ${adminBadge}
+            </div>
+            <div class="message-text">${message.message}</div>
+          </div>
+        `;
+        
         messagesContainer.appendChild(messageElement);
         
         // Show notification if enabled and message is not from current user
         if(notificationsEnabled && message.sender !== currentUser.displayName && Notification.permission === 'granted') {
           new Notification('New Message', {
-            body: `${message.sender}: ${message.message}`, // Fixed: Added template literal syntax
+            body: `${message.sender}: ${message.message}`,
             icon: '/path/to/icon.png'
           });
         }
@@ -318,7 +335,9 @@ const firebaseConfig = {
     .collection('messages').add({
       message: message,
       sender: currentUser.displayName || 'User',
-      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      isAdmin: isAdmin,
+      photoURL: currentUser.photoURL || 'https://s1.ezgif.com/tmp/ezgif-1-89965b355d.png'
     }).then(() => {
       messageInput.value = '';
     }).catch(error => {
