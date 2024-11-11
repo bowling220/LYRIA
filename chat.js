@@ -302,9 +302,9 @@ const firebaseConfig = {
         if(message.timestamp && (!lastMessageTimestamp || message.timestamp > lastMessageTimestamp)) {
           if(notificationsEnabled && message.sender !== currentUser.displayName && Notification.permission === 'granted') {
             notificationSound.play();
-            new Notification('New Message', {
+            new Notification('New Chat:', {
               body: `${message.sender}: ${message.message}`, // Fixed: Added template literal syntax
-              icon: 'assets/icon.jpg'
+              icon: '/assets/icon.jpg'
             });
           }
           lastMessageTimestamp = message.timestamp;
