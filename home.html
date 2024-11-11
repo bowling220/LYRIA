@@ -36,9 +36,21 @@
     background-color: var(--sidebar-color);
     color: #fff;
     text-align: center;
-    padding: 1rem;
-    font-size: 1.5rem;
+    padding: 0.8rem;
+    font-size: 1.2rem;
     font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .menu-toggle {
+    display: none;
+    background: none;
+    border: none;
+    color: var(--text-color);
+    font-size: 1.5rem;
+    cursor: pointer;
   }
 
   .app-container {
@@ -61,9 +73,9 @@
   }
 
   .channels h3 {
-    font-size: 1rem;
+    font-size: 0.9rem;
     color: #8e9297;
-    margin-bottom: 1rem;
+    margin-bottom: 0.8rem;
     border-bottom: 1px solid #292b2f;
     padding-bottom: 0.5rem;
     text-transform: uppercase;
@@ -78,13 +90,13 @@
   .channel-btn {
     display: flex;
     align-items: center;
-    padding: 0.6rem 1rem;
+    padding: 0.5rem 0.8rem;
     color: #8e9297;
     background: none;
     border: none;
     cursor: pointer;
     border-radius: 4px;
-    font-size: 1rem;
+    font-size: 0.9rem;
     width: 100%;
     transition: background 0.3s;
   }
@@ -101,10 +113,10 @@
     color: #8e9297;
     border: none;
     border-radius: 4px;
-    margin-top: 1rem;
+    margin-top: 0.8rem;
     cursor: pointer;
     transition: background 0.3s;
-    font-size: 1rem;
+    font-size: 0.9rem;
     text-align: left;
   }
 
@@ -114,7 +126,7 @@
   }
 
   .user-profile {
-    padding: 1rem;
+    padding: 0.8rem;
     background-color: #292b2f;
     display: flex;
     align-items: center;
@@ -122,15 +134,15 @@
   }
 
   .avatar {
-    width: 40px;
-    height: 40px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
     border: 2px solid var(--secondary-color);
   }
 
   .username {
     font-weight: bold;
-    font-size: 1rem;
+    font-size: 0.9rem;
   }
 
   /* Main Chat Area */
@@ -142,7 +154,7 @@
   }
 
   .chat-header {
-    padding: 1rem;
+    padding: 0.8rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -155,14 +167,14 @@
   .messages {
     flex: 1;
     overflow-y: auto;
-    padding: 1rem;
+    padding: 0.8rem;
     background-color: var(--primary-color);
   }
 
   .message {
     display: flex;
     flex-direction: column;
-    margin-bottom: 1rem;
+    margin-bottom: 0.8rem;
     padding: 0.5rem;
     background-color: var(--message-hover);
     border-radius: 5px;
@@ -170,37 +182,38 @@
 
   .sender {
     font-weight: bold;
-    font-size: 1rem;
+    font-size: 0.9rem;
     color: var(--secondary-color);
     margin-bottom: 0.2rem;
   }
 
   .message-content {
-    font-size: 0.95rem;
+    font-size: 0.85rem;
+    word-break: break-word;
   }
 
   .message-input {
     display: flex;
-    padding: 1rem;
+    padding: 0.8rem;
     border-top: 1px solid #202225;
     background-color: var(--primary-color);
   }
 
   textarea {
     flex: 1;
-    padding: 0.8rem;
+    padding: 0.6rem;
     background-color: var(--background-color);
     border: none;
     border-radius: 8px;
     color: var(--text-color);
-    font-size: 1rem;
+    font-size: 0.9rem;
     resize: none;
   }
 
   .send-btn {
     background-color: var(--secondary-color);
     color: #fff;
-    padding: 0.8rem 1rem;
+    padding: 0.6rem 0.8rem;
     border: none;
     border-radius: 8px;
     font-weight: bold;
@@ -216,11 +229,12 @@
   .copy-join-code-btn {
     background-color: var(--secondary-color);
     color: #fff;
-    padding: 0.5rem 1rem;
+    padding: 0.4rem 0.8rem;
     border: none;
     border-radius: 4px;
     cursor: pointer;
     transition: background 0.3s;
+    font-size: 0.9rem;
   }
 
   .copy-join-code-btn:hover {
@@ -238,19 +252,22 @@
     background: rgba(0, 0, 0, 0.5);
     justify-content: center;
     align-items: center;
+    z-index: 1000;
   }
 
   .modal-content {
     background-color: var(--background-color);
-    padding: 20px;
+    padding: 1rem;
     border-radius: 8px;
     text-align: center;
-    width: 300px;
+    width: 90%;
+    max-width: 300px;
   }
 
   .modal-content h2 {
     color: var(--text-color);
     margin-bottom: 1rem;
+    font-size: 1.2rem;
   }
 
   .close-modal {
@@ -260,14 +277,69 @@
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    margin-top: 1rem;
+    margin-top: 0.8rem;
+    font-size: 0.9rem;
   }
 
+  /* Mobile Responsive Styles */
+  @media (max-width: 768px) {
+    .menu-toggle {
+      display: block;
+    }
 
+    .sidebar {
+      position: fixed;
+      left: -250px;
+      top: 0;
+      bottom: 0;
+      z-index: 100;
+      transition: left 0.3s ease;
+    }
+
+    .sidebar.active {
+      left: 0;
+    }
+
+    .app-container {
+      position: relative;
+    }
+
+    .chat-area {
+      width: 100%;
+    }
+
+    .chat-header {
+      padding: 0.6rem;
+    }
+
+    .chat-header h2 {
+      font-size: 1rem;
+    }
+
+    .message-input {
+      padding: 0.6rem;
+    }
+
+    textarea {
+      font-size: 0.9rem;
+    }
+
+    .send-btn {
+      padding: 0.5rem;
+    }
+
+    .copy-join-code-btn {
+      font-size: 0.8rem;
+      padding: 0.3rem 0.6rem;
+    }
+  }
 </style>
 </head>
 <body>
-<header class="top-header">LYRIA Chat</header>
+<header class="top-header">
+    <button class="menu-toggle">☰</button>
+    LYRIA Chat
+</header>
 <div class="app-container">
     <nav class="sidebar">
         <div class="channels">
@@ -277,7 +349,7 @@
             <button class="join-channel-btn" id="join-channel">Join Channel</button>
         </div>
         <div class="user-profile">
-            <img class="avatar" id="user-avatar" src="https://files.oaiusercontent.com/file-eJdIQqzEdzoa3ZLBu3NLP0yQ?se=2024-11-11T01%3A02%3A26Z&sp=r&sv=2024-08-04&sr=b&rscc=max-age%3D604800%2C%20immutable%2C%20private&rscd=attachment%3B%20filename%3D8c932a21-35ab-4a92-8824-0694fb90da06.webp&sig=B6U7kxGUpmp0MDS0IsqRt5m6CgxV7udBaahLNCsbs3w%3D" alt="User avatar">
+            <img class="avatar" id="user-avatar" src="https://s1.ezgif.com/tmp/ezgif-1-89965b355d.png" alt="User avatar">
             <span class="username" id="user-name">Username</span>
             <button class="settings-btn" id="settings-btn">Settings</button>
         </div>
@@ -346,6 +418,23 @@ let currentChannel;
 let darkMode = false;
 let notificationsEnabled = false;
 
+// Mobile menu toggle
+document.querySelector('.menu-toggle').addEventListener('click', () => {
+  document.querySelector('.sidebar').classList.toggle('active');
+});
+
+// Close sidebar when clicking outside on mobile
+document.addEventListener('click', (e) => {
+  const sidebar = document.querySelector('.sidebar');
+  const menuToggle = document.querySelector('.menu-toggle');
+  if (window.innerWidth <= 768 && 
+      !sidebar.contains(e.target) && 
+      !menuToggle.contains(e.target) &&
+      sidebar.classList.contains('active')) {
+    sidebar.classList.remove('active');
+  }
+});
+
 auth.onAuthStateChanged(user => {
   if (user) {
     currentUser = user;
@@ -358,7 +447,7 @@ auth.onAuthStateChanged(user => {
         return Promise.all([
           userDocRef.set({
             displayName: user.displayName || 'User',
-            photoURL: user.photoURL || 'https://files.oaiusercontent.com/file-eJdIQqzEdzoa3ZLBu3NLP0yQ?se=2024-11-11T01%3A02%3A26Z&sp=r&sv=2024-08-04&sr=b&rscc=max-age%3D604800%2C%20immutable%2C%20private&rscd=attachment%3B%20filename%3D8c932a21-35ab-4a92-8824-0694fb90da06.webp&sig=B6U7kxGUpmp0MDS0IsqRt5m6CgxV7udBaahLNCsbs3w%3D',
+            photoURL: user.photoURL || 'https://s1.ezgif.com/tmp/ezgif-1-89965b355d.png',
             role: 'user',
             channels: [personalChannelId],
             darkMode: false,
@@ -377,7 +466,7 @@ auth.onAuthStateChanged(user => {
     }).then(doc => {
       const userData = doc.exists ? doc.data() : {
         displayName: user.displayName || 'User',
-        photoURL: user.photoURL || 'https://files.oaiusercontent.com/file-eJdIQqzEdzoa3ZLBu3NLP0yQ?se=2024-11-11T01%3A02%3A26Z&sp=r&sv=2024-08-04&sr=b&rscc=max-age%3D604800%2C%20immutable%2C%20private&rscd=attachment%3B%20filename%3D8c932a21-35ab-4a92-8824-0694fb90da06.webp&sig=B6U7kxGUpmp0MDS0IsqRt5m6CgxV7udBaahLNCsbs3w%3D',
+        photoURL: user.photoURL || 'https://s1.ezgif.com/tmp/ezgif-1-89965b355d.png',
         role: 'user',
         channels: [`personal-${user.uid}`],
         darkMode: false,
@@ -495,6 +584,10 @@ function loadChannels() {
           document.querySelectorAll('.channel-btn').forEach(btn => btn.classList.remove('active-channel'));
           button.classList.add('active-channel');
           document.getElementById('message-input').placeholder = `Message #${channel.name}`;
+          // Close sidebar on mobile after channel selection
+          if (window.innerWidth <= 768) {
+            document.querySelector('.sidebar').classList.remove('active');
+          }
         };
         channelElement.appendChild(button);
         channelsList.appendChild(channelElement);
