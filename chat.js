@@ -206,22 +206,23 @@ const firebaseConfig = {
   }
   
   document.getElementById('add-channel').addEventListener('click', () => {
-  const channelName = prompt('Enter channel name:');
-  if (channelName) {
-  const channelId = `${Date.now()}-${currentUser.uid}`;
-  db.collection('channels').doc(channelId).set({
-    name: channelName,
-    id: channelId,
-    createdBy: currentUser.uid,
-    joinCode: generateJoinCode(),
-    members: [currentUser.uid]
-  }).then(() => {
-    loadChannels();
-  }).catch(error => {
-    console.error("Error creating channel:", error);
-  });
-  }
-  });
+    const channelName = prompt('Enter channel name:');
+    if (channelName) {
+        const channelId = `${Date.now()}-${currentUser.uid}`;
+        db.collection('channels').doc(channelId).set({
+            name: channelName,
+            id: channelId,
+            createdBy: currentUser.uid,
+            admins: [currentUser.uid], // Add this line
+            joinCode: generateJoinCode(),
+            members: [currentUser.uid]
+        }).then(() => {
+            loadChannels();
+        }).catch(error => {
+            console.error("Error creating channel:", error);
+        });
+    }
+    });
   
   document.getElementById('join-channel').addEventListener('click', () => {
   const joinCode = prompt('Enter channel join code:');
@@ -269,77 +270,117 @@ const firebaseConfig = {
   });
   
   function loadMessages(channelId) {
-  const messagesContainer = document.getElementById('messages');
-  messagesContainer.innerHTML = '';
-  const channelTitle = document.getElementById('channel-title');
-  
-  db.collection('channels').doc(channelId).get().then(doc => {
-  if (doc.exists) {
-    const channelName = doc.data().name;
-    channelTitle.textContent = `#${channelName}`;
-    document.getElementById('message-input').placeholder = `Message #${channelName}`;
-  }
-  });
-  
-  db.collection('channels').doc(channelId).collection('messages')
-  .orderBy('timestamp')
-  .onSnapshot(snapshot => {
-    snapshot.docChanges().forEach(change => {
-      if (change.type === 'added') {
-        const message = change.doc.data();
-        const messageElement = document.createElement('div');
-        messageElement.className = 'message';
-        
-        let adminBadge = '';
-        if(message.isAdmin) {
-          adminBadge = '<span class="admin-badge">👑 Admin</span>';
+    const messagesContainer = document.getElementById('messages');
+    messagesContainer.innerHTML = '';
+    const channelTitle = document.getElementById('channel-title');
+
+    db.collection('channels').doc(channelId).get().then(doc => {
+        if (doc.exists) {
+            const channelData = doc.data();
+            const channelName = channelData.name;
+            const admins = channelData.admins || [channelData.createdBy];
+            channelTitle.textContent = `#${channelName}`;
+            document.getElementById('message-input').placeholder = `Message #${channelName}`;
+
+            // Check if current user is admin
+            isAdmin = admins.includes(currentUser.uid);
+
+            // Listen for messages
+            db.collection('channels').doc(channelId).collection('messages')
+                .orderBy('timestamp')
+                .onSnapshot(snapshot => {
+                    snapshot.docChanges().forEach(change => {
+                        if (change.type === 'added') {
+                            const message = change.doc.data();
+                            const messageElement = document.createElement('div');
+                            messageElement.className = 'message';
+                            
+                            const isMessageFromAdmin = admins.includes(message.userId);
+                            
+                            messageElement.innerHTML = `
+                                <div class="message-content">
+                                    <div class="message-header">
+                                        <span class="message-username">${message.sender}</span>
+                                        ${isMessageFromAdmin ? '<span class="admin-badge">👑 Admin</span>' : ''}
+                                        <span class="message-timestamp">${formatTimestamp(message.timestamp)}</span>
+                                    </div>
+                                    <div class="message-text">${formatMessage(message.message)}</div>
+                                </div>
+                            `;
+                            
+                            messagesContainer.appendChild(messageElement);
+                            
+                            // Show notification if enabled and message is not from current user
+                            if(notificationsEnabled && 
+                               message.userId !== currentUser.uid && 
+                               Notification.permission === 'granted') {
+                                new Notification('New Message', {
+                                    body: `${message.sender}: ${message.message}`,
+                                    icon: message.photoURL || '/path/to/icon.png'
+                                });
+                            }
+                        }
+                    });
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                });
         }
-        
-        messageElement.innerHTML = `
-          <div class="message-content">
-            <div class="message-header">
-              <span class="message-username">${message.sender}</span>
-              ${adminBadge}
-            </div>
-            <div class="message-text">${message.message}</div>
-          </div>
-        `;
-        
-        messagesContainer.appendChild(messageElement);
-        
-        // Show notification if enabled and message is not from current user
-        if(notificationsEnabled && message.sender !== currentUser.displayName && Notification.permission === 'granted') {
-          new Notification('New Message', {
-            body: `${message.sender}: ${message.message}`,
-            icon: '/path/to/icon.png'
-          });
-        }
-      }
     });
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-  }, error => {
-    console.error("Error loading messages:", error);
-  });
-  }
+}
+
+// Add these helper functions
+function formatTimestamp(timestamp) {
+    if (!timestamp) return '';
+    const date = timestamp.toDate();
+    const now = new Date();
+    const diff = now - date;
+    
+    if (diff < 24 * 60 * 60 * 1000) {
+        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+    if (diff < 7 * 24 * 60 * 60 * 1000) {
+        return date.toLocaleDateString([], { weekday: 'long' }) + ' ' + 
+               date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+    return date.toLocaleDateString() + ' ' + 
+           date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+function formatMessage(text) {
+    if (!text) return '';
+    // Basic XSS prevention
+    text = text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    
+    // Convert URLs to clickable links
+    text = text.replace(
+        /(https?:\/\/[^\s]+)/g, 
+        '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>'
+    );
+    
+    // Convert line breaks to <br>
+    text = text.replace(/\n/g, '<br>');
+    
+    return text;
+}
   
-  document.getElementById('send-button').addEventListener('click', () => {
-  const messageInput = document.getElementById('message-input');
-  const message = messageInput.value.trim();
-  
-  if (message && currentChannel) {
-  db.collection('channels').doc(currentChannel)
-    .collection('messages').add({
-      message: message,
-      sender: currentUser.displayName || 'User',
-      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-      isAdmin: isAdmin
-    }).then(() => {
-      messageInput.value = '';
-    }).catch(error => {
-      console.error("Error sending message:", error);
-    });
-  }
-  });
+document.getElementById('send-button').addEventListener('click', () => {
+    const messageInput = document.getElementById('message-input');
+    const message = messageInput.value.trim();
+
+    if (message && currentChannel) {
+        db.collection('channels').doc(currentChannel)
+            .collection('messages').add({
+                message: message,
+                sender: currentUser.displayName || 'User',
+                userId: currentUser.uid,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                photoURL: currentUser.photoURL || 'https://s1.ezgif.com/tmp/ezgif-1-89965b355d.png'
+            }).then(() => {
+                messageInput.value = '';
+            }).catch(error => {
+                console.error("Error sending message:", error);
+            });
+    }
+});
   
   document.getElementById('message-input').addEventListener('keypress', (e) => {
   if (e.key === 'Enter' && !e.shiftKey) {
