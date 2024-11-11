@@ -34,7 +34,21 @@
             <h2 id="channel-title"># general</h2>
             <button id="copy-join-code" class="copy-join-code-btn">Invite Others</button>
         </header>
-        <div class="messages" id="messages"></div>
+        <div class="messages" id="messages">
+            <!-- Messages will be dynamically added here with profile pictures -->
+            <!-- Example message structure:
+            <div class="message">
+                <img class="message-avatar" src="user-avatar-url" alt="User avatar">
+                <div class="message-content">
+                    <div class="message-header">
+                        <span class="message-username">Username</span>
+                        <span class="admin-badge" style="display: none;">👑 Admin</span>
+                    </div>
+                    <div class="message-text">Message content</div>
+                </div>
+            </div>
+            -->
+        </div>
         <div class="message-input">
             <textarea id="message-input" placeholder="Message #"></textarea>
             <button id="send-button" class="send-btn">Send</button>
