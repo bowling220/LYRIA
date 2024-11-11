@@ -289,3 +289,24 @@
 }
 
 
+#vanta-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+}
+
+/* Adjust your existing container to have some transparency */
+.app-container {
+    background-color: rgba(47, 49, 54, 0.8); /* Semi-transparent background */
+}
+
+.sidebar {
+    background-color: rgba(32, 34, 37, 0.9); /* Semi-transparent background */
+}
+
+.chat-area {
+    background-color: rgba(47, 49, 54, 0.8); /* Semi-transparent background */
+}
