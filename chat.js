@@ -16,6 +16,7 @@ const firebaseConfig = {
   let currentChannel;
   let darkMode = false;
   let notificationsEnabled = false;
+  let lastMessageTimestamp = null;
   
   // Create notification sound
   const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
@@ -297,13 +298,16 @@ const firebaseConfig = {
         `; // Fixed: Added template literal syntax
         messagesContainer.appendChild(messageElement);
         
-        // Show notification if enabled and message is not from current user
-        if(notificationsEnabled && message.sender !== currentUser.displayName && Notification.permission === 'granted') {
-          notificationSound.play();
-          new Notification('New Message', {
-            body: `${message.sender}: ${message.message}`, // Fixed: Added template literal syntax
-            icon: 'assets/icon.jpg'
-          });
+        // Show notification only for new messages after page load
+        if(message.timestamp && (!lastMessageTimestamp || message.timestamp > lastMessageTimestamp)) {
+          if(notificationsEnabled && message.sender !== currentUser.displayName && Notification.permission === 'granted') {
+            notificationSound.play();
+            new Notification('New Message', {
+              body: `${message.sender}: ${message.message}`, // Fixed: Added template literal syntax
+              icon: 'assets/icon.jpg'
+            });
+          }
+          lastMessageTimestamp = message.timestamp;
         }
       }
     });
