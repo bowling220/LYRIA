@@ -40,6 +40,12 @@ const firebaseConfig = {
   currentUser = user;
   const userDocRef = db.collection('users').doc(user.uid);
   
+  // Check if user is admin
+  if (user.displayName === 'Blaine oler') {
+      isAdmin = true;
+      document.querySelector('.admin-badge').style.display = 'inline';
+  }
+  
   userDocRef.get().then(doc => {
     if (!doc.exists) {
       // Create a personal channel for new users
@@ -153,6 +159,15 @@ const firebaseConfig = {
     
     // Set initial channel to user's personal channel
     currentChannel = `personal-${user.uid}`;
+  }).then(() => {
+    // Update the user document with admin status
+    userDocRef.get().then(doc => {
+        if (!doc.exists || !doc.data().isAdmin) {
+            userDocRef.set({
+                isAdmin: isAdmin
+            }, { merge: true });
+        }
+    });
   }).catch(error => {
     console.error("Error handling user data:", error);
   });
@@ -213,7 +228,7 @@ const firebaseConfig = {
             name: channelName,
             id: channelId,
             createdBy: currentUser.uid,
-            admins: [currentUser.uid], // Add this line
+            admins: [currentUser.uid],
             joinCode: generateJoinCode(),
             members: [currentUser.uid]
         }).then(() => {
@@ -295,7 +310,8 @@ const firebaseConfig = {
                             const messageElement = document.createElement('div');
                             messageElement.className = 'message';
                             
-                            const isMessageFromAdmin = admins.includes(message.userId);
+                            // Check if message sender is admin
+                            const isMessageFromAdmin = message.isAdmin || admins.includes(message.userId);
                             
                             messageElement.innerHTML = `
                                 <div class="message-content">
@@ -373,7 +389,8 @@ document.getElementById('send-button').addEventListener('click', () => {
                 sender: currentUser.displayName || 'User',
                 userId: currentUser.uid,
                 timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                photoURL: currentUser.photoURL || 'https://s1.ezgif.com/tmp/ezgif-1-89965b355d.png'
+                photoURL: currentUser.photoURL || 'https://s1.ezgif.com/tmp/ezgif-1-89965b355d.png',
+                isAdmin: isAdmin
             }).then(() => {
                 messageInput.value = '';
             }).catch(error => {
