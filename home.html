@@ -226,6 +226,44 @@
   .copy-join-code-btn:hover {
     background-color: #4a5de2;
   }
+
+  /* Settings Modal */
+  .modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    justify-content: center;
+    align-items: center;
+  }
+
+  .modal-content {
+    background-color: var(--background-color);
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+    width: 300px;
+  }
+
+  .modal-content h2 {
+    color: var(--text-color);
+    margin-bottom: 1rem;
+  }
+
+  .close-modal {
+    background-color: var(--secondary-color);
+    color: #fff;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 1rem;
+  }
+
+
 </style>
 </head>
 <body>
@@ -239,14 +277,15 @@
             <button class="join-channel-btn" id="join-channel">Join Channel</button>
         </div>
         <div class="user-profile">
-            <img class="avatar" id="user-avatar" src="https://via.placeholder.com/40" alt="User avatar">
+            <img class="avatar" id="user-avatar" src="https://files.oaiusercontent.com/file-eJdIQqzEdzoa3ZLBu3NLP0yQ?se=2024-11-11T01%3A02%3A26Z&sp=r&sv=2024-08-04&sr=b&rscc=max-age%3D604800%2C%20immutable%2C%20private&rscd=attachment%3B%20filename%3D8c932a21-35ab-4a92-8824-0694fb90da06.webp&sig=B6U7kxGUpmp0MDS0IsqRt5m6CgxV7udBaahLNCsbs3w%3D" alt="User avatar">
             <span class="username" id="user-name">Username</span>
+            <button class="settings-btn" id="settings-btn">Settings</button>
         </div>
     </nav>
     <main class="chat-area">
         <header class="chat-header">
             <h2 id="channel-title"># general</h2>
-            <button id="copy-join-code" class="copy-join-code-btn">Copy Invite Code</button>
+            <button id="copy-join-code" class="copy-join-code-btn">Invite Others</button>
         </header>
         <div class="messages" id="messages"></div>
         <div class="message-input">
@@ -255,6 +294,38 @@
         </div>
     </main>
 </div>
+
+<!-- Settings Modal -->
+<div id="settings-modal" class="modal">
+    <div class="modal-content">
+        <h2>Settings</h2>
+        <p>This is the settings page for guest users.</p>
+        
+        <!-- Toggle Dark Mode -->
+        <button id="toggle-dark-mode" class="close-modal">Toggle Dark Mode</button>
+        
+        <!-- Update Display Name -->
+        <div style="margin-top: 1rem;">
+            <label for="display-name-input" style="color: var(--text-color);">Update Display Name:</label>
+            <input type="text" id="display-name-input" placeholder="Enter new display name" style="margin-top: 0.5rem; padding: 0.5rem; width: 100%; border-radius: 4px; border: none;">
+            <button id="update-display-name" style="margin-top: 0.5rem;" class="close-modal">Update Name</button>
+        </div>
+
+        <!-- Notification Toggle -->
+        <div style="margin-top: 1rem;">
+            <label style="color: var(--text-color);">
+                <input type="checkbox" id="notifications-toggle"> Enable Notifications
+            </label>
+        </div>
+
+        <button id="logout-btn" class="close-modal" style="margin-top: 1rem;">Logout</button>
+        <button id="close-modal" class="close-modal">Close</button>
+    </div>
+</div>
+
+
+  
+  
 <script>
 const firebaseConfig = {
       apiKey: "AIzaSyDORsM0Dz9d_ZxqVd8zjNXwsEdR1_aVF7g",
@@ -272,6 +343,8 @@ const db = firebase.firestore();
 
 let currentUser;
 let currentChannel;
+let darkMode = false;
+let notificationsEnabled = false;
 
 auth.onAuthStateChanged(user => {
   if (user) {
@@ -285,9 +358,11 @@ auth.onAuthStateChanged(user => {
         return Promise.all([
           userDocRef.set({
             displayName: user.displayName || 'User',
-            photoURL: user.photoURL || 'https://via.placeholder.com/40',
+            photoURL: user.photoURL || 'https://files.oaiusercontent.com/file-eJdIQqzEdzoa3ZLBu3NLP0yQ?se=2024-11-11T01%3A02%3A26Z&sp=r&sv=2024-08-04&sr=b&rscc=max-age%3D604800%2C%20immutable%2C%20private&rscd=attachment%3B%20filename%3D8c932a21-35ab-4a92-8824-0694fb90da06.webp&sig=B6U7kxGUpmp0MDS0IsqRt5m6CgxV7udBaahLNCsbs3w%3D',
             role: 'user',
-            channels: [personalChannelId]
+            channels: [personalChannelId],
+            darkMode: false,
+            notificationsEnabled: false
           }),
           db.collection('channels').doc(personalChannelId).set({
             name: 'My Personal Channel',
@@ -302,16 +377,90 @@ auth.onAuthStateChanged(user => {
     }).then(doc => {
       const userData = doc.exists ? doc.data() : {
         displayName: user.displayName || 'User',
-        photoURL: user.photoURL || 'https://via.placeholder.com/40',
+        photoURL: user.photoURL || 'https://files.oaiusercontent.com/file-eJdIQqzEdzoa3ZLBu3NLP0yQ?se=2024-11-11T01%3A02%3A26Z&sp=r&sv=2024-08-04&sr=b&rscc=max-age%3D604800%2C%20immutable%2C%20private&rscd=attachment%3B%20filename%3D8c932a21-35ab-4a92-8824-0694fb90da06.webp&sig=B6U7kxGUpmp0MDS0IsqRt5m6CgxV7udBaahLNCsbs3w%3D',
         role: 'user',
-        channels: [`personal-${user.uid}`]
+        channels: [`personal-${user.uid}`],
+        darkMode: false,
+        notificationsEnabled: false
       };
       
       document.getElementById('user-name').textContent = userData.displayName;
       document.getElementById('user-avatar').src = userData.photoURL;
       
+      // Initialize settings from user data
+      darkMode = userData.darkMode;
+      notificationsEnabled = userData.notificationsEnabled;
+      document.getElementById('notifications-toggle').checked = notificationsEnabled;
+      if(darkMode) {
+        document.documentElement.style.setProperty('--primary-color', '#1a1a1a');
+        document.documentElement.style.setProperty('--background-color', '#121212');
+      }
+      
       document.getElementById('add-channel').removeAttribute('disabled');
       document.getElementById('join-channel').removeAttribute('disabled');
+
+      function logout() {
+        auth.signOut().then(() => {
+            window.location.href = 'index.html';
+        }).catch(error => {
+            console.error("Error logging out:", error);
+        });
+      }
+
+      // Event listeners for modal buttons
+      document.getElementById('settings-btn').addEventListener('click', () => {
+          document.getElementById('settings-modal').style.display = 'flex';
+      });
+
+      document.getElementById('close-modal').addEventListener('click', () => {
+          document.getElementById('settings-modal').style.display = 'none';
+      });
+
+      // Toggle Dark Mode
+      document.getElementById('toggle-dark-mode').addEventListener('click', () => {
+          darkMode = !darkMode;
+          if(darkMode) {
+              document.documentElement.style.setProperty('--primary-color', '#1a1a1a');
+              document.documentElement.style.setProperty('--background-color', '#121212');
+          } else {
+              document.documentElement.style.setProperty('--primary-color', '#36393f');
+              document.documentElement.style.setProperty('--background-color', '#2f3136');
+          }
+          db.collection('users').doc(currentUser.uid).update({
+              darkMode: darkMode
+          });
+      });
+
+      // Update Display Name
+      document.getElementById('update-display-name').addEventListener('click', () => {
+          const newName = document.getElementById('display-name-input').value.trim();
+          if(newName) {
+              db.collection('users').doc(currentUser.uid).update({
+                  displayName: newName
+              }).then(() => {
+                  document.getElementById('user-name').textContent = newName;
+                  document.getElementById('display-name-input').value = '';
+                  alert('Display name updated successfully!');
+              }).catch(error => {
+                  console.error("Error updating display name:", error);
+                  alert('Failed to update display name');
+              });
+          }
+      });
+
+      // Toggle Notifications
+      document.getElementById('notifications-toggle').addEventListener('change', (e) => {
+          notificationsEnabled = e.target.checked;
+          if(notificationsEnabled) {
+              Notification.requestPermission();
+          }
+          db.collection('users').doc(currentUser.uid).update({
+              notificationsEnabled: notificationsEnabled
+          });
+      });
+
+      // Logout button event listener
+      document.getElementById('logout-btn').addEventListener('click', logout);
       
       // Set initial channel to user's personal channel
       currentChannel = `personal-${user.uid}`;
@@ -452,6 +601,14 @@ function loadMessages(channelId) {
             <div class="message-content">${message.message}</div>
           `;
           messagesContainer.appendChild(messageElement);
+          
+          // Show notification if enabled and message is not from current user
+          if(notificationsEnabled && message.sender !== currentUser.displayName && Notification.permission === 'granted') {
+            new Notification('New Message', {
+              body: `${message.sender}: ${message.message}`,
+              icon: '/path/to/icon.png'
+            });
+          }
         }
       });
       messagesContainer.scrollTop = messagesContainer.scrollHeight;
