@@ -1,64 +1,100 @@
 // voicecall.js
 
-import AgoraRTC from "agora-rtc-sdk-ng";
 
-let client; // Agora client instance
-let localAudioTrack;
-let currentChannel; // Make sure this variable is set to your current channel ID
+let peer;
+let currentCalls = {}; // Stores active calls with other peers
+let localStream;
 let callUnsubscribes = []; // Stores unsubscribe functions for Firestore listeners
 
-const APP_ID = "74e58a770e774705a2a1ce38bf08f2ac"; // Replace with your Agora App ID
-const TOKEN = null; // Use null for testing; generate a token for production
-
-// Function to initialize Agora client
-function initializeAgoraClient() {
-    if (!client) {
-        client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
-
-        // Listen for remote users publishing their tracks
-        client.on("user-published", handleUserPublished);
-        client.on("user-unpublished", handleUserUnpublished);
+// Function to initialize PeerJS
+function initializePeer() {
+    if (!peer) {
+        peer = new Peer(currentUser.uid, {
+            config: {
+                iceServers: [
+                    { urls: 'stun:stun.l.google.com:19302' },
+                    // Add TURN server configurations if available
+                ]
+            }
+        });
     }
+
+    peer.on('open', (id) => {
+        console.log('Your peer ID is: ' + id);
+    });
+
+    peer.on('error', (err) => {
+        console.error('PeerJS error:', err);
+    });
+
+    // Listen for incoming calls
+    peer.on('call', (call) => {
+        // Answer the call with the local audio stream
+        if (localStream) {
+            call.answer(localStream);
+            handleCallEvents(call);
+        } else {
+            // If localStream is not ready, get user media first
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(stream => {
+                    localStream = stream;
+                    call.answer(localStream);
+                    handleCallEvents(call);
+                })
+                .catch(error => {
+                    console.error('Error accessing media devices.', error);
+                    alert('Microphone access is required to make or join a voice call.');
+                });
+        }
+    });
 }
 
-// Function to handle when a remote user publishes their track
-async function handleUserPublished(user, mediaType) {
-    console.log("User published:", user.uid);
+// Function to handle call events
+function handleCallEvents(call) {
+    currentCalls[call.peer] = call; // Add call to current calls
+    document.getElementById('end-call').style.display = 'block'; // Show end call button
 
-    // Subscribe to the remote user
-    await client.subscribe(user, mediaType);
+    call.on('stream', (remoteStream) => {
+        const remoteAudio = document.createElement('audio');
+        remoteAudio.srcObject = remoteStream;
+        remoteAudio.autoplay = true; // Enable autoplay
+        remoteAudio.controls = false; // Hide controls (you can set to true for testing)
+        remoteAudio.style.display = 'none'; // Hide the audio element
+        document.body.appendChild(remoteAudio);
 
-    if (mediaType === "audio") {
-        const remoteAudioTrack = user.audioTrack;
-        remoteAudioTrack.play();
-    }
-}
+        // Attempt to play the audio
+        remoteAudio.play().catch(error => {
+            console.error('Error playing remote audio:', error);
+            // Handle autoplay restrictions
+            alert('Please interact with the page to enable audio playback.');
+        });
+    });
 
-// Function to handle when a remote user unpublishes their track
-function handleUserUnpublished(user) {
-    console.log("User unpublished:", user.uid);
-    // Handle cleanup if necessary
+    call.on('close', () => {
+        console.log("Call with peer " + call.peer + " ended.");
+        delete currentCalls[call.peer]; // Remove call from current calls
+        if (Object.keys(currentCalls).length === 0) {
+            document.getElementById('end-call').style.display = 'none'; // Hide end call button if no calls are active
+        }
+    });
 }
 
 // Function to start or join a call
-async function startOrJoinCall() {
-    initializeAgoraClient();
-
-    try {
-        // Join the Agora channel
-        const uid = await client.join(APP_ID, currentChannel, TOKEN, currentUser.uid);
-        console.log("Joined Agora channel with UID:", uid);
-
-        // Create and publish local audio track
-        localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack();
-        await client.publish([localAudioTrack]);
-        console.log("Published local audio track.");
-
-        // Update Firestore to indicate that the user has joined the call
+function startOrJoinCall() {
+    // Get user media if not already obtained
+    if (!localStream) {
+        navigator.mediaDevices.getUserMedia({ audio: true })
+            .then(stream => {
+                console.log('Microphone access granted.');
+                localStream = stream;
+                joinActiveCall();
+            })
+            .catch(error => {
+                console.error('Error accessing media devices.', error);
+                alert('Microphone access is required to make or join a voice call.');
+            });
+    } else {
         joinActiveCall();
-    } catch (error) {
-        console.error("Error joining Agora channel:", error);
-        alert('An error occurred while trying to join the voice call.');
     }
 }
 
@@ -71,7 +107,6 @@ function joinActiveCall() {
         activeCallMembers: firebase.firestore.FieldValue.arrayUnion(currentUser.uid),
         callActive: true
     }).then(() => {
-        console.log('Joined active call in channel:', currentChannel);
         // Listen for changes in activeCallMembers
         listenToActiveCallMembers();
     }).catch(error => console.error("Error joining call:", error));
@@ -79,7 +114,6 @@ function joinActiveCall() {
 
 // Function to listen to changes in activeCallMembers
 function listenToActiveCallMembers() {
-    console.log('Listening to active call members in channel:', currentChannel);
     // Unsubscribe from previous listener if exists
     callUnsubscribes.forEach(unsub => unsub());
     callUnsubscribes = [];
@@ -90,7 +124,25 @@ function listenToActiveCallMembers() {
         if (doc.exists) {
             const data = doc.data();
             const activeMembers = data.activeCallMembers || [];
-            console.log('Active call members:', activeMembers);
+            // Remove self from the list to get other participants
+            const otherMembers = activeMembers.filter(uid => uid !== currentUser.uid);
+
+            // Connect to new participants
+            otherMembers.forEach(memberUid => {
+                if (!currentCalls[memberUid]) {
+                    // Call the other peer
+                    callPeer(memberUid);
+                }
+            });
+
+            // Disconnect from participants who left
+            Object.keys(currentCalls).forEach(peerId => {
+                if (!activeMembers.includes(peerId)) {
+                    // Close the call
+                    currentCalls[peerId].close();
+                    delete currentCalls[peerId];
+                }
+            });
 
             // Update the call button text based on callActive and active members
             updateCallButton(data.callActive, activeMembers);
@@ -100,7 +152,13 @@ function listenToActiveCallMembers() {
     callUnsubscribes.push(unsubscribe);
 }
 
-// Add event listener for the voice call button
+// Function to call another peer
+function callPeer(peerId) {
+    const call = peer.call(peerId, localStream);
+    handleCallEvents(call);
+}
+
+// Event listener for the voice call button
 document.getElementById('make-voice-call').addEventListener('click', () => {
     const buttonText = document.getElementById('make-voice-call').textContent;
     if (buttonText === 'Make Voice Call' || buttonText === 'Join Call') {
@@ -114,27 +172,23 @@ document.getElementById('end-call').addEventListener('click', () => {
 });
 
 // Function to end the group call
-async function endGroupCall() {
-    console.log('Ending group call...');
-
+function endGroupCall() {
     // Remove self from activeCallMembers in Firestore
     const channelRef = db.collection('channels').doc(currentChannel);
-    try {
-        await channelRef.update({
-            activeCallMembers: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)
+    channelRef.update({
+        activeCallMembers: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)
+    }).then(() => {
+        // Close all current calls
+        Object.values(currentCalls).forEach(call => {
+            call.close();
         });
+        currentCalls = {};
 
-        // Unpublish and close local audio track
-        if (localAudioTrack) {
-            await client.unpublish([localAudioTrack]);
-            localAudioTrack.close();
-            localAudioTrack = null;
-            console.log('Unpublished and closed local audio track.');
+        // Stop local audio stream
+        if (localStream) {
+            localStream.getTracks().forEach(track => track.stop());
+            localStream = null;
         }
-
-        // Leave the Agora channel
-        await client.leave();
-        console.log('Left Agora channel.');
 
         // Hide end call button
         document.getElementById('end-call').style.display = 'none';
@@ -144,28 +198,25 @@ async function endGroupCall() {
         callUnsubscribes = [];
 
         // Check if we are the last person in the call
-        const doc = await channelRef.get();
-        if (doc.exists) {
-            const data = doc.data();
-            const activeMembers = data.activeCallMembers || [];
-            if (activeMembers.length === 0) {
-                // No one else in the call, set callActive to false and clear activeCallMembers
-                await channelRef.update({
-                    callActive: false,
-                    activeCallMembers: firebase.firestore.FieldValue.delete()
-                });
-                console.log('No active members left. Call is now inactive.');
+        channelRef.get().then(doc => {
+            if (doc.exists) {
+                const data = doc.data();
+                const activeMembers = data.activeCallMembers || [];
+                if (activeMembers.length === 0) {
+                    // No one else in the call, set callActive to false and clear activeCallMembers
+                    channelRef.update({
+                        callActive: false,
+                        activeCallMembers: firebase.firestore.FieldValue.delete()
+                    });
+                }
             }
-        }
-    } catch (error) {
-        console.error("Error ending call:", error);
-    }
+        });
+    }).catch(error => console.error("Error ending call:", error));
 }
 
 // Clean up when switching channels
 function leaveCurrentCall() {
-    console.log('Leaving current call in channel:', currentChannel);
-    if (localAudioTrack) {
+    if (localStream || Object.keys(currentCalls).length > 0) {
         endGroupCall();
     } else {
         // Even if not in call, unsubscribe from listeners and update button
@@ -177,7 +228,6 @@ function leaveCurrentCall() {
 
 // Listener for changes in callActive to update the button text
 function listenToCallActive() {
-    console.log('Listening to callActive changes in channel:', currentChannel);
     const channelRef = db.collection('channels').doc(currentChannel);
 
     const unsubscribe = channelRef.onSnapshot(doc => {
@@ -199,18 +249,15 @@ function updateCallButton(callActive, activeMembers) {
         if (activeMembers.includes(currentUser.uid)) {
             // User is in call
             callButton.style.display = 'none';
-            document.getElementById('end-call').style.display = 'block';
         } else {
             // User is not in call
             callButton.textContent = 'Join Call';
             callButton.style.display = 'inline-block';
-            document.getElementById('end-call').style.display = 'none';
         }
     } else {
         // No active call
         callButton.textContent = 'Make Voice Call';
         callButton.style.display = 'inline-block';
-        document.getElementById('end-call').style.display = 'none';
     }
 }
 
