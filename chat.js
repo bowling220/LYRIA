@@ -120,8 +120,8 @@ auth.onAuthStateChanged(user => {
             loadChannels();
 
             // Initialize PeerJS after currentUser is available
-            initializePeer(); // Make sure this function is defined in voicecall.js
-
+            // Uncomment the line below if using voicecall.js and initializePeer() is defined
+            // initializePeer();
         }).catch(error => {
             console.error("Error handling user data:", error);
         });
@@ -151,6 +151,8 @@ function setupUIEventListeners() {
         applyDarkMode();
         db.collection('users').doc(currentUser.uid).update({
             darkMode: darkMode
+        }).catch(error => {
+            console.error("Error updating dark mode:", error);
         });
     });
 
@@ -183,10 +185,23 @@ function setupUIEventListeners() {
     document.getElementById('notifications-toggle').addEventListener('change', (e) => {
         notificationsEnabled = e.target.checked;
         if(notificationsEnabled) {
-            Notification.requestPermission();
+            Notification.requestPermission().then(permission => {
+                if(permission !== 'granted') {
+                    alert('Notifications permission denied.');
+                    document.getElementById('notifications-toggle').checked = false;
+                    notificationsEnabled = false;
+                    db.collection('users').doc(currentUser.uid).update({
+                        notificationsEnabled: notificationsEnabled
+                    }).catch(error => {
+                        console.error("Error updating notifications:", error);
+                    });
+                }
+            });
         }
         db.collection('users').doc(currentUser.uid).update({
             notificationsEnabled: notificationsEnabled
+        }).catch(error => {
+            console.error("Error updating notifications:", error);
         });
     });
 
@@ -238,6 +253,7 @@ function setupUIEventListeners() {
                 loadChannels();
             }).catch(error => {
                 console.error("Error creating channel:", error);
+                alert('Failed to create channel.');
             });
         }
     });
@@ -260,10 +276,11 @@ function setupUIEventListeners() {
                             loadChannels();
                         });
                     } else {
-                        alert('Invalid join code');
+                        alert('Invalid join code.');
                     }
                 }).catch(error => {
                     console.error("Error joining channel:", error);
+                    alert('Failed to join channel.');
                 });
         }
     });
@@ -281,10 +298,12 @@ function setupUIEventListeners() {
                 document.execCommand('copy');
                 document.body.removeChild(tempInput);
                 alert('Join code copied to clipboard: ' + joinCode);
+            } else {
+                alert('Channel does not exist.');
             }
         } catch (error) {
             console.error("Error copying join code:", error);
-            alert('Failed to copy join code');
+            alert('Failed to copy join code.');
         }
     });
 }
@@ -307,6 +326,7 @@ function sendMessage() {
                 setTypingStatus(false);
             }).catch(error => {
                 console.error("Error sending message:", error);
+                alert('Failed to send message.');
             });
     }
 }
@@ -320,15 +340,24 @@ function setTypingStatus(isTyping) {
             typingRef.set({
                 displayName: currentUser.displayName || 'User',
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            }).catch(error => {
+                console.error("Error setting typing status:", error);
             });
         } else {
-            typingRef.delete();
+            typingRef.delete().catch(error => {
+                console.error("Error deleting typing status:", error);
+            });
         }
     }
 }
 
 function listenForTypingStatus(channelId) {
     const typingStatusContainer = document.getElementById('typing-status');
+    if (!typingStatusContainer) {
+        console.error("Typing status container not found in HTML.");
+        return;
+    }
+
     const typingRef = db.collection('channels').doc(channelId)
         .collection('typingStatus');
 
@@ -346,6 +375,8 @@ function listenForTypingStatus(channelId) {
         } else {
             typingStatusContainer.style.display = 'none';
         }
+    }, error => {
+        console.error("Error listening for typing status:", error);
     });
 }
 
@@ -387,6 +418,7 @@ function loadChannels() {
     })
     .catch(error => {
         console.error("Error loading channels:", error);
+        alert('Failed to load channels.');
     });
 }
 
@@ -413,6 +445,9 @@ function loadMessages(channelId) {
             channelTitle.textContent = `#${channelName}`;
             document.getElementById('message-input').placeholder = `Message #${channelName}`;
         }
+    }).catch(error => {
+        console.error("Error fetching channel data:", error);
+        alert('Failed to fetch channel data.');
     });
 
     // Set up the new listener and store the unsubscribe function
@@ -495,6 +530,7 @@ function loadMessages(channelId) {
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }, error => {
             console.error("Error loading messages:", error);
+            alert('Failed to load messages.');
         });
 }
 
@@ -506,34 +542,53 @@ function showUserProfileModal(uid) {
 
             // Set profile image
             const profileImage = document.getElementById('profile-modal-image');
-            profileImage.src = userData.photoURL || 'assets/default-avatar.png';
+            if (profileImage) {
+                profileImage.src = userData.photoURL || 'assets/default-avatar.png';
+            } else {
+                console.error("Profile modal image element not found.");
+            }
 
             // Set display name
             const profileName = document.getElementById('profile-modal-name');
-            profileName.textContent = userData.displayName || 'User';
+            if (profileName) {
+                profileName.textContent = userData.displayName || 'User';
+            } else {
+                console.error("Profile modal name element not found.");
+            }
 
             // Set badges
             const profileBadges = document.getElementById('profile-modal-badges');
-            profileBadges.innerHTML = ''; // Clear previous badges
+            if (profileBadges) {
+                profileBadges.innerHTML = ''; // Clear previous badges
 
-            if (badgeUserUIDs.includes(uid)) {
-                const badges = ['DevBadge.png', 'Mod.png', 'EarlyAccess.png'];
-                badges.forEach(badgeSrc => {
-                    const badge = document.createElement('img');
-                    badge.src = `assets/${badgeSrc}`;
-                    badge.alt = badgeSrc.replace('.png', '') + ' Badge';
-                    badge.className = 'admin-badge';
-                    profileBadges.appendChild(badge);
-                });
+                if (badgeUserUIDs.includes(uid)) {
+                    const badges = ['DevBadge.png', 'Mod.png', 'EarlyAccess.png'];
+                    badges.forEach(badgeSrc => {
+                        const badge = document.createElement('img');
+                        badge.src = `assets/${badgeSrc}`;
+                        badge.alt = badgeSrc.replace('.png', '') + ' Badge';
+                        badge.className = 'admin-badge';
+                        profileBadges.appendChild(badge);
+                    });
+                }
+            } else {
+                console.error("Profile modal badges element not found.");
             }
 
             // Display the modal
-            document.getElementById('profile-modal').style.display = 'flex';
+            const profileModal = document.getElementById('profile-modal');
+            if (profileModal) {
+                profileModal.style.display = 'flex';
+            } else {
+                console.error("Profile modal element not found.");
+            }
         } else {
             console.error('User data not found');
+            alert('User profile not found.');
         }
     }).catch(error => {
         console.error('Error fetching user data:', error);
+        alert('Failed to fetch user profile.');
     });
 }
 
@@ -552,6 +607,7 @@ function logout() {
         window.location.href = 'login.html';
     }).catch(error => {
         console.error("Error logging out:", error);
+        alert('Failed to log out.');
     });
 }
 
@@ -560,5 +616,6 @@ function switchChannel(channelId) {
     currentChannel = channelId; // Update currentChannel when switching channels
     loadMessages(channelId);     // Load messages for the new channel
     listenForTypingStatus(channelId); // Listen for typing status changes
-    loadChannelPeerId(channelId); // Load and set currentChannelPeerId (from voicecall.js)
+    // Uncomment the line below if using voicecall.js and initializePeer() is defined
+    // loadChannelPeerId(channelId); // Load and set currentChannelPeerId (from voicecall.js)
 }

@@ -519,3 +519,11 @@
     height: 30px;
     margin: 0 5px;
 }
+
+/* Typing Status Styles */
+.typing-status {
+    padding: 5px 10px;
+    color: #888;
+    font-style: italic;
+    margin-bottom: 10px;
+}
