@@ -1,117 +1,180 @@
 // voicecall.js
 
 let peer;
-let currentCall;
-let currentChannelPeerId; // Stores the peer ID for the other user in the current channel
+let currentCalls = {}; // Stores active calls with other peers
+let localStream;
+let callUnsubscribes = []; // Stores unsubscribe functions for Firestore listeners
 
 // Function to initialize PeerJS
 function initializePeer() {
     if (!peer) {
-        peer = new Peer();
+        peer = new Peer(currentUser.uid); // Use user's UID as peer ID
     }
 
     peer.on('open', (id) => {
         console.log('Your peer ID is: ' + id);
-        // Save your own peerId in your user document
-        db.collection('users').doc(currentUser.uid).set({
-            peerId: id
-        }, { merge: true }).catch(error => console.error("Error updating peer ID:", error));
+        // Save your own peerId in your user document (optional since we're using UID as peer ID)
     });
 
     // Listen for incoming calls
     peer.on('call', (call) => {
-        // When a call is received, request user media
-        navigator.mediaDevices.getUserMedia({ audio: true })
-            .then(stream => {
-                call.answer(stream); // Answer the call with your audio stream
-                currentCall = call; // Keep track of the current call
-                document.getElementById('end-call').style.display = 'block'; // Show end call button
-                call.on('stream', (remoteStream) => {
-                    const remoteAudio = document.createElement('audio');
-                    remoteAudio.srcObject = remoteStream;
-                    remoteAudio.play();
-                });
-
-                call.on('close', () => {
-                    console.log("Call ended.");
-                    // Stop your audio stream
-                    stream.getTracks().forEach(track => track.stop());
-                    currentCall = null;
-                    document.getElementById('end-call').style.display = 'none'; // Hide end call button
-                });
-            })
-            .catch(error => console.error('Error accessing media devices.', error));
+        // Answer the call with the local audio stream
+        if (localStream) {
+            call.answer(localStream);
+            handleCallEvents(call);
+        } else {
+            // If localStream is not ready, get user media first
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(stream => {
+                    localStream = stream;
+                    call.answer(localStream);
+                    handleCallEvents(call);
+                })
+                .catch(error => console.error('Error accessing media devices.', error));
+        }
     });
 }
 
-// Function to call another peer
-function callPeer(peerId) {
-    // Request user media
-    navigator.mediaDevices.getUserMedia({ audio: true })
-        .then(stream => {
-            currentCall = peer.call(peerId, stream);
-            document.getElementById('end-call').style.display = 'block'; // Show end call button
-            currentCall.on('stream', (remoteStream) => {
-                const remoteAudio = document.createElement('audio');
-                remoteAudio.srcObject = remoteStream;
-                remoteAudio.play();
-            });
-            currentCall.on('close', () => {
-                console.log("Call ended.");
-                // Stop your audio stream
-                stream.getTracks().forEach(track => track.stop());
-                currentCall = null;
-                document.getElementById('end-call').style.display = 'none'; // Hide end call button
-            });
-        })
-        .catch(error => console.error('Error accessing media devices.', error));
+// Function to handle call events
+function handleCallEvents(call) {
+    currentCalls[call.peer] = call; // Add call to current calls
+    document.getElementById('end-call').style.display = 'block'; // Show end call button
+
+    call.on('stream', (remoteStream) => {
+        const remoteAudio = document.createElement('audio');
+        remoteAudio.srcObject = remoteStream;
+        remoteAudio.play();
+    });
+
+    call.on('close', () => {
+        console.log("Call with peer " + call.peer + " ended.");
+        delete currentCalls[call.peer]; // Remove call from current calls
+        if (Object.keys(currentCalls).length === 0) {
+            document.getElementById('end-call').style.display = 'none'; // Hide end call button if no calls are active
+        }
+    });
 }
 
 // Event listener for the voice call button
 document.getElementById('make-voice-call').addEventListener('click', () => {
-    if (currentChannelPeerId) {
-        callPeer(currentChannelPeerId); // Call the peer ID of the other user
-    } else {
-        console.error('No peer ID available for this channel.');
-        alert('The other user is not available for a voice call.');
-    }
+    startGroupCall();
 });
+
+// Function to start or join a group call
+function startGroupCall() {
+    // Get user media if not already obtained
+    if (!localStream) {
+        navigator.mediaDevices.getUserMedia({ audio: true })
+            .then(stream => {
+                localStream = stream;
+                joinActiveCall();
+            })
+            .catch(error => console.error('Error accessing media devices.', error));
+    } else {
+        joinActiveCall();
+    }
+}
+
+// Function to join the active call in the channel
+function joinActiveCall() {
+    // Add self to activeCallMembers in Firestore
+    const channelRef = db.collection('channels').doc(currentChannel);
+
+    // Update the activeCallMembers array atomically
+    channelRef.update({
+        activeCallMembers: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
+    }).then(() => {
+        // Listen for changes in activeCallMembers
+        listenToActiveCallMembers();
+    }).catch(error => console.error("Error joining call:", error));
+}
+
+// Function to listen to changes in activeCallMembers
+function listenToActiveCallMembers() {
+    // Unsubscribe from previous listener if exists
+    callUnsubscribes.forEach(unsub => unsub());
+    callUnsubscribes = [];
+
+    const channelRef = db.collection('channels').doc(currentChannel);
+
+    const unsubscribe = channelRef.onSnapshot(doc => {
+        if (doc.exists) {
+            const data = doc.data();
+            const activeMembers = data.activeCallMembers || [];
+            // Remove self from the list to get other participants
+            const otherMembers = activeMembers.filter(uid => uid !== currentUser.uid);
+
+            // Connect to new participants
+            otherMembers.forEach(memberUid => {
+                if (!currentCalls[memberUid]) {
+                    // Call the other peer
+                    callPeer(memberUid);
+                }
+            });
+
+            // Disconnect from participants who left
+            Object.keys(currentCalls).forEach(peerId => {
+                if (!activeMembers.includes(peerId)) {
+                    // Close the call
+                    currentCalls[peerId].close();
+                    delete currentCalls[peerId];
+                }
+            });
+
+            // Show or hide the end call button
+            if (Object.keys(currentCalls).length > 0) {
+                document.getElementById('end-call').style.display = 'block';
+            } else {
+                document.getElementById('end-call').style.display = 'none';
+            }
+        }
+    });
+
+    callUnsubscribes.push(unsubscribe);
+}
+
+// Function to call another peer
+function callPeer(peerId) {
+    const call = peer.call(peerId, localStream);
+    handleCallEvents(call);
+}
 
 // Add event listener for ending the call
 document.getElementById('end-call').addEventListener('click', () => {
-    if (currentCall) {
-        currentCall.close();
-        currentCall = null;
-        document.getElementById('end-call').style.display = 'none';
-    }
+    endGroupCall();
 });
 
-// Load the peer ID for the other user in a given channel
-function loadChannelPeerId(channelId) {
-    db.collection('channels').doc(channelId).get().then(doc => {
-        if (doc.exists) {
-            const channelData = doc.data();
-            const members = channelData.members || [];
-            // Remove the current user's UID to get the other user's UID
-            const otherMembers = members.filter(uid => uid !== currentUser.uid);
-            if (otherMembers.length > 0) {
-                const otherUserUid = otherMembers[0]; // Assuming one-to-one channels
-                // Get the peerId of the other user
-                db.collection('users').doc(otherUserUid).get().then(userDoc => {
-                    if (userDoc.exists && userDoc.data().peerId) {
-                        currentChannelPeerId = userDoc.data().peerId;
-                    } else {
-                        console.warn("No peer ID found for the other user.");
-                        currentChannelPeerId = null;
-                    }
-                }).catch(error => console.error("Error loading other user's peer ID:", error));
-            } else {
-                console.warn("No other users in this channel.");
-                currentChannelPeerId = null;
-            }
-        } else {
-            console.warn("Channel does not exist.");
-            currentChannelPeerId = null;
+// Function to end the group call
+function endGroupCall() {
+    // Remove self from activeCallMembers in Firestore
+    const channelRef = db.collection('channels').doc(currentChannel);
+    channelRef.update({
+        activeCallMembers: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)
+    }).then(() => {
+        // Close all current calls
+        Object.values(currentCalls).forEach(call => {
+            call.close();
+        });
+        currentCalls = {};
+
+        // Stop local audio stream
+        if (localStream) {
+            localStream.getTracks().forEach(track => track.stop());
+            localStream = null;
         }
-    }).catch(error => console.error("Error loading channel data:", error));
+
+        // Hide end call button
+        document.getElementById('end-call').style.display = 'none';
+
+        // Unsubscribe from Firestore listeners
+        callUnsubscribes.forEach(unsub => unsub());
+        callUnsubscribes = [];
+    }).catch(error => console.error("Error ending call:", error));
+}
+
+// Clean up when switching channels
+function leaveCurrentCall() {
+    if (localStream || Object.keys(currentCalls).length > 0) {
+        endGroupCall();
+    }
 }
