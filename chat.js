@@ -24,7 +24,7 @@ let unsubscribeFromMessages = null; // Unsubscribe function for message listener
 const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
 
 // Define an array of UIDs for users who should have badges
-const badgeUserUIDs = ["USER_UID_1", "USER_UID_2"]; // Replace with actual UIDs
+const badgeUserUIDs = ["xLT0XKgtF5ZnlfX2fLj9hXrTcW02", "qzf9fO2bBLU0PJhRDSQK9KnMZD32"]; // Replace with actual UIDs
 
 // Mobile menu toggle
 document.querySelector('.menu-toggle').addEventListener('click', () => {
