@@ -1,6 +1,5 @@
 // chat.js
 
-// Firebase configuration
 const firebaseConfig = {
     apiKey: "AIzaSyDORsM0Dz9d_ZxqVd8zjNXwsEdR1_aVF7g",
     authDomain: "lyria-cfc06.firebaseapp.com", 
@@ -11,6 +10,7 @@ const firebaseConfig = {
     measurementId: "G-0EMBBE255Z",
     databaseURL: "https://lyria-cfc06-default-rtdb.firebaseio.com"
 };
+
 
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
@@ -29,17 +29,10 @@ const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx
 // Define an array of UIDs for users who should have badges
 const badgeUserUIDs = ["qzf9fO2bBLU0PJhRDSQK9KnMZD32", "xLT0XKgtF5ZnlfX2fLj9hXrTcW02"]; // Replace with actual UIDs
 
-// User color preferences
-let userColors = {
-    primaryColor: '#36393f',
-    backgroundColor: '#2f3136',
-    // Add other colors if needed
-};
-
 // Mobile menu toggle
 document.querySelector('.menu-toggle').addEventListener('click', () => {
     document.querySelector('.sidebar').classList.toggle('active');
-});     
+});
 
 // Close sidebar when clicking outside on mobile
 document.addEventListener('click', (e) => {
@@ -68,10 +61,9 @@ auth.onAuthStateChanged(user => {
                         email: user.email,
                         photoURL: user.photoURL || 'default-avatar-url',
                         role: 'user',
-                        channels: [personalChannelId],
+                        channels: [`personal-${user.uid}`],
                         darkMode: false,
-                        notificationsEnabled: false,
-                        colors: userColors // Save default colors
+                        notificationsEnabled: false
                     }),
                     db.collection('channels').doc(personalChannelId).set({
                         name: 'My Personal Channel',
@@ -91,8 +83,7 @@ auth.onAuthStateChanged(user => {
                 role: 'user',
                 channels: [`personal-${user.uid}`],
                 darkMode: false,
-                notificationsEnabled: false,
-                colors: userColors // Default colors
+                notificationsEnabled: false
             };
 
             // Display user information
@@ -119,12 +110,6 @@ auth.onAuthStateChanged(user => {
             darkMode = userData.darkMode;
             notificationsEnabled = userData.notificationsEnabled;
             document.getElementById('notifications-toggle').checked = notificationsEnabled;
-
-            // Load user's color preferences
-            if (userData.colors) {
-                userColors = userData.colors;
-            }
-            applyCustomColors();
             applyDarkMode();
 
             document.getElementById('add-channel').removeAttribute('disabled');
@@ -279,35 +264,6 @@ function setupUIEventListeners() {
             alert('Failed to copy join code');
         }
     });
-
-    // Initialize color pickers with current values
-    document.getElementById('primary-color-picker').value = userColors.primaryColor;
-    document.getElementById('background-color-picker').value = userColors.backgroundColor;
-
-    // Event listener for Save Colors button
-    document.getElementById('save-color-settings').addEventListener('click', () => {
-        // Get selected colors
-        const primaryColor = document.getElementById('primary-color-picker').value;
-        const backgroundColor = document.getElementById('background-color-picker').value;
-
-        // Update userColors object
-        userColors.primaryColor = primaryColor;
-        userColors.backgroundColor = backgroundColor;
-
-        // Apply the custom colors
-        applyCustomColors();
-        applyDarkMode(); // Reapply dark mode with new colors
-
-        // Save the colors to Firestore
-        db.collection('users').doc(currentUser.uid).update({
-            colors: userColors
-        }).then(() => {
-            alert('Color settings saved successfully!');
-        }).catch(error => {
-            console.error("Error saving color settings:", error);
-            alert('Failed to save color settings');
-        });
-    });
 }
 
 function sendMessage() {
@@ -439,7 +395,7 @@ function loadMessages(channelId) {
                 messageContentElement.className = 'message-content';
                 messageContentElement.textContent = message.message;
 
-                // Apply moving color theme if sender is in badgeUserUIDs
+                // *** Apply moving color theme if sender is in badgeUserUIDs ***
                 if (message.senderId && badgeUserUIDs.includes(message.senderId)) {
                     messageContentElement.classList.add('moving-color');
                 }
@@ -456,47 +412,14 @@ function loadMessages(channelId) {
         });
 }
 
-function applyCustomColors() {
-    document.documentElement.style.setProperty('--primary-color', userColors.primaryColor);
-    document.documentElement.style.setProperty('--background-color', userColors.backgroundColor);
-}
-
 function applyDarkMode() {
     if(darkMode) {
-        // Apply darker shades based on user's custom colors
-        const darkerPrimary = shadeColor(userColors.primaryColor, -20);
-        const darkerBackground = shadeColor(userColors.backgroundColor, -20);
-
-        document.documentElement.style.setProperty('--primary-color', darkerPrimary);
-        document.documentElement.style.setProperty('--background-color', darkerBackground);
+        document.documentElement.style.setProperty('--primary-color', '#1a1a1a');
+        document.documentElement.style.setProperty('--background-color', '#121212');
     } else {
-        // Use user's custom colors
-        applyCustomColors();
+        document.documentElement.style.setProperty('--primary-color', '#36393f');
+        document.documentElement.style.setProperty('--background-color', '#2f3136');
     }
-}
-
-// Utility function to adjust color brightness
-function shadeColor(color, percent) {
-    // Convert hex color to RGB
-    let R = parseInt(color.substring(1,3),16);
-    let G = parseInt(color.substring(3,5),16);
-    let B = parseInt(color.substring(5,7),16);
-
-    // Adjust color
-    R = parseInt(R * (100 + percent) / 100);
-    G = parseInt(G * (100 + percent) / 100);
-    B = parseInt(B * (100 + percent) / 100);
-
-    R = (R<255)?R:255;  
-    G = (G<255)?G:255;  
-    B = (B<255)?B:255;  
-
-    // Convert back to hex
-    const RR = ((R.toString(16).length==1)?"0"+R.toString(16):R.toString(16));
-    const GG = ((G.toString(16).length==1)?"0"+G.toString(16):G.toString(16));
-    const BB = ((B.toString(16).length==1)?"0"+B.toString(16):B.toString(16));
-
-    return "#" + RR + GG + BB;
 }
 
 function logout() {
@@ -509,7 +432,7 @@ function logout() {
 
 // Function to switch channels
 function switchChannel(channelId) {
-    currentChannel = channelId; // Update `currentChannel` when switching channels
+    currentChannel = channelId; // Update currentChannel when switching channels
     loadMessages(channelId);     // Load messages for the new channel
-    loadChannelPeerId(channelId); // Load and set `currentChannelPeerId` (from voicecall.js)
+    loadChannelPeerId(channelId); // Load and set currentChannelPeerId (from voicecall.js)
 }
