@@ -1,0 +1,14 @@
+/* Style for the voice call button */
+.make-voice-call-btn {
+    background-color: #4CAF50; /* Green background */
+    color: white; /* White text */
+    border: none; /* No border */
+    border-radius: 4px; /* Rounded corners */
+    padding: 0.5rem 1rem; /* Padding */
+    cursor: pointer; /* Pointer cursor on hover */
+    transition: background-color 0.3s; /* Smooth background color transition */
+}
+
+.make-voice-call-btn:hover {
+    background-color: #45a049; /* Darker green on hover */
+} 

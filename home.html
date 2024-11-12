@@ -6,11 +6,16 @@
 <title>LYRIA Chat - Home</title>
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="chat.css">
+<link rel="stylesheet" href="voiceCall.css">
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+<script src="https://cdn.peerjs.com/1.3.1/peerjs.min.js"></script>
+
 </head>
 <body>
+<script src="voiceCall.js"></script>
+
 <header class="top-header">
     <button class="menu-toggle">☰</button>
     <span style="flex: 1; text-align: center;">LYRIA Chat</span>
@@ -18,7 +23,7 @@
 <div class="app-container">
     <nav class="sidebar">
         <div class="channels">
-            <h3>Text Channels</h3>
+            <h3>Channels</h3>
             <ul class="channels-list" id="channels-list"></ul>
             <button class="add-channel-btn" id="add-channel">Add Channel</button>
             <button class="join-channel-btn" id="join-channel">Join Channel</button>
@@ -33,6 +38,7 @@
         <header class="chat-header">
             <h2 id="channel-title"># general</h2>
             <button id="copy-join-code" class="copy-join-code-btn">Invite Others</button>
+            <button id="make-voice-call" class="make-voice-call-btn">Make Voice Call</button> <!-- Added button for voice call -->
         </header>
         <div class="messages" id="messages">
             <!-- Messages will be dynamically added here with profile pictures -->
