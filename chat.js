@@ -1,4 +1,4 @@
-// Firebase configuration (replace with your own Firebase config)
+// Firebase configuration
 const firebaseConfig = {
     apiKey: "AIzaSyDORsM0Dz9d_ZxqVd8zjNXwsEdR1_aVF7g",
     authDomain: "lyria-cfc06.firebaseapp.com", 
@@ -9,6 +9,7 @@ const firebaseConfig = {
     measurementId: "G-0EMBBE255Z",
     databaseURL: "https://lyria-cfc06-default-rtdb.firebaseio.com"
 };
+
 
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
@@ -52,6 +53,7 @@ auth.onAuthStateChanged(user => {
                 return Promise.all([
                     userDocRef.set({
                         displayName: user.displayName || 'User',
+                        email: user.email,
                         photoURL: user.photoURL || 'default-avatar-url',
                         role: 'user',
                         channels: [personalChannelId],
@@ -71,6 +73,7 @@ auth.onAuthStateChanged(user => {
         }).then(doc => {
             const userData = doc.exists ? doc.data() : {
                 displayName: user.displayName || 'User',
+                email: user.email,
                 photoURL: user.photoURL || 'default-avatar-url',
                 role: 'user',
                 channels: [`personal-${user.uid}`],
@@ -82,7 +85,8 @@ auth.onAuthStateChanged(user => {
             document.getElementById('user-name').textContent = userData.displayName;
             document.getElementById('user-avatar').src = userData.photoURL;
 
-            if (userData.displayName === "Blaine Oler") {
+            // Check user's email to display badges
+            if (userData.email === "olerblaine@gmail.com") {
                 const badgesContainer = document.createElement('div');
                 badgesContainer.className = 'badges-container';
 
@@ -177,6 +181,7 @@ function setupUIEventListeners() {
                 .collection('messages').add({
                     message: message,
                     sender: currentUser.displayName || 'User',
+                    senderEmail: currentUser.email, // Include sender's email
                     timestamp: firebase.firestore.FieldValue.serverTimestamp()
                 }).then(() => {
                     messageInput.value = '';
@@ -337,23 +342,22 @@ function loadMessages(channelId) {
 
                 senderElement.appendChild(senderNameElement);
 
-               // Check if sender is "Blaine Oler" or "Blaine oler" to add badges
-if (message.sender === "Blaine Oler" || message.sender === "Blaine oler") {
-    const badgesContainer = document.createElement('span');
-    badgesContainer.className = 'badges-container';
+                // Check if sender's email is "olerblaine@gmail.com"
+                if (message.senderEmail === "olerblaine@gmail.com") {
+                    const badgesContainer = document.createElement('span');
+                    badgesContainer.className = 'badges-container';
 
-    const badges = ['DevBadge.png', 'Mod.png', 'EarlyAccess.png'];
-    badges.forEach(badgeSrc => {
-        const badge = document.createElement('img');
-        badge.src = `assets/${badgeSrc}`;
-        badge.alt = badgeSrc.replace('.png', '') + ' Badge';
-        badge.className = 'admin-badge';
-        badgesContainer.appendChild(badge);
-    });
+                    const badges = ['DevBadge.png', 'Mod.png', 'EarlyAccess.png'];
+                    badges.forEach(badgeSrc => {
+                        const badge = document.createElement('img');
+                        badge.src = `assets/${badgeSrc}`;
+                        badge.alt = badgeSrc.replace('.png', '') + ' Badge';
+                        badge.className = 'admin-badge';
+                        badgesContainer.appendChild(badge);
+                    });
 
-    senderElement.appendChild(badgesContainer);
-}
-
+                    senderElement.appendChild(badgesContainer);
+                }
 
                 // Message content
                 const messageContentElement = document.createElement('div');
