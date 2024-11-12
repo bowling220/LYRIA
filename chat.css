@@ -396,3 +396,9 @@
     font-weight: bold;
     color: var(--secondary-color);
   }
+  .admin-badge {
+    width: 20px; /* Adjust size as needed */
+    height: 20px;
+    margin-left: 5px; /* Space between the name and the badge */
+    vertical-align: middle;
+}
