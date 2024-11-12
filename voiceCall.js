@@ -2,7 +2,6 @@ let peer;
 let localStream;
 let currentCall;
 let currentChannelPeerId; // Stores the peer ID for the current channel
-let currentChannel; // Stores the current selected channel
 
 // Function to initiate a voice call
 function initiateVoiceCall() {
@@ -14,11 +13,12 @@ function initiateVoiceCall() {
     peer.on('open', (id) => {
         console.log('Your peer ID is: ' + id);
         if (currentChannel) {
-            db.collection('channels').doc(currentChannel).update({
+            db.collection('channels').doc(currentChannel).set({
                 peerId: id
-            }).catch(error => console.error("Error updating peer ID:", error));
+            }, { merge: true }).catch(error => console.error("Error updating peer ID:", error));
         }
     });
+    
 
     // Get user media (audio)
     navigator.mediaDevices.getUserMedia({ audio: true })
