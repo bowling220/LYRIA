@@ -1,14 +1,15 @@
 // Firebase configuration (replace with your own Firebase config)
 const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT_ID.firebaseapp.com", 
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_PROJECT_ID.appspot.com",
-    messagingSenderId: "YOUR_SENDER_ID",
-    appId: "YOUR_APP_ID",
-    measurementId: "YOUR_MEASUREMENT_ID",
-    databaseURL: "YOUR_DATABASE_URL"
-};
+    apiKey: "AIzaSyDORsM0Dz9d_ZxqVd8zjNXwsEdR1_aVF7g",
+    authDomain: "lyria-cfc06.firebaseapp.com", 
+    projectId: "lyria-cfc06",
+    storageBucket: "lyria-cfc06.appspot.com",
+    messagingSenderId: "309881717815",
+    appId: "1:309881717815:web:c8e9a4007341ab17ecebb2",
+    measurementId: "G-0EMBBE255Z",
+    databaseURL: "https://lyria-cfc06-default-rtdb.firebaseio.com"
+  };
+
 
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
