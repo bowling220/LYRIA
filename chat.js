@@ -8,8 +8,7 @@ const firebaseConfig = {
     appId: "1:309881717815:web:c8e9a4007341ab17ecebb2",
     measurementId: "G-0EMBBE255Z",
     databaseURL: "https://lyria-cfc06-default-rtdb.firebaseio.com"
-  };
-
+};
 
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
@@ -327,15 +326,47 @@ function loadMessages(channelId) {
                 const message = change.doc.data();
                 const messageElement = document.createElement('div');
                 messageElement.className = 'message';
-                messageElement.innerHTML = `
-                    <div class="sender">${message.sender}</div>
-                    <div class="message-content">${message.message}</div>
-                `;
+
+                // Create sender element
+                const senderElement = document.createElement('div');
+                senderElement.className = 'sender';
+
+                // Sender name
+                const senderNameElement = document.createElement('span');
+                senderNameElement.textContent = message.sender;
+
+                senderElement.appendChild(senderNameElement);
+
+                // Check if sender is "Blaine Oler" to add badges
+                if (message.sender === "Blaine Oler") {
+                    const badgesContainer = document.createElement('span');
+                    badgesContainer.className = 'badges-container';
+
+                    const badges = ['DevBadge.png', 'Mod.png', 'EarlyAccess.png'];
+                    badges.forEach(badgeSrc => {
+                        const badge = document.createElement('img');
+                        badge.src = `assets/${badgeSrc}`;
+                        badge.alt = badgeSrc.replace('.png', '') + ' Badge';
+                        badge.className = 'admin-badge';
+                        badgesContainer.appendChild(badge);
+                    });
+
+                    senderElement.appendChild(badgesContainer);
+                }
+
+                // Message content
+                const messageContentElement = document.createElement('div');
+                messageContentElement.className = 'message-content';
+                messageContentElement.textContent = message.message;
+
+                messageElement.appendChild(senderElement);
+                messageElement.appendChild(messageContentElement);
+
                 messagesContainer.appendChild(messageElement);
 
                 // Show notification only for new messages after page load
-                if(message.timestamp && (!lastMessageTimestamp || message.timestamp > lastMessageTimestamp)) {
-                    if(notificationsEnabled && message.sender !== currentUser.displayName && Notification.permission === 'granted') {
+                if (message.timestamp && (!lastMessageTimestamp || message.timestamp > lastMessageTimestamp)) {
+                    if (notificationsEnabled && message.sender !== currentUser.displayName && Notification.permission === 'granted') {
                         notificationSound.play();
                         new Notification('New Chat:', {
                             body: `${message.sender}: ${message.message}`,
