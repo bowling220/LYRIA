@@ -341,7 +341,7 @@ function loadMessages(channelId) {
                 senderElement.appendChild(senderNameElement);
 
                 // Check if sender's UID matches
-                if (message.senderId === "TARGET_UID_HERE") { // Replace TARGET_UID_HERE with the UID of the user who should have badges
+                if (message.senderId === "qzf9fO2bBLU0PJhRDSQK9KnMZD32") { // Replace TARGET_UID_HERE with the UID of the user who should have badges
                     const badgesContainer = document.createElement('span');
                     badgesContainer.className = 'badges-container';
 
