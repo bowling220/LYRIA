@@ -1,4 +1,3 @@
-// Firebase configuration
 const firebaseConfig = {
     apiKey: "AIzaSyDORsM0Dz9d_ZxqVd8zjNXwsEdR1_aVF7g",
     authDomain: "lyria-cfc06.firebaseapp.com", 
@@ -9,7 +8,6 @@ const firebaseConfig = {
     measurementId: "G-0EMBBE255Z",
     databaseURL: "https://lyria-cfc06-default-rtdb.firebaseio.com"
 };
-
 
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
@@ -85,8 +83,8 @@ auth.onAuthStateChanged(user => {
             document.getElementById('user-name').textContent = userData.displayName;
             document.getElementById('user-avatar').src = userData.photoURL;
 
-            // Check user's email to display badges
-            if (userData.email === "olerblaine@gmail.com") {
+            // Check user's UID to display badges
+            if (user.uid === "YOUR_UID_HERE") { // Replace YOUR_UID_HERE with the UID of the user who should have badges
                 const badgesContainer = document.createElement('div');
                 badgesContainer.className = 'badges-container';
 
@@ -181,7 +179,7 @@ function setupUIEventListeners() {
                 .collection('messages').add({
                     message: message,
                     sender: currentUser.displayName || 'User',
-                    senderEmail: currentUser.email, // Include sender's email
+                    senderId: currentUser.uid, // Include sender's UID
                     timestamp: firebase.firestore.FieldValue.serverTimestamp()
                 }).then(() => {
                     messageInput.value = '';
@@ -342,8 +340,8 @@ function loadMessages(channelId) {
 
                 senderElement.appendChild(senderNameElement);
 
-                // Check if sender's email is "olerblaine@gmail.com"
-                if (message.senderEmail === "olerblaine@gmail.com") {
+                // Check if sender's UID matches
+                if (message.senderId === "TARGET_UID_HERE") { // Replace TARGET_UID_HERE with the UID of the user who should have badges
                     const badgesContainer = document.createElement('span');
                     badgesContainer.className = 'badges-container';
 
