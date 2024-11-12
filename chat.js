@@ -11,8 +11,6 @@ const firebaseConfig = {
     databaseURL: "https://lyria-cfc06-default-rtdb.firebaseio.com"
 };
 
-
-
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
@@ -140,6 +138,11 @@ function setupUIEventListeners() {
 
     document.getElementById('close-modal').addEventListener('click', () => {
         document.getElementById('settings-modal').style.display = 'none';
+    });
+
+    // Close Profile Modal
+    document.getElementById('close-profile-modal').addEventListener('click', () => {
+        document.getElementById('profile-modal').style.display = 'none';
     });
 
     // Toggle Dark Mode
@@ -373,12 +376,20 @@ function loadMessages(channelId) {
                 const senderAvatarElement = document.createElement('img');
                 senderAvatarElement.src = message.senderPhotoURL || 'assets/default-avatar.png';
                 senderAvatarElement.className = 'sender-avatar';
+                senderAvatarElement.setAttribute('data-uid', message.senderId);
+                senderAvatarElement.addEventListener('click', () => {
+                    showUserProfileModal(message.senderId);
+                });
                 senderElement.appendChild(senderAvatarElement);
 
                 // Sender name
                 const senderNameElement = document.createElement('span');
                 senderNameElement.className = 'sender-name';
                 senderNameElement.textContent = message.sender;
+                senderNameElement.setAttribute('data-uid', message.senderId);
+                senderNameElement.addEventListener('click', () => {
+                    showUserProfileModal(message.senderId);
+                });
                 senderElement.appendChild(senderNameElement);
 
                 // Check if sender's UID is in the badgeUserUIDs array
@@ -427,6 +438,45 @@ function loadMessages(channelId) {
         }, error => {
             console.error("Error loading messages:", error);
         });
+}
+
+function showUserProfileModal(uid) {
+    // Fetch user data from Firestore
+    db.collection('users').doc(uid).get().then(doc => {
+        if (doc.exists) {
+            const userData = doc.data();
+
+            // Set profile image
+            const profileImage = document.getElementById('profile-modal-image');
+            profileImage.src = userData.photoURL || 'assets/default-avatar.png';
+
+            // Set display name
+            const profileName = document.getElementById('profile-modal-name');
+            profileName.textContent = userData.displayName || 'User';
+
+            // Set badges
+            const profileBadges = document.getElementById('profile-modal-badges');
+            profileBadges.innerHTML = ''; // Clear previous badges
+
+            if (badgeUserUIDs.includes(uid)) {
+                const badges = ['DevBadge.png', 'Mod.png', 'EarlyAccess.png'];
+                badges.forEach(badgeSrc => {
+                    const badge = document.createElement('img');
+                    badge.src = `assets/${badgeSrc}`;
+                    badge.alt = badgeSrc.replace('.png', '') + ' Badge';
+                    badge.className = 'admin-badge';
+                    profileBadges.appendChild(badge);
+                });
+            }
+
+            // Display the modal
+            document.getElementById('profile-modal').style.display = 'flex';
+        } else {
+            console.error('User data not found');
+        }
+    }).catch(error => {
+        console.error('Error fetching user data:', error);
+    });
 }
 
 function applyDarkMode() {
