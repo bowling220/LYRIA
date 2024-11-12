@@ -1,14 +1,15 @@
+// voicecall.js
+
 let peer;
 let currentCall;
 let currentChannelPeerId; // Stores the peer ID for the other user in the current channel
 
 // Function to initialize PeerJS
 function initializePeer() {
-    if (!peer) { // Create a new Peer instance only if it doesn’t already exist
+    if (!peer) {
         peer = new Peer();
     }
 
-    // Ensure the peer ID is available before attempting to use it
     peer.on('open', (id) => {
         console.log('Your peer ID is: ' + id);
         // Save your own peerId in your user document
@@ -16,7 +17,7 @@ function initializePeer() {
             peerId: id
         }, { merge: true }).catch(error => console.error("Error updating peer ID:", error));
     });
-    
+
     // Listen for incoming calls
     peer.on('call', (call) => {
         // When a call is received, request user media
@@ -24,6 +25,7 @@ function initializePeer() {
             .then(stream => {
                 call.answer(stream); // Answer the call with your audio stream
                 currentCall = call; // Keep track of the current call
+                document.getElementById('end-call').style.display = 'block'; // Show end call button
                 call.on('stream', (remoteStream) => {
                     const remoteAudio = document.createElement('audio');
                     remoteAudio.srcObject = remoteStream;
@@ -34,6 +36,8 @@ function initializePeer() {
                     console.log("Call ended.");
                     // Stop your audio stream
                     stream.getTracks().forEach(track => track.stop());
+                    currentCall = null;
+                    document.getElementById('end-call').style.display = 'none'; // Hide end call button
                 });
             })
             .catch(error => console.error('Error accessing media devices.', error));
@@ -46,6 +50,7 @@ function callPeer(peerId) {
     navigator.mediaDevices.getUserMedia({ audio: true })
         .then(stream => {
             currentCall = peer.call(peerId, stream);
+            document.getElementById('end-call').style.display = 'block'; // Show end call button
             currentCall.on('stream', (remoteStream) => {
                 const remoteAudio = document.createElement('audio');
                 remoteAudio.srcObject = remoteStream;
@@ -55,18 +60,29 @@ function callPeer(peerId) {
                 console.log("Call ended.");
                 // Stop your audio stream
                 stream.getTracks().forEach(track => track.stop());
+                currentCall = null;
+                document.getElementById('end-call').style.display = 'none'; // Hide end call button
             });
         })
         .catch(error => console.error('Error accessing media devices.', error));
 }
 
-// Event listener for the voice call button in the selected chat channel
+// Event listener for the voice call button
 document.getElementById('make-voice-call').addEventListener('click', () => {
     if (currentChannelPeerId) {
         callPeer(currentChannelPeerId); // Call the peer ID of the other user
     } else {
         console.error('No peer ID available for this channel.');
         alert('The other user is not available for a voice call.');
+    }
+});
+
+// Add event listener for ending the call
+document.getElementById('end-call').addEventListener('click', () => {
+    if (currentCall) {
+        currentCall.close();
+        currentCall = null;
+        document.getElementById('end-call').style.display = 'none';
     }
 });
 
@@ -99,13 +115,3 @@ function loadChannelPeerId(channelId) {
         }
     }).catch(error => console.error("Error loading channel data:", error));
 }
-
-// Function to switch channels
-function switchChannel(channelId) {
-    currentChannel = channelId; // Update `currentChannel` when switching channels
-    loadMessages(channelId);
-    loadChannelPeerId(channelId); // Load and set `currentChannelPeerId`
-}
-
-// Initialize PeerJS when the application starts
-initializePeer();

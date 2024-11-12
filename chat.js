@@ -1,12 +1,15 @@
+// chat.js
+
+// Firebase configuration
 const firebaseConfig = {
-    apiKey: "AIzaSyDORsM0Dz9d_ZxqVd8zjNXwsEdR1_aVF7g",
+    apiKey: "YOUR_API_KEY",
     authDomain: "lyria-cfc06.firebaseapp.com", 
     projectId: "lyria-cfc06",
     storageBucket: "lyria-cfc06.appspot.com",
-    messagingSenderId: "309881717815",
-    appId: "1:309881717815:web:c8e9a4007341ab17ecebb2",
-    measurementId: "G-0EMBBE255Z",
-    databaseURL: "https://lyria-cfc06-default-rtdb.firebaseio.com"
+    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+    appId: "YOUR_APP_ID",
+    measurementId: "YOUR_MEASUREMENT_ID",
+    databaseURL: "YOUR_DATABASE_URL"
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -24,7 +27,7 @@ let unsubscribeFromMessages = null; // Unsubscribe function for message listener
 const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
 
 // Define an array of UIDs for users who should have badges
-const badgeUserUIDs = ["xLT0XKgtF5ZnlfX2fLj9hXrTcW02", "qzf9fO2bBLU0PJhRDSQK9KnMZD32"]; // Replace with actual UIDs
+const badgeUserUIDs = ["USER_UID_1", "USER_UID_2"]; // Replace with actual UIDs
 
 // Mobile menu toggle
 document.querySelector('.menu-toggle').addEventListener('click', () => {
@@ -115,6 +118,10 @@ auth.onAuthStateChanged(user => {
             setupUIEventListeners();
             currentChannel = `personal-${user.uid}`;
             loadChannels();
+
+            // Initialize PeerJS after currentUser is available
+            initializePeer(); // Make sure this function is defined in voicecall.js
+
         }).catch(error => {
             console.error("Error handling user data:", error);
         });
@@ -226,8 +233,7 @@ function setupUIEventListeners() {
                         return db.collection('channels').doc(channel.id).update({
                             members: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
                         }).then(() => {
-                            currentChannel = channel.id;
-                            loadMessages(channel.id);
+                            switchChannel(channel.id);
                             loadChannels();
                         });
                     } else {
@@ -294,9 +300,9 @@ function loadChannels() {
             const button = document.createElement('button');
             button.className = 'channel-btn';
             button.textContent = `#${channel.name}`;
+            button.setAttribute('data-channel-id', channel.id); // Add data attribute
             button.onclick = () => {
-                currentChannel = channel.id;
-                loadMessages(channel.id);
+                switchChannel(channel.id);
                 document.querySelectorAll('.channel-btn').forEach(btn => btn.classList.remove('active-channel'));
                 button.classList.add('active-channel');
                 document.getElementById('message-input').placeholder = `Message #${channel.name}`;
@@ -313,7 +319,7 @@ function loadChannels() {
         if (!currentChannel) {
             currentChannel = `personal-${currentUser.uid}`;
         }
-        loadMessages(currentChannel);
+        switchChannel(currentChannel); // Use switchChannel to load messages and peer ID
     })
     .catch(error => {
         console.error("Error loading channels:", error);
@@ -417,4 +423,11 @@ function logout() {
     }).catch(error => {
         console.error("Error logging out:", error);
     });
+}
+
+// Function to switch channels
+function switchChannel(channelId) {
+    currentChannel = channelId; // Update `currentChannel` when switching channels
+    loadMessages(channelId);     // Load messages for the new channel
+    loadChannelPeerId(channelId); // Load and set `currentChannelPeerId` (from voicecall.js)
 }
