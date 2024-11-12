@@ -24,7 +24,7 @@ let lastMessageTimestamp = null;
 const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
 
 // Define an array of UIDs for users who should have badges
-const badgeUserUIDs = ["qzf9fO2bBLU0PJhRDSQK9KnMZD32", "xLT0XKgtF5ZnlfX2fLj9hXrTcW02", "UID_3"]; // Add additional UIDs as needed
+const badgeUserUIDs = ["qzf9fO2bBLU0PJhRDSQK9KnMZD32", "xLT0XKgtF5ZnlfX2fLj9hXrTcW02"]; // Add additional UIDs as needed
 
 // Mobile menu toggle
 document.querySelector('.menu-toggle').addEventListener('click', () => {
@@ -146,10 +146,18 @@ function setupUIEventListeners() {
     document.getElementById('update-display-name').addEventListener('click', () => {
         const newName = document.getElementById('display-name-input').value.trim();
         if(newName) {
-            db.collection('users').doc(currentUser.uid).update({
+            // Update display name in Firebase Authentication
+            currentUser.updateProfile({
                 displayName: newName
             }).then(() => {
+                // Update display name in Firestore
+                return db.collection('users').doc(currentUser.uid).update({
+                    displayName: newName
+                });
+            }).then(() => {
+                // Update the display name in the UI
                 document.getElementById('user-name').textContent = newName;
+                currentUser.displayName = newName; // Update the currentUser object
                 document.getElementById('display-name-input').value = '';
                 alert('Display name updated successfully!');
             }).catch(error => {
