@@ -63,7 +63,10 @@ function startOrJoinCall() {
                 localStream = stream;
                 joinActiveCall();
             })
-            .catch(error => console.error('Error accessing media devices.', error));
+            .catch(error => {
+                console.error('Error accessing media devices.', error);
+                alert('Microphone access is required to make or join a voice call.');
+            });
     } else {
         joinActiveCall();
     }

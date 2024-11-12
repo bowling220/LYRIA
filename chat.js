@@ -426,9 +426,11 @@ function logout() {
     });
 }
 
-// Function to switch channels
 function switchChannel(channelId) {
-    currentChannel = channelId; // Update `currentChannel` when switching channels
-    loadMessages(channelId);     // Load messages for the new channel
-    loadChannelPeerId(channelId); // Load and set `currentChannelPeerId` (from voicecall.js)
+    window.leaveCurrentCall(); // Leave any active calls
+    currentChannel = channelId;
+    loadMessages(channelId);
+    window.setupCallListeners(); // Set up call listeners for the new channel
 }
+
+
