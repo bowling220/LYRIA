@@ -9,7 +9,6 @@ const firebaseConfig = {
     databaseURL: "https://lyria-cfc06-default-rtdb.firebaseio.com"
 };
 
-
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
@@ -19,12 +18,13 @@ let currentChannel;
 let darkMode = false;
 let notificationsEnabled = false;
 let lastMessageTimestamp = null;
+let unsubscribeFromMessages = null; // Unsubscribe function for message listener
 
 // Create notification sound
 const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
 
 // Define an array of UIDs for users who should have badges
-const badgeUserUIDs = ["qzf9fO2bBLU0PJhRDSQK9KnMZD32", "xLT0XKgtF5ZnlfX2fLj9hXrTcW02"]; // Add additional UIDs as needed
+const badgeUserUIDs = ["USER_UID_1", "USER_UID_2"]; // Replace with actual UIDs
 
 // Mobile menu toggle
 document.querySelector('.menu-toggle').addEventListener('click', () => {
@@ -183,28 +183,13 @@ function setupUIEventListeners() {
 
     // Send message
     document.getElementById('send-button').addEventListener('click', () => {
-        const messageInput = document.getElementById('message-input');
-        const message = messageInput.value.trim();
-
-        if (message && currentChannel) {
-            db.collection('channels').doc(currentChannel)
-                .collection('messages').add({
-                    message: message,
-                    sender: currentUser.displayName || 'User',
-                    senderId: currentUser.uid, // Include sender's UID
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                }).then(() => {
-                    messageInput.value = '';
-                }).catch(error => {
-                    console.error("Error sending message:", error);
-                });
-        }
+        sendMessage();
     });
 
     document.getElementById('message-input').addEventListener('keypress', (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
-            document.getElementById('send-button').click();
+            sendMessage();
         }
     });
 
@@ -275,6 +260,25 @@ function setupUIEventListeners() {
     });
 }
 
+function sendMessage() {
+    const messageInput = document.getElementById('message-input');
+    const messageText = messageInput.value.trim();
+
+    if (messageText && currentChannel) {
+        db.collection('channels').doc(currentChannel)
+            .collection('messages').add({
+                message: messageText,
+                sender: currentUser.displayName || 'User',
+                senderId: currentUser.uid, // Include sender's UID
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            }).then(() => {
+                messageInput.value = '';
+            }).catch(error => {
+                console.error("Error sending message:", error);
+            });
+    }
+}
+
 function loadChannels() {
     const channelsList = document.getElementById('channels-list');
     channelsList.innerHTML = '';
@@ -321,6 +325,14 @@ function generateJoinCode() {
 }
 
 function loadMessages(channelId) {
+    console.log('loadMessages called with channelId:', channelId);
+
+    // Unsubscribe from previous listener if it exists
+    if (unsubscribeFromMessages) {
+        unsubscribeFromMessages();
+        unsubscribeFromMessages = null;
+    }
+
     const messagesContainer = document.getElementById('messages');
     messagesContainer.innerHTML = '';
     const channelTitle = document.getElementById('channel-title');
@@ -333,12 +345,14 @@ function loadMessages(channelId) {
         }
     });
 
-    db.collection('channels').doc(channelId).collection('messages')
-    .orderBy('timestamp')
-    .onSnapshot(snapshot => {
-        snapshot.docChanges().forEach(change => {
-            if (change.type === 'added') {
-                const message = change.doc.data();
+    // Set up the new listener and store the unsubscribe function
+    unsubscribeFromMessages = db.collection('channels').doc(channelId).collection('messages')
+        .orderBy('timestamp')
+        .onSnapshot(snapshot => {
+            messagesContainer.innerHTML = ''; // Clear the container to prevent duplicates
+
+            snapshot.forEach(doc => {
+                const message = doc.data();
                 const messageElement = document.createElement('div');
                 messageElement.className = 'message';
 
@@ -354,6 +368,7 @@ function loadMessages(channelId) {
 
                 // Check if sender's UID is in the badgeUserUIDs array
                 if (message.senderId && badgeUserUIDs.includes(message.senderId)) {
+                    console.log('Displaying badges for senderId:', message.senderId);
                     const badgesContainer = document.createElement('span');
                     badgesContainer.className = 'badges-container';
 
@@ -378,24 +393,12 @@ function loadMessages(channelId) {
                 messageElement.appendChild(messageContentElement);
 
                 messagesContainer.appendChild(messageElement);
+            });
 
-                // Show notification only for new messages after page load
-                if (message.timestamp && (!lastMessageTimestamp || message.timestamp > lastMessageTimestamp)) {
-                    if (notificationsEnabled && message.sender !== currentUser.displayName && Notification.permission === 'granted') {
-                        notificationSound.play();
-                        new Notification('New Chat:', {
-                            body: `${message.sender}: ${message.message}`,
-                            icon: '/assets/icon.jpg'
-                        });
-                    }
-                    lastMessageTimestamp = message.timestamp;
-                }
-            }
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }, error => {
+            console.error("Error loading messages:", error);
         });
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    }, error => {
-        console.error("Error loading messages:", error);
-    });
 }
 
 function applyDarkMode() {
