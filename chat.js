@@ -205,6 +205,24 @@ function setupUIEventListeners() {
         }
     });
 
+    // Detect typing
+    const messageInput = document.getElementById('message-input');
+    let typingTimer;
+    const TYPING_INTERVAL = 3000; // 3 seconds of inactivity considered as stopped typing
+
+    messageInput.addEventListener('input', () => {
+        setTypingStatus(true);
+
+        clearTimeout(typingTimer);
+        typingTimer = setTimeout(() => {
+            setTypingStatus(false);
+        }, TYPING_INTERVAL);
+    });
+
+    messageInput.addEventListener('blur', () => {
+        setTypingStatus(false);
+    });
+
     // Add channel
     document.getElementById('add-channel').addEventListener('click', () => {
         const channelName = prompt('Enter channel name:');
@@ -285,10 +303,50 @@ function sendMessage() {
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             }).then(() => {
                 messageInput.value = '';
+                // Reset typing status
+                setTypingStatus(false);
             }).catch(error => {
                 console.error("Error sending message:", error);
             });
     }
+}
+
+function setTypingStatus(isTyping) {
+    if (currentChannel && currentUser) {
+        const typingRef = db.collection('channels').doc(currentChannel)
+            .collection('typingStatus').doc(currentUser.uid);
+
+        if (isTyping) {
+            typingRef.set({
+                displayName: currentUser.displayName || 'User',
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        } else {
+            typingRef.delete();
+        }
+    }
+}
+
+function listenForTypingStatus(channelId) {
+    const typingStatusContainer = document.getElementById('typing-status');
+    const typingRef = db.collection('channels').doc(channelId)
+        .collection('typingStatus');
+
+    typingRef.onSnapshot(snapshot => {
+        const typingUsers = [];
+        snapshot.forEach(doc => {
+            if (doc.id !== currentUser.uid) {
+                typingUsers.push(doc.data().displayName);
+            }
+        });
+
+        if (typingUsers.length > 0) {
+            typingStatusContainer.textContent = `${typingUsers.join(', ')} is typing...`;
+            typingStatusContainer.style.display = 'block';
+        } else {
+            typingStatusContainer.style.display = 'none';
+        }
+    });
 }
 
 function loadChannels() {
@@ -501,5 +559,6 @@ function logout() {
 function switchChannel(channelId) {
     currentChannel = channelId; // Update currentChannel when switching channels
     loadMessages(channelId);     // Load messages for the new channel
+    listenForTypingStatus(channelId); // Listen for typing status changes
     loadChannelPeerId(channelId); // Load and set currentChannelPeerId (from voicecall.js)
 }
