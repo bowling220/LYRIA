@@ -12,6 +12,8 @@ const firebaseConfig = {
 };
 
 
+
+// Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
@@ -59,7 +61,7 @@ auth.onAuthStateChanged(user => {
                     userDocRef.set({
                         displayName: user.displayName || 'User',
                         email: user.email,
-                        photoURL: user.photoURL || 'default-avatar-url',
+                        photoURL: user.photoURL || 'assets/default-avatar.png',
                         role: 'user',
                         channels: [`personal-${user.uid}`],
                         darkMode: false,
@@ -79,7 +81,7 @@ auth.onAuthStateChanged(user => {
             const userData = doc.exists ? doc.data() : {
                 displayName: user.displayName || 'User',
                 email: user.email,
-                photoURL: user.photoURL || 'default-avatar-url',
+                photoURL: user.photoURL || 'assets/default-avatar.png',
                 role: 'user',
                 channels: [`personal-${user.uid}`],
                 darkMode: false,
@@ -276,6 +278,7 @@ function sendMessage() {
                 message: messageText,
                 sender: currentUser.displayName || 'User',
                 senderId: currentUser.uid, // Include sender's UID
+                senderPhotoURL: currentUser.photoURL || 'assets/default-avatar.png', // Include sender's photo URL
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             }).then(() => {
                 messageInput.value = '';
@@ -366,10 +369,16 @@ function loadMessages(channelId) {
                 const senderElement = document.createElement('div');
                 senderElement.className = 'sender';
 
+                // Sender avatar
+                const senderAvatarElement = document.createElement('img');
+                senderAvatarElement.src = message.senderPhotoURL || 'assets/default-avatar.png';
+                senderAvatarElement.className = 'sender-avatar';
+                senderElement.appendChild(senderAvatarElement);
+
                 // Sender name
                 const senderNameElement = document.createElement('span');
+                senderNameElement.className = 'sender-name';
                 senderNameElement.textContent = message.sender;
-
                 senderElement.appendChild(senderNameElement);
 
                 // Check if sender's UID is in the badgeUserUIDs array
@@ -390,12 +399,20 @@ function loadMessages(channelId) {
                     senderElement.appendChild(badgesContainer);
                 }
 
+                // Timestamp
+                const timestampElement = document.createElement('span');
+                timestampElement.className = 'message-timestamp';
+                const timestamp = message.timestamp ? message.timestamp.toDate() : new Date();
+                const timeString = timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                timestampElement.textContent = timeString;
+                senderElement.appendChild(timestampElement);
+
                 // Message content
                 const messageContentElement = document.createElement('div');
                 messageContentElement.className = 'message-content';
                 messageContentElement.textContent = message.message;
 
-                // *** Apply moving color theme if sender is in badgeUserUIDs ***
+                // Apply moving color theme if sender is in badgeUserUIDs
                 if (message.senderId && badgeUserUIDs.includes(message.senderId)) {
                     messageContentElement.classList.add('moving-color');
                 }
