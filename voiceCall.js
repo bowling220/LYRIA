@@ -13,7 +13,6 @@ function initializePeer() {
 
     peer.on('open', (id) => {
         console.log('Your peer ID is: ' + id);
-        // Save your own peerId in your user document (optional since we're using UID as peer ID)
     });
 
     // Listen for incoming calls
@@ -55,13 +54,8 @@ function handleCallEvents(call) {
     });
 }
 
-// Event listener for the voice call button
-document.getElementById('make-voice-call').addEventListener('click', () => {
-    startGroupCall();
-});
-
-// Function to start or join a group call
-function startGroupCall() {
+// Function to start or join a call
+function startOrJoinCall() {
     // Get user media if not already obtained
     if (!localStream) {
         navigator.mediaDevices.getUserMedia({ audio: true })
@@ -77,12 +71,12 @@ function startGroupCall() {
 
 // Function to join the active call in the channel
 function joinActiveCall() {
-    // Add self to activeCallMembers in Firestore
     const channelRef = db.collection('channels').doc(currentChannel);
 
-    // Update the activeCallMembers array atomically
+    // Add self to activeCallMembers in Firestore
     channelRef.update({
-        activeCallMembers: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
+        activeCallMembers: firebase.firestore.FieldValue.arrayUnion(currentUser.uid),
+        callActive: true
     }).then(() => {
         // Listen for changes in activeCallMembers
         listenToActiveCallMembers();
@@ -121,12 +115,8 @@ function listenToActiveCallMembers() {
                 }
             });
 
-            // Show or hide the end call button
-            if (Object.keys(currentCalls).length > 0) {
-                document.getElementById('end-call').style.display = 'block';
-            } else {
-                document.getElementById('end-call').style.display = 'none';
-            }
+            // Update the call button text based on callActive and active members
+            updateCallButton(data.callActive, activeMembers);
         }
     });
 
@@ -138,6 +128,14 @@ function callPeer(peerId) {
     const call = peer.call(peerId, localStream);
     handleCallEvents(call);
 }
+
+// Event listener for the voice call button
+document.getElementById('make-voice-call').addEventListener('click', () => {
+    const buttonText = document.getElementById('make-voice-call').textContent;
+    if (buttonText === 'Make Voice Call' || buttonText === 'Join Call') {
+        startOrJoinCall();
+    }
+});
 
 // Add event listener for ending the call
 document.getElementById('end-call').addEventListener('click', () => {
@@ -169,6 +167,21 @@ function endGroupCall() {
         // Unsubscribe from Firestore listeners
         callUnsubscribes.forEach(unsub => unsub());
         callUnsubscribes = [];
+
+        // Check if we are the last person in the call
+        channelRef.get().then(doc => {
+            if (doc.exists) {
+                const data = doc.data();
+                const activeMembers = data.activeCallMembers || [];
+                if (activeMembers.length === 0) {
+                    // No one else in the call, set callActive to false and clear activeCallMembers
+                    channelRef.update({
+                        callActive: false,
+                        activeCallMembers: firebase.firestore.FieldValue.delete()
+                    });
+                }
+            }
+        });
     }).catch(error => console.error("Error ending call:", error));
 }
 
@@ -176,5 +189,55 @@ function endGroupCall() {
 function leaveCurrentCall() {
     if (localStream || Object.keys(currentCalls).length > 0) {
         endGroupCall();
+    } else {
+        // Even if not in call, unsubscribe from listeners and update button
+        callUnsubscribes.forEach(unsub => unsub());
+        callUnsubscribes = [];
+        updateCallButton(false, []);
     }
 }
+
+// Listener for changes in callActive to update the button text
+function listenToCallActive() {
+    const channelRef = db.collection('channels').doc(currentChannel);
+
+    const unsubscribe = channelRef.onSnapshot(doc => {
+        if (doc.exists) {
+            const data = doc.data();
+            const activeMembers = data.activeCallMembers || [];
+            updateCallButton(data.callActive, activeMembers);
+        }
+    });
+
+    callUnsubscribes.push(unsubscribe);
+}
+
+// Function to update the call button based on call status
+function updateCallButton(callActive, activeMembers) {
+    const callButton = document.getElementById('make-voice-call');
+
+    if (callActive) {
+        if (activeMembers.includes(currentUser.uid)) {
+            // User is in call
+            callButton.style.display = 'none';
+        } else {
+            // User is not in call
+            callButton.textContent = 'Join Call';
+            callButton.style.display = 'inline-block';
+        }
+    } else {
+        // No active call
+        callButton.textContent = 'Make Voice Call';
+        callButton.style.display = 'inline-block';
+    }
+}
+
+// Call this function when switching channels to set up the listener
+function setupCallListeners() {
+    leaveCurrentCall(); // Ensure we leave any previous calls
+    listenToCallActive(); // Start listening to callActive changes
+}
+
+// Expose functions to global scope so they can be called from chat.js
+window.leaveCurrentCall = leaveCurrentCall;
+window.setupCallListeners = setupCallListeners;
