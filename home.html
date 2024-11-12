@@ -9,12 +9,8 @@
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.net.min.js"></script>
 </head>
 <body>
-<div id="vanta-background"></div>
-
 <header class="top-header">
     <button class="menu-toggle">☰</button>
     <span style="flex: 1; text-align: center;">LYRIA Chat</span>
@@ -88,23 +84,5 @@
     </div>
 </div>
 <script src="chat.js"></script>
-
-<script>
-    VANTA.NET({
-        el: "#vanta-background",
-        mouseControls: true,
-        touchControls: true,
-        gyroControls: false,
-        minHeight: 200.00,
-        minWidth: 200.00,
-        scale: 1.00,
-        scaleMobile: 1.00,
-        color: 0x5865f2, // Discord-like blue color
-        backgroundColor: 0x36393f, // Matches your chat background
-        points: 10,
-        maxDistance: 20.00,
-        spacing: 15.00
-    });
-    </script>
 </body>
 </html>

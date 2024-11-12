@@ -1,5 +1,5 @@
- /* Basic styling for chat interface */
- :root {
+/* Basic styling for chat interface */
+:root {
     --primary-color: #36393f;
     --secondary-color: #5865f2;
     --accent-color: #43b581;
@@ -9,7 +9,7 @@
     --message-hover: #32353b;
     --sidebar-color: #202225;
   }
-
+  
   body {
     font-family: Arial, sans-serif;
     margin: 0;
@@ -20,7 +20,7 @@
     height: 100vh;
     overflow: hidden;
   }
-
+  
   .top-header {
     background-color: var(--sidebar-color);
     color: #fff;
@@ -32,7 +32,7 @@
     justify-content: space-between;
     align-items: center;
   }
-
+  
   .menu-toggle {
     display: none;
     background: none;
@@ -41,12 +41,12 @@
     font-size: 1.5rem;
     cursor: pointer;
   }
-
+  
   .app-container {
     display: flex;
     height: calc(100vh - 50px); /* Subtract header height */
   }
-
+  
   /* Sidebar */
   .sidebar {
     background-color: var(--sidebar-color);
@@ -55,12 +55,12 @@
     flex-direction: column;
     overflow: auto;
   }
-
+  
   .channels {
     flex: 1;
     padding: 1rem;
   }
-
+  
   .channels h3 {
     font-size: 0.9rem;
     color: #8e9297;
@@ -69,13 +69,13 @@
     padding-bottom: 0.5rem;
     text-transform: uppercase;
   }
-
+  
   .channels-list {
     list-style: none;
     padding: 0;
     margin: 0;
   }
-
+  
   .channel-btn {
     display: flex;
     align-items: center;
@@ -89,12 +89,12 @@
     width: 100%;
     transition: background 0.3s;
   }
-
+  
   .channel-btn:hover, .channel-btn.active-channel {
     background-color: var(--channel-hover);
     color: var(--text-color);
   }
-
+  
   .add-channel-btn, .join-channel-btn {
     width: 100%;
     padding: 0.5rem;
@@ -108,12 +108,12 @@
     font-size: 0.9rem;
     text-align: left;
   }
-
+  
   .add-channel-btn:hover, .join-channel-btn:hover {
     background-color: var(--channel-hover);
     color: var(--text-color);
   }
-
+  
   .user-profile {
     padding: 0.8rem;
     background-color: #292b2f;
@@ -121,28 +121,40 @@
     align-items: center;
     gap: 0.5rem;
   }
-
+  
   .avatar {
     width: 32px;
     height: 32px;
     border-radius: 50%;
     border: 2px solid var(--secondary-color);
   }
-
+  
   .username {
     font-weight: bold;
     font-size: 0.9rem;
   }
-
+  
   /* Main Chat Area */
   .chat-area {
     flex: 1;
     display: flex;
     flex-direction: column;
-    background-color: var(--background-color);
+    background-color: transparent;
     min-width: 0; /* Allow shrinking */
+    position: relative;
+    z-index: 1;
   }
-
+  
+  #vanta-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+  }
+  
   .chat-header {
     padding: 0.8rem;
     display: flex;
@@ -153,14 +165,14 @@
     color: var(--text-color);
     font-weight: bold;
   }
-
+  
   .messages {
     flex: 1;
     overflow-y: auto;
     padding: 0.8rem;
     background-color: var(--primary-color);
   }
-
+  
   .message {
     display: flex;
     flex-direction: column;
@@ -169,26 +181,26 @@
     background-color: var(--message-hover);
     border-radius: 5px;
   }
-
+  
   .sender {
     font-weight: bold;
     font-size: 0.9rem;
     color: var(--secondary-color);
     margin-bottom: 0.2rem;
   }
-
+  
   .message-content {
     font-size: 0.85rem;
     word-break: break-word;
   }
-
+  
   .message-input {
     display: flex;
     padding: 0.8rem;
     border-top: 1px solid #202225;
     background-color: var(--primary-color);
   }
-
+  
   textarea {
     flex: 1;
     padding: 0.6rem;
@@ -201,7 +213,7 @@
     min-height: 40px;
     max-height: 120px;
   }
-
+  
   .send-btn {
     background-color: var(--secondary-color);
     color: #fff;
@@ -214,11 +226,11 @@
     transition: background 0.3s;
     white-space: nowrap;
   }
-
+  
   .send-btn:hover {
     background-color: #4a5de2;
   }
-
+  
   .copy-join-code-btn {
     background-color: var(--secondary-color);
     color: #fff;
@@ -229,11 +241,11 @@
     transition: background 0.3s;
     font-size: 0.9rem;
   }
-
+  
   .copy-join-code-btn:hover {
     background-color: #4a5de2;
   }
-
+  
   /* Settings Modal */
   .modal {
     display: none;
@@ -247,7 +259,7 @@
     align-items: center;
     z-index: 1000;
   }
-
+  
   .modal-content {
     background-color: var(--background-color);
     padding: 1rem;
@@ -256,13 +268,13 @@
     width: 90%;
     max-width: 300px;
   }
-
+  
   .modal-content h2 {
     color: var(--text-color);
     margin-bottom: 1rem;
     font-size: 1.2rem;
   }
-
+  
   .close-modal {
     background-color: var(--secondary-color);
     color: #fff;
@@ -273,13 +285,13 @@
     margin-top: 0.8rem;
     font-size: 0.9rem;
   }
-
+  
   /* Mobile Responsive Styles */
   @media (max-width: 768px) {
     .menu-toggle {
       display: block;
     }
-
+  
     .sidebar {
       position: fixed;
       left: -250px;
@@ -289,62 +301,62 @@
       transition: left 0.3s ease;
       height: calc(100vh - 50px); /* Subtract header height */
     }
-
+  
     .sidebar.active {
       left: 0;
       box-shadow: 2px 0 5px rgba(0, 0, 0, 0.3);
     }
-
+  
     .app-container {
       position: relative;
       height: calc(100vh - 50px); /* Subtract header height */
     }
-
+  
     .chat-area {
       width: 100%;
       height: calc(100vh - 50px); /* Subtract header height */
     }
-
+  
     .chat-header {
       padding: 0.6rem;
       position: sticky;
       top: 0;
       z-index: 1;
     }
-
+  
     .chat-header h2 {
       font-size: 1rem;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
-
+  
     .messages {
       height: calc(100vh - 170px); /* Adjust for header and input area */
       padding: 0.6rem;
     }
-
+  
     .message-input {
       padding: 0.6rem;
       position: sticky;
       bottom: 0;
     }
-
+  
     textarea {
       font-size: 1rem;
       padding: 0.5rem;
     }
-
+  
     .send-btn {
       padding: 0.5rem;
       min-width: 60px;
     }
-
+  
     .copy-join-code-btn {
       font-size: 0.8rem;
       padding: 0.3rem 0.6rem;
     }
-
+  
     /* Improve touch targets */
     .channel-btn,
     .add-channel-btn,
@@ -352,7 +364,7 @@
       padding: 0.8rem;
       min-height: 44px;
     }
-
+  
     /* Ensure modal is accessible on mobile */
     .modal-content {
       margin: 1rem;
@@ -360,9 +372,9 @@
       overflow-y: auto;
     }
   }
-
-/* Add these to your existing CSS */
-.admin-badge {
+  
+  /* Admin badge and message styling */
+  .admin-badge {
     background-color: #ffd700;
     color: #000;
     padding: 0.2rem 0.4rem;
@@ -372,15 +384,15 @@
     display: inline-flex;
     align-items: center;
     gap: 0.2rem;
-}
-
-.message-header {
+  }
+  
+  .message-header {
     display: flex;
     align-items: center;
     margin-bottom: 0.3rem;
-}
-
-.message-username {
+  }
+  
+  .message-username {
     font-weight: bold;
     color: var(--secondary-color);
-}
+  }
