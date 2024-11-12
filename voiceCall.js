@@ -1,6 +1,5 @@
 // voicecall.js
 
-
 let peer;
 let currentCalls = {}; // Stores active calls with other peers
 let localStream;
@@ -9,22 +8,11 @@ let callUnsubscribes = []; // Stores unsubscribe functions for Firestore listene
 // Function to initialize PeerJS
 function initializePeer() {
     if (!peer) {
-        peer = new Peer(currentUser.uid, {
-            config: {
-                iceServers: [
-                    { urls: 'stun:stun.l.google.com:19302' },
-                    // Add TURN server configurations if available
-                ]
-            }
-        });
+        peer = new Peer(currentUser.uid); // Use user's UID as peer ID
     }
 
     peer.on('open', (id) => {
         console.log('Your peer ID is: ' + id);
-    });
-
-    peer.on('error', (err) => {
-        console.error('PeerJS error:', err);
     });
 
     // Listen for incoming calls
@@ -41,10 +29,7 @@ function initializePeer() {
                     call.answer(localStream);
                     handleCallEvents(call);
                 })
-                .catch(error => {
-                    console.error('Error accessing media devices.', error);
-                    alert('Microphone access is required to make or join a voice call.');
-                });
+                .catch(error => console.error('Error accessing media devices.', error));
         }
     });
 }
@@ -57,17 +42,7 @@ function handleCallEvents(call) {
     call.on('stream', (remoteStream) => {
         const remoteAudio = document.createElement('audio');
         remoteAudio.srcObject = remoteStream;
-        remoteAudio.autoplay = true; // Enable autoplay
-        remoteAudio.controls = false; // Hide controls (you can set to true for testing)
-        remoteAudio.style.display = 'none'; // Hide the audio element
-        document.body.appendChild(remoteAudio);
-
-        // Attempt to play the audio
-        remoteAudio.play().catch(error => {
-            console.error('Error playing remote audio:', error);
-            // Handle autoplay restrictions
-            alert('Please interact with the page to enable audio playback.');
-        });
+        remoteAudio.play();
     });
 
     call.on('close', () => {
@@ -85,7 +60,6 @@ function startOrJoinCall() {
     if (!localStream) {
         navigator.mediaDevices.getUserMedia({ audio: true })
             .then(stream => {
-                console.log('Microphone access granted.');
                 localStream = stream;
                 joinActiveCall();
             })
