@@ -1,6 +1,7 @@
 let peer;
 let localStream;
 let currentCall;
+let currentChannelPeerId; // Stores the peer ID for the current channel
 
 // Function to initiate a voice call
 function initiateVoiceCall() {
@@ -24,18 +25,22 @@ function initiateVoiceCall() {
                 });
             });
 
-            // Log the peer ID for sharing
+            // Log the peer ID for sharing and set up channel-specific connections
             console.log('Your peer ID is: ' + peer.id);
+
+            // Set the peer ID for the selected channel
+            // This example assumes a `setChannelPeerId` function exists to set the peer ID for each channel
+            setChannelPeerId(peer.id);
         })
         .catch(error => {
             console.error('Error accessing media devices.', error);
         });
 }
 
-// Function to call another peer
-function callPeer(peerId) {
-    if (localStream) {
-        const call = peer.call(peerId, localStream);
+// Function to call another peer in the selected channel
+function callPeerInChannel() {
+    if (localStream && currentChannelPeerId) {
+        const call = peer.call(currentChannelPeerId, localStream);
         call.on('stream', (remoteStream) => {
             // Play the remote audio stream
             const remoteAudio = document.createElement('audio');
@@ -43,17 +48,17 @@ function callPeer(peerId) {
             remoteAudio.play();
         });
     } else {
-        console.error('Local stream is not available.');
+        console.error('Local stream or channel peer ID is not available.');
     }
 }
 
-// Event listener for the voice call button
+// Event listener for the voice call button in the selected chat channel
 document.getElementById('make-voice-call').addEventListener('click', () => {
-    const peerId = prompt('Enter the peer ID to call:');
-    if (peerId) {
-        callPeer(peerId);
-    }
+    callPeerInChannel(); // Automatically calls the peer ID of the current channel
 });
 
-// Start the peer connection when the page loads
-window.onload = initiateVoiceCall;
+// Example function to update the channel-specific peer ID
+function setChannelPeerId(peerId) {
+    // Assuming you have a mechanism to set the `currentChannelPeerId` dynamically
+    currentChannelPeerId = peerId; // Replace this with actual channel selection logic
+}

@@ -341,4 +341,20 @@ const firebaseConfig = {
   document.getElementById('send-button').click();
   }
   });
+  const userDocRef = db.collection('channels').doc(currentChannel);
+userDocRef.update({
+    peerId: peer.id
+}).catch(error => console.error("Error updating peer ID:", error));
+
   
+function loadChannelPeerId(channelId) {
+    db.collection('channels').doc(channelId).get().then(doc => {
+        if (doc.exists && doc.data().peerId) {
+            currentChannelPeerId = doc.data().peerId;
+        } else {
+            console.warn("No peer ID found for this channel.");
+        }
+    }).catch(error => console.error("Error loading peer ID:", error));
+}
+
+// Call this function inside your channel switch logic to automatically update `currentChannelPeerId`
