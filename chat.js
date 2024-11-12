@@ -9,6 +9,7 @@ const firebaseConfig = {
     databaseURL: "https://lyria-cfc06-default-rtdb.firebaseio.com"
 };
 
+
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
@@ -21,6 +22,9 @@ let lastMessageTimestamp = null;
 
 // Create notification sound
 const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+
+// Define an array of UIDs for users who should have badges
+const badgeUserUIDs = ["qzf9fO2bBLU0PJhRDSQK9KnMZD32", "xLT0XKgtF5ZnlfX2fLj9hXrTcW02", "UID_3"]; // Add additional UIDs as needed
 
 // Mobile menu toggle
 document.querySelector('.menu-toggle').addEventListener('click', () => {
@@ -83,8 +87,8 @@ auth.onAuthStateChanged(user => {
             document.getElementById('user-name').textContent = userData.displayName;
             document.getElementById('user-avatar').src = userData.photoURL;
 
-            // Check user's UID to display badges
-            if (user.uid === "YOUR_UID_HERE") { // Replace YOUR_UID_HERE with the UID of the user who should have badges
+            // Check if the user's UID is in the badgeUserUIDs array
+            if (badgeUserUIDs.includes(user.uid)) {
                 const badgesContainer = document.createElement('div');
                 badgesContainer.className = 'badges-container';
 
@@ -340,8 +344,8 @@ function loadMessages(channelId) {
 
                 senderElement.appendChild(senderNameElement);
 
-                // Check if sender's UID matches
-                if (message.senderId === "qzf9fO2bBLU0PJhRDSQK9KnMZD32") { // Replace TARGET_UID_HERE with the UID of the user who should have badges
+                // Check if sender's UID is in the badgeUserUIDs array
+                if (message.senderId && badgeUserUIDs.includes(message.senderId)) {
                     const badgesContainer = document.createElement('span');
                     badgesContainer.className = 'badges-container';
 
