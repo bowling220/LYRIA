@@ -337,22 +337,23 @@ function loadMessages(channelId) {
 
                 senderElement.appendChild(senderNameElement);
 
-                // Check if sender is "Blaine Oler" to add badges
-                if (message.sender === "Blaine Oler") {
-                    const badgesContainer = document.createElement('span');
-                    badgesContainer.className = 'badges-container';
+               // Check if sender is "Blaine Oler" or "Blaine oler" to add badges
+if (message.sender === "Blaine Oler" || message.sender === "Blaine oler") {
+    const badgesContainer = document.createElement('span');
+    badgesContainer.className = 'badges-container';
 
-                    const badges = ['DevBadge.png', 'Mod.png', 'EarlyAccess.png'];
-                    badges.forEach(badgeSrc => {
-                        const badge = document.createElement('img');
-                        badge.src = `assets/${badgeSrc}`;
-                        badge.alt = badgeSrc.replace('.png', '') + ' Badge';
-                        badge.className = 'admin-badge';
-                        badgesContainer.appendChild(badge);
-                    });
+    const badges = ['DevBadge.png', 'Mod.png', 'EarlyAccess.png'];
+    badges.forEach(badgeSrc => {
+        const badge = document.createElement('img');
+        badge.src = `assets/${badgeSrc}`;
+        badge.alt = badgeSrc.replace('.png', '') + ' Badge';
+        badge.className = 'admin-badge';
+        badgesContainer.appendChild(badge);
+    });
 
-                    senderElement.appendChild(badgesContainer);
-                }
+    senderElement.appendChild(badgesContainer);
+}
+
 
                 // Message content
                 const messageContentElement = document.createElement('div');
