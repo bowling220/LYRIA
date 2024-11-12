@@ -413,3 +413,28 @@
     height: 10px;
     margin-left: 5px;
 }
+
+
+/* Add this CSS to your stylesheet */
+
+/* Define the keyframes for the moving gradient */
+@keyframes movingGradient {
+    0% {
+      background-position: 0% 50%;
+    }
+    100% {
+      background-position: 200% 50%;
+    }
+  }
+  
+  /* Class for messages with moving color theme */
+  .moving-color {
+    background: linear-gradient(90deg, #ff6ec4, #7873f5, #ff6ec4);
+    background-size: 200% 200%;
+    animation: movingGradient 4s linear infinite;
+    color: white; /* Adjust text color for readability */
+    padding: 10px;
+    border-radius: 5px;
+  }
+  
+  

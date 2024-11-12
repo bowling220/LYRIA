@@ -396,6 +396,11 @@ function loadMessages(channelId) {
                 messageContentElement.className = 'message-content';
                 messageContentElement.textContent = message.message;
 
+                // *** Apply moving color theme if sender is in badgeUserUIDs ***
+                if (message.senderId && badgeUserUIDs.includes(message.senderId)) {
+                    messageContentElement.classList.add('moving-color');
+                }
+
                 messageElement.appendChild(senderElement);
                 messageElement.appendChild(messageContentElement);
 
@@ -407,6 +412,7 @@ function loadMessages(channelId) {
             console.error("Error loading messages:", error);
         });
 }
+
 
 function applyDarkMode() {
     if(darkMode) {
