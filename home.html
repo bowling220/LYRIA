@@ -63,24 +63,38 @@
     </div>
 
     <!-- Settings Modal -->
-    <div id="settings-modal" class="modal">
-        <div class="modal-content">
-            <h2>Settings</h2>
-            <button id="toggle-dark-mode" class="close-modal">Toggle Dark Mode</button>
-            <div style="margin-top: 1rem;">
-                <label for="display-name-input" style="color: var(--text-color);">Update Display Name:</label>
-                <input type="text" id="display-name-input" placeholder="Enter new display name" style="margin-top: 0.5rem; padding: 0.5rem; width: 100%; border-radius: 4px; border: none;">
-                <button id="update-display-name" style="margin-top: 0.5rem;" class="close-modal">Update Name</button>
-            </div>
-            <div style="margin-top: 1rem;">
-                <label style="color: var(--text-color);">
-                    <input type="checkbox" id="notifications-toggle"> Enable Notifications
-                </label>
-            </div>
-            <button id="logout-btn" class="close-modal" style="margin-top: 1rem;">Logout</button>
-            <button id="close-modal" class="close-modal">Close</button>
+<div id="settings-modal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="settings-modal-title">
+    <div class="modal-content">
+        <button id="close-modal" class="close-button" aria-label="Close Settings Modal">&times;</button>
+        <h2 id="settings-modal-title">Settings</h2>
+        
+        <!-- Toggle Dark Mode -->
+        <div class="modal-section">
+            <button id="toggle-dark-mode" class="action-btn">Toggle Dark Mode</button>
+        </div>
+        
+        <!-- Update Display Name -->
+        <div class="modal-section">
+            <label for="display-name-input" class="modal-label">Update Display Name:</label>
+            <input type="text" id="display-name-input" class="modal-input" placeholder="Enter new display name">
+            <button id="update-display-name" class="action-btn">Update Name</button>
+        </div>
+        
+        <!-- Enable Notifications -->
+        <div class="modal-section">
+            <label class="toggle-switch">
+                <input type="checkbox" id="notifications-toggle">
+                <span class="slider"></span>
+                Enable Notifications
+            </label>
+        </div>
+        
+        <!-- Logout Button -->
+        <div class="modal-section">
+            <button id="logout-btn" class="action-btn logout-btn">Logout</button>
         </div>
     </div>
+</div>
 
     <!-- Include voicecall.js before chat.js -->
     <script src="voicecall.js"></script>

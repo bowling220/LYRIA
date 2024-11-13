@@ -8,9 +8,11 @@
     --channel-hover: #42464d;
     --message-hover: #32353b;
     --sidebar-color: #202225;
-  }
-  
-  body {
+    --error-color: #e74c3c;
+    --success-color: #2ecc71;
+}
+
+body {
     font-family: Arial, sans-serif;
     margin: 0;
     background-color: var(--primary-color);
@@ -19,9 +21,9 @@
     flex-direction: column;
     height: 100vh;
     overflow: hidden;
-  }
-  
-  .top-header {
+}
+
+.top-header {
     background-color: var(--sidebar-color);
     color: #fff;
     text-align: center;
@@ -31,52 +33,55 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-  }
-  
-  .menu-toggle {
+}
+
+.menu-toggle {
     display: none;
     background: none;
     border: none;
     color: var(--text-color);
     font-size: 1.5rem;
     cursor: pointer;
-  }
-  
-  .app-container {
+}
+
+.app-container {
     display: flex;
     height: calc(100vh - 50px); /* Subtract header height */
-  }
-  
-  /* Sidebar */
-  .sidebar {
+}
+
+/* Sidebar */
+.sidebar {
     background-color: var(--sidebar-color);
     width: 250px;
     display: flex;
     flex-direction: column;
-    overflow: auto;
-  }
-  
-  .channels {
-    flex: 1;
+    justify-content: space-between; /* Ensures space between channels and user-profile */
+    height: 100%;
+    overflow: hidden; /* Prevents scrolling within sidebar */
+}
+
+.channels {
+    flex: 1; /* Takes up available space, pushing user-profile to the bottom */
     padding: 1rem;
-  }
-  
-  .channels h3 {
+    overflow-y: auto; /* Allows scrolling if channels exceed viewport height */
+}
+
+.channels h3 {
     font-size: 0.9rem;
     color: #8e9297;
     margin-bottom: 0.8rem;
     border-bottom: 1px solid #292b2f;
     padding-bottom: 0.5rem;
     text-transform: uppercase;
-  }
-  
-  .channels-list {
+}
+
+.channels-list {
     list-style: none;
     padding: 0;
     margin: 0;
-  }
-  
-  .channel-btn {
+}
+
+.channel-btn {
     display: flex;
     align-items: center;
     padding: 0.5rem 0.8rem;
@@ -88,14 +93,14 @@
     font-size: 0.9rem;
     width: 100%;
     transition: background 0.3s;
-  }
-  
-  .channel-btn:hover, .channel-btn.active-channel {
+}
+
+.channel-btn:hover, .channel-btn.active-channel {
     background-color: var(--channel-hover);
     color: var(--text-color);
-  }
-  
-  .add-channel-btn, .join-channel-btn {
+}
+
+.add-channel-btn, .join-channel-btn {
     width: 100%;
     padding: 0.5rem;
     background-color: var(--background-color);
@@ -107,35 +112,76 @@
     transition: background 0.3s;
     font-size: 0.9rem;
     text-align: left;
-  }
-  
-  .add-channel-btn:hover, .join-channel-btn:hover {
+}
+
+.add-channel-btn:hover, .join-channel-btn:hover {
     background-color: var(--channel-hover);
     color: var(--text-color);
-  }
-  
-  .user-profile {
-    padding: 0.8rem;
+}
+
+/* User Profile Section */
+.user-profile {
+    padding: 1rem;
     background-color: #292b2f;
     display: flex;
     align-items: center;
+    justify-content: space-between; /* Distributes space between avatar, username, and button */
     gap: 0.5rem;
-  }
-  
-  .avatar {
-    width: 32px;
-    height: 32px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Avatar Styling */
+.avatar {
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     border: 2px solid var(--secondary-color);
-  }
-  
-  .username {
+    object-fit: cover; /* Ensures the image covers the entire area */
+    cursor: pointer; /* Indicates interactivity, e.g., clicking for profile */
+}
+
+/* Username Styling */
+.username {
+    flex: 1; /* Allows the username to take up remaining space */
     font-weight: bold;
-    font-size: 0.9rem;
-  }
-  
-  /* Main Chat Area */
-  .chat-area {
+    font-size: 1rem;
+    color: var(--text-color);
+    margin-left: 0.5rem; /* Adds spacing between avatar and username */
+    white-space: nowrap; /* Prevents text from wrapping */
+    overflow: hidden; /* Hides overflowed text */
+    text-overflow: ellipsis; /* Adds ellipsis (...) for overflowed text */
+    cursor: pointer; /* Indicates interactivity, e.g., clicking for profile */
+}
+
+/* Settings Button Styling */
+.settings-btn {
+    background: none;
+    border: none;
+    color: var(--secondary-color);
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 0.3rem;
+    transition: color 0.3s, transform 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.settings-btn:hover {
+    color: var(--accent-color);
+    transform: scale(1.1); /* Slightly enlarges the button on hover */
+}
+
+/* Optional: Icon for Settings Button */
+.settings-btn::before {
+    content: '⚙️'; /* Unicode gear icon */
+    margin-right: 0.3rem;
+    font-size: 1.1rem;
+}
+
+/* Main Chat Area */
+.chat-area {
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -143,9 +189,9 @@
     min-width: 0; /* Allow shrinking */
     position: relative;
     z-index: 1;
-  }
-  
-  #vanta-background {
+}
+
+#vanta-background {
     position: fixed;
     top: 0;
     left: 0;
@@ -153,9 +199,9 @@
     height: 100%;
     z-index: 0;
     pointer-events: none;
-  }
-  
-  .chat-header {
+}
+
+.chat-header {
     padding: 0.8rem;
     display: flex;
     justify-content: space-between;
@@ -164,50 +210,79 @@
     background-color: var(--primary-color);
     color: var(--text-color);
     font-weight: bold;
-  }
-  
-  .messages {
+}
+
+.messages {
     flex: 1;
     overflow-y: auto;
     padding: 0.8rem;
     background-color: var(--primary-color);
     margin-bottom: 10px;
+}
 
-  }
-  
-  .message {
+.message {
     display: flex;
     flex-direction: column;
     margin-bottom: 0.8rem;
     padding: 0.5rem;
     background-color: var(--message-hover);
     border-radius: 5px;
-  }
-  
-  .sender {
+}
+
+.sender {
+    display: flex;
+    align-items: center;
     font-weight: bold;
     font-size: 0.9rem;
     color: var(--secondary-color);
     margin-bottom: 0.2rem;
-    font-weight: bold;
-    display: flex;
-    align-items: center;
-  }
-  
-  .message-content {
+}
+
+.message-content {
     font-size: 0.85rem;
     word-break: break-word;
     margin-left: 20px;
-  }
-  
-  .message-input {
+}
+
+.message-timestamp {
+    color: #999;
+    font-size: 0.85em;
+    margin-left: auto;
+}
+
+.sender-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+
+.moving-color {
+    background: linear-gradient(90deg, #ff6ec4, #7873f5, #ff6ec4);
+    background-size: 200% 200%;
+    animation: movingGradient 4s linear infinite;
+    color: white; /* Adjust text color for readability */
+    padding: 10px;
+    border-radius: 5px;
+}
+
+@keyframes movingGradient {
+    0% {
+      background-position: 0% 50%;
+    }
+    100% {
+      background-position: 200% 50%;
+    }
+}
+
+.message-input {
     display: flex;
     padding: 0.8rem;
     border-top: 1px solid #202225;
     background-color: var(--primary-color);
-  }
-  
-  textarea {
+}
+
+textarea {
     flex: 1;
     padding: 0.6rem;
     background-color: var(--background-color);
@@ -218,9 +293,9 @@
     resize: none;
     min-height: 40px;
     max-height: 120px;
-  }
-  
-  .send-btn {
+}
+
+.send-btn {
     background-color: var(--secondary-color);
     color: #fff;
     padding: 0.6rem 0.8rem;
@@ -231,13 +306,13 @@
     cursor: pointer;
     transition: background 0.3s;
     white-space: nowrap;
-  }
-  
-  .send-btn:hover {
+}
+
+.send-btn:hover {
     background-color: #4a5de2;
-  }
-  
-  .copy-join-code-btn {
+}
+
+.copy-join-code-btn {
     background-color: var(--secondary-color);
     color: #fff;
     padding: 0.4rem 0.8rem;
@@ -246,15 +321,15 @@
     cursor: pointer;
     transition: background 0.3s;
     font-size: 0.9rem;
-  }
-  
-  .copy-join-code-btn:hover {
+}
+
+.copy-join-code-btn:hover {
     background-color: #4a5de2;
-  }
-  
-  /* Settings Modal */
-  .modal {
-    display: none;
+}
+
+/* Settings Modal */
+.modal {
+    display: none; /* Hidden by default */
     position: fixed;
     top: 0;
     left: 0;
@@ -264,123 +339,258 @@
     justify-content: center;
     align-items: center;
     z-index: 1000;
-  }
-  
-  .modal-content {
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    visibility: hidden;
+}
+
+.modal[aria-hidden="false"] {
+    display: flex;
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-content {
     background-color: var(--background-color);
-    padding: 1rem;
-    border-radius: 8px;
-    text-align: center;
+    padding: 2rem;
+    border-radius: 10px;
+    text-align: left;
     width: 90%;
-    max-width: 300px;
-  }
-  
-  .modal-content h2 {
+    max-width: 400px;
+    position: relative;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        transform: translateY(-30px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Close Button */
+.close-button {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
     color: var(--text-color);
-    margin-bottom: 1rem;
-    font-size: 1.2rem;
-  }
-  
-  .close-modal {
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.close-button:hover {
+    color: var(--accent-color);
+}
+
+/* Modal Title */
+.modal-content h2 {
+    color: var(--text-color);
+    margin-bottom: 1.5rem;
+    font-size: 1.5rem;
+    text-align: center;
+}
+
+/* Modal Sections */
+.modal-section {
+    margin-bottom: 1.5rem;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Labels */
+.modal-label {
+    color: var(--text-color);
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+}
+
+/* Input Fields */
+.modal-input {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #444;
+    border-radius: 5px;
+    background-color: var(--primary-color);
+    color: var(--text-color);
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+.modal-input::placeholder {
+    color: #999;
+}
+
+.modal-input:focus {
+    border-color: var(--secondary-color);
+    outline: none;
+}
+
+/* Action Buttons */
+.action-btn {
+    padding: 0.6rem 1rem;
     background-color: var(--secondary-color);
     color: #fff;
-    padding: 0.5rem 1rem;
     border: none;
-    border-radius: 4px;
+    border-radius: 5px;
     cursor: pointer;
-    margin-top: 0.8rem;
-    font-size: 0.9rem;
-  }
-  
-  /* Mobile Responsive Styles */
-  @media (max-width: 768px) {
+    font-size: 1rem;
+    align-self: flex-start;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.action-btn:hover {
+    background-color: #4a5de2;
+    transform: translateY(-2px);
+}
+
+.logout-btn {
+    background-color: #e74c3c;
+}
+
+.logout-btn:hover {
+    background-color: #c0392b;
+}
+
+/* Toggle Switch */
+.toggle-switch {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-switch .slider {
+    position: relative;
+    width: 50px;
+    height: 24px;
+    background-color: #ccc;
+    border-radius: 24px;
+    transition: background-color 0.4s;
+}
+
+.toggle-switch .slider::before {
+    content: "";
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    border-radius: 50%;
+    transition: transform 0.4s;
+}
+
+.toggle-switch input:checked + .slider {
+    background-color: var(--secondary-color);
+}
+
+.toggle-switch input:checked + .slider::before {
+    transform: translateX(26px);
+}
+
+.toggle-switch .toggle-label {
+    color: var(--text-color);
+    font-size: 1rem;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
     .menu-toggle {
-      display: block;
+        display: block;
     }
-  
+
     .sidebar {
-      position: fixed;
-      left: -250px;
-      top: 50px; /* Below header */
-      bottom: 0;
-      z-index: 100;
-      transition: left 0.3s ease;
-      height: calc(100vh - 50px); /* Subtract header height */
+        width: 200px; /* Reduces sidebar width on smaller screens */
     }
-  
-    .sidebar.active {
-      left: 0;
-      box-shadow: 2px 0 5px rgba(0, 0, 0, 0.3);
+
+    .user-profile {
+        padding: 0.8rem;
     }
-  
-    .app-container {
-      position: relative;
-      height: calc(100vh - 50px); /* Subtract header height */
+
+    .avatar {
+        width: 35px;
+        height: 35px;
     }
-  
-    .chat-area {
-      width: 100%;
-      height: calc(100vh - 50px); /* Subtract header height */
+
+    .username {
+        font-size: 0.9rem;
     }
-  
+
+    .settings-btn {
+        font-size: 0.9rem;
+    }
+
     .chat-header {
-      padding: 0.6rem;
-      position: sticky;
-      top: 0;
-      z-index: 1;
+        padding: 0.6rem;
+        position: sticky;
+        top: 0;
+        z-index: 1;
     }
-  
+
     .chat-header h2 {
-      font-size: 1rem;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+        font-size: 1rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
-  
+
     .messages {
-      height: calc(100vh - 170px); /* Adjust for header and input area */
-      padding: 0.6rem;
+        height: calc(100vh - 170px); /* Adjust for header and input area */
+        padding: 0.6rem;
     }
-  
+
     .message-input {
-      padding: 0.6rem;
-      position: sticky;
-      bottom: 0;
+        padding: 0.6rem;
+        position: sticky;
+        bottom: 0;
     }
-  
+
     textarea {
-      font-size: 1rem;
-      padding: 0.5rem;
+        font-size: 1rem;
+        padding: 0.5rem;
     }
-  
+
     .send-btn {
-      padding: 0.5rem;
-      min-width: 60px;
+        padding: 0.5rem;
+        min-width: 60px;
     }
-  
+
     .copy-join-code-btn {
-      font-size: 0.8rem;
-      padding: 0.3rem 0.6rem;
+        font-size: 0.8rem;
+        padding: 0.3rem 0.6rem;
     }
-  
+
     /* Improve touch targets */
     .channel-btn,
     .add-channel-btn,
     .join-channel-btn {
-      padding: 0.8rem;
-      min-height: 44px;
+        padding: 0.8rem;
+        min-height: 44px;
     }
-  
+
     /* Ensure modal is accessible on mobile */
     .modal-content {
-      margin: 1rem;
-      max-height: 90vh;
-      overflow-y: auto;
+        margin: 1rem;
+        max-height: 90vh;
+        overflow-y: auto;
     }
-  }
-  
-  /* Admin badge and message styling */
-  .admin-badge {
+}
+
+/* Admin badge and message styling */
+.admin-badge {
     background-color: #ffd700;
     color: #000;
     padding: 0.2rem 0.4rem;
@@ -390,104 +600,41 @@
     display: inline-flex;
     align-items: center;
     gap: 0.2rem;
-  }
-  
-  .message-header {
+}
+
+.message-header {
     display: flex;
     align-items: center;
     margin-bottom: 0.3rem;
-  }
-  
-  .message-username {
+}
+
+.message-username {
     font-weight: bold;
     color: var(--secondary-color);
-  }
-  .badges-container {
+}
+
+.badges-container {
     display: flex;
     align-items: center;
     margin-left: 5px;
 }
 
-.admin-badge {
-    width: 10px;
-    height: 10px;
-    margin-left: 5px;
+.badges-container img {
+    width: 30px;
+    height: 30px;
+    margin: 0 5px;
 }
 
-
-/* Add this CSS to your stylesheet */
-
-/* Define the keyframes for the moving gradient */
-@keyframes movingGradient {
-    0% {
-      background-position: 0% 50%;
-    }
-    100% {
-      background-position: 200% 50%;
-    }
-  }
-  
-  /* Class for messages with moving color theme */
-  .moving-color {
-    background: linear-gradient(90deg, #ff6ec4, #7873f5, #ff6ec4);
-    background-size: 200% 200%;
-    animation: movingGradient 4s linear infinite;
-    color: white; /* Adjust text color for readability */
-    padding: 10px;
-    border-radius: 5px;
-  }
-  
-  
-/* Styles for the timestamp */
-.message-timestamp {
-    color: #999;
-    font-size: 0.85em;
-    margin-left: auto;
+/* Typing Status Styles */
+.typing-status {
+    padding: 5px 10px;
+    color: #888;
+    font-style: italic;
+    margin-bottom: 10px;
+    font-size: 0.9em;
 }
 
-/* Styles for the sender's avatar */
-.sender-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    margin-right: 10px;
-}
-
-/* Styles for the sender's name */
-.sender-name {
-    font-weight: bold;
-    margin-right: 5px;
-}
-
-/* The Modal (background) */
-.modal {
-    display: none; /* Hidden by default */
-    position: fixed; /* Stay in place */
-    z-index: 1000; /* Sit on top */
-    padding-top: 60px; /* Location of the box */
-    left: 0;
-    top: 0;
-    width: 100%; /* Full width */
-    height: 100%; /* Full height */
-    overflow: auto; /* Enable scroll if needed */
-    background-color: rgba(0,0,0,0.5); /* Black w/ opacity */
-}
-
-/* Modal Content */
-.modal-content {
-    background-color: var(--primary-color);
-    margin: 5% auto; /* 5% from the top and centered */
-    padding: 20px;
-    border: 1px solid #888;
-    width: 80%; /* Could be more or less, depending on screen size */
-    max-width: 500px;
-    border-radius: 10px;
-    position: relative;
-    text-align: center;
-    color: #fff;
-}
-
-/* Close Button */
+/* Modal Close Button */
 .close {
     color: #aaa;
     position: absolute;
@@ -505,7 +652,7 @@
     cursor: pointer;
 }
 
-/* Profile Image */
+/* Profile Modal Image */
 .profile-modal-image {
     width: 120px;
     height: 120px;
@@ -513,17 +660,30 @@
     margin-bottom: 15px;
 }
 
-/* Badges in Modal */
+/* Badges in Profile Modal */
 .profile-modal-badges img {
     width: 30px;
     height: 30px;
     margin: 0 5px;
 }
 
-/* Typing Status Styles */
-.typing-status {
-    padding: 5px 10px;
-    color: #888;
-    font-style: italic;
-    margin-bottom: 10px;
+/* Moving Gradient Animation for Messages */
+@keyframes movingGradient {
+    0% {
+      background-position: 0% 50%;
+    }
+    100% {
+      background-position: 200% 50%;
+    }
+}
+
+/* Focus States for Accessibility */
+.action-btn:focus, .close-button:focus, .modal-input:focus {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 2px;
+}
+
+/* Ensure Inputs and Buttons are Accessible via Keyboard */
+.modal-input, .action-btn, .close-button {
+    outline: none;
 }

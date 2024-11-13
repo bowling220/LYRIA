@@ -562,7 +562,7 @@ function showUserProfileModal(uid) {
                 profileBadges.innerHTML = ''; // Clear previous badges
 
                 if (badgeUserUIDs.includes(uid)) {
-                    const badges = ['DevBadge.png', 'Mod.png', 'EarlyAccess.png'];
+                    const badges = ['admin.png','DevBadge.png', 'Mod.png', 'EarlyAccess.png'];
                     badges.forEach(badgeSrc => {
                         const badge = document.createElement('img');
                         badge.src = `assets/${badgeSrc}`;
@@ -619,3 +619,78 @@ function switchChannel(channelId) {
     // Uncomment the line below if using voicecall.js and initializePeer() is defined
     // loadChannelPeerId(channelId); // Load and set currentChannelPeerId (from voicecall.js)
 }
+
+// Function to open the modal
+function openModal() {
+    const modal = document.getElementById('settings-modal');
+    modal.style.display = 'flex';
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden'; // Disable background scrolling
+    
+    // Trap focus within the modal
+    trapFocus(modal);
+    
+    // Focus the first focusable element in the modal
+    const firstFocusable = modal.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+    if (firstFocusable) firstFocusable.focus();
+}
+
+// Function to close the modal
+function closeModal() {
+    const modal = document.getElementById('settings-modal');
+    modal.style.display = 'none';
+    modal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = 'auto'; // Re-enable background scrolling
+}
+
+// Function to trap focus within the modal
+function trapFocus(modal) {
+    const focusableElements = modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+    const firstElement = focusableElements[0];
+    const lastElement = focusableElements[focusableElements.length - 1];
+    
+    modal.addEventListener('keydown', function(e) {
+        const isTabPressed = (e.key === 'Tab' || e.keyCode === 9);
+        if (!isTabPressed) return;
+        
+        if (e.shiftKey) { // Shift + Tab
+            if (document.activeElement === firstElement) {
+                lastElement.focus();
+                e.preventDefault();
+            }
+        } else { // Tab
+            if (document.activeElement === lastElement) {
+                firstElement.focus();
+                e.preventDefault();
+            }
+        }
+    });
+}
+
+// Event listener to open the modal when settings button is clicked
+const settingsBtn = document.getElementById('settings-btn');
+if (settingsBtn) {
+    settingsBtn.addEventListener('click', openModal);
+}
+
+// Event listeners to close the modal when close button is clicked
+const closeModalBtn = document.getElementById('close-modal');
+if (closeModalBtn) {
+    closeModalBtn.addEventListener('click', closeModal);
+}
+
+// Event listener to close the modal when clicking outside the modal content
+window.addEventListener('click', (event) => {
+    const modal = document.getElementById('settings-modal');
+    if (event.target === modal) {
+        closeModal();
+    }
+});
+
+// Event listener to close the modal with the Escape key
+window.addEventListener('keydown', (event) => {
+    const modal = document.getElementById('settings-modal');
+    if (event.key === 'Escape' && modal.style.display === 'flex') {
+        closeModal();
+    }
+});
