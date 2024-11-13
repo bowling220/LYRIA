@@ -429,7 +429,6 @@ function generateJoinCode() {
 function loadMessages(channelId) {
     console.log('loadMessages called with channelId:', channelId);
 
-    // Unsubscribe from previous listener if it exists
     if (unsubscribeFromMessages) {
         unsubscribeFromMessages();
         unsubscribeFromMessages = null;
@@ -450,22 +449,19 @@ function loadMessages(channelId) {
         alert('Failed to fetch channel data.');
     });
 
-    // Set up the new listener and store the unsubscribe function
     unsubscribeFromMessages = db.collection('channels').doc(channelId).collection('messages')
         .orderBy('timestamp')
         .onSnapshot(snapshot => {
-            messagesContainer.innerHTML = ''; // Clear the container to prevent duplicates
+            messagesContainer.innerHTML = '';
 
             snapshot.forEach(doc => {
                 const message = doc.data();
                 const messageElement = document.createElement('div');
                 messageElement.className = 'message';
 
-                // Create sender element
                 const senderElement = document.createElement('div');
                 senderElement.className = 'sender';
 
-                // Sender avatar
                 const senderAvatarElement = document.createElement('img');
                 senderAvatarElement.src = message.senderPhotoURL || 'assets/default-avatar.png';
                 senderAvatarElement.className = 'sender-avatar';
@@ -475,7 +471,6 @@ function loadMessages(channelId) {
                 });
                 senderElement.appendChild(senderAvatarElement);
 
-                // Sender name
                 const senderNameElement = document.createElement('span');
                 senderNameElement.className = 'sender-name';
                 senderNameElement.textContent = message.sender;
@@ -485,12 +480,9 @@ function loadMessages(channelId) {
                 });
                 senderElement.appendChild(senderNameElement);
 
-                // Check if sender's UID is in the badgeUserUIDs array
                 if (message.senderId && badgeUserUIDs.includes(message.senderId)) {
-                    console.log('Displaying badges for senderId:', message.senderId);
                     const badgesContainer = document.createElement('span');
                     badgesContainer.className = 'badges-container';
-
                     const badges = ['DevBadge.png', 'Mod.png', 'EarlyAccess.png'];
                     badges.forEach(badgeSrc => {
                         const badge = document.createElement('img');
@@ -499,11 +491,9 @@ function loadMessages(channelId) {
                         badge.className = 'admin-badge';
                         badgesContainer.appendChild(badge);
                     });
-
                     senderElement.appendChild(badgesContainer);
                 }
 
-                // Timestamp
                 const timestampElement = document.createElement('span');
                 timestampElement.className = 'message-timestamp';
                 const timestamp = message.timestamp ? message.timestamp.toDate() : new Date();
@@ -511,12 +501,10 @@ function loadMessages(channelId) {
                 timestampElement.textContent = timeString;
                 senderElement.appendChild(timestampElement);
 
-                // Message content
                 const messageContentElement = document.createElement('div');
                 messageContentElement.className = 'message-content';
                 messageContentElement.textContent = message.message;
 
-                // Apply moving color theme if sender is in badgeUserUIDs
                 if (message.senderId && badgeUserUIDs.includes(message.senderId)) {
                     messageContentElement.classList.add('moving-color');
                 }
@@ -534,56 +522,28 @@ function loadMessages(channelId) {
         });
 }
 
+
 function showUserProfileModal(uid) {
-    // Fetch user data from Firestore
     db.collection('users').doc(uid).get().then(doc => {
         if (doc.exists) {
             const userData = doc.data();
+            document.getElementById('profile-modal-image').src = userData.photoURL || 'assets/default-avatar.png';
+            document.getElementById('profile-modal-name').textContent = userData.displayName || 'User';
 
-            // Set profile image
-            const profileImage = document.getElementById('profile-modal-image');
-            if (profileImage) {
-                profileImage.src = userData.photoURL || 'assets/default-avatar.png';
-            } else {
-                console.error("Profile modal image element not found.");
-            }
-
-            // Set display name
-            const profileName = document.getElementById('profile-modal-name');
-            if (profileName) {
-                profileName.textContent = userData.displayName || 'User';
-            } else {
-                console.error("Profile modal name element not found.");
-            }
-
-            // Set badges
             const profileBadges = document.getElementById('profile-modal-badges');
-            if (profileBadges) {
-                profileBadges.innerHTML = ''; // Clear previous badges
-
-                if (badgeUserUIDs.includes(uid)) {
-                    const badges = ['admin.png','DevBadge.png', 'Mod.png', 'EarlyAccess.png'];
-                    badges.forEach(badgeSrc => {
-                        const badge = document.createElement('img');
-                        badge.src = `assets/${badgeSrc}`;
-                        badge.alt = badgeSrc.replace('.png', '') + ' Badge';
-                        badge.className = 'admin-badge';
-                        profileBadges.appendChild(badge);
-                    });
-                }
-            } else {
-                console.error("Profile modal badges element not found.");
+            profileBadges.innerHTML = '';
+            if (badgeUserUIDs.includes(uid)) {
+                const badges = ['DevBadge.png', 'Mod.png', 'EarlyAccess.png'];
+                badges.forEach(badgeSrc => {
+                    const badge = document.createElement('img');
+                    badge.src = `assets/${badgeSrc}`;
+                    badge.alt = badgeSrc.replace('.png', '') + ' Badge';
+                    badge.className = 'admin-badge';
+                    profileBadges.appendChild(badge);
+                });
             }
-
-            // Display the modal
-            const profileModal = document.getElementById('profile-modal');
-            if (profileModal) {
-                profileModal.style.display = 'flex';
-            } else {
-                console.error("Profile modal element not found.");
-            }
+            document.getElementById('profile-modal').style.display = 'flex';
         } else {
-            console.error('User data not found');
             alert('User profile not found.');
         }
     }).catch(error => {
@@ -591,6 +551,7 @@ function showUserProfileModal(uid) {
         alert('Failed to fetch user profile.');
     });
 }
+
 
 function applyDarkMode() {
     if(darkMode) {
