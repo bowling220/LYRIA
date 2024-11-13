@@ -523,44 +523,7 @@ function loadMessages(channelId) {
 }
 
 
-function showUserProfileModal(uid) {
-    console.log('Attempting to show profile for UID:', uid);
-    db.collection('users').doc(uid).get().then(doc => {
-        if (doc.exists) {
-            const userData = doc.data();
 
-            document.getElementById('profile-modal-image').src = userData.photoURL || 'assets/default-avatar.png';
-            document.getElementById('profile-modal-name').textContent = userData.displayName || 'User';
-
-            const profileBadges = document.getElementById('profile-modal-badges');
-            profileBadges.innerHTML = '';
-            if (badgeUserUIDs.includes(uid)) {
-                const badges = ['admin.png', 'DevBadge.png', 'Mod.png', 'EarlyAccess.png'];
-                badges.forEach(badgeSrc => {
-                    const badge = document.createElement('img');
-                    badge.src = `assets/${badgeSrc}`;
-                    badge.alt = badgeSrc.replace('.png', '') + ' Badge';
-                    badge.className = 'admin-badge';
-                    profileBadges.appendChild(badge);
-                });
-            }
-
-            const profileModal = document.getElementById('profile-modal');
-            if (profileModal) {
-                profileModal.style.display = 'flex';
-                console.log('Profile modal displayed for UID:', uid);
-            } else {
-                console.error("Profile modal element not found in HTML.");
-            }
-        } else {
-            console.warn('User profile not found in database for UID:', uid);
-            alert('User profile not found.');
-        }
-    }).catch(error => {
-        console.error('Error fetching user data from Firestore:', error);
-        alert('Failed to fetch user profile.');
-    });
-}
 
 
 
@@ -683,23 +646,83 @@ if (userAvatar) {
 }
 
 
-function showUserProfileModal(uid) {
-    console.log('Attempting to show profile for UID:', uid);
 
+
+userAvatar.addEventListener('click', () => {
+    showUserProfileModal(currentUser ? currentUser.uid : null);
+});
+
+
+
+let showBadges = true; // Default value for showing badges
+
+// Function to load settings, including badge visibility
+auth.onAuthStateChanged(user => {
+    if (user) {
+        currentUser = user;
+        const userDocRef = db.collection('users').doc(user.uid);
+
+        userDocRef.get().then(doc => {
+            if (doc.exists) {
+                const userData = doc.data();
+                showBadges = userData.showBadges !== false; // Default to true if not set
+
+                // Display badge visibility toggle if the user has the admin badge
+                if (badgeUserUIDs.includes(user.uid)) {
+                    document.getElementById('badge-visibility-section').style.display = 'block';
+                    document.getElementById('badge-visibility-toggle').checked = showBadges;
+                }
+
+                // Update badge visibility
+                applyBadgeVisibility();
+            }
+        }).catch(error => {
+            console.error("Error loading user data:", error);
+        });
+    }
+});
+
+// Event listener for badge visibility toggle
+document.getElementById('badge-visibility-toggle').addEventListener('change', (e) => {
+    showBadges = e.target.checked;
+    applyBadgeVisibility();
+
+    // Save the setting to Firestore
+    if (currentUser) {
+        db.collection('users').doc(currentUser.uid).update({
+            showBadges: showBadges
+        }).catch(error => {
+            console.error("Error saving badge visibility setting:", error);
+        });
+    }
+});
+
+// Function to apply badge visibility in the profile modal and chat
+function applyBadgeVisibility() {
+    const profileBadges = document.getElementById('profile-modal-badges');
+    if (profileBadges) {
+        profileBadges.style.display = showBadges ? 'flex' : 'none';
+    }
+
+    // Update chat badges as well
+    document.querySelectorAll('.admin-badge').forEach(badge => {
+        badge.style.display = showBadges ? 'inline-block' : 'none';
+    });
+}
+
+// Modify showUserProfileModal to respect the badge visibility setting
+function showUserProfileModal(uid) {
     db.collection('users').doc(uid).get().then(doc => {
         if (doc.exists) {
             const userData = doc.data();
-
             document.getElementById('profile-modal-image').src = userData.photoURL || 'assets/default-avatar.png';
             document.getElementById('profile-modal-name').textContent = userData.displayName || 'User';
 
             const profileBadges = document.getElementById('profile-modal-badges');
             profileBadges.innerHTML = '';
 
-            if (badgeUserUIDs.includes(uid)) {
-                // Include all badges, including 'admin.png'
+            if (badgeUserUIDs.includes(uid) && showBadges) {
                 const badges = ['admin.png', 'DevBadge.png', 'Mod.png', 'EarlyAccess.png'];
-                
                 badges.forEach(badgeSrc => {
                     const badge = document.createElement('img');
                     badge.src = `assets/${badgeSrc}`;
@@ -708,27 +731,11 @@ function showUserProfileModal(uid) {
                     profileBadges.appendChild(badge);
                 });
             }
-            
 
-            const profileModal = document.getElementById('profile-modal');
-            if (profileModal) {
-                profileModal.style.display = 'flex';
-                console.log('Profile modal displayed for UID:', uid);
-            } else {
-                console.error("Profile modal element not found in HTML.");
-            }
-        } else {
-            console.warn('User profile not found in database for UID:', uid);
-            alert('User profile not found.');
+            document.getElementById('profile-modal').style.display = 'flex';
         }
     }).catch(error => {
-        console.error('Error fetching user data from Firestore:', error);
+        console.error("Error fetching user data:", error);
         alert('Failed to fetch user profile.');
     });
 }
-
-
-userAvatar.addEventListener('click', () => {
-    showUserProfileModal(currentUser ? currentUser.uid : null);
-});
-
