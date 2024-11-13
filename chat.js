@@ -535,7 +535,7 @@ function showUserProfileModal(uid) {
             const profileBadges = document.getElementById('profile-modal-badges');
             profileBadges.innerHTML = '';
             if (badgeUserUIDs.includes(uid)) {
-                const badges = ['DevBadge.png', 'Mod.png', 'EarlyAccess.png'];
+                const badges = ['admin.png', 'DevBadge.png', 'Mod.png', 'EarlyAccess.png'];
                 badges.forEach(badgeSrc => {
                     const badge = document.createElement('img');
                     badge.src = `assets/${badgeSrc}`;
