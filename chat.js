@@ -698,7 +698,11 @@ window.addEventListener('keydown', (event) => {
 const userAvatar = document.getElementById('user-avatar');
 if (userAvatar) {
     userAvatar.addEventListener('click', () => {
-        showUserProfileModal(currentUser.uid);
+        if (currentUser) {
+            showUserProfileModal(currentUser.uid);
+        } else {
+            console.error("No current user is set.");
+        }
     });
 } else {
     console.error("User avatar element not found.");
