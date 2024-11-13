@@ -698,12 +698,15 @@ window.addEventListener('keydown', (event) => {
 const userAvatar = document.getElementById('user-avatar');
 if (userAvatar) {
     userAvatar.addEventListener('click', () => {
-        if (currentUser) {
-            showUserProfileModal(currentUser.uid);
+        // Directly open the modal for testing
+        const profileModal = document.getElementById('profile-modal');
+        if (profileModal) {
+            profileModal.style.display = 'flex';
         } else {
-            console.error("No current user is set.");
+            console.error("Profile modal element not found.");
         }
     });
 } else {
     console.error("User avatar element not found.");
 }
+
