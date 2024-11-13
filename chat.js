@@ -697,7 +697,9 @@ function showUserProfileModal(uid) {
             profileBadges.innerHTML = '';
 
             if (badgeUserUIDs.includes(uid)) {
-                const badges = ['DevBadge.png', 'Mod.png', 'EarlyAccess.png'];
+                // Include all badges, including 'admin.png'
+                const badges = ['admin.png', 'DevBadge.png', 'Mod.png', 'EarlyAccess.png'];
+                
                 badges.forEach(badgeSrc => {
                     const badge = document.createElement('img');
                     badge.src = `assets/${badgeSrc}`;
@@ -706,6 +708,7 @@ function showUserProfileModal(uid) {
                     profileBadges.appendChild(badge);
                 });
             }
+            
 
             const profileModal = document.getElementById('profile-modal');
             if (profileModal) {
