@@ -1,20 +1,55 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta name="description" content="LYRIA - A real-time messaging platform">
-        <title>LYRIA</title>
-        <link rel="stylesheet" href="styles.css">
-        <link rel="icon" type="image/png" href="icon.jpg">
-        
-        <script>
-            // Redirect to login.html immediately upon loading index.html
-            window.onload = function() {
-                window.location.href = 'login.html';
-            };
-        </script>
-    </head>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="LYRIA - A real-time messaging platform">
+    <title>LYRIA</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" type="image/jpeg" href="assets/icon.png"> <!-- Updated path and type -->
     
+    <!-- Inline CSS to center the image -->
+    <style>
+        /* Full-height container */
+        body, html {
+            height: 100%;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center; /* Center horizontally */
+            align-items: center;     /* Center vertically */
+            background-color: #2f3136; /* Optional: Background color */
+            color: #ffffff; /* Optional: Text color */
+            font-family: Arial, sans-serif; /* Optional: Font */
+        }
+        /* Responsive Image */
+        img {
+            max-width: 50%;
+            height: auto;
+        }
+        /* Footer Styling */
+        footer {
+            position: fixed;
+            bottom: 10px;
+            text-align: center;
+            font-size: 0.9em;
+        }
+    </style>
 
+    <!-- Redirect Script with Optional Delay -->
+    <script>
+        window.onload = function() {
+            // Optional: Delay the redirect to allow users to see the image
+            setTimeout(function() {
+                window.location.href = 'login.html';
+            }, 2000); // Redirect after 2 seconds (2000 milliseconds)
+        };
+    </script>
+</head>
+<body>
+    <img src="assets/icon.png" alt="LYRIA Logo">
+    <footer>
+        &copy; 2024 LYRIA. All rights reserved. Trademarked by LYRIA.
+    </footer>
+</body>
 </html>

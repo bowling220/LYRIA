@@ -620,8 +620,8 @@ textarea {
 }
 
 .badges-container img {
-    width: 30px;
-    height: 30px;
+    width: 10px;
+    height: 10px;
     margin: 0 5px;
 }
 
@@ -686,4 +686,11 @@ textarea {
 /* Ensure Inputs and Buttons are Accessible via Keyboard */
 .modal-input, .action-btn, .close-button {
     outline: none;
+}
+  /* Footer Styling */
+  footer {
+    position: fixed;
+    bottom: 10px;
+    text-align: center;
+    font-size: 0.9em;
 }

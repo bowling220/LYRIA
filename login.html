@@ -16,12 +16,14 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { 
       display: flex; 
+      flex-direction: column;
       justify-content: center; 
       align-items: center; 
       min-height: 100vh; 
       font-family: Arial, sans-serif; 
       background: url('assets/background.png') no-repeat center center fixed; 
       background-size: cover; 
+      color: #ffffff;
     }
     .wrapper { 
       width: 100%; 
@@ -51,6 +53,17 @@
     .guest-button { background-color: #3c3f42; }
     .guest-button:hover { background-color: #2f3236; }
     #error-message { color: red; font-size: 0.9rem; margin-top: 1rem; }
+    footer {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      text-align: center;
+      font-size: 0.9em;
+      color: #ffffff; /* White text */
+      background-color: transparent;
+      padding: 1rem 0;
+    }
+
   </style>
 </head>
 <body>
@@ -123,5 +136,9 @@
         });
     });
   </script>
+
+  <footer>
+    &copy; 2024 LYRIA. All rights reserved. Trademarked by LYRIA.
+  </footer>
 </body>
 </html>
