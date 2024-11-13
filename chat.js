@@ -710,3 +710,19 @@ if (userAvatar) {
     console.error("User avatar element not found.");
 }
 
+
+function showUserProfileModal(uid) {
+    const profileModal = document.getElementById('profile-modal');
+    if (profileModal) {
+        // Display the modal directly for testing
+        profileModal.style.display = 'flex';
+        console.log("Profile modal opened for UID:", uid);
+    } else {
+        console.error("Profile modal element not found.");
+    }
+}
+
+userAvatar.addEventListener('click', () => {
+    showUserProfileModal(currentUser ? currentUser.uid : null);
+});
+
