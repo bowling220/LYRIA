@@ -684,15 +684,46 @@ if (userAvatar) {
 
 
 function showUserProfileModal(uid) {
-    const profileModal = document.getElementById('profile-modal');
-    if (profileModal) {
-        // Display the modal directly for testing
-        profileModal.style.display = 'flex';
-        console.log("Profile modal opened for UID:", uid);
-    } else {
-        console.error("Profile modal element not found.");
-    }
+    console.log('Attempting to show profile for UID:', uid);
+
+    db.collection('users').doc(uid).get().then(doc => {
+        if (doc.exists) {
+            const userData = doc.data();
+
+            document.getElementById('profile-modal-image').src = userData.photoURL || 'assets/default-avatar.png';
+            document.getElementById('profile-modal-name').textContent = userData.displayName || 'User';
+
+            const profileBadges = document.getElementById('profile-modal-badges');
+            profileBadges.innerHTML = '';
+
+            if (badgeUserUIDs.includes(uid)) {
+                const badges = ['DevBadge.png', 'Mod.png', 'EarlyAccess.png'];
+                badges.forEach(badgeSrc => {
+                    const badge = document.createElement('img');
+                    badge.src = `assets/${badgeSrc}`;
+                    badge.alt = badgeSrc.replace('.png', '') + ' Badge';
+                    badge.className = 'admin-badge';
+                    profileBadges.appendChild(badge);
+                });
+            }
+
+            const profileModal = document.getElementById('profile-modal');
+            if (profileModal) {
+                profileModal.style.display = 'flex';
+                console.log('Profile modal displayed for UID:', uid);
+            } else {
+                console.error("Profile modal element not found in HTML.");
+            }
+        } else {
+            console.warn('User profile not found in database for UID:', uid);
+            alert('User profile not found.');
+        }
+    }).catch(error => {
+        console.error('Error fetching user data from Firestore:', error);
+        alert('Failed to fetch user profile.');
+    });
 }
+
 
 userAvatar.addEventListener('click', () => {
     showUserProfileModal(currentUser ? currentUser.uid : null);
