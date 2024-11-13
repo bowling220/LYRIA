@@ -694,3 +694,12 @@ window.addEventListener('keydown', (event) => {
         closeModal();
     }
 });
+
+const userAvatar = document.getElementById('user-avatar');
+if (userAvatar) {
+    userAvatar.addEventListener('click', () => {
+        showUserProfileModal(currentUser.uid);
+    });
+} else {
+    console.error("User avatar element not found.");
+}
