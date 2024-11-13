@@ -694,8 +694,6 @@ textarea {
     text-align: center;
     font-size: 0.9em;
 }
-
-/* CSS for modal */
 #profile-modal {
     display: none; /* Initially hidden */
     position: fixed;
@@ -715,4 +713,5 @@ textarea {
     border-radius: 8px;
     max-width: 400px;
     width: 90%;
+    text-align: center;
 }
