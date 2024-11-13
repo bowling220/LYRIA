@@ -95,7 +95,7 @@ auth.onAuthStateChanged(user => {
                 const badgesContainer = document.createElement('div');
                 badgesContainer.className = 'badges-container';
 
-                const badges = ['DevBadge.png', 'Mod.png', 'EarlyAccess.png'];
+                const badges = ['admin.png', 'DevBadge.png', 'Mod.png', 'EarlyAccess.png'];
                 badges.forEach(badgeSrc => {
                     const badge = document.createElement('img');
                     badge.src = `assets/${badgeSrc}`;
@@ -483,7 +483,7 @@ function loadMessages(channelId) {
                 if (message.senderId && badgeUserUIDs.includes(message.senderId)) {
                     const badgesContainer = document.createElement('span');
                     badgesContainer.className = 'badges-container';
-                    const badges = ['DevBadge.png', 'Mod.png', 'EarlyAccess.png'];
+                    const badges = ['admin.png', 'DevBadge.png', 'Mod.png', 'EarlyAccess.png'];
                     badges.forEach(badgeSrc => {
                         const badge = document.createElement('img');
                         badge.src = `assets/${badgeSrc}`;
