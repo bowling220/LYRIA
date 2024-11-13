@@ -49,18 +49,16 @@
         </main>
     </div>
 
-    <!-- Profile Modal -->
-    <div id="profile-modal" class="modal">
-        <div class="modal-content">
-            <span id="close-profile-modal" class="close">&times;</span>
-            <img id="profile-modal-image" class="profile-modal-image" src="assets/default-avatar.png" alt="Profile Image">
-            <h2 id="profile-modal-name">User Name</h2>
-            <div id="profile-modal-badges" class="profile-modal-badges">
-                <!-- Badges will be inserted here -->
-            </div>
-            <!-- Add more user info here if needed -->
-        </div>
+<!-- Profile Modal Structure -->
+<div id="profile-modal" style="display: none;">
+    <div class="modal-content">
+        <img id="profile-modal-image" src="assets/default-avatar.png" alt="User Avatar">
+        <h2 id="profile-modal-name">User</h2>
+        <div id="profile-modal-badges"></div>
+        <button id="close-profile-modal">Close</button>
     </div>
+</div>
+
 
     <!-- Settings Modal -->
 <div id="settings-modal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="settings-modal-title">
