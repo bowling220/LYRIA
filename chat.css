@@ -188,6 +188,7 @@ body {
     min-width: 0; /* Allow shrinking */
     position: relative;
     z-index: 1;
+    padding: 0.5rem; /* Add padding to the chat area */
 }
 
 #vanta-background {
@@ -214,7 +215,7 @@ body {
 .messages {
     flex: 1;
     overflow-y: auto;
-    padding: 0.8rem;
+    padding: 0.5rem; /* Adjust padding */
     background-color: var(--primary-color);
     margin-bottom: 10px;
 }
@@ -276,35 +277,33 @@ body {
 
 .message-input {
     display: flex;
-    padding: 0.8rem;
+    padding: 0.5rem;
     border-top: 1px solid #202225;
     background-color: var(--primary-color);
 }
 
 textarea {
     flex: 1;
-    padding: 0.6rem;
+    padding: 0.5rem;
     background-color: var(--background-color);
     border: none;
     border-radius: 8px;
     color: var(--text-color);
-    font-size: 0.9rem;
+    font-size: 0.9rem; /* Adjust font size */
     resize: none;
     min-height: 40px;
-    max-height: 120px;
 }
 
 .send-btn {
     background-color: var(--secondary-color);
     color: #fff;
-    padding: 0.6rem 0.8rem;
+    padding: 0.5rem 0.8rem;
     border: none;
     border-radius: 8px;
     font-weight: bold;
     margin-left: 0.5rem;
     cursor: pointer;
     transition: background 0.3s;
-    white-space: nowrap;
 }
 
 .send-btn:hover {
