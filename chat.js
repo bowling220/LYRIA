@@ -270,6 +270,13 @@ function setupUIEventListeners() {
                         joinCode: generateJoinCode(),
                         members: [currentUser.uid], // Ensure the creator is added as a member
                         isPublic: false // Set to true if you want the channel to be public
+                    }).then(() => {
+                        // Send a welcome message to the new channel
+                        return db.collection('channels').doc(channelId).collection('messages').add({
+                            message: `Welcome to the channel, ${currentUser.displayName || 'User'}!`,
+                            sender: 'System',
+                            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                        });
                     });
                 }).then(() => {
                     loadChannels(); // Reload channels after creation
@@ -282,31 +289,59 @@ function setupUIEventListeners() {
                 });
         }
     });
+// Join channel
+document.getElementById('join-channel').addEventListener('click', () => {
+    console.log('Join channel button clicked'); // Log to confirm the button click
+    const joinCode = prompt('Enter channel join code:');
+    if (joinCode) {
+        db.collection('channels').where('joinCode', '==', joinCode).get()
+            .then(snapshot => {
+                console.log(`Join code entered: ${joinCode}`); // Log the join code
+                console.log(`Channels found: ${snapshot.size}`); // Log the number of channels found
+                if (!snapshot.empty) {
+                    const channelDoc = snapshot.docs[0];
+                    const channel = channelDoc.data();
 
-    // Join channel
-    document.getElementById('join-channel').addEventListener('click', () => {
-        const joinCode = prompt('Enter channel join code:');
-        if (joinCode) {
-            db.collection('channels').where('joinCode', '==', joinCode).get()
-                .then(snapshot => {
-                    if (!snapshot.empty) {
-                        const channelDoc = snapshot.docs[0];
-                        const channel = channelDoc.data();
+                    console.log(`Joining channel: ${channel.name}`); // Log channel name
 
-                        // Add user to channel members
-                        return db.collection('channels').doc(channel.id).update({
-                            members: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
-                        }).then(() => {
-                            switchChannel(channel.id);
-                            loadChannels();
+                    // Add user to channel members
+                    return db.collection('channels').doc(channel.id).update({
+                        members: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
+                    }).then(() => {
+                        console.log(`User ${currentUser.displayName} added to channel ${channel.name}`); // Log user addition
+
+                        // Send a welcome message to the channel
+                        return db.collection('channels').doc(channel.id).collection('messages').add({
+                            message: `Welcome to the channel, ${currentUser.displayName || 'User'}!`,
+                            sender: 'System',
+                            timestamp: firebase.firestore.FieldValue.serverTimestamp()
                         });
-                    } else {
-                        alert('Invalid join code.');
-                    }
-                }).catch(error => {
-                    console.error("Error joining channel:", error);
-                    alert('Failed to join channel.');
-                });
+                    }).then(() => {
+                        console.log(`Welcome message sent to channel ${channel.name}`); // Log message sending
+                        switchChannel(channel.id);
+                        loadChannels();
+                    });
+                } else {
+                    alert('Invalid join code.');
+                }
+            }).catch(error => {
+                console.error("Error joining channel:", error); // Log any errors
+                alert('Failed to join channel.');
+            });
+    }
+});
+    // Leave channel
+    document.getElementById('leave-channel').addEventListener('click', () => {
+        if (currentChannel) {
+            db.collection('channels').doc(currentChannel).update({
+                members: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)
+            }).then(() => {
+                switchChannel(`personal-${currentUser.uid}`);
+                loadChannels();
+            }).catch(error => {
+                console.error("Error leaving channel:", error);
+                alert('Failed to leave channel.');
+            });
         }
     });
 
@@ -820,6 +855,8 @@ messageInput.addEventListener('input', (e) => {
         suggestionsContainer.style.top = `${rect.top - suggestionsContainer.offsetHeight - 5}px`; // Position above with a small gap
         suggestionsContainer.style.left = `${rect.left}px`;
         suggestionsContainer.style.width = `${rect.width}px`;
+
+        
         suggestionsContainer.style.display = 'block'; // Show suggestions
     } else {
         suggestionsContainer.innerHTML = ''; // Clear suggestions if no @

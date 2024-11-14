@@ -100,6 +100,26 @@ body {
     color: var(--text-color);
 }
 
+.leave-channel-btn {
+    width: 100%;
+    padding: 0.5rem;
+    background-color: var(--background-color);
+    color: #8e9297;
+    border: none;
+    border-radius: 4px;
+    margin-top: 0.8rem;
+    cursor: pointer;
+    transition: background 0.3s;
+    font-size: 0.9rem;
+    text-align: left;
+}
+
+.leave-channel-btn:hover {
+    background-color: #c0392b; /* Red hover background */
+    color: #fff; /* White text on hover */
+}
+
+
 .add-channel-btn, .join-channel-btn {
     width: 100%;
     padding: 0.5rem;
