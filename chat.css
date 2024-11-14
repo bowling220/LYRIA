@@ -441,6 +441,7 @@ textarea {
     font-size: 1rem;
     align-self: flex-start;
     transition: background-color 0.3s ease, transform 0.2s ease;
+    margin-top: 0.5rem;
 }
 
 .action-btn:hover {
