@@ -928,6 +928,7 @@ input:checked + .slider:before {
     border-radius: 4px; /* Rounded corners */
     padding: 2px 4px; /* Padding for better spacing */
     cursor: pointer; /* Indicate that it's clickable */
+    transition: background-color 0.3s; /* Smooth transition for hover effect */
 }
 
 /* Optional: Style for hover effect on tagged usernames */
