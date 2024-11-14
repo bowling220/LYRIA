@@ -242,22 +242,44 @@ function setupUIEventListeners() {
     });
 
     // Add channel
+    let isCreatingChannel = false; // Flag to prevent multiple submissions
+
     document.getElementById('add-channel').addEventListener('click', () => {
+        if (isCreatingChannel) return; // Prevent further clicks if already creating a channel
+
         const channelName = prompt('Enter channel name:');
         if (channelName) {
-            const channelId = `${Date.now()}-${currentUser.uid}`;
-            db.collection('channels').doc(channelId).set({
-                name: channelName,
-                id: channelId,
-                createdBy: currentUser.uid,
-                joinCode: generateJoinCode(),
-                members: [currentUser.uid]
-            }).then(() => {
-                loadChannels();
-            }).catch(error => {
-                console.error("Error creating channel:", error);
-                alert('Failed to create channel.');
-            });
+            // Check if the channel already exists
+            db.collection('channels').where('name', '==', channelName).get()
+                .then(snapshot => {
+                    if (!snapshot.empty) {
+                        alert('A channel with this name already exists.');
+                        return; // Exit if a duplicate is found
+                    }
+
+                    const channelId = `${Date.now()}-${currentUser.uid}`;
+                    console.log('Creating channel with name:', channelName, 'and ID:', channelId); // Debugging log
+                    
+                    // Set the flag to true to indicate a channel creation is in progress
+                    isCreatingChannel = true;
+
+                    return db.collection('channels').doc(channelId).set({
+                        name: channelName,
+                        id: channelId,
+                        createdBy: currentUser.uid,
+                        joinCode: generateJoinCode(),
+                        members: [currentUser.uid], // Ensure the creator is added as a member
+                        isPublic: false // Set to true if you want the channel to be public
+                    });
+                }).then(() => {
+                    loadChannels(); // Reload channels after creation
+                }).catch(error => {
+                    console.error("Error creating channel:", error);
+                    alert('Failed to create channel.');
+                }).finally(() => {
+                    // Reset the flag and re-enable the button after the operation is complete
+                    isCreatingChannel = false;
+                });
         }
     });
 
