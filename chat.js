@@ -790,20 +790,13 @@ messageInput.addEventListener('input', (e) => {
             suggestionsContainer.appendChild(suggestionItem);
         });
 
-        // Position the suggestions container
+        // Position the suggestions container above the message input
         const rect = messageInput.getBoundingClientRect();
-        suggestionsContainer.style.top = `${rect.bottom}px`;
+        suggestionsContainer.style.top = `${rect.top - suggestionsContainer.offsetHeight}px`; // Position above
         suggestionsContainer.style.left = `${rect.left}px`;
         suggestionsContainer.style.width = `${rect.width}px`;
         suggestionsContainer.style.display = 'block'; // Show suggestions
     } else {
         suggestionsContainer.innerHTML = ''; // Clear suggestions if no @
-    }
-});
-
-// Hide suggestions when clicking outside
-document.addEventListener('click', (e) => {
-    if (!suggestionsContainer.contains(e.target) && e.target !== messageInput) {
-        suggestionsContainer.innerHTML = ''; // Clear suggestions
     }
 });

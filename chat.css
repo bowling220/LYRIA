@@ -912,6 +912,8 @@ input:checked + .slider:before {
     max-height: 200px;
     overflow-y: auto;
     width: 100%;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Optional: Add shadow for better visibility */
+    display: none; /* Initially hidden */
 }
 
 .suggestion-item {
@@ -921,4 +923,19 @@ input:checked + .slider:before {
 
 .suggestion-item:hover {
     background-color: #f0f0f0;
+}
+
+/* Style for tagged usernames */
+.tagged-user {
+    color: var(--secondary-color); /* Use your secondary color for tagged users */
+    font-weight: bold; /* Make the tagged username bold */
+    background-color: rgba(54, 198, 255, 0.2); /* Light background for visibility */
+    border-radius: 4px; /* Rounded corners */
+    padding: 2px 4px; /* Padding for better spacing */
+    cursor: pointer; /* Indicate that it's clickable */
+}
+
+/* Optional: Style for hover effect on tagged usernames */
+.tagged-user:hover {
+    background-color: rgba(54, 198, 255, 0.4); /* Darker background on hover */
 }
