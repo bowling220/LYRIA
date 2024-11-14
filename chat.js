@@ -92,8 +92,6 @@ auth.onAuthStateChanged(user => {
 
             // Check if the user's UID is in the badgeUserUIDs array
             if (badgeUserUIDs.includes(user.uid)) {
-                // Commenting out the badge display logic
-                /*
                 const badgesContainer = document.createElement('div');
                 badgesContainer.className = 'badges-container';
 
@@ -107,7 +105,6 @@ auth.onAuthStateChanged(user => {
                 });
 
                 document.getElementById('user-name').after(badgesContainer);
-                */
             }
 
             darkMode = userData.darkMode;
@@ -184,35 +181,30 @@ function setupUIEventListeners() {
         }
     });
 
-
-// Toggle Notifications
-document.getElementById('notifications-toggle').addEventListener('change', (e) => {
-    notificationsEnabled = e.target.checked;
-
-    if (notificationsEnabled) {
-        Notification.requestPermission().then(permission => {
-            if (permission === 'granted') {
-                // Update Firestore
-                db.collection('users').doc(currentUser.uid).update({
-                    notificationsEnabled: notificationsEnabled
-                }).catch(error => {
-                    console.error("Error updating notifications:", error);
-                });
-            } else {
-                alert('Notifications permission denied.');
-                document.getElementById('notifications-toggle').checked = false;
-                notificationsEnabled = false;
-            }
-        });
-    } else {
-        // Update Firestore
+    // Toggle Notifications
+    document.getElementById('notifications-toggle').addEventListener('change', (e) => {
+        notificationsEnabled = e.target.checked;
+        if(notificationsEnabled) {
+            Notification.requestPermission().then(permission => {
+                if(permission !== 'granted') {
+                    alert('Notifications permission denied.');
+                    document.getElementById('notifications-toggle').checked = false;
+                    notificationsEnabled = false;
+                    db.collection('users').doc(currentUser.uid).update({
+                        notificationsEnabled: notificationsEnabled
+                    }).catch(error => {
+                        console.error("Error updating notifications:", error);
+                    });
+                }
+            });
+        }
         db.collection('users').doc(currentUser.uid).update({
             notificationsEnabled: notificationsEnabled
         }).catch(error => {
             console.error("Error updating notifications:", error);
         });
-    }
-});
+    });
+
     // Logout button event listener
     document.getElementById('logout-btn').addEventListener('click', logout);
 
@@ -316,32 +308,6 @@ document.getElementById('notifications-toggle').addEventListener('change', (e) =
     });
 }
 
-function handleNotifications(message) {
-    console.log("Handling notification for message:", message);
-    if (notificationsEnabled) {
-        console.log("Notifications are enabled.");
-        if (Notification.permission === 'granted') {
-            new Notification('New Message', {
-                body: message,
-                icon: 'assets/default-avatar.png'
-            });
-        } else {
-            console.log("Notification permission not granted.");
-            Notification.requestPermission().then(permission => {
-                if (permission === 'granted') {
-                    new Notification('New Message', {
-                        body: message,
-                        icon: 'assets/default-avatar.png'
-                    });
-                }
-            });
-        }
-    } else {
-        console.log("Notifications are disabled.");
-    }
-}
-
-// Update the sendMessage function to include notifications
 function sendMessage() {
     const messageInput = document.getElementById('message-input');
     const messageText = messageInput.value.trim();
@@ -351,13 +317,13 @@ function sendMessage() {
             .collection('messages').add({
                 message: messageText,
                 sender: currentUser.displayName || 'User',
-                senderId: currentUser.uid,
-                senderPhotoURL: currentUser.photoURL || 'assets/default-avatar.png',
+                senderId: currentUser.uid, // Include sender's UID
+                senderPhotoURL: currentUser.photoURL || 'assets/default-avatar.png', // Include sender's photo URL
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             }).then(() => {
                 messageInput.value = '';
-                setTypingStatus(false); // Reset typing status
-                handleNotifications(messageText); // Notify about the new message
+                // Reset typing status
+                setTypingStatus(false);
             }).catch(error => {
                 console.error("Error sending message:", error);
                 alert('Failed to send message.');
@@ -588,6 +554,7 @@ function switchChannel(channelId) {
     // Uncomment the line below if using voicecall.js and initializePeer() is defined
     // loadChannelPeerId(channelId); // Load and set currentChannelPeerId (from voicecall.js)
 }
+
 // Function to open the modal
 function openModal() {
     const modal = document.getElementById('settings-modal');
@@ -772,64 +739,3 @@ function showUserProfileModal(uid) {
         alert('Failed to fetch user profile.');
     });
 }
-
-// Add a global variable to store the list of users
-let usersList = [];
-
-// Fetch users from Firestore and store them in usersList
-function fetchUsers() {
-    db.collection('users').get().then(snapshot => {
-        usersList = snapshot.docs.map(doc => ({
-            id: doc.id,
-            displayName: doc.data().displayName || 'User'
-        }));
-    }).catch(error => {
-        console.error("Error fetching users:", error);
-    });
-}
-
-// Call fetchUsers when the app initializes
-fetchUsers();
-
-// Add event listener for input to handle tagging
-const messageInput = document.getElementById('message-input');
-const suggestionsContainer = document.createElement('div');
-suggestionsContainer.className = 'suggestions-container';
-document.body.appendChild(suggestionsContainer); // Append to body or a specific container
-
-messageInput.addEventListener('input', (e) => {
-    const value = e.target.value;
-    const atIndex = value.lastIndexOf('@');
-
-    if (atIndex !== -1) {
-        const query = value.substring(atIndex + 1).toLowerCase();
-        const filteredUsers = usersList.filter(user => user.displayName.toLowerCase().includes(query));
-
-        // Clear previous suggestions
-        suggestionsContainer.innerHTML = '';
-
-        // Show suggestions
-        filteredUsers.forEach(user => {
-            const suggestionItem = document.createElement('div');
-            suggestionItem.textContent = user.displayName;
-            suggestionItem.className = 'suggestion-item';
-            suggestionItem.onclick = () => {
-                // Replace the @username with the selected username
-                const newMessage = value.substring(0, atIndex + 1) + user.displayName + ' ';
-                messageInput.value = newMessage;
-                suggestionsContainer.innerHTML = ''; // Clear suggestions
-                messageInput.focus(); // Refocus on input
-            };
-            suggestionsContainer.appendChild(suggestionItem);
-        });
-
-        // Position the suggestions container above the message input
-        const rect = messageInput.getBoundingClientRect();
-        suggestionsContainer.style.top = `${rect.top - suggestionsContainer.offsetHeight - 5}px`; // Position above with a small gap
-        suggestionsContainer.style.left = `${rect.left}px`;
-        suggestionsContainer.style.width = `${rect.width}px`;
-        suggestionsContainer.style.display = 'block'; // Show suggestions
-    } else {
-        suggestionsContainer.innerHTML = ''; // Clear suggestions if no @
-    }
-});
