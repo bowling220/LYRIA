@@ -39,6 +39,84 @@ body {
     display: none;
     background: none;
     border: none;
+    color: var(--text-color);
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+.app-container {
+    display: flex;
+    height: calc(100vh - 50px); /* Subtract header height */
+}
+
+/* Sidebar */
+.sidebar {
+    background-color: var(--sidebar-color);
+    width: 250px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* Ensures space between channels and user-profile */
+    height: 100%;
+    overflow: hidden; /* Prevents scrolling within sidebar */
+}
+
+.channels {
+    flex: 1; /* Takes up available space, pushing user-profile to the bottom */
+    padding: 1rem;
+    overflow-y: auto; /* Allows scrolling if channels exceed viewport height */
+}
+
+.channels h3 {
+    font-size: 0.9rem;
+    color: #8e9297;
+    margin-bottom: 0.8rem;
+    border-bottom: 1px solid #292b2f;
+    padding-bottom: 0.5rem;
+    text-transform: uppercase;
+}
+
+.channels-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.channel-btn {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 0.8rem;
+    color: #8e9297;
+    background: none;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    width: 100%;
+    transition: background 0.3s;
+}
+
+.channel-btn:hover, .channel-btn.active-channel {
+    background-color: var(--channel-hover);
+    color: var(--text-color);
+}
+
+.add-channel-btn, .join-channel-btn {
+    width: 100%;
+    padding: 0.5rem;
+    background-color: var(--background-color);
+    color: #8e9297;
+    border: none;
+    border-radius: 4px;
+    margin-top: 0.8rem;
+    cursor: pointer;
+    transition: background 0.3s;
+    font-size: 0.9rem;
+    text-align: left;
+}
+
+.add-channel-btn:hover, .join-channel-btn:hover {
+    background-color: var(--channel-hover);
+    color: var(--text-color);
 }
 
 /* User Profile Section */
@@ -76,6 +154,31 @@ body {
     cursor: pointer; /* Indicates interactivity, e.g., clicking for profile */
 }
 
+/* Settings Button Styling */
+.settings-btn {
+    background: none;
+    border: none;
+    color: var(--secondary-color);
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 0.3rem;
+    transition: color 0.3s, transform 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.settings-btn:hover {
+    color: var(--accent-color);
+    transform: scale(1.1); /* Slightly enlarges the button on hover */
+}
+
+/* Optional: Icon for Settings Button */
+.settings-btn::before {
+    content: '⚙️'; /* Unicode gear icon */
+    margin-right: 0.3rem;
+}
+
 /* Main Chat Area */
 .chat-area {
     flex: 1;
@@ -105,6 +208,7 @@ body {
     border-bottom: 1px solid #202225;
     background-color: var(--primary-color);
     color: var(--text-color);
+    font-weight: bold;
 }
 
 .messages {
@@ -152,6 +256,78 @@ body {
     margin-right: 10px;
 }
 
+.moving-color {
+    background: linear-gradient(90deg, #ff6ec4, #7873f5, #ff6ec4);
+    background-size: 200% 200%;
+    animation: movingGradient 4s linear infinite;
+    color: white; /* Adjust text color for readability */
+    padding: 10px;
+    border-radius: 5px;
+}
+
+@keyframes movingGradient {
+    0% {
+      background-position: 0% 50%;
+    }
+    100% {
+      background-position: 200% 50%;
+    }
+}
+
+.message-input {
+    display: flex;
+    padding: 0.8rem;
+    border-top: 1px solid #202225;
+    background-color: var(--primary-color);
+}
+
+textarea {
+    flex: 1;
+    padding: 0.6rem;
+    background-color: var(--background-color);
+    border: none;
+    border-radius: 8px;
+    color: var(--text-color);
+    font-size: 0.9rem;
+    resize: none;
+    min-height: 40px;
+    max-height: 120px;
+}
+
+.send-btn {
+    background-color: var(--secondary-color);
+    color: #fff;
+    padding: 0.6rem 0.8rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    margin-left: 0.5rem;
+    cursor: pointer;
+    transition: background 0.3s;
+    white-space: nowrap;
+}
+
+.send-btn:hover {
+    background-color: #4a5de2;
+}
+
+.copy-join-code-btn {
+    background-color: var(--secondary-color);
+    color: #fff;
+    padding: 0.4rem 0.8rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.3s;
+    font-size: 0.9rem;
+}
+
+.copy-join-code-btn:hover {
+    background-color: #4a5de2;
+}
+
+
+
 /* Close Button */
 .close-button {
     position: absolute;
@@ -182,6 +358,13 @@ body {
     margin-bottom: 1.5rem; /* Increase bottom margin for spacing */
     display: flex;
     flex-direction: column;
+}
+
+/* Labels */
+.modal-label {
+    color: var(--text-color);
+    margin-bottom: 0.5rem; /* Ensure there's space below the label */
+    font-weight: bold;
 }
 
 /* Input Fields */
@@ -221,6 +404,736 @@ body {
 .action-btn:hover {
     background-color: #4a5de2;
     transform: translateY(-2px);
+}
+
+.logout-btn {
+    background-color: #e74c3c;
+}
+
+.logout-btn:hover {
+    background-color: #c0392b;
+}
+
+/* Toggle Switch */
+.toggle-switch {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-switch .slider {
+    position: relative;
+    width: 50px;
+    height: 24px;
+    background-color: #ccc;
+    border-radius: 24px;
+    transition: background-color 0.4s;
+}
+
+.toggle-switch .slider::before {
+    content: "";
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    border-radius: 50%;
+    transition: transform 0.4s;
+}
+
+.toggle-switch input:checked + .slider {
+    background-color: var(--secondary-color);
+}
+
+.toggle-switch input:checked + .slider::before {
+    transform: translateX(26px);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .menu-toggle {
+        display: block;
+    }
+
+    .sidebar {
+        width: 200px; /* Reduces sidebar width on smaller screens */
+    }
+
+    .user-profile {
+        padding: 0.8rem;
+    }
+
+    .avatar {
+        width: 35px;
+        height: 35px;
+    }
+
+    .username {
+        font-size: 0.9rem;
+    }
+
+    .settings-btn {
+        font-size: 0.9rem;
+    }
+
+    .chat-header {
+        padding: 0.6rem;
+        position: sticky;
+        top: 0;
+        z-index: 1;
+    }
+
+    .chat-header h2 {
+        font-size: 1rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .messages {
+        height: calc(100vh - 170px); /* Adjust for header and input area */
+        padding: 0.6rem;
+    }
+
+    .message-input {
+        padding: 0.6rem;
+        position: sticky;
+        bottom: 0;
+    }
+
+    textarea {
+        font-size: 1rem;
+        padding: 0.5rem;
+    }
+
+    .send-btn {
+        padding: 0.5rem;
+        min-width: 60px;
+    }
+
+    .copy-join-code-btn {
+        font-size: 0.8rem;
+        padding: 0.3rem 0.6rem;
+    }
+
+    /* Improve touch targets */
+    .channel-btn,
+    .add-channel-btn,
+    .join-channel-btn {
+        padding: 0.8rem;
+        min-height: 44px;
+    }
+
+    /* Ensure modal is accessible on mobile */
+    .modal-content {
+        margin: 1rem;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+}
+
+/* Admin badge and message styling */
+.admin-badge {
+    background-color: #ffd700;
+    color: #000;
+    padding: 0.2rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    margin-left: 0.5rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+}
+
+.message-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.3rem;
+}
+
+.message-username {
+    font-weight: bold;
+    color: var(--secondary-color);
+}
+
+.badges-container {
+    display: flex;
+    align-items: center;
+    margin-left: 5px;
+}
+
+.badges-container img {
+    width: 10px;
+    height: 10px;
+    margin: 0 5px;
+}
+
+/* Typing Status Styles */
+.typing-status {
+    padding: 5px 10px;
+    color: #888;
+    font-style: italic;
+    margin-bottom: 10px;
+    font-size: 0.9em;
+}
+
+/* Modal Close Button */
+.close {
+    color: #aaa;
+    position: absolute;
+    top: 15px;
+    right: 25px;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close:hover,
+.close:focus {
+    color: #fff;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+/* Profile Modal Image */
+.profile-modal-image {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    margin-bottom: 15px;
+}
+
+/* Badges in Profile Modal */
+.profile-modal-badges img {
+    width: 30px;
+    height: 30px;
+    margin: 0 5px;
+}
+
+/* Moving Gradient Animation for Messages */
+@keyframes movingGradient {
+    0% {
+      background-position: 0% 50%;
+    }
+    100% {
+      background-position: 200% 50%;
+    }
+}
+
+/* Focus States for Accessibility */
+.action-btn:focus, .close-button:focus, .modal-input:focus {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 2px;
+}
+
+/* Ensure Inputs and Buttons are Accessible via Keyboard */
+.modal-input, .action-btn, .close-button {
+    outline: none;
+}
+
+/* Footer Styling */
+footer {
+    position: fixed;
+    bottom: 10px;
+    text-align: center;
+    font-size: 0.9em;
+}
+
+/* Modal Background */
+#profile-modal {
+    display: none; /* Hidden by default, shown when needed */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7); /* Dark, semi-transparent background */
+    justify-content: center;
+    align-items: center;
+    z-index: 1000; /* Make sure it’s on top of other elements */
+}
+
+/* Modal Content */
+#profile-modal .modal-content {
+    background-color: #ffffff;
+    padding: 30px;
+    border-radius: 12px;
+    max-width: 400px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Soft shadow */
+    animation: fadeIn 0.3s ease; /* Smooth fade-in effect */
+}
+
+/* Profile Image */
+#profile-modal-image {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%; /* Circular image */
+    object-fit: cover;
+    margin-bottom: 20px;
+}
+
+/* User Name */
+#profile-modal-name {
+    font-size: 1.5em;
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+/* Badges Container */
+#profile-modal-badges {
+    display: flex;
+    justify-content: center;
+    gap: 8px; /* Space between badges */
+    margin-bottom: 20px;
+}
+
+/* Badges Style */
+.admin-badge {
+    width: 32px;
+    height: 32px;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+/* Close Button */
+#close-profile-modal {
+    background-color: #007bff;
+    color: #ffffff;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1em;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#close-profile-modal:hover {
+    background-color: #0056b3; /* Darker blue on hover */
+}
+
+/* Fade-in Animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Settings Modal Badge Visibility Toggle */
+.modal-section {
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+#badge-visibility-section {
+    display: none; /* Hidden by default, only shown for admins */
+}
+
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 24px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: 0.4s;
+    border-radius: 24px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: 0.4s;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: #4CAF50;
+}
+
+input:checked + .slider:before {
+    transform: translateX(26px);
+}
+
+/* Badge Styles */
+.badges-container, #profile-modal-badges {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 5px;
+}
+
+.admin-badge {
+    width: 20px;
+    height: 20px;
+    border-radius: 3px;
+}
+
+/* Optional - Animation for 'moving-color' badges */
+.moving-color {
+    animation: colorPulse 2s infinite;
+}
+
+@keyframes colorPulse {
+    0% { filter: hue-rotate(0deg); }
+    100% { filter: hue-rotate(360deg); }
+}
+
+/* Profile Modal Styling */
+#profile-modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background-color: #2f3136;
+    color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    width: 300px;
+    text-align: center;
+}
+
+#profile-modal-image {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    margin-bottom: 10px;
+}
+
+#profile-modal-name {
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.suggestions-container {
+    position: absolute;
+    background: white;
+    border: 1px solid #ccc;
+    z-index: 1000;
+    max-height: 200px;
+    overflow-y: auto;
+    width: 100%;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Optional: Add shadow for better visibility */
+    display: none; /* Initially hidden */
+    border-radius: 4px; /* Optional: Rounded corners */
+}
+
+.suggestion-item {
+    padding: 8px;
+    cursor: pointer;
+}
+
+.suggestion-item:hover {
+    background-color: #f0f0f0;
+}
+
+/* Style for tagged usernames */
+.tagged-user {
+    color: var(--secondary-color); /* Use your secondary color for tagged users */
+    font-weight: bold; /* Make the tagged username bold */
+    background-color: rgba(54, 198, 255, 0.2); /* Light background for visibility */
+    border-radius: 4px; /* Rounded corners */
+    padding: 2px 4px; /* Padding for better spacing */
+    cursor: pointer; /* Indicate that it's clickable */
+    transition: background-color 0.3s; /* Smooth transition for hover effect */
+}
+
+/* Optional: Style for hover effect on tagged usernames */
+.tagged-user:hover {
+    background-color: rgba(54, 198, 255, 0.4); /* Darker background on hover */
+}
+
+/* Mobile Menu Styles */
+.sidebar {
+    position: fixed; /* Fixed position for overlay effect */
+    top: 0;
+    left: -250px; /* Start hidden off-screen */
+    width: 250px; /* Width of the sidebar */
+    height: 100%; /* Full height */
+    background-color: var(--sidebar-color);
+    transition: left 0.3s ease; /* Smooth transition */
+    z-index: 100; /* Ensure it overlays other content */
+    padding: 1rem; /* Padding for content */
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5); /* Shadow for depth */
+}
+
+/* Show the sidebar when active */
+.sidebar.active {
+    left: 0; /* Slide in */
+}
+
+/* Close button for the menu */
+.close-menu {
+    font-size: 1.5rem;
+    color: #fff;
+    cursor: pointer;
+    margin-bottom: 1rem; /* Space below the close button */
+}
+
+/* Menu Toggle Button */
+.menu-toggle {
+    display: block; /* Show on mobile */
+    background: none;
+    border: none;
+    color: var(--text-color);
+    font-size: 2rem; /* Larger size for visibility */
+    cursor: pointer;
+    position: fixed; /* Fixed position */
+    top: 10px; /* Position from the top */
+    left: 10px; /* Position from the left */
+    z-index: 200; /* Above the sidebar */
+}
+
+/* Channel Button Styles */
+.channel-btn {
+    display: block; /* Full width */
+    padding: 1rem; /* Padding for touch targets */
+    color: #8e9297;
+    background: none;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background 0.3s;
+}
+
+.channel-btn:hover {
+    background-color: var(--channel-hover); /* Highlight on hover */
+    color: var(--text-color);
+}
+
+/* Responsive Adjustments for Mobile */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 80%; /* Full width on mobile */
+    }
+
+    .app-container {
+        margin-left: 0; /* Reset margin for mobile */
+    }
+
+    .top-header {
+        padding: 0.5rem; /* Adjust padding for mobile */
+    }
+
+    .menu-toggle {
+        display: block; /* Ensure toggle is visible on mobile */
+    }
+}
+
+/* Desktop Styles (Ensure they remain unchanged) */
+@media (min-width: 769px) {
+    .sidebar {
+        position: static; /* Static position for desktop */
+        width: 250px; /* Fixed width */
+        height: auto; /* Auto height */
+        left: 0; /* Always visible */
+        box-shadow: none; /* No shadow on desktop */
+    }
+
+    .menu-toggle {
+        display: none; /* Hide toggle on desktop */
+    }
+}
+
+/* Settings Modal */
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7); /* Dark, semi-transparent background */
+    justify-content: center;
+    align-items: center;
+    z-index: 1000; /* Make sure it’s on top of other elements */
+}
+
+.modal-content {
+    background-color: var(--background-color);
+    color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    width: 300px;
+    text-align: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Soft shadow */
+    animation: fadeIn 0.3s ease; /* Smooth fade-in effect */
+}
+
+/* Close Button */
+.close-button {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--text-color);
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.close-button:hover {
+    color: var(--accent-color);
+}
+
+/* Modal Title */
+.modal-content h2 {
+    color: var(--text-color);
+    margin-bottom: 1.5rem;
+    font-size: 1.5rem;
+    text-align: center;
+}
+
+/* Modal Sections */
+.modal-section {
+    margin-bottom: 1.5rem; /* Increase bottom margin for spacing */
+    display: flex;
+    flex-direction: column;
+}
+
+/* Labels */
+.modal-label {
+    color: var(--text-color);
+    margin-bottom: 0.5rem; /* Ensure there's space below the label */
+    font-weight: bold;
+}
+
+/* Input Fields */
+.modal-input {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #444;
+    border-radius: 5px;
+    background-color: var(--primary-color);
+    color: var(--text-color);
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+.modal-input::placeholder {
+    color: #999;
+}
+
+.modal-input:focus {
+    border-color: var(--secondary-color);
+    outline: none;
+}
+
+/* Action Buttons */
+.action-btn {
+    padding: 0.6rem 1rem;
+    background-color: var(--secondary-color);
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    align-self: flex-start;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    margin-top: 0.5rem; /* Add margin to separate from other elements */
+}
+
+.action-btn:hover {
+    background-color: #4a5de2;
+    transform: translateY(-2px);
+}
+
+.logout-btn {
+    background-color: #e74c3c;
+}
+
+.logout-btn:hover {
+    background-color: #c0392b;
+}
+
+/* Toggle Switch */
+.toggle-switch {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-switch .slider {
+    position: relative;
+    width: 50px;
+    height: 24px;
+    background-color: #ccc;
+    border-radius: 24px;
+    transition: background-color 0.4s;
+}
+
+.toggle-switch .slider::before {
+    content: "";
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    border-radius: 50%;
+    transition: transform 0.4s;
+}
+
+.toggle-switch input:checked + .slider {
+    background-color: var(--secondary-color);
+}
+
+.toggle-switch input:checked + .slider::before {
+    transform: translateX(26px);
 }
 
 /* Responsive Adjustments */
