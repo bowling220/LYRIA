@@ -183,7 +183,6 @@ function setupUIEventListeners() {
             });
         }
     });
-
 // Toggle Notifications
 document.getElementById('notifications-toggle').addEventListener('change', (e) => {
     notificationsEnabled = e.target.checked;
@@ -318,18 +317,17 @@ document.getElementById('notifications-toggle').addEventListener('change', (e) =
 }
 
 // Function to handle notifications
-// Function to handle notifications
 function handleNotifications(message) {
     if (notificationsEnabled) {
         if (Notification.permission === 'granted') {
-            new Notification('New Message', {
+            new Notification('New Chat', {
                 body: message,
                 icon: 'assets/default-avatar.png' // Optional: Add an icon
             });
         } else if (Notification.permission !== 'denied') {
             Notification.requestPermission().then(permission => {
                 if (permission === 'granted') {
-                    new Notification('New Message', {
+                    new Notification('New Chat', {
                         body: message,
                         icon: 'assets/default-avatar.png' // Optional: Add an icon
                     });
