@@ -10,8 +10,7 @@
     background-color: #1e1e2f; /* Dark background */
     color: #e0e0e0; /* Light text color */
     display: flex;
-    justify-content: center;
-    align-items: center;
+    flex-direction: column;
     height: 100vh;
     overflow: hidden; /* Prevents scrolling on the entire page */
 }
@@ -19,7 +18,7 @@
   
   .app-container {
     display: flex;
-    height: 90vh;
+    height: calc(100vh - 50px); /* Subtract header height */
     width: 90vw;
     border-radius: 10px;
     overflow: hidden;
@@ -286,5 +285,49 @@
     overflow: hidden;
     background-color: #2b2d3e;
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+}
+
+/* Mobile Styles */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 100%; /* Full width on mobile */
+        border-right: none; /* Remove right border */
+        border-bottom: 1px solid #444; /* Add bottom border */
+    }
+
+    .app-container {
+        flex-direction: column; /* Stack elements vertically */
+        height: auto; /* Allow height to adjust */
+    }
+
+    .chat-area {
+        flex: 1; /* Allow chat area to take available space */
+    }
+
+    .members-list {
+        width: 100%; /* Full width for members list */
+        border-left: none; /* Remove left border */
+        border-top: 1px solid #444; /* Add top border */
+    }
+
+    .message-input {
+        padding: 10px; /* Reduce padding for mobile */
+    }
+
+    .message-input textarea {
+        height: 40px; /* Adjust height for mobile */
+    }
+
+    .send-btn {
+        padding: 6px 12px; /* Adjust padding for mobile */
+    }
+
+    .channel-btn, .dm-btn, .add-channel-btn {
+        padding: 10px; /* Increase padding for touch targets */
+    }
+
+    .members-search input {
+        padding: 6px; /* Adjust padding for mobile */
+    }
 }
 
