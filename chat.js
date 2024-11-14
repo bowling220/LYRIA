@@ -739,3 +739,71 @@ function showUserProfileModal(uid) {
         alert('Failed to fetch user profile.');
     });
 }
+
+// Add a global variable to store the list of users
+let usersList = [];
+
+// Fetch users from Firestore and store them in usersList
+function fetchUsers() {
+    db.collection('users').get().then(snapshot => {
+        usersList = snapshot.docs.map(doc => ({
+            id: doc.id,
+            displayName: doc.data().displayName || 'User'
+        }));
+    }).catch(error => {
+        console.error("Error fetching users:", error);
+    });
+}
+
+// Call fetchUsers when the app initializes
+fetchUsers();
+
+// Add event listener for input to handle tagging
+const messageInput = document.getElementById('message-input');
+const suggestionsContainer = document.createElement('div');
+suggestionsContainer.className = 'suggestions-container';
+document.body.appendChild(suggestionsContainer); // Append to body or a specific container
+
+messageInput.addEventListener('input', (e) => {
+    const value = e.target.value;
+    const atIndex = value.lastIndexOf('@');
+
+    if (atIndex !== -1) {
+        const query = value.substring(atIndex + 1).toLowerCase();
+        const filteredUsers = usersList.filter(user => user.displayName.toLowerCase().includes(query));
+
+        // Clear previous suggestions
+        suggestionsContainer.innerHTML = '';
+
+        // Show suggestions
+        filteredUsers.forEach(user => {
+            const suggestionItem = document.createElement('div');
+            suggestionItem.textContent = user.displayName;
+            suggestionItem.className = 'suggestion-item';
+            suggestionItem.onclick = () => {
+                // Replace the @username with the selected username
+                const newMessage = value.substring(0, atIndex + 1) + user.displayName + ' ';
+                messageInput.value = newMessage;
+                suggestionsContainer.innerHTML = ''; // Clear suggestions
+                messageInput.focus(); // Refocus on input
+            };
+            suggestionsContainer.appendChild(suggestionItem);
+        });
+
+        // Position the suggestions container
+        const rect = messageInput.getBoundingClientRect();
+        suggestionsContainer.style.top = `${rect.bottom}px`;
+        suggestionsContainer.style.left = `${rect.left}px`;
+        suggestionsContainer.style.width = `${rect.width}px`;
+        suggestionsContainer.style.display = 'block'; // Show suggestions
+    } else {
+        suggestionsContainer.innerHTML = ''; // Clear suggestions if no @
+    }
+});
+
+// Hide suggestions when clicking outside
+document.addEventListener('click', (e) => {
+    if (!suggestionsContainer.contains(e.target) && e.target !== messageInput) {
+        suggestionsContainer.innerHTML = ''; // Clear suggestions
+    }
+});
