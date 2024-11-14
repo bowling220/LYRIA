@@ -753,7 +753,6 @@ footer {
     border-radius: 5px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 }
-
 /* Close Button */
 #close-profile-modal {
     background-color: #007bff;
@@ -935,3 +934,69 @@ input:checked + .slider:before {
 .tagged-user:hover {
     background-color: rgba(54, 198, 255, 0.4); /* Darker background on hover */
 }
+
+/* Mobile Menu Styles */
+.sidebar {
+    position: fixed; /* Fixed position for overlay effect */
+    top: 0;
+    left: -250px; /* Start hidden off-screen */
+    width: 250px; /* Width of the sidebar */
+    height: 100%; /* Full height */
+    background-color: var(--sidebar-color);
+    transition: left 0.3s ease; /* Smooth transition */
+    z-index: 100; /* Ensure it overlays other content */
+    padding: 1rem; /* Padding for content */
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5); /* Shadow for depth */
+}
+
+/* Show the sidebar when active */
+.sidebar.active {
+    left: 0; /* Slide in */
+}
+
+/* Close button for the menu */
+.close-menu {
+    font-size: 1.5rem;
+    color: #fff;
+    cursor: pointer;
+    margin-bottom: 1rem; /* Space below the close button */
+}
+
+/* Menu Toggle Button */
+.menu-toggle {
+    display: block; /* Show on mobile */
+    background: none;
+    border: none;
+    color: var(--text-color);
+    font-size: 2rem; /* Larger size for visibility */
+    cursor: pointer;
+    position: fixed; /* Fixed position */
+    top: 10px; /* Position from the top */
+    left: 10px; /* Position from the left */
+    z-index: 200; /* Above the sidebar */
+}
+
+/* Channel Button Styles */
+.channel-btn {
+    display: block; /* Full width */
+    padding: 1rem; /* Padding for touch targets */
+    color: #8e9297;
+    background: none;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background 0.3s;
+}
+
+.channel-btn:hover {
+    background-color: var(--channel-hover); /* Highlight on hover */
+    color: var(--text-color);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 80%; /* Full width on mobile */
+    }
+}
+
