@@ -19,7 +19,6 @@ const db = firebase.firestore();
 let currentUser;
 let currentChannel;
 let darkMode = false;
-let notificationsEnabled = false;
 let lastMessageTimestamp = null;
 let unsubscribeFromMessages = null; // Unsubscribe function for message listener
 
@@ -111,7 +110,6 @@ auth.onAuthStateChanged(user => {
             }
 
             darkMode = userData.darkMode;
-            notificationsEnabled = userData.notificationsEnabled;
             document.getElementById('notifications-toggle').checked = notificationsEnabled;
             applyDarkMode();
 
@@ -183,35 +181,6 @@ function setupUIEventListeners() {
             });
         }
     });
-// Toggle Notifications
-document.getElementById('notifications-toggle').addEventListener('change', (e) => {
-    notificationsEnabled = e.target.checked;
-
-    if (notificationsEnabled) {
-        Notification.requestPermission().then(permission => {
-            if (permission === 'granted') {
-                // Permission granted, update Firestore
-                db.collection('users').doc(currentUser.uid).update({
-                    notificationsEnabled: notificationsEnabled
-                }).catch(error => {
-                    console.error("Error updating notifications:", error);
-                });
-            } else {
-                // Permission denied, revert toggle
-                alert('Notifications permission denied.');
-                document.getElementById('notifications-toggle').checked = false;
-                notificationsEnabled = false;
-            }
-        });
-    } else {
-        // If notifications are disabled, update Firestore
-        db.collection('users').doc(currentUser.uid).update({
-            notificationsEnabled: notificationsEnabled
-        }).catch(error => {
-            console.error("Error updating notifications:", error);
-        });
-    }
-});
 
     // Logout button event listener
     document.getElementById('logout-btn').addEventListener('click', logout);
@@ -314,51 +283,6 @@ document.getElementById('notifications-toggle').addEventListener('change', (e) =
             alert('Failed to copy join code.');
         }
     });
-}
-
-// Function to handle notifications
-function handleNotifications(message) {
-    if (notificationsEnabled) {
-        if (Notification.permission === 'granted') {
-            new Notification('New Chat', {
-                body: message,
-                icon: 'assets/default-avatar.png' // Optional: Add an icon
-            });
-        } else if (Notification.permission !== 'denied') {
-            Notification.requestPermission().then(permission => {
-                if (permission === 'granted') {
-                    new Notification('New Chat', {
-                        body: message,
-                        icon: 'assets/default-avatar.png' // Optional: Add an icon
-                    });
-                }
-            });
-        }
-    }
-}
-
-// Update the sendMessage function to include notifications
-function sendMessage() {
-    const messageInput = document.getElementById('message-input');
-    const messageText = messageInput.value.trim();
-
-    if (messageText && currentChannel) {
-        db.collection('channels').doc(currentChannel)
-            .collection('messages').add({
-                message: messageText,
-                sender: currentUser.displayName || 'User',
-                senderId: currentUser.uid,
-                senderPhotoURL: currentUser.photoURL || 'assets/default-avatar.png',
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            }).then(() => {
-                messageInput.value = '';
-                setTypingStatus(false); // Reset typing status
-                handleNotifications(messageText); // Notify about the new message
-            }).catch(error => {
-                console.error("Error sending message:", error);
-                alert('Failed to send message.');
-            });
-    }
 }
 
 function setTypingStatus(isTyping) {
@@ -538,7 +462,6 @@ function loadMessages(channelId) {
                 if (message.senderId && badgeUserUIDs.includes(message.senderId)) {
                     messageContentElement.classList.add('moving-color');
                 }
-
                 messageElement.appendChild(senderElement);
                 messageElement.appendChild(messageContentElement);
 
@@ -829,3 +752,27 @@ messageInput.addEventListener('input', (e) => {
         suggestionsContainer.innerHTML = ''; // Clear suggestions if no @
     }
 });
+
+function sendMessage() {
+    const messageInput = document.getElementById('message-input');
+    const messageText = messageInput.value.trim();
+
+    if (messageText && currentChannel) {
+        db.collection('channels').doc(currentChannel)
+            .collection('messages').add({
+                message: messageText,
+                sender: currentUser.displayName || 'User',
+                senderId: currentUser.uid,
+                senderPhotoURL: currentUser.photoURL || 'assets/default-avatar.png',
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            }).then(() => {
+                messageInput.value = '';
+                setTypingStatus(false); // Reset typing status
+                // Remove the following line
+                // handleNotifications(messageText); // Notify about the new message
+            }).catch(error => {
+                console.error("Error sending message:", error);
+                alert('Failed to send message.');
+            });
+    }
+}
