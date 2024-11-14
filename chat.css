@@ -177,7 +177,6 @@ body {
 .settings-btn::before {
     content: '⚙️'; /* Unicode gear icon */
     margin-right: 0.3rem;
-    font-size: 1.1rem;
 }
 
 /* Main Chat Area */
@@ -687,16 +686,14 @@ textarea {
 .modal-input, .action-btn, .close-button {
     outline: none;
 }
-  /* Footer Styling */
-  footer {
+
+/* Footer Styling */
+footer {
     position: fixed;
     bottom: 10px;
     text-align: center;
     font-size: 0.9em;
 }
-
-
-
 
 /* Modal Background */
 #profile-modal {
@@ -731,7 +728,6 @@ textarea {
     border-radius: 50%; /* Circular image */
     object-fit: cover;
     margin-bottom: 20px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 /* User Name */
@@ -785,7 +781,6 @@ textarea {
         transform: scale(1);
     }
 }
-
 
 /* Settings Modal Badge Visibility Toggle */
 .modal-section {
