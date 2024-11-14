@@ -993,10 +993,37 @@ input:checked + .slider:before {
     color: var(--text-color);
 }
 
-/* Responsive Adjustments */
+/* Responsive Adjustments for Mobile */
 @media (max-width: 768px) {
     .sidebar {
         width: 80%; /* Full width on mobile */
+    }
+
+    .app-container {
+        margin-left: 0; /* Reset margin for mobile */
+    }
+
+    .top-header {
+        padding: 0.5rem; /* Adjust padding for mobile */
+    }
+
+    .menu-toggle {
+        display: block; /* Ensure toggle is visible on mobile */
+    }
+}
+
+/* Desktop Styles (Ensure they remain unchanged) */
+@media (min-width: 769px) {
+    .sidebar {
+        position: static; /* Static position for desktop */
+        width: 250px; /* Fixed width */
+        height: auto; /* Auto height */
+        left: 0; /* Always visible */
+        box-shadow: none; /* No shadow on desktop */
+    }
+
+    .menu-toggle {
+        display: none; /* Hide toggle on desktop */
     }
 }
 
