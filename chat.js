@@ -790,9 +790,9 @@ messageInput.addEventListener('input', (e) => {
             suggestionsContainer.appendChild(suggestionItem);
         });
 
-        // Position the suggestions container above the message input
+        // Position the suggestions container just above the message input
         const rect = messageInput.getBoundingClientRect();
-        suggestionsContainer.style.top = `${rect.top - suggestionsContainer.offsetHeight}px`; // Position above
+        suggestionsContainer.style.top = `${rect.top - suggestionsContainer.offsetHeight - 5}px`; // Position above with a small gap
         suggestionsContainer.style.left = `${rect.left}px`;
         suggestionsContainer.style.width = `${rect.width}px`;
         suggestionsContainer.style.display = 'block'; // Show suggestions
