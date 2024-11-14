@@ -311,6 +311,30 @@ function setupUIEventListeners() {
     });
 }
 
+// Function to handle notifications
+function handleNotifications(message) {
+    if (notificationsEnabled) {
+        // Check if the user has granted permission
+        if (Notification.permission === 'granted') {
+            new Notification('New Message', {
+                body: message,
+                icon: 'assets/default-avatar.png' // Optional: Add an icon
+            });
+        } else if (Notification.permission !== 'denied') {
+            // Request permission if not already denied
+            Notification.requestPermission().then(permission => {
+                if (permission === 'granted') {
+                    new Notification('New Message', {
+                        body: message,
+                        icon: 'assets/default-avatar.png' // Optional: Add an icon
+                    });
+                }
+            });
+        }
+    }
+}
+
+// Update the sendMessage function to include notifications
 function sendMessage() {
     const messageInput = document.getElementById('message-input');
     const messageText = messageInput.value.trim();
@@ -327,6 +351,8 @@ function sendMessage() {
                 messageInput.value = '';
                 // Reset typing status
                 setTypingStatus(false);
+                // Call the notification function
+                handleNotifications(messageText); // Notify about the new message
             }).catch(error => {
                 console.error("Error sending message:", error);
                 alert('Failed to send message.');
@@ -557,7 +583,6 @@ function switchChannel(channelId) {
     // Uncomment the line below if using voicecall.js and initializePeer() is defined
     // loadChannelPeerId(channelId); // Load and set currentChannelPeerId (from voicecall.js)
 }
-
 // Function to open the modal
 function openModal() {
     const modal = document.getElementById('settings-modal');
