@@ -92,6 +92,8 @@ auth.onAuthStateChanged(user => {
 
             // Check if the user's UID is in the badgeUserUIDs array
             if (badgeUserUIDs.includes(user.uid)) {
+                // Commenting out the badge display logic
+                /*
                 const badgesContainer = document.createElement('div');
                 badgesContainer.className = 'badges-container';
 
@@ -105,6 +107,7 @@ auth.onAuthStateChanged(user => {
                 });
 
                 document.getElementById('user-name').after(badgesContainer);
+                */
             }
 
             darkMode = userData.darkMode;
