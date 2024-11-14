@@ -184,29 +184,35 @@ function setupUIEventListeners() {
         }
     });
 
-    // Toggle Notifications
-    document.getElementById('notifications-toggle').addEventListener('change', (e) => {
-        notificationsEnabled = e.target.checked;
-        if(notificationsEnabled) {
-            Notification.requestPermission().then(permission => {
-                if(permission !== 'granted') {
-                    alert('Notifications permission denied.');
-                    document.getElementById('notifications-toggle').checked = false;
-                    notificationsEnabled = false;
-                    db.collection('users').doc(currentUser.uid).update({
-                        notificationsEnabled: notificationsEnabled
-                    }).catch(error => {
-                        console.error("Error updating notifications:", error);
-                    });
-                }
-            });
-        }
+// Toggle Notifications
+document.getElementById('notifications-toggle').addEventListener('change', (e) => {
+    notificationsEnabled = e.target.checked;
+
+    if (notificationsEnabled) {
+        Notification.requestPermission().then(permission => {
+            if (permission === 'granted') {
+                // Permission granted, update Firestore
+                db.collection('users').doc(currentUser.uid).update({
+                    notificationsEnabled: notificationsEnabled
+                }).catch(error => {
+                    console.error("Error updating notifications:", error);
+                });
+            } else {
+                // Permission denied, revert toggle
+                alert('Notifications permission denied.');
+                document.getElementById('notifications-toggle').checked = false;
+                notificationsEnabled = false;
+            }
+        });
+    } else {
+        // If notifications are disabled, update Firestore
         db.collection('users').doc(currentUser.uid).update({
             notificationsEnabled: notificationsEnabled
         }).catch(error => {
             console.error("Error updating notifications:", error);
         });
-    });
+    }
+});
 
     // Logout button event listener
     document.getElementById('logout-btn').addEventListener('click', logout);
@@ -312,16 +318,15 @@ function setupUIEventListeners() {
 }
 
 // Function to handle notifications
+// Function to handle notifications
 function handleNotifications(message) {
     if (notificationsEnabled) {
-        // Check if the user has granted permission
         if (Notification.permission === 'granted') {
             new Notification('New Message', {
                 body: message,
                 icon: 'assets/default-avatar.png' // Optional: Add an icon
             });
         } else if (Notification.permission !== 'denied') {
-            // Request permission if not already denied
             Notification.requestPermission().then(permission => {
                 if (permission === 'granted') {
                     new Notification('New Message', {
@@ -344,14 +349,12 @@ function sendMessage() {
             .collection('messages').add({
                 message: messageText,
                 sender: currentUser.displayName || 'User',
-                senderId: currentUser.uid, // Include sender's UID
-                senderPhotoURL: currentUser.photoURL || 'assets/default-avatar.png', // Include sender's photo URL
+                senderId: currentUser.uid,
+                senderPhotoURL: currentUser.photoURL || 'assets/default-avatar.png',
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             }).then(() => {
                 messageInput.value = '';
-                // Reset typing status
-                setTypingStatus(false);
-                // Call the notification function
+                setTypingStatus(false); // Reset typing status
                 handleNotifications(messageText); // Notify about the new message
             }).catch(error => {
                 console.error("Error sending message:", error);
