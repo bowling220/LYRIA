@@ -34,7 +34,6 @@ document.querySelector('.menu-toggle').addEventListener('click', () => {
     const sidebar = document.querySelector('.sidebar');
     sidebar.classList.toggle('active'); // Toggle the 'active' class to show/hide the sidebar
 });
-
 // Close sidebar when clicking outside on mobile
 document.addEventListener('click', (e) => {
     const sidebar = document.querySelector('.sidebar');
