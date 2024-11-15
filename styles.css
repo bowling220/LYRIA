@@ -447,10 +447,3 @@
 .toggle-switch input:checked + .slider::before {
   transform: translateX(26px);
 }
-
-/* Responsive Adjustments */
-@media (max-width: 768px) {
-  .modal-content {
-      width: 90%; /* Full width on mobile */
-  }
-}
