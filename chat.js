@@ -271,9 +271,9 @@ function setupUIEventListeners() {
                         members: [currentUser.uid], // Ensure the creator is added as a member
                         isPublic: false // Set to true if you want the channel to be public
                     }).then(() => {
-                        // Send a welcome message to the new channel
+                        // Send a welcoming message to the new channel with more words
                         return db.collection('channels').doc(channelId).collection('messages').add({
-                            message: `Welcome to the channel, ${currentUser.displayName || 'User'}!`,
+                            message: `Welcome to ${channelName}, ${currentUser.displayName || 'User'}! This is a new channel created by ${currentUser.uid === channelId.split('-')[1] ? currentUser.displayName : db.collection('channels').doc(channelId).get().then(doc => doc.data().createdBy) || 'Unknown'}. Let's start chatting!`,
                             sender: 'System',
                             timestamp: firebase.firestore.FieldValue.serverTimestamp()
                         });
