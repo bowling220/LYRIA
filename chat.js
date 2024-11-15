@@ -31,7 +31,8 @@ const badgeUserUIDs = ["qzf9fO2bBLU0PJhRDSQK9KnMZD32", "xLT0XKgtF5ZnlfX2fLj9hXrT
 
 // Mobile menu toggle
 document.querySelector('.menu-toggle').addEventListener('click', () => {
-    document.querySelector('.sidebar').classList.toggle('active');
+    const sidebar = document.querySelector('.sidebar');
+    sidebar.classList.toggle('active'); // Toggle the 'active' class to show/hide the sidebar
 });
 
 // Close sidebar when clicking outside on mobile

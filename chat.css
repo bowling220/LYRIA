@@ -984,9 +984,24 @@ input:checked + .slider:before {
     }
 
     .sidebar {
+        display: none; /* Hide sidebar by default */
         width: 100%; /* Full width on mobile */
-        left: 0; /* Always visible */
-        box-shadow: none; /* Remove shadow on mobile */
+        position: absolute; /* Position it absolutely */
+        top: 0; /* Align to the top */
+        left: 0; /* Align to the left */
+        background-color: var(--sidebar-color); /* Background color */
+        z-index: 10; /* Ensure it appears above other content */
+    }
+
+    .sidebar.active {
+        display: flex; /* Show sidebar when active */
+        flex-direction: column; /* Stack items vertically */
+    }
+
+    .menu-toggle {
+        display: block; /* Ensure toggle button is visible */
+        font-size: 2rem; /* Larger size for visibility */
+        z-index: 20; /* Ensure it appears above other content */
     }
 
     .channels {
@@ -1245,9 +1260,24 @@ input:checked + .slider:before {
     }
 
     .sidebar {
+        display: none; /* Hide sidebar by default */
         width: 100%; /* Full width on mobile */
-        left: 0; /* Always visible */
-        box-shadow: none; /* Remove shadow on mobile */
+        position: absolute; /* Position it absolutely */
+        top: 0; /* Align to the top */
+        left: 0; /* Align to the left */
+        background-color: var(--sidebar-color); /* Background color */
+        z-index: 10; /* Ensure it appears above other content */
+    }
+
+    .sidebar.active {
+        display: flex; /* Show sidebar when active */
+        flex-direction: column; /* Stack items vertically */
+    }
+
+    .menu-toggle {
+        display: block; /* Ensure toggle button is visible */
+        font-size: 2rem; /* Larger size for visibility */
+        z-index: 20; /* Ensure it appears above other content */
     }
 
     .channels {
