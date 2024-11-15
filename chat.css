@@ -1177,3 +1177,88 @@ input:checked + .slider:before {
     }
 }
 
+/* Mobile Styles */
+@media (max-width: 768px) {
+    body {
+        font-size: 14px; /* Adjust base font size for better readability */
+    }
+
+    .top-header {
+        padding: 0.5rem; /* Adjust padding for mobile */
+        font-size: 1.1rem; /* Slightly smaller font size */
+    }
+
+    .app-container {
+        flex-direction: column; /* Stack elements vertically */
+        height: auto; /* Allow height to adjust based on content */
+    }
+
+    .sidebar {
+        width: 100%; /* Full width on mobile */
+        left: 0; /* Always visible */
+        box-shadow: none; /* Remove shadow on mobile */
+    }
+
+    .menu-toggle {
+        display: block; /* Ensure toggle is visible on mobile */
+        font-size: 2rem; /* Larger size for visibility */
+    }
+
+    .channel-btn,
+    .add-channel-btn,
+    .join-channel-btn {
+        padding: 1rem; /* Increase padding for touch targets */
+        min-height: 50px; /* Ensure minimum height for buttons */
+    }
+
+    .message-input {
+        padding: 0.6rem; /* Adjust padding for input area */
+        position: relative; /* Change to relative for better positioning */
+    }
+
+    textarea {
+        font-size: 1rem; /* Adjust font size for better readability */
+        padding: 0.5rem; /* Increase padding */
+    }
+
+    .send-btn {
+        padding: 0.5rem; /* Increase padding */
+        min-width: 70px; /* Ensure minimum width for buttons */
+    }
+
+    .messages {
+        height: calc(100vh - 150px); /* Adjust height for header and input area */
+        padding: 0.6rem;
+        overflow-y: auto; /* Allow scrolling for messages */
+    }
+
+    .modal-content {
+        width: 90%; /* Full width for modals */
+        max-width: 400px; /* Limit max width */
+        margin: 0 auto; /* Center modal */
+    }
+
+    .close-button {
+        font-size: 1.5rem; /* Adjust close button size */
+    }
+
+    .suggestions-container {
+        width: 100%; /* Full width for suggestions */
+        max-height: 200px; /* Limit height */
+        overflow-y: auto; /* Allow scrolling */
+    }
+
+    .toggle-switch {
+        width: 60px; /* Adjust toggle switch width */
+    }
+
+    .toggle-switch .slider {
+        height: 26px; /* Adjust height for better touch target */
+    }
+
+    .toggle-switch .slider::before {
+        width: 20px; /* Adjust width for better touch target */
+        height: 20px; /* Adjust height for better touch target */
+    }
+}
+
