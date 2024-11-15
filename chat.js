@@ -29,8 +29,8 @@ const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx
 // Define an array of UIDs for users who should have badges
 const badgeUserUIDs = ["qzf9fO2bBLU0PJhRDSQK9KnMZD32", "xLT0XKgtF5ZnlfX2fLj9hXrTcW02"]; // Replace with actual UIDs
 
-// Mobile menu toggle
 document.querySelector('.menu-toggle').addEventListener('click', () => {
+    console.log('Menu toggle button clicked'); // Log to confirm the button click
     const sidebar = document.querySelector('.sidebar');
     sidebar.classList.toggle('active'); // Toggle the 'active' class to show/hide the sidebar
 });
