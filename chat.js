@@ -779,10 +779,9 @@ function applyBadgeVisibility() {
         profileBadges.style.display = showBadges ? 'flex' : 'none';
     }
 
-    // Update chat badges as well
     document.querySelectorAll('.admin-badge').forEach(badge => {
         badge.style.display = showBadges ? 'inline-block' : 'none';
-    });
+    });    
 }
 
 // Modify showUserProfileModal to respect the badge visibility setting
