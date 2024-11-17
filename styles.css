@@ -299,6 +299,30 @@
 @media (max-width: 768px) {
     .menu-toggle {
         display: block; /* Ensure toggle button is visible */
+        font-size: 2rem; /* Larger size for visibility */
+        z-index: 200; /* Ensure it appears above the sidebar */
+        position: fixed; /* Fixed position */
+        top: 10px; /* Position from the top */
+        left: 10px; /* Position from the left */
+        background: none; /* No background */
+        border: none; /* No border */
+        color: var(--text-color); /* Text color */
+    }
+
+    .sidebar {
+        display: none; /* Hide sidebar by default */
+        width: 100%; /* Full width on mobile */
+        position: absolute; /* Position it absolutely */
+        top: 0; /* Align to the top */
+        left: 0; /* Align to the left */
+        background-color: var(--sidebar-color); /* Background color */
+        z-index: 10; /* Ensure it appears above other content */
+    }
+
+    .sidebar.active {
+        display: flex; /* Show sidebar when active */
+        flex-direction: column; /* Stack items vertically */
+        padding-top: 50px; /* Add padding to avoid overlap with the toggle button */
     }
 }
 
