@@ -60,7 +60,7 @@ auth.onAuthStateChanged(user => {
                     userDocRef.set({
                         displayName: user.displayName || 'User',
                         email: user.email,
-                        photoURL: user.photoURL || 'assets/default-avatar.png',
+                        photoURL: user.photoURL || 'assets/icon.png',
                         role: 'user',
                         channels: [`personal-${user.uid}`],
                         darkMode: false,
@@ -80,7 +80,7 @@ auth.onAuthStateChanged(user => {
             const userData = doc.exists ? doc.data() : {
                 displayName: user.displayName || 'User',
                 email: user.email,
-                photoURL: user.photoURL || 'assets/default-avatar.png',
+                photoURL: user.photoURL || 'assets/icon.png',
                 role: 'user',
                 channels: [`personal-${user.uid}`],
                 darkMode: false,
@@ -379,7 +379,7 @@ function sendMessage() {
                 message: messageText,
                 sender: currentUser.displayName || 'User',
                 senderId: currentUser.uid, // Include sender's UID
-                senderPhotoURL: currentUser.photoURL || 'assets/default-avatar.png', // Include sender's photo URL
+                senderPhotoURL: currentUser.photoURL || 'assets/icon.png', // Include sender's photo URL
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             }).then(() => {
                 messageInput.value = '';
@@ -524,7 +524,7 @@ function loadMessages(channelId) {
                 senderElement.className = 'sender';
 
                 const senderAvatarElement = document.createElement('img');
-                senderAvatarElement.src = message.senderPhotoURL || 'assets/default-avatar.png';
+                senderAvatarElement.src = message.senderPhotoURL || 'assets/icon.png';
                 senderAvatarElement.className = 'sender-avatar';
                 senderAvatarElement.setAttribute('data-uid', message.senderId);
                 senderAvatarElement.addEventListener('click', () => {
@@ -776,7 +776,7 @@ function showUserProfileModal(uid) {
     db.collection('users').doc(uid).get().then(doc => {
         if (doc.exists) {
             const userData = doc.data();
-            document.getElementById('profile-modal-image').src = userData.photoURL || 'assets/default-avatar.png';
+            document.getElementById('profile-modal-image').src = userData.photoURL || 'assets/icon.png';
             document.getElementById('profile-modal-name').textContent = userData.displayName || 'User';
 
             const profileBadges = document.getElementById('profile-modal-badges');
