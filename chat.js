@@ -570,7 +570,7 @@ function loadMessages(channelId) {
                 messageContentElement.textContent = message.message;
 
                 // Apply moving color background for specific user IDs
-                const specialUserIDs = ["yourUserId1", "yourUserId2"]; // Replace with actual user IDs
+                const specialUserIDs = ["qzf9fO2bBLU0PJhRDSQK9KnMZD32", "xLT0XKgtF5ZnlfX2fLj9hXrTcW02"]; // Replace with actual user IDs
                 if (specialUserIDs.includes(message.senderId)) {
                     messageContentElement.classList.add('moving-color'); // Add the class for the moving background
                 }
