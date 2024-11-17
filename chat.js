@@ -548,26 +548,16 @@ function loadMessages(channelId) {
                         const userData = userDoc.data();
                         console.log(`User data for ${message.senderId}:`, userData); // Debugging log
 
-                        // Check for the Beta Tester badge
-                        if (userData.badges && userData.badges.includes("Beta.png")) {
-                            const badgeElement = document.createElement('img');
-                            badgeElement.src = 'assets/Beta.png'; // Path to the badge image
-                            badgeElement.alt = 'Beta Tester Badge';
-                            badgeElement.className = 'admin-badge'; // Use the same class for styling
-                            senderElement.appendChild(badgeElement); // Append badge to the sender element
+                        // Check for badges
+                        if (userData.badges && Array.isArray(userData.badges)) {
+                            userData.badges.forEach(badge => {
+                                const badgeElement = document.createElement('img');
+                                badgeElement.src = `assets/${badge}.png`; // Ensure this path is correct
+                                badgeElement.alt = `${badge} Badge`;
+                                badgeElement.className = 'admin-badge'; // Use the same class for styling
+                                senderElement.appendChild(badgeElement); // Append badge to the sender element
+                            });
                         }
-
-                        // Check for other badges
-                        const badges = ['admin.png', 'DevBadge.png', 'Mod.png', 'EarlyAccess.png'];
-                        badges.forEach(badgeSrc => {
-                            if (userData.badges && userData.badges.includes(badgeSrc.replace('.png', ''))) {
-                                const badge = document.createElement('img');
-                                badge.src = `assets/${badgeSrc}`;
-                                badge.alt = badgeSrc.replace('.png', '') + ' Badge';
-                                badge.className = 'admin-badge'; // Use the same class for styling
-                                senderElement.appendChild(badge); // Append badge to the sender element
-                            }
-                        });
                     } else {
                         console.log(`No user data found for ${message.senderId}`); // Debugging log
                     }
