@@ -64,6 +64,27 @@
       padding: 1rem 0;
     }
 
+    .modal {
+        display: none; /* Hidden by default */
+        position: fixed; /* Stay in place */
+        z-index: 1000; /* Sit on top */
+        left: 0;
+        top: 0;
+        width: 100%; /* Full width */
+        height: 100%; /* Full height */
+        overflow: auto; /* Enable scroll if needed */
+        background-color: rgb(0,0,0); /* Fallback color */
+        background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+    }
+
+    .modal-content {
+        background-color: #fefefe;
+        margin: 15% auto; /* 15% from the top and centered */
+        padding: 20px;
+        border: 1px solid #888;
+        width: 80%; /* Could be more or less, depending on screen size */
+    }
+
   </style>
 </head>
 <body>
@@ -95,17 +116,30 @@
       auth.signInWithPopup(provider)
         .then(result => {
           const user = result.user;
+          const currentDate = new Date();
+          const cutoffDate = new Date('2024-12-01'); // Set the cutoff date
+
           // First check if user document already exists
           db.collection('users').doc(user.uid).get().then(doc => {
             if (!doc.exists) {
               // Only create new document if it doesn't exist
-              return db.collection('users').doc(user.uid).set({
+              const userData = {
                 email: user.email,
                 displayName: user.displayName,
                 photoURL: user.photoURL,
                 channels: ["general"],
-                role: "user"
-              });
+                role: "user",
+                badges: [] // Initialize badges array
+              };
+
+              // Check if the current date is before December 1st
+              if (currentDate < cutoffDate) {
+                userData.badges.push("Beta.png"); // Add Beta badge
+                // Show welcome message
+                document.getElementById('welcome-modal').style.display = 'block'; // Show the welcome modal
+              }
+
+              return db.collection('users').doc(user.uid).set(userData);
             }
           }).then(() => window.location.href = 'home.html');
         })
@@ -135,10 +169,23 @@
           document.getElementById('error-message').textContent = error.message;
         });
     });
+
+    // Close the welcome modal
+    document.getElementById('close-welcome-modal').addEventListener('click', () => {
+      document.getElementById('welcome-modal').style.display = 'none';
+    });
   </script>
 
   <footer>
     &copy; 2024 LYRIA. All rights reserved. Trademarked by LYRIA.
   </footer>
+
+  <div id="welcome-modal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="welcome-modal-title">
+    <div class="modal-content">
+        <h2 id="welcome-modal-title">Welcome!</h2>
+        <p>You've received a Beta Tester badge for signing up early!</p>
+        <button id="close-welcome-modal" class="close-button" aria-label="Close Welcome Modal">&times;</button>
+    </div>
+  </div>
 </body>
 </html>
