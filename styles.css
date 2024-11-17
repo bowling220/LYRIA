@@ -28,19 +28,18 @@
   
   /* Sidebar Styling */
   .sidebar {
-    width: 20%;
-    background-color: #272738;
-    color: #e0e0e0;
-    display: none; /* Hide sidebar by default */
-    flex-direction: column;
-    padding: 20px;
-    border-right: 1px solid #444;
-    transition: transform 0.3s ease; /* Smooth transition */
+    width: 100%; /* Full width on mobile */
+    height: 100%; /* Full height on mobile */
+    background-color: var(--sidebar-color); /* Background color */
+    position: fixed; /* Fixed position to cover the screen */
+    top: 0; /* Align to the top */
+    left: 0; /* Align to the left */
+    z-index: 10; /* Ensure it appears above other content */
     transform: translateX(-100%); /* Start hidden off-screen */
+    transition: transform 0.3s ease; /* Smooth transition */
   }
   
   .sidebar.active {
-    display: flex; /* Show sidebar when active */
     transform: translateX(0); /* Slide in */
   }
   
@@ -310,16 +309,6 @@
     }
 
     .sidebar {
-        display: none; /* Hide sidebar by default */
-        width: 100%; /* Full width on mobile */
-        position: absolute; /* Position it absolutely */
-        top: 0; /* Align to the top */
-        left: 0; /* Align to the left */
-        background-color: var(--sidebar-color); /* Background color */
-        z-index: 10; /* Ensure it appears above other content */
-    }
-
-    .sidebar.active {
         display: flex; /* Show sidebar when active */
         flex-direction: column; /* Stack items vertically */
         padding-top: 50px; /* Add padding to avoid overlap with the toggle button */
