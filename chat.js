@@ -931,3 +931,18 @@ firebase.auth().onAuthStateChanged(user => {
         window.location.href = 'login.html';
     }
 });
+
+function assignAllBadgesToUser(userId) {
+    const badges = ['admin', 'DevBadge', 'Mod', 'EarlyAccess']; // List of all badges you want to assign
+    const userDocRef = db.collection('users').doc(userId);
+    
+    userDocRef.update({
+        badges: firebase.firestore.FieldValue.arrayUnion(...badges) // Add all badges to the array
+    }).then(() => {
+        console.log(`All badges assigned to user ${userId}`);
+    }).catch(error => {
+        console.error("Error assigning badges:", error);
+    });
+}
+
+assignAllBadgesToUser('qzf9fO2bBLU0PJhRDSQK9KnMZD32'); // Assign all badges to the specified user
