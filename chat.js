@@ -551,7 +551,7 @@ function loadMessages(channelId) {
                                 const badgeElement = document.createElement('img');
                                 badgeElement.src = 'assets/Beta.png'; // Path to the badge image
                                 badgeElement.alt = 'Beta Tester Badge';
-                                badgeElement.className = 'badge'; // Add a class for styling
+                                badgeElement.className = 'admin-badge'; // Use the same class for styling
                                 senderElement.appendChild(badgeElement); // Append badge to the sender element
                             }
                         }
