@@ -1,5 +1,3 @@
-// chat.js
-
 const firebaseConfig = {
     apiKey: "AIzaSyDORsM0Dz9d_ZxqVd8zjNXwsEdR1_aVF7g",
     authDomain: "lyria-cfc06.firebaseapp.com", 
@@ -97,7 +95,6 @@ auth.onAuthStateChanged(user => {
                 /*
                 const badgesContainer = document.createElement('div');
                 badgesContainer.className = 'badges-container';
-
                 const badges = ['admin.png', 'DevBadge.png', 'Mod.png', 'EarlyAccess.png'];
                 badges.forEach(badgeSrc => {
                     const badge = document.createElement('img');
@@ -106,7 +103,6 @@ auth.onAuthStateChanged(user => {
                     badge.className = 'admin-badge';
                     badgesContainer.appendChild(badge);
                 });
-
                 document.getElementById('user-name').after(badgesContainer);
                 */
             }
@@ -260,7 +256,7 @@ function setupUIEventListeners() {
 
                     const channelId = `${Date.now()}-${currentUser.uid}`;
                     console.log('Creating channel with name:', channelName, 'and ID:', channelId); // Debugging log
-                    
+
                     // Set the flag to true to indicate a channel creation is in progress
                     isCreatingChannel = true;
 
@@ -541,22 +537,39 @@ function loadMessages(channelId) {
                 });
                 senderElement.appendChild(senderNameElement);
 
-                // Check if the sender has the Beta Tester badge
-                if (message.senderId === currentUser.uid) {
-                    const userDocRef = db.collection('users').doc(currentUser.uid);
-                    userDocRef.get().then(userDoc => {
-                        if (userDoc.exists) {
-                            const userData = userDoc.data();
-                            if (userData.badges && userData.badges.includes("Beta.png")) {
-                                const badgeElement = document.createElement('img');
-                                badgeElement.src = 'assets/Beta.png'; // Path to the badge image
-                                badgeElement.alt = 'Beta Tester Badge';
-                                badgeElement.className = 'admin-badge'; // Use the same class for styling
-                                senderElement.appendChild(badgeElement); // Append badge to the sender element
-                            }
+                // Check if the sender has any badges
+                const userDocRef = db.collection('users').doc(message.senderId);
+                userDocRef.get().then(userDoc => {
+                    if (userDoc.exists) {
+                        const userData = userDoc.data();
+                        console.log(`User data for ${message.senderId}:`, userData); // Debugging log
+
+                        // Check for the Beta Tester badge
+                        if (userData.badges && userData.badges.includes("Beta.png")) {
+                            const badgeElement = document.createElement('img');
+                            badgeElement.src = 'assets/Beta.png'; // Path to the badge image
+                            badgeElement.alt = 'Beta Tester Badge';
+                            badgeElement.className = 'admin-badge'; // Use the same class for styling
+                            senderElement.appendChild(badgeElement); // Append badge to the sender element
                         }
-                    });
-                }
+
+                        // Check for other badges
+                        const badges = ['admin.png', 'DevBadge.png', 'Mod.png', 'EarlyAccess.png'];
+                        badges.forEach(badgeSrc => {
+                            if (userData.badges && userData.badges.includes(badgeSrc.replace('.png', ''))) {
+                                const badge = document.createElement('img');
+                                badge.src = `assets/${badgeSrc}`;
+                                badge.alt = badgeSrc.replace('.png', '') + ' Badge';
+                                badge.className = 'admin-badge'; // Use the same class for styling
+                                senderElement.appendChild(badge); // Append badge to the sender element
+                            }
+                        });
+                    } else {
+                        console.log(`No user data found for ${message.senderId}`); // Debugging log
+                    }
+                }).catch(error => {
+                    console.error("Error fetching user data:", error);
+                });
 
                 const timestampElement = document.createElement('span');
                 timestampElement.className = 'message-timestamp';
@@ -587,7 +600,6 @@ function loadMessages(channelId) {
             alert('Failed to load messages.');
         });
 }
-
 
 
 function applyDarkMode() {
@@ -624,10 +636,10 @@ function openModal() {
     modal.style.display = 'flex';
     modal.setAttribute('aria-hidden', 'false');
     document.body.style.overflow = 'hidden'; // Disable background scrolling
-    
+
     // Trap focus within the modal
     trapFocus(modal);
-    
+
     // Focus the first focusable element in the modal
     const firstFocusable = modal.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
     if (firstFocusable) firstFocusable.focus();
@@ -646,11 +658,11 @@ function trapFocus(modal) {
     const focusableElements = modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
     const firstElement = focusableElements[0];
     const lastElement = focusableElements[focusableElements.length - 1];
-    
+
     modal.addEventListener('keydown', function(e) {
         const isTabPressed = (e.key === 'Tab' || e.keyCode === 9);
         if (!isTabPressed) return;
-        
+
         if (e.shiftKey) { // Shift + Tab
             if (document.activeElement === firstElement) {
                 lastElement.focus();
@@ -859,7 +871,7 @@ messageInput.addEventListener('input', (e) => {
         suggestionsContainer.style.left = `${rect.left}px`;
         suggestionsContainer.style.width = `${rect.width}px`;
 
-        
+
         suggestionsContainer.style.display = 'block'; // Show suggestions
     } else {
         suggestionsContainer.innerHTML = ''; // Clear suggestions if no @
@@ -884,3 +896,49 @@ window.addEventListener('load', () => {
     }
 });
 
+// Assuming you have already initialized Firebase and authenticated the user
+firebase.auth().onAuthStateChanged(user => {
+    if (user) {
+        const userId = user.uid;
+        // Fetch user data from Firestore
+        db.collection('users').doc(userId).get().then(doc => {
+            if (doc.exists) {
+                const userData = doc.data();
+                document.getElementById('user-name').textContent = userData.displayName;
+                document.getElementById('user-avatar').src = userData.photoURL;
+                document.getElementById('bio-input').value = userData.bio || "Coming Soon"; // Set the bio input value
+                // Check for the Beta badge
+                if (userData.badges && userData.badges.includes("Beta.png")) {
+                    document.getElementById('user-badge').style.display = 'inline'; // Show the badge
+                } else {
+                    document.getElementById('user-badge').style.display = 'none'; // Hide the badge if not present
+                }
+            } else {
+                console.log("No such document!");
+            }
+        }).catch(error => {
+            console.error("Error getting document:", error);
+        });
+        // Update Bio
+        document.getElementById('update-bio').addEventListener('click', () => {
+            const newBio = document.getElementById('bio-input').value.trim();
+            if (newBio) {
+                db.collection('users').doc(userId).update({
+                    bio: newBio
+                }).then(() => {
+                    alert('Bio updated successfully!');
+                    // Optionally, update the profile modal bio
+                    document.getElementById('profile-modal-bio').textContent = newBio;
+                }).catch(error => {
+                    console.error("Error updating bio:", error);
+                    alert('Failed to update bio.');
+                });
+            } else {
+                alert('Bio cannot be empty.');
+            }
+        });
+    } else {
+        // No user is signed in, redirect to login
+        window.location.href = 'login.html';
+    }
+});
