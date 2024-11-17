@@ -28,6 +28,11 @@ const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx
 
 // Define an array of UIDs for users who should have badges
 const badgeUserUIDs = ["qzf9fO2bBLU0PJhRDSQK9KnMZD32", "xLT0XKgtF5ZnlfX2fLj9hXrTcW02"]; // Replace with actual UIDs
+// Assign the "admin" badge to a user with a specific user ID
+assignBadgeToUser('qzf9fO2bBLU0PJhRDSQK9KnMZD32', 'XKgtF5ZnlfX2fLj9hXrTcW02'); // Replace with the actual user ID
+
+
+
 
 document.querySelector('#sidebar-menu-toggle').addEventListener('click', (event) => {
     event.stopPropagation(); // Prevent event from bubbling up
@@ -223,6 +228,19 @@ function setupUIEventListeners() {
             sendMessage();
         }
     });
+
+    function assignBadgeToUser(userId, badge) {
+        const userDocRef = db.collection('users').doc(userId);
+        
+        userDocRef.update({
+            badges: firebase.firestore.FieldValue.arrayUnion(badge) // Add badge to the array
+        }).then(() => {
+            console.log(`Badge "${badge}" assigned to user ${userId}`);
+        }).catch(error => {
+            console.error("Error assigning badge:", error);
+        });
+    }
+    
 
     // Detect typing
     const messageInput = document.getElementById('message-input');
@@ -543,25 +561,26 @@ function loadMessages(channelId) {
 
                 // Check if the sender has any badges
                 const userDocRef = db.collection('users').doc(message.senderId);
-                userDocRef.get().then(userDoc => {
-                    if (userDoc.exists) {
-                        const userData = userDoc.data();
-                        console.log(`User data for ${message.senderId}:`, userData); // Debugging log
+                // Inside loadMessages function
+userDocRef.get().then(userDoc => {
+    if (userDoc.exists) {
+        const userData = userDoc.data();
+        console.log(`User data for ${message.senderId}:`, userData); // Debugging log
 
-                        // Check for badges
-                        if (userData.badges && Array.isArray(userData.badges)) {
-                            userData.badges.forEach(badge => {
-                                const badgeElement = document.createElement('img');
-                                badgeElement.src = `assets/${badge}.png`; // Ensure this path is correct
-                                badgeElement.alt = `${badge} Badge`;
-                                badgeElement.className = 'admin-badge'; // Use the same class for styling
-                                senderElement.appendChild(badgeElement); // Append badge to the sender element
-                            });
-                        }
-                    } else {
-                        console.log(`No user data found for ${message.senderId}`); // Debugging log
-                    }
-                }).catch(error => {
+        // Check for badges
+        if (userData.badges && Array.isArray(userData.badges)) {
+            userData.badges.forEach(badge => {
+                const badgeElement = document.createElement('img');
+                badgeElement.src = `assets/${badge}.png`; // Ensure this path is correct
+                badgeElement.alt = `${badge} Badge`;
+                badgeElement.className = 'admin-badge'; // Use the same class for styling
+                senderElement.appendChild(badgeElement); // Append badge to the sender element
+            });
+        }
+    } else {
+        console.log(`No user data found for ${message.senderId}`); // Debugging log
+    }
+}).catch(error => {
                     console.error("Error fetching user data:", error);
                 });
 
