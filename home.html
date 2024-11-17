@@ -61,18 +61,10 @@
 
     <div id="profile-modal">
         <div class="modal-content">
-            <!-- Profile Image -->
             <img id="profile-modal-image" src="assets/icon.png" alt="User Avatar">
-    
-            <!-- User Name -->
-            <h2 id="profile-modal-name">User</h2>
-    
-            <!-- Badges -->
-            <div id="profile-modal-badges">
-                <!-- Badges will be injected here by JavaScript -->
-            </div>
-    
-            <!-- Close Button -->
+            <h2 id="profile-modal-name">User Name</h2>
+            <p id="profile-modal-bio">Bio's - Coming Soon</p>
+            <div id="profile-modal-badges" class="badges-container"></div>
             <button id="close-profile-modal">Close</button>
         </div>
     </div>
@@ -96,6 +88,13 @@
             <button id="update-display-name" class="action-btn">Update Name</button>
         </div>
         
+        <!-- Update Bio Section -->
+        <div class="modal-section">
+            <label for="bio-input" class="modal-label">Update Bio:</label>
+            <input type="text" id="bio-input" class="modal-input" placeholder="Enter new bio" value="Coming Soon">
+            <button id="update-bio" class="action-btn">Update Bio</button>
+        </div>
+
         <!-- Enable Notifications -->
         <div class="modal-section">
             <label class="toggle-switch">

@@ -900,3 +900,53 @@ window.addEventListener('load', () => {
     }
 });
 
+// Assuming you have already initialized Firebase and authenticated the user
+firebase.auth().onAuthStateChanged(user => {
+    if (user) {
+        const userId = user.uid;
+
+        // Fetch user data from Firestore
+        db.collection('users').doc(userId).get().then(doc => {
+            if (doc.exists) {
+                const userData = doc.data();
+                document.getElementById('user-name').textContent = userData.displayName;
+                document.getElementById('user-avatar').src = userData.photoURL;
+                document.getElementById('bio-input').value = userData.bio || "Coming Soon"; // Set the bio input value
+
+                // Check for the Beta badge
+                if (userData.badges && userData.badges.includes("Beta.png")) {
+                    document.getElementById('user-badge').style.display = 'inline'; // Show the badge
+                } else {
+                    document.getElementById('user-badge').style.display = 'none'; // Hide the badge if not present
+                }
+            } else {
+                console.log("No such document!");
+            }
+        }).catch(error => {
+            console.error("Error getting document:", error);
+        });
+
+        // Update Bio
+        document.getElementById('update-bio').addEventListener('click', () => {
+            const newBio = document.getElementById('bio-input').value.trim();
+            if (newBio) {
+                db.collection('users').doc(userId).update({
+                    bio: newBio
+                }).then(() => {
+                    alert('Bio updated successfully!');
+                    // Optionally, update the profile modal bio
+                    document.getElementById('profile-modal-bio').textContent = newBio;
+                }).catch(error => {
+                    console.error("Error updating bio:", error);
+                    alert('Failed to update bio.');
+                });
+            } else {
+                alert('Bio cannot be empty.');
+            }
+        });
+    } else {
+        // No user is signed in, redirect to login
+        window.location.href = 'login.html';
+    }
+});
+
