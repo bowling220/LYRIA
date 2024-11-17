@@ -29,11 +29,12 @@ const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx
 // Define an array of UIDs for users who should have badges
 const badgeUserUIDs = ["qzf9fO2bBLU0PJhRDSQK9KnMZD32", "xLT0XKgtF5ZnlfX2fLj9hXrTcW02"]; // Replace with actual UIDs
 
-document.querySelector('.menu-toggle').addEventListener('click', () => {
-    console.log('Menu toggle button clicked'); // Log to confirm the button click
+document.querySelector('#sidebar-menu-toggle').addEventListener('click', (event) => {
+    event.stopPropagation(); // Prevent event from bubbling up
     const sidebar = document.querySelector('.sidebar');
-    sidebar.classList.toggle('active'); // Toggle the 'active' class to show/hide the sidebar
+    sidebar.classList.toggle('active');
 });
+
 // Close sidebar when clicking outside on mobile
 document.addEventListener('click', (e) => {
     const sidebar = document.querySelector('.sidebar');
@@ -273,7 +274,7 @@ function setupUIEventListeners() {
                     }).then(() => {
                         // Send a welcoming message to the new channel with more words
                         return db.collection('channels').doc(channelId).collection('messages').add({
-                            message: `Welcome to ${channelName}, ${currentUser.displayName || 'User'}! This is a new channel created by ${currentUser.uid === channelId.split('-')[1] ? currentUser.displayName : db.collection('channels').doc(channelId).get().then(doc => doc.data().createdBy) || 'Unknown'}. Let's start chatting!`,
+                            message: `Welcome to ${channelName}, ${currentUser.displayName || 'User'}! This is a new channel created by ${currentUser.displayName || 'User'}. Let's start chatting!`,
                             sender: 'System',
                             timestamp: firebase.firestore.FieldValue.serverTimestamp()
                         });
@@ -311,8 +312,9 @@ document.getElementById('join-channel').addEventListener('click', () => {
                         console.log(`User ${currentUser.displayName} added to channel ${channel.name}`); // Log user addition
 
                         // Send a welcome message to the channel
+                        const welcomeMessage = `Welcome to ${channel.name}, ${currentUser.displayName || 'User'}! We're glad to have you here.`;
                         return db.collection('channels').doc(channel.id).collection('messages').add({
-                            message: `Welcome to the channel, ${currentUser.displayName || 'User'}!`,
+                            message: welcomeMessage,
                             sender: 'System',
                             timestamp: firebase.firestore.FieldValue.serverTimestamp()
                         });
@@ -329,8 +331,7 @@ document.getElementById('join-channel').addEventListener('click', () => {
                 alert('Failed to join channel.');
             });
     }
-});
-    // Leave channel
+});    // Leave channel
     document.getElementById('leave-channel').addEventListener('click', () => {
         if (currentChannel) {
             db.collection('channels').doc(currentChannel).update({
