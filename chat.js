@@ -541,18 +541,21 @@ function loadMessages(channelId) {
                 });
                 senderElement.appendChild(senderNameElement);
 
-                if (message.senderId && badgeUserUIDs.includes(message.senderId)) {
-                    const badgesContainer = document.createElement('span');
-                    badgesContainer.className = 'badges-container';
-                    const badges = ['admin.png', 'DevBadge.png', 'Mod.png', 'EarlyAccess.png'];
-                    badges.forEach(badgeSrc => {
-                        const badge = document.createElement('img');
-                        badge.src = `assets/${badgeSrc}`;
-                        badge.alt = badgeSrc.replace('.png', '') + ' Badge';
-                        badge.className = 'admin-badge';
-                        badgesContainer.appendChild(badge);
+                // Check if the sender has the Beta Tester badge
+                if (message.senderId === currentUser.uid) {
+                    const userDocRef = db.collection('users').doc(currentUser.uid);
+                    userDocRef.get().then(userDoc => {
+                        if (userDoc.exists) {
+                            const userData = userDoc.data();
+                            if (userData.badges && userData.badges.includes("Beta.png")) {
+                                const badgeElement = document.createElement('img');
+                                badgeElement.src = 'assets/Beta.png'; // Path to the badge image
+                                badgeElement.alt = 'Beta Tester Badge';
+                                badgeElement.className = 'badge'; // Add a class for styling
+                                senderElement.appendChild(badgeElement); // Append badge to the sender element
+                            }
+                        }
                     });
-                    senderElement.appendChild(badgesContainer);
                 }
 
                 const timestampElement = document.createElement('span');
@@ -566,10 +569,6 @@ function loadMessages(channelId) {
                 messageContentElement.className = 'message-content';
                 messageContentElement.textContent = message.message;
 
-                if (message.senderId && badgeUserUIDs.includes(message.senderId)) {
-                    messageContentElement.classList.add('moving-color');
-                }
-
                 messageElement.appendChild(senderElement);
                 messageElement.appendChild(messageContentElement);
 
@@ -582,9 +581,6 @@ function loadMessages(channelId) {
             alert('Failed to load messages.');
         });
 }
-
-
-
 
 
 
@@ -881,3 +877,4 @@ window.addEventListener('load', () => {
         mobileMessage.style.display = 'block';
     }
 });
+
