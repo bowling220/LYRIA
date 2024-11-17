@@ -546,6 +546,8 @@ function loadMessages(channelId) {
                 userDocRef.get().then(userDoc => {
                     if (userDoc.exists) {
                         const userData = userDoc.data();
+                        console.log(`User data for ${message.senderId}:`, userData); // Debugging log
+
                         // Check for the Beta Tester badge
                         if (userData.badges && userData.badges.includes("Beta.png")) {
                             const badgeElement = document.createElement('img');
@@ -554,6 +556,7 @@ function loadMessages(channelId) {
                             badgeElement.className = 'admin-badge'; // Use the same class for styling
                             senderElement.appendChild(badgeElement); // Append badge to the sender element
                         }
+
                         // Check for other badges
                         const badges = ['admin.png', 'DevBadge.png', 'Mod.png', 'EarlyAccess.png'];
                         badges.forEach(badgeSrc => {
@@ -565,7 +568,11 @@ function loadMessages(channelId) {
                                 senderElement.appendChild(badge); // Append badge to the sender element
                             }
                         });
+                    } else {
+                        console.log(`No user data found for ${message.senderId}`); // Debugging log
                     }
+                }).catch(error => {
+                    console.error("Error fetching user data:", error);
                 });
 
                 const timestampElement = document.createElement('span');
@@ -597,7 +604,6 @@ function loadMessages(channelId) {
             alert('Failed to load messages.');
         });
 }
-
 
 
 function applyDarkMode() {
