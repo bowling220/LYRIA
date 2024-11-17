@@ -53,9 +53,11 @@
             <!-- Typing Status Indicator -->
             <div id="typing-status" class="typing-status" style="display: none;"></div>
             <div class="message-input">
-                <textarea id="message-input" placeholder="Message #"></textarea>
-                <button id="send-button" class="send-btn">Send</button>
-            </div>
+                <textarea id="message-input" placeholder="Message #" style="height: 15px;"></textarea>
+                <button id="send-button" class="send-btn" 
+                style="background-color: rgba(255, 255, 255, 0.2); color: rgb(0, 0, 0); border: 1px solid rgba(255, 255, 255, 0.4); padding: 6px 12px; font-size: 14px; cursor: pointer; border-radius: 8px; backdrop-filter: blur(4px);">
+                Send
+            </button>            </div>
         </main>
     </div>
     <div id="profile-modal">
@@ -67,8 +69,8 @@
             <button id="close-profile-modal">Close</button>
         </div>
     </div>
-<div id="version-info" style="position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); color: white; font-size: 12px;">
-    Beta 1.0.0 &copy; 2024 LYRIA. All rights reserved. Trademarked by LYRIA.
+<div id="version-info" style="position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); color: var(--text-color); font-size: 12px; font-weight: bold; text-shadow: 1px 1px 2px var(--background-color);">
+    Version: Beta 1.0.0 &copy; 2024 LYRIA. All rights reserved. Trademarked by LYRIA.
 </div>
 <!-- Settings Modal -->
 <div id="settings-modal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="settings-modal-title">
