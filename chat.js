@@ -528,6 +528,38 @@ function loadMessages(channelId) {
                 });
                 senderElement.appendChild(senderAvatarElement);
 
+                // Check if the sender has any badges
+                const userDocRef = db.collection('users').doc(message.senderId);
+                userDocRef.get().then(userDoc => {
+                    if (userDoc.exists) {
+                        const userData = userDoc.data();
+                        console.log(`User data for ${message.senderId}:`, userData); // Debugging log
+
+                        // Create a container for badges
+                        const badgesContainer = document.createElement('div');
+                        badgesContainer.className = 'badges-container';
+
+                        // Check for badges
+                        if (userData.badges && Array.isArray(userData.badges)) {
+                            userData.badges.forEach(badge => {
+                                const badgeElement = document.createElement('img');
+                                badgeElement.src = `assets/${badge}.png`; // Ensure this path is correct
+                                badgeElement.alt = `${badge} Badge`;
+                                badgeElement.className = 'admin-badge'; // Use the same class for styling
+                                badgesContainer.appendChild(badgeElement); // Append badge to the badges container
+                            });
+                        }
+
+                        // Append badges container before the sender name
+                        senderElement.appendChild(badgesContainer);
+                    } else {
+                        console.log(`No user data found for ${message.senderId}`); // Debugging log
+                    }
+                }).catch(error => {
+                    console.error("Error fetching user data:", error);
+                });
+
+                // Create the sender name element
                 const senderNameElement = document.createElement('span');
                 senderNameElement.className = 'sender-name';
                 senderNameElement.textContent = message.sender;
@@ -537,30 +569,6 @@ function loadMessages(channelId) {
                 });
                 senderElement.appendChild(senderNameElement);
 
-                // Check if the sender has any badges
-                const userDocRef = db.collection('users').doc(message.senderId);
-                userDocRef.get().then(userDoc => {
-                    if (userDoc.exists) {
-                        const userData = userDoc.data();
-                        console.log(`User data for ${message.senderId}:`, userData); // Debugging log
-
-                        // Check for badges
-                        if (userData.badges && Array.isArray(userData.badges)) {
-                            userData.badges.forEach(badge => {
-                                const badgeElement = document.createElement('img');
-                                badgeElement.src = `assets/${badge}.png`; // Ensure this path is correct
-                                badgeElement.alt = `${badge} Badge`;
-                                badgeElement.className = 'admin-badge'; // Use the same class for styling
-                                senderElement.appendChild(badgeElement); // Append badge to the sender element
-                            });
-                        }
-                    } else {
-                        console.log(`No user data found for ${message.senderId}`); // Debugging log
-                    }
-                }).catch(error => {
-                    console.error("Error fetching user data:", error);
-                });
-
                 // Create a timestamp element
                 const timestampElement = document.createElement('span');
                 timestampElement.className = 'message-timestamp';
@@ -568,7 +576,7 @@ function loadMessages(channelId) {
                 const timeString = timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                 timestampElement.textContent = timeString;
 
-                // Append the timestamp after the badges
+                // Append the timestamp after the sender name
                 senderElement.appendChild(timestampElement);
 
                 const messageContentElement = document.createElement('div');
