@@ -25,6 +25,7 @@ body {
 
 .top-header {
     background-color: var(--sidebar-color);
+    position: fixed;
     color: #fff;
     text-align: center;
     padding: 0.8rem;
