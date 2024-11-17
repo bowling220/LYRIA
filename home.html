@@ -41,6 +41,7 @@
             <div class="user-profile">
                 <img class="avatar" id="user-avatar" src="https://s1.ezgif.com/tmp/ezgif-1-89965b355d.png" alt="User avatar">
                 <span class="username" id="user-name">Username</span>
+                <img id="user-badge" src="assets/Beta.png" alt="Beta Tester Badge" style="display: none; width: 50px; height: auto;">
                 <button class="settings-btn" id="settings-btn">Settings</button>
             </div>
         </div>
@@ -143,6 +144,37 @@
         document.getElementById('close-mobile-message').addEventListener('click', () => {
             const mobileMessage = document.getElementById('mobile-message');
             mobileMessage.style.display = 'none';
+        });
+
+        // Assuming you have already initialized Firebase and authenticated the user
+        firebase.auth().onAuthStateChanged(user => {
+            if (user) {
+                // User is signed in
+                const userId = user.uid;
+
+                // Fetch user data from Firestore
+                db.collection('users').doc(userId).get().then(doc => {
+                    if (doc.exists) {
+                        const userData = doc.data();
+                        document.getElementById('user-name').textContent = userData.displayName;
+                        document.getElementById('user-avatar').src = userData.photoURL;
+
+                        // Check for the Beta badge
+                        if (userData.badges && userData.badges.includes("Beta.png")) {
+                            document.getElementById('user-badge').style.display = 'inline'; // Show the badge
+                        } else {
+                            document.getElementById('user-badge').style.display = 'none'; // Hide the badge if not present
+                        }
+                    } else {
+                        console.log("No such document!");
+                    }
+                }).catch(error => {
+                    console.error("Error getting document:", error);
+                });
+            } else {
+                // No user is signed in, redirect to login
+                window.location.href = 'login.html';
+            }
         });
     </script>
 </body>
