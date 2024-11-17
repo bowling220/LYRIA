@@ -41,6 +41,11 @@
   
   .sidebar.active {
     transform: translateX(0); /* Slide in */
+    /* Adjusted to ensure the sidebar appears in front of the user's face */
+    position: absolute; /* Changed from fixed to absolute */
+    top: 50%; /* Align to the middle of the viewport */
+    left: 50%; /* Align to the middle of the viewport */
+    transform: translate(-50%, -50%); /* Center the sidebar */
   }
   
   .user-profile {
