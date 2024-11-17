@@ -541,22 +541,32 @@ function loadMessages(channelId) {
                 });
                 senderElement.appendChild(senderNameElement);
 
-                // Check if the sender has the Beta Tester badge
-                if (message.senderId === currentUser.uid) {
-                    const userDocRef = db.collection('users').doc(currentUser.uid);
-                    userDocRef.get().then(userDoc => {
-                        if (userDoc.exists) {
-                            const userData = userDoc.data();
-                            if (userData.badges && userData.badges.includes("Beta.png")) {
-                                const badgeElement = document.createElement('img');
-                                badgeElement.src = 'assets/Beta.png'; // Path to the badge image
-                                badgeElement.alt = 'Beta Tester Badge';
-                                badgeElement.className = 'admin-badge'; // Use the same class for styling
-                                senderElement.appendChild(badgeElement); // Append badge to the sender element
-                            }
+                // Check if the sender has any badges
+                const userDocRef = db.collection('users').doc(message.senderId);
+                userDocRef.get().then(userDoc => {
+                    if (userDoc.exists) {
+                        const userData = userDoc.data();
+                        // Check for the Beta Tester badge
+                        if (userData.badges && userData.badges.includes("Beta.png")) {
+                            const badgeElement = document.createElement('img');
+                            badgeElement.src = 'assets/Beta.png'; // Path to the badge image
+                            badgeElement.alt = 'Beta Tester Badge';
+                            badgeElement.className = 'admin-badge'; // Use the same class for styling
+                            senderElement.appendChild(badgeElement); // Append badge to the sender element
                         }
-                    });
-                }
+                        // Check for other badges
+                        const badges = ['admin.png', 'DevBadge.png', 'Mod.png', 'EarlyAccess.png'];
+                        badges.forEach(badgeSrc => {
+                            if (userData.badges && userData.badges.includes(badgeSrc.replace('.png', ''))) {
+                                const badge = document.createElement('img');
+                                badge.src = `assets/${badgeSrc}`;
+                                badge.alt = badgeSrc.replace('.png', '') + ' Badge';
+                                badge.className = 'admin-badge'; // Use the same class for styling
+                                senderElement.appendChild(badge); // Append badge to the sender element
+                            }
+                        });
+                    }
+                });
 
                 const timestampElement = document.createElement('span');
                 timestampElement.className = 'message-timestamp';
