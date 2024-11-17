@@ -16,6 +16,14 @@
     <script src="https://cdn.agora.io/sdk/release/AgoraRTC_N.js"></script>
 </head>
 <body>
+    <!-- Mobile Experience Message -->
+    <div id="mobile-message" style="display: none; background-color: #ffcccb; padding: 10px; text-align: center; position: sticky; top: 0; z-index: 1000;">
+        For a better experience, please use a computer.
+        <button id="close-mobile-message" style="margin-left: 10px; background-color: #f44336; color: white; border: none; cursor: pointer;">
+            Close
+        </button>
+    </div>
+
     <header class="top-header">
         <button class="menu-toggle">☰</button>
         <span style="flex: 1; text-align: center;">LYRIA Chat</span>
@@ -116,5 +124,26 @@
     <!-- Include voicecall.js before chat.js -->
     <script src="voicecall.js"></script>
     <script src="chat.js"></script>
+
+    <script>
+        // Detect if the user is on a mobile device
+        function isMobileDevice() {
+            return /Mobi|Android|iPhone|iPad|iPod|Windows Phone/i.test(navigator.userAgent);
+        }
+
+        // Display the mobile message if on a mobile device
+        window.addEventListener('load', () => {
+            const mobileMessage = document.getElementById('mobile-message');
+            if (isMobileDevice()) {
+                mobileMessage.style.display = 'block';
+            }
+        });
+
+        // Close the mobile message
+        document.getElementById('close-mobile-message').addEventListener('click', () => {
+            const mobileMessage = document.getElementById('mobile-message');
+            mobileMessage.style.display = 'none';
+        });
+    </script>
 </body>
 </html>

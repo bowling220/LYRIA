@@ -863,3 +863,21 @@ messageInput.addEventListener('input', (e) => {
         suggestionsContainer.innerHTML = ''; // Clear suggestions if no @
     }
 });
+
+document.getElementById('close-mobile-message').addEventListener('click', () => {
+    const mobileMessage = document.getElementById('mobile-message');
+    mobileMessage.style.display = 'none';
+});
+
+// Detect if the user is on a mobile device
+function isMobileDevice() {
+    return /Mobi|Android|iPhone|iPad|iPod|Windows Phone/i.test(navigator.userAgent);
+}
+
+// Display the mobile message if on a mobile device
+window.addEventListener('load', () => {
+    const mobileMessage = document.getElementById('mobile-message');
+    if (isMobileDevice()) {
+        mobileMessage.style.display = 'block';
+    }
+});
