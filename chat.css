@@ -485,14 +485,15 @@ textarea {
 .badges-container, #profile-modal-badges {
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 5px; /* Increased space between badges */
     margin-top: 5px;
 }
 
 .admin-badge {
-    width: 20px;
-    height: 20px;
-    border-radius: 3px;
+    margin-right: 5px; /* Adjust the space between badges */
+    width: 20px; /* Set a fixed width for badges */
+    height: 20px; /* Set a fixed height for badges */
+    vertical-align: middle; /* Align badges vertically with text */
 }
 
 /* Optional - Animation for 'moving-color' badges */
