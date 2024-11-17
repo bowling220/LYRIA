@@ -561,22 +561,19 @@ function loadMessages(channelId) {
                     console.error("Error fetching user data:", error);
                 });
 
+                // Create a timestamp element
                 const timestampElement = document.createElement('span');
                 timestampElement.className = 'message-timestamp';
                 const timestamp = message.timestamp ? message.timestamp.toDate() : new Date();
                 const timeString = timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                 timestampElement.textContent = timeString;
+
+                // Append the timestamp after the badges
                 senderElement.appendChild(timestampElement);
 
                 const messageContentElement = document.createElement('div');
                 messageContentElement.className = 'message-content';
                 messageContentElement.textContent = message.message;
-
-                // Apply moving color background for specific user IDs
-                const specialUserIDs = ["qzf9fO2bBLU0PJhRDSQK9KnMZD32", "xLT0XKgtF5ZnlfX2fLj9hXrTcW02"]; // Replace with actual user IDs
-                if (specialUserIDs.includes(message.senderId)) {
-                    messageContentElement.classList.add('moving-color'); // Add the class for the moving background
-                }
 
                 messageElement.appendChild(senderElement);
                 messageElement.appendChild(messageContentElement);
