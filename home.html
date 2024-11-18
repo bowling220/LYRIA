@@ -48,6 +48,9 @@
             <header class="chat-header">
                 <h2 id="channel-title"># general</h2>
                 <button id="copy-join-code" class="copy-join-code-btn">Invite Others</button>
+                <button id="inbox-btn" onclick="window.location.href='inbox.html'" style="background: none; border: none; color: var(--text-color); cursor: pointer; padding: 8px; font-size: 1.2rem;">
+                    📬 Inbox
+                </button>
             </header>
             <div class="messages" id="messages"></div>
             <!-- Typing Status Indicator -->
@@ -66,6 +69,7 @@
             <h2 id="profile-modal-name">User Name</h2>
             <div id="profile-modal-badges" class="badges-container"></div>
             <p id="profile-modal-bio">Update Your Bio In Settings</p>
+            <button id="send-friend-request" class="action-btn">Send Friend Request</button>
             <button id="close-profile-modal">Close</button>
         </div>
     </div>
@@ -146,6 +150,8 @@
             mobileMessage.style.display = 'none';
         });
 
+        let selectedUserId = null; // Store the ID of the user whose profile is being viewed
+
         // Assuming you have already initialized Firebase and authenticated the user
         firebase.auth().onAuthStateChanged(user => {
             if (user) {
@@ -174,6 +180,50 @@
             } else {
                 // No user is signed in, redirect to login
                 window.location.href = 'login.html';
+            }
+        });
+
+        // Add friend request functionality
+        document.getElementById('send-friend-request').addEventListener('click', async () => {
+            if (!selectedUserId || !firebase.auth().currentUser) return;
+            
+            const currentUser = firebase.auth().currentUser;
+            
+            try {
+                // Get sender's display name
+                const senderDoc = await db.collection('users').doc(currentUser.uid).get();
+                const senderName = senderDoc.data().displayName;
+                
+                // Create friend request document
+                await db.collection('friendRequests').add({
+                    from: currentUser.uid,
+                    to: selectedUserId,
+                    status: 'pending',
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                // Add notification to recipient's inbox
+                await db.collection('inbox').add({
+                    recipientId: selectedUserId,
+                    senderId: currentUser.uid,
+                    senderName: senderName,
+                    message: `${senderName} sent you a friend request!`,
+                    type: 'friendRequest',
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    read: false
+                });
+                
+                // Update button state
+                const friendRequestBtn = document.getElementById('send-friend-request');
+                friendRequestBtn.textContent = 'Friend Request Sent';
+                friendRequestBtn.disabled = true;
+
+                // Show success message
+                alert('Friend request sent successfully!');
+                
+            } catch (error) {
+                console.error("Error sending friend request:", error);
+                alert('Failed to send friend request. Please try again.');
             }
         });
     </script>
