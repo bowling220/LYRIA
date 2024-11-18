@@ -1122,3 +1122,27 @@ function toggleFavoriteChannel(channelId, isFavorite) {
         alert('Failed to update favorite status.');
     });
 }
+document.addEventListener('DOMContentLoaded', () => {
+    // Open the suggestions modal
+    document.getElementById('open-suggestions-modal').addEventListener('click', () => {
+        const modal = document.getElementById('suggestions-modal');
+        modal.style.display = 'flex';
+        modal.removeAttribute('inert'); // Remove inert when opening
+    });
+
+    // Close the suggestions modal
+    document.getElementById('close-suggestions-modal').addEventListener('click', () => {
+        const modal = document.getElementById('suggestions-modal');
+        modal.style.display = 'none';
+        modal.setAttribute('inert', ''); // Add inert when closing
+    });
+
+    // Close the modal when clicking outside of it
+    window.addEventListener('click', (event) => {
+        const modal = document.getElementById('suggestions-modal');
+        if (event.target === modal) {
+            modal.style.display = 'none';
+            modal.setAttribute('inert', ''); // Add inert when closing
+        }
+    });
+});

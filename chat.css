@@ -1110,3 +1110,70 @@ textarea {
     flex: 1; /* Allow the channel button to take available space */
     text-align: left; /* Align text to the left */
 }
+
+.suggestions-section {
+    margin-top: 10px; /* Further reduced space above the suggestions section */
+    padding: 6px; /* Further reduced padding for the section */
+    background-color: var(--primary-color); /* Background color to match the app */
+    border-radius: 8px; /* Rounded corners */
+    color: var(--text-color); /* Text color */
+}
+
+.suggestions-section h3 {
+    margin: 0; /* Remove default margin */
+    font-size: 1.2rem; /* Further reduced font size for the heading */
+}
+
+.suggestions-link {
+    display: inline-block; /* Make the link a block element */
+    margin-top: 6px; /* Further reduced space above the link */
+    padding: 5px 8px; /* Further reduced padding for the link */
+    background-color: var(--secondary-color); /* Background color for the link */
+    color: #fff; /* Text color */
+    border-radius: 5px; /* Rounded corners */
+    text-decoration: none; /* Remove underline */
+    transition: background-color 0.3s ease; /* Smooth transition */
+}
+
+.suggestions-link:hover {
+    background-color: #4a5de2; /* Darker shade on hover */
+}
+
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1000; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    background-color: rgba(0, 0, 0, 0.7); /* Black background with opacity */
+    justify-content: center; /* Center the modal */
+    align-items: center; /* Center the modal */
+}
+
+.modal-content {
+    background-color: #2f3136; /* Modal background color */
+    color: #fff; /* Text color */
+    padding: 20px;
+    border-radius: 8px; /* Rounded corners */
+    width: 90%; /* Full width for smaller screens */
+    max-width: 600px; /* Limit max width */
+    position: relative; /* Position relative for close button */
+}
+
+.close-button {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--text-color);
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.close-button:hover {
+    color: var(--accent-color);
+}

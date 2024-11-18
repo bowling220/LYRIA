@@ -47,6 +47,13 @@
                 </ul>
             </div>
 
+            <!-- Suggestions Section -->
+            <div class="suggestions-section">
+                <h3>Suggestions</h3>
+                <p>We value your feedback! Please share your suggestions for new features or improvements.</p>
+                <button id="open-suggestions-modal" class="suggestions-link">Submit Your Suggestions</button>
+            </div>
+
             <div class="user-profile">
                 <img class="avatar" id="user-avatar" src="assets/icon.png" alt="User avatar">
                 <span class="username" id="user-name">User</span>
@@ -266,5 +273,14 @@ async function loadFriends(userId) {
             }
         }
     </script>
+
+    <!-- Suggestions Modal -->
+    <div id="suggestions-modal" class="modal" inert aria-labelledby="suggestions-modal-title">
+        <div class="modal-content">
+            <button id="close-suggestions-modal" class="close-button" aria-label="Close Suggestions Modal">&times;</button>
+            <h2 id="suggestions-modal-title">Submit Your Suggestions</h2>
+            <iframe src="https://docs.google.com/forms/d/13N4gBgbZOyxgNzUuc8OHCVXlJ6j81BaS7wG-ZRQKbj0/viewform?embedded=true" width="100%" height="500" frameborder="0" marginheight="0" marginwidth="0">Loading…</iframe>
+        </div>
+    </div>
 </body>
 </html>
