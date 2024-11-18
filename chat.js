@@ -802,6 +802,7 @@ function applyBadgeVisibility() {
 function showUserProfileModal(uid) {
     db.collection('users').doc(uid).get().then(doc => {
         if (doc.exists) {
+            profileUserId = userId;
             const userData = doc.data();
             document.getElementById('profile-modal-image').src = userData.photoURL || 'assets/icon.png';
             document.getElementById('profile-modal-name').textContent = userData.displayName || 'User';

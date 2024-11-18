@@ -196,6 +196,10 @@
 
         // Add friend request functionality
         document.getElementById('send-friend-request').addEventListener('click', async () => {
+            if (!profileUserId) {
+                alert('Unable to identify target user');
+                return;
+            }
             try {
                 const currentUser = firebase.auth().currentUser;
                 if (!currentUser) {
