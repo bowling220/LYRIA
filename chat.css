@@ -1209,6 +1209,7 @@ textarea {
     font-size: 1rem; /* Reduced font size for the section title */
     color: var(--text-color); /* Text color for the title */
     margin-bottom: 8px; /* Reduced space below the title */
+    text-align: center; /* Center the text */
 }
 
 .friends-list {
