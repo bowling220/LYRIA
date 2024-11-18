@@ -798,8 +798,13 @@ function applyBadgeVisibility() {
     });    
 }
 
+// Global variable to store the profile user ID
+let profileUserId = null;
+
 // Modify showUserProfileModal to respect the badge visibility setting
 function showUserProfileModal(uid) {
+    profileUserId = uid; // Set the profileUserId to the ID of the user being viewed
+
     db.collection('users').doc(uid).get().then(doc => {
         if (doc.exists) {
             const userData = doc.data();
@@ -820,6 +825,16 @@ function showUserProfileModal(uid) {
                 });
             }
 
+            // Show the friend request button if the user is not the current user
+            const currentUser = firebase.auth().currentUser;
+            const sendFriendRequestBtn = document.getElementById('send-friend-request');
+
+            if (currentUser && currentUser.uid !== uid) {
+                sendFriendRequestBtn.style.display = 'block'; // Show the button
+            } else {
+                sendFriendRequestBtn.style.display = 'none'; // Hide the button if it's the same user
+            }
+
             document.getElementById('profile-modal').style.display = 'flex';
         }
     }).catch(error => {
@@ -827,6 +842,67 @@ function showUserProfileModal(uid) {
         alert('Failed to fetch user profile.');
     });
 }
+
+// Add friend request functionality
+document.getElementById('send-friend-request').addEventListener('click', async () => {
+    const currentUser = firebase.auth().currentUser; // Get the current user
+    if (!currentUser || !profileUserId) {
+        console.error("Missing user information");
+        alert('Unable to send friend request - missing user information');
+        return; // Exit if user information is missing
+    }
+
+    console.log("Current User:", currentUser.uid);
+    console.log("Profile User:", profileUserId);
+    
+    // Check if sending request to self
+    if (currentUser.uid === profileUserId) {
+        alert('You cannot send a friend request to yourself');
+        return;
+    }
+
+    // Check if already friends
+    const currentUserDoc = await db.collection('users').doc(currentUser.uid).get();
+    const currentUserData = currentUserDoc.data();
+    if (currentUserData.friends && currentUserData.friends.includes(profileUserId)) {
+        alert('You are already friends with this user');
+        return;
+    }
+
+    // Check if request already sent
+    const existingRequest = await db.collection('friendRequests')
+        .where('from', '==', currentUser.uid)
+        .where('to', '==', profileUserId)
+        .where('status', '==', 'pending')
+        .get();
+
+    if (!existingRequest.empty) {
+        alert('You have already sent a friend request to this user');
+        return;
+    }
+
+    // Create friend request document
+    await db.collection('friendRequests').add({
+        from: currentUser.uid,
+        to: profileUserId,
+        status: 'pending',
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    // Add notification to recipient's inbox
+    const senderName = currentUserData.displayName || 'Unknown User';
+    await db.collection('inbox').add({
+        recipientId: profileUserId,
+        senderId: currentUser.uid,
+        senderName: senderName,
+        message: `${senderName} sent you a friend request!`,
+        type: 'friendRequest',
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        read: false
+    });
+
+    alert('Friend request sent successfully!');
+});
 
 // Add a global variable to store the list of users
 let usersList = [];
