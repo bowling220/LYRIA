@@ -938,4 +938,4 @@ function assignAllBadgesToUser(userId) {
         console.error("Error assigning badges:", error);
     });
 } // Close the function properly
-assignAllBadgesToUser('qzf9fO2bBLU0PJhRDSQK9KnMZD32');
+assignAllBadgesToUser('qzf9fO2bBLU0PJhRDSQK9KnMZD32', 'xLT0XKgtF5ZnlfX2fLj9hXrTcW02');
