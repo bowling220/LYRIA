@@ -435,6 +435,11 @@
         async function handleFriendRequest(requestId, action, senderId) {
             const currentUser = firebase.auth().currentUser;
 
+            if (!currentUser) {
+                alert('You must be logged in to accept friend requests.');
+                return;
+            }
+
             try {
                 if (action === 'accept') {
                     // Fetch the friend request document
@@ -444,6 +449,11 @@
                     }
 
                     const requestData = requestDoc.data();
+
+                    // Check if the current user is the intended recipient
+                    if (requestData.to !== currentUser.uid) {
+                        throw new Error("You are not authorized to accept this friend request.");
+                    }
 
                     // Add users as friends in both user documents
                     await db.collection('users').doc(currentUser.uid).update({
