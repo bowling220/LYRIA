@@ -37,12 +37,19 @@
                 <button class="add-channel-btn" id="add-channel">Add Channel</button>
                 <button class="join-channel-btn" id="join-channel">Join Channel</button>
                 <button class="leave-channel-btn" id="leave-channel">Leave Channel</button>
+                <!-- Friends Section -->
+ <div class="friends-section">
+    <h3>Your Friends</h3>
+     <ul class="friends-list" id="friends-list"></ul>
+    </div>
             </div>
+
             <div class="user-profile">
                 <img class="avatar" id="user-avatar" src="https://s1.ezgif.com/tmp/ezgif-1-89965b355d.png" alt="User avatar">
                 <span class="username" id="user-name">Username</span>
                 <button class="settings-btn" id="settings-btn">Settings</button>
             </div>
+
         </div>
         <main class="chat-area">
             <header class="chat-header">
@@ -171,6 +178,9 @@
                         } else {
                             document.getElementById('user-badge').style.display = 'none'; // Hide the badge if not present
                         }
+
+                        // Load friends
+                        loadFriends(userId);
                     } else {
                         console.log("No such document!");
                     }
@@ -182,6 +192,30 @@
                 window.location.href = 'login.html';
             }
         });
+
+        // Function to load friends
+        async function loadFriends(userId) {
+            const friendsList = document.getElementById('friends-list');
+            friendsList.innerHTML = ''; // Clear previous friends
+
+            // Fetch user data to get friends
+            const userDoc = await db.collection('users').doc(userId).get();
+            if (userDoc.exists) {
+                const userData = userDoc.data();
+                const friends = userData.friends || []; // Get friends array
+
+                // Loop through friends and display them
+                for (const friendId of friends) {
+                    const friendDoc = await db.collection('users').doc(friendId).get();
+                    if (friendDoc.exists) {
+                        const friendData = friendDoc.data();
+                        const friendItem = document.createElement('li');
+                        friendItem.textContent = friendData.displayName || 'Unknown User';
+                        friendsList.appendChild(friendItem);
+                    }
+                }
+            }
+        }
 
         // Add friend request functionality
         document.getElementById('send-friend-request').addEventListener('click', async () => {

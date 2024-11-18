@@ -462,13 +462,13 @@
                     await db.collection('users').doc(senderId).update({
                         friends: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
                     });
+
+                    // Delete the friend request
+                    await db.collection('friendRequests').doc(requestId).delete();
+
+                    // Refresh the friend requests display
+                    loadFriendRequests(currentUser.uid);
                 }
-
-                // Delete the friend request
-                await db.collection('friendRequests').doc(requestId).delete();
-
-                // Refresh the friend requests display
-                loadFriendRequests(currentUser.uid);
             } catch (error) {
                 console.error("Error handling friend request:", error);
                 alert('Error processing friend request: ' + error.message);
