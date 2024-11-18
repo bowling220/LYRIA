@@ -515,7 +515,7 @@ textarea {
     top: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.7); /* Darker background for better contrast */
     justify-content: center;
     align-items: center;
 }
@@ -524,22 +524,33 @@ textarea {
     background-color: #2f3136;
     color: #fff;
     padding: 20px;
-    border-radius: 8px;
-    width: 300px;
+    border-radius: 12px; /* More rounded corners */
+    width: 90%; /* Full width for smaller screens */
+    max-width: 400px; /* Limit max width */
     text-align: center;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5); /* Softer shadow for depth */
+    animation: fadeIn 0.3s ease; /* Smooth fade-in effect */
+    position: relative; /* Set position to relative for absolute positioning of close button */
 }
 
 #profile-modal-image {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
+    width: 100px; /* Slightly larger image */
+    height: 100px; /* Slightly larger image */
+    border-radius: 50%; /* Keep it circular */
     margin-bottom: 10px;
+    border: 3px solid var(--secondary-color); /* Add border to the image */
+    transition: transform 0.3s; /* Add transition for hover effect */
+}
+
+#profile-modal-image:hover {
+    transform: scale(1.05); /* Slightly enlarge on hover */
 }
 
 #profile-modal-name {
-    font-size: 1.2rem;
+    font-size: 1.5rem; /* Larger font size */
     font-weight: bold;
     margin-bottom: 10px;
+    color: var(--accent-color); /* Use accent color for the name */
 }
 
 #profile-modal-badges {
@@ -553,6 +564,9 @@ textarea {
     font-size: 1rem; /* Adjust font size as needed */
     color: #ccc; /* Lighter color for the bio text */
     margin-bottom: 10px; /* Space below the bio */
+    padding: 10px; /* Add padding for better spacing */
+    border-radius: 8px; /* Rounded corners for bio */
+    background-color: rgba(255, 255, 255, 0.1); /* Light background for contrast */
 }
 
 .suggestions-container {
@@ -1042,4 +1056,57 @@ textarea {
 
 #close-mobile-message:hover {
     background-color: #d32f2f;
+}
+
+/* Button Styles for Profile Modal */
+#send-friend-request, #close-profile-modal {
+    padding: 0.6rem 1rem; /* Padding for better touch targets */
+    background-color: var(--secondary-color); /* Use secondary color */
+    color: #fff; /* White text for contrast */
+    border: none; /* Remove default border */
+    border-radius: 8px; /* Rounded corners */
+    cursor: pointer; /* Pointer cursor on hover */
+    font-size: 1rem; /* Font size */
+    transition: background-color 0.3s ease, transform 0.2s ease; /* Smooth transitions */
+    margin-top: 10px; /* Space above buttons */
+    width: 100%; /* Full width for buttons */
+}
+
+/* Hover Effects */
+#send-friend-request:hover, #close-profile-modal:hover {
+    background-color: #4a5de2; /* Darker shade on hover */
+    transform: translateY(-2px); /* Slight lift effect */
+}
+
+/* Close Button Specific Styles */
+#close-profile-modal {
+    background-color: #e74c3c; /* Red background for close button */
+}
+
+#close-profile-modal:hover {
+    background-color: #c0392b; /* Darker red on hover */
+}
+
+.favorite-btn {
+    background: none; /* No background */
+    border: none; /* No border */
+    color: var(--accent-color); /* Color for the star */
+    font-size: 1.5rem; /* Size of the star */
+    cursor: pointer; /* Pointer cursor on hover */
+    transition: transform 0.2s ease; /* Smooth transition for hover effect */
+    margin-left: 10px; /* Space between channel button and favorite button */
+}
+
+.favorite-btn:hover {
+    transform: scale(1.2); /* Slightly enlarge on hover */
+}
+
+.channel-container {
+    display: flex; /* Use flexbox for alignment */
+    align-items: center; /* Center items vertically */
+}
+
+.channel-btn {
+    flex: 1; /* Allow the channel button to take available space */
+    text-align: left; /* Align text to the left */
 }

@@ -33,6 +33,8 @@ const betaUserUIDs = [
     // Add more user IDs as needed
 ];
 
+const featureUserUIDs = ["miu0tI2oHJUiNx2gxtPwSpJ136w1", "dIc6q6xdqsTuiVC9JWGQT9XVH6T2"]; // Add the UID for the feature badge
+
 document.querySelector('#sidebar-menu-toggle').addEventListener('click', (event) => {
     event.stopPropagation(); // Prevent event from bubbling up
     const sidebar = document.querySelector('.sidebar');
@@ -113,6 +115,15 @@ auth.onAuthStateChanged(user => {
                 });
                 document.getElementById('user-name').after(badgesContainer);
                 */
+            }
+
+            // Check if the user's UID is in the featureUserUIDs array
+            if (featureUserUIDs.includes(user.uid)) {
+                const featureBadge = document.createElement('img');
+                featureBadge.src = 'assets/feature.png'; // Path to the feature badge
+                featureBadge.alt = 'Feature Badge';
+                featureBadge.className = 'admin-badge'; // Use the same class for styling as admin badges
+                document.getElementById('user-name').after(featureBadge); // Display the badge after the user name
             }
 
             darkMode = userData.darkMode;
@@ -296,7 +307,8 @@ function setupUIEventListeners() {
                         createdBy: currentUser.uid,
                         joinCode: generateJoinCode(),
                         members: [currentUser.uid], // Ensure the creator is added as a member
-                        isPublic: false // Set to true if you want the channel to be public
+                        isPublic: false, // Set to true if you want the channel to be public
+                        favorite: false // Default to not favorite
                     }).then(() => {
                         // Send a welcoming message to the new channel with more words
                         return db.collection('channels').doc(channelId).collection('messages').add({
@@ -473,40 +485,62 @@ function loadChannels() {
 
     // Get channels where user is a member
     db.collection('channels')
-    .where('members', 'array-contains', currentUser.uid)
-    .get()
-    .then(snapshot => {
-        snapshot.forEach(doc => {
-            const channel = doc.data();
-            const channelElement = document.createElement('li');
-            const button = document.createElement('button');
-            button.className = 'channel-btn';
-            button.textContent = `#${channel.name}`;
-            button.setAttribute('data-channel-id', channel.id); // Add data attribute
-            button.onclick = () => {
-                switchChannel(channel.id);
-                document.querySelectorAll('.channel-btn').forEach(btn => btn.classList.remove('active-channel'));
-                button.classList.add('active-channel');
-                document.getElementById('message-input').placeholder = `Message #${channel.name}`;
-                // Close sidebar on mobile after channel selection
-                if (window.innerWidth <= 768) {
-                    document.querySelector('.sidebar').classList.remove('active');
-                }
-            };
-            channelElement.appendChild(button);
-            channelsList.appendChild(channelElement);
-        });
+        .where('members', 'array-contains', currentUser.uid)
+        .get()
+        .then(snapshot => {
+            const channels = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-        // Load messages for the current channel or default to personal channel
-        if (!currentChannel) {
-            currentChannel = `personal-${currentUser.uid}`;
-        }
-        switchChannel(currentChannel); // Use switchChannel to load messages and peer ID
-    })
-    .catch(error => {
-        console.error("Error loading channels:", error);
-        alert('Failed to load channels.');
-    });
+            // Sort channels: favorites first
+            channels.sort((a, b) => {
+                return (b.favorite === a.favorite) ? 0 : (b.favorite ? 1 : -1);
+            });
+
+            channels.forEach(channel => {
+                const channelElement = document.createElement('li');
+                const channelContainer = document.createElement('div'); // Create a container for the channel name and favorite button
+                channelContainer.className = 'channel-container'; // Add a class for styling
+
+                const button = document.createElement('button');
+                button.className = 'channel-btn';
+                button.textContent = `#${channel.name}`;
+                button.setAttribute('data-channel-id', channel.id); // Add data attribute
+                button.onclick = () => {
+                    switchChannel(channel.id);
+                    document.querySelectorAll('.channel-btn').forEach(btn => btn.classList.remove('active-channel'));
+                    button.classList.add('active-channel');
+                    document.getElementById('message-input').placeholder = `Message #${channel.name}`;
+                    // Close sidebar on mobile after channel selection
+                    if (window.innerWidth <= 768) {
+                        document.querySelector('.sidebar').classList.remove('active');
+                    }
+                };
+
+                // Create a favorite button
+                const favoriteButton = document.createElement('button');
+                favoriteButton.className = 'favorite-btn';
+                favoriteButton.innerHTML = channel.favorite ? '★' : '☆'; // Filled star for favorite, empty star for not favorite
+                favoriteButton.onclick = (e) => {
+                    e.stopPropagation(); // Prevent triggering the channel button click
+                    toggleFavoriteChannel(channel.id, !channel.favorite);
+                };
+
+                // Append the channel button and favorite button to the channel container
+                channelContainer.appendChild(button);
+                channelContainer.appendChild(favoriteButton);
+                channelElement.appendChild(channelContainer); // Append the container to the list item
+                channelsList.appendChild(channelElement);
+            });
+
+            // Load messages for the current channel or default to personal channel
+            if (!currentChannel) {
+                currentChannel = `personal-${currentUser.uid}`;
+            }
+            switchChannel(currentChannel); // Use switchChannel to load messages and peer ID
+        })
+        .catch(error => {
+            console.error("Error loading channels:", error);
+            alert('Failed to load channels.');
+        });
 }
 
 function generateJoinCode() {
@@ -583,6 +617,15 @@ function loadMessages(channelId) {
                                 badgeElement.className = 'admin-badge'; // Use the same class for styling
                                 senderElement.appendChild(badgeElement); // Append badge to the sender element
                             });
+                        }
+
+                        // Check if the sender has the feature badge
+                        if (featureUserUIDs.includes(message.senderId)) {
+                            const featureBadge = document.createElement('img');
+                            featureBadge.src = 'assets/feature.png'; // Path to the feature badge
+                            featureBadge.alt = 'Feature Badge';
+                            featureBadge.className = 'admin-badge'; // Use the same class for styling
+                            senderElement.appendChild(featureBadge); // Append feature badge to the sender element
                         }
                     } else {
                         console.log(`No user data found for ${message.senderId}`); // Debugging log
@@ -812,17 +855,26 @@ function showUserProfileModal(uid) {
             document.getElementById('profile-modal-name').textContent = userData.displayName || 'User';
 
             const profileBadges = document.getElementById('profile-modal-badges');
-            profileBadges.innerHTML = '';
+            profileBadges.innerHTML = ''; // Clear previous badges
 
-            if (badgeUserUIDs.includes(uid) && showBadges) {
-                const badges = ['admin.png', 'DevBadge.png', 'Mod.png', 'EarlyAccess.png'];
-                badges.forEach(badgeSrc => {
-                    const badge = document.createElement('img');
-                    badge.src = `assets/${badgeSrc}`;
-                    badge.alt = badgeSrc.replace('.png', '') + ' Badge';
-                    badge.className = 'admin-badge';
-                    profileBadges.appendChild(badge);
+            // Check if the user has any badges
+            if (userData.badges && Array.isArray(userData.badges)) {
+                userData.badges.forEach(badge => {
+                    const badgeElement = document.createElement('img');
+                    badgeElement.src = `assets/${badge}.png`; // Ensure this path is correct
+                    badgeElement.alt = `${badge} Badge`;
+                    badgeElement.className = 'admin-badge';
+                    profileBadges.appendChild(badgeElement); // Append badge to the profile badges
                 });
+            }
+
+            // Check if the user has the feature badge
+            if (featureUserUIDs.includes(uid)) {
+                const featureBadge = document.createElement('img');
+                featureBadge.src = 'assets/feature.png'; // Path to the feature badge
+                featureBadge.alt = 'Feature Badge';
+                featureBadge.className = 'admin-badge'; // Use the same class for styling
+                profileBadges.appendChild(featureBadge); // Append feature badge to the profile badges
             }
 
             // Show the friend request button if the user is not the current user
@@ -1059,3 +1111,14 @@ function assignBetaBadgeToUser(userId) {
 betaUserUIDs.forEach(userId => {
     assignBetaBadgeToUser(userId);
 });
+
+function toggleFavoriteChannel(channelId, isFavorite) {
+    db.collection('channels').doc(channelId).update({
+        favorite: isFavorite
+    }).then(() => {
+        loadChannels(); // Reload channels to reflect changes
+    }).catch(error => {
+        console.error("Error updating favorite status:", error);
+        alert('Failed to update favorite status.');
+    });
+}
