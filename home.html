@@ -74,7 +74,7 @@
         </div>
     </div>
 <div id="version-info" style="position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); color: var(--text-color); font-size: 12px; font-weight: bold; text-shadow: 1px 1px 2px var(--background-color);">
-    Version: Beta 1.0.2 &copy; 2024 LYRIA. All rights reserved. Trademarked by LYRIA.
+    Version: Beta 1.0.4 &copy; 2024 LYRIA. All rights reserved. Trademarked by LYRIA.
 </div>
 <!-- Settings Modal -->
 <div id="settings-modal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="settings-modal-title">
@@ -185,9 +185,38 @@
 
         // Add friend request functionality
         document.getElementById('send-friend-request').addEventListener('click', async () => {
-            if (!selectedUserId || !firebase.auth().currentUser) return;
+            if (!selectedUserId || !firebase.auth().currentUser) {
+                alert('Please select a user to send a friend request to');
+                return;
+            }
             
             const currentUser = firebase.auth().currentUser;
+            
+            // Check if sending request to self
+            if (currentUser.uid === selectedUserId) {
+                alert('You cannot send a friend request to yourself');
+                return;
+            }
+
+            // Check if already friends
+            const currentUserDoc = await db.collection('users').doc(currentUser.uid).get();
+            const currentUserData = currentUserDoc.data();
+            if (currentUserData.friends && currentUserData.friends.includes(selectedUserId)) {
+                alert('You are already friends with this user');
+                return;
+            }
+
+            // Check if request already sent
+            const existingRequest = await db.collection('friendRequests')
+                .where('from', '==', currentUser.uid)
+                .where('to', '==', selectedUserId)
+                .where('status', '==', 'pending')
+                .get();
+
+            if (!existingRequest.empty) {
+                alert('You have already sent a friend request to this user');
+                return;
+            }
             
             try {
                 // Get sender's display name
