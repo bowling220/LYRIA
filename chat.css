@@ -1112,22 +1112,29 @@ textarea {
 }
 
 .suggestions-section {
-    margin-top: 10px; /* Further reduced space above the suggestions section */
-    padding: 6px; /* Further reduced padding for the section */
+    margin-top: 10px; /* Space above the suggestions section */
+    padding: 12px; /* Padding for the section */
     background-color: var(--primary-color); /* Background color to match the app */
     border-radius: 8px; /* Rounded corners */
     color: var(--text-color); /* Text color */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2); /* Subtle shadow for depth */
 }
 
 .suggestions-section h3 {
     margin: 0; /* Remove default margin */
-    font-size: 1.2rem; /* Further reduced font size for the heading */
+    font-size: 1.4rem; /* Font size for the heading */
+    font-weight: bold; /* Make the heading bold */
+}
+
+.suggestions-section p {
+    margin: 5px 0; /* Space above and below the paragraph */
+    font-size: 1rem; /* Font size for the paragraph */
 }
 
 .suggestions-link {
     display: inline-block; /* Make the link a block element */
-    margin-top: 6px; /* Further reduced space above the link */
-    padding: 5px 8px; /* Further reduced padding for the link */
+    margin-top: 8px; /* Space above the link */
+    padding: 8px 12px; /* Padding for the link */
     background-color: var(--secondary-color); /* Background color for the link */
     color: #fff; /* Text color */
     border-radius: 5px; /* Rounded corners */
