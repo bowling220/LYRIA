@@ -153,13 +153,16 @@
         let profileUserId = null; // Store the ID of the user whose profile is being viewed
 
         // Assuming you have already initialized Firebase and authenticated the user
-        firebase.auth().onAuthStateChanged(user => {
+        firebase.auth().onAuthStateChanged(async user => {
             if (user) {
-                // User is signed in
-                const userId = user.uid;
+                try {
+                    // User is signed in
+                    const userId = user.uid;
 
-                // Fetch user data from Firestore
-                db.collection('users').doc(userId).get().then(doc => {
+                    // Fetch user data from Firestore with error handling
+                    const docRef = db.collection('users').doc(userId);
+                    const doc = await docRef.get();
+                    
                     if (doc.exists) {
                         const userData = doc.data();
                         document.getElementById('user-name').textContent = userData.displayName;
@@ -172,11 +175,19 @@
                             document.getElementById('user-badge').style.display = 'none'; // Hide the badge if not present
                         }
                     } else {
-                        console.log("No such document!");
+                        console.log("User document not found - creating new user profile");
+                        // Create a default user profile if none exists
+                        await docRef.set({
+                            displayName: user.displayName || "New User",
+                            photoURL: user.photoURL || "https://s1.ezgif.com/tmp/ezgif-1-89965b355d.png",
+                            badges: []
+                        });
                     }
-                }).catch(error => {
-                    console.error("Error getting document:", error);
-                });
+                } catch (error) {
+                    console.error("Error accessing user data:", error);
+                    // Handle the error appropriately - maybe show a user-friendly message
+                    alert("Unable to load user profile. Please try refreshing the page.");
+                }
             } else {
                 // No user is signed in, redirect to login
                 window.location.href = 'login.html';
@@ -185,35 +196,44 @@
 
         // Add friend request functionality
         document.getElementById('send-friend-request').addEventListener('click', async () => {
-            const currentUser = firebase.auth().currentUser;
-            
-            // Check if sending request to self
-            if (currentUser.uid === profileUserId) {
-                alert('You cannot send a friend request to yourself');
-                return;
-            }
-
-            // Check if already friends
-            const currentUserDoc = await db.collection('users').doc(currentUser.uid).get();
-            const currentUserData = currentUserDoc.data();
-            if (currentUserData.friends && currentUserData.friends.includes(profileUserId)) {
-                alert('You are already friends with this user');
-                return;
-            }
-
-            // Check if request already sent
-            const existingRequest = await db.collection('friendRequests')
-                .where('from', '==', currentUser.uid)
-                .where('to', '==', profileUserId)
-                .where('status', '==', 'pending')
-                .get();
-
-            if (!existingRequest.empty) {
-                alert('You have already sent a friend request to this user');
-                return;
-            }
-            
             try {
+                const currentUser = firebase.auth().currentUser;
+                if (!currentUser) {
+                    alert('Please sign in to send friend requests');
+                    return;
+                }
+                
+                if (!profileUserId) {
+                    alert('Unable to identify target user');
+                    return;
+                }
+
+                // Check if sending request to self
+                if (currentUser.uid === profileUserId) {
+                    alert('You cannot send a friend request to yourself');
+                    return;
+                }
+
+                // Check if already friends
+                const currentUserDoc = await db.collection('users').doc(currentUser.uid).get();
+                const currentUserData = currentUserDoc.data();
+                if (currentUserData.friends && currentUserData.friends.includes(profileUserId)) {
+                    alert('You are already friends with this user');
+                    return;
+                }
+
+                // Check if request already sent
+                const existingRequest = await db.collection('friendRequests')
+                    .where('from', '==', currentUser.uid)
+                    .where('to', '==', profileUserId)
+                    .where('status', '==', 'pending')
+                    .get();
+
+                if (!existingRequest.empty) {
+                    alert('You have already sent a friend request to this user');
+                    return;
+                }
+                
                 // Get sender's display name
                 const senderDoc = await db.collection('users').doc(currentUser.uid).get();
                 const senderName = senderDoc.data().displayName;
