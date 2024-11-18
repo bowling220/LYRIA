@@ -52,7 +52,20 @@ auth.onAuthStateChanged(user => {
         const userDocRef = db.collection('users').doc(user.uid);
 
         userDocRef.get().then(doc => {
-            if (!doc.exists) {
+            if (doc.exists) {
+                const userData = doc.data();
+                document.getElementById('user-name').textContent = userData.displayName;
+                document.getElementById('user-avatar').src = userData.photoURL || 'assets/icon.png';
+                document.getElementById('bio-input').value = userData.bio || "No bio set.";
+                document.getElementById('profile-modal-bio').textContent = userData.bio || "No bio set.";
+
+                // Check for the Beta badge
+                if (userData.badges && userData.badges.includes("Beta.png")) {
+                    document.getElementById('user-badge').style.display = 'inline'; // Show the badge
+                } else {
+                    document.getElementById('user-badge').style.display = 'none'; // Hide the badge if not present
+                }
+            } else {
                 const personalChannelId = `personal-${user.uid}`;
                 return Promise.all([
                     userDocRef.set({
@@ -62,7 +75,8 @@ auth.onAuthStateChanged(user => {
                         role: 'user',
                         channels: [`personal-${user.uid}`],
                         darkMode: false,
-                        notificationsEnabled: false
+                        notificationsEnabled: false,
+                        bio: "No bio set." // Set the default bio
                     }),
                     db.collection('channels').doc(personalChannelId).set({
                         name: 'My Personal Channel',
@@ -82,7 +96,8 @@ auth.onAuthStateChanged(user => {
                 role: 'user',
                 channels: [`personal-${user.uid}`],
                 darkMode: false,
-                notificationsEnabled: false
+                notificationsEnabled: false,
+                bio: "No bio set." // Set the default bio
             };
 
             // Display user information
@@ -177,6 +192,23 @@ function setupUIEventListeners() {
             }).catch(error => {
                 console.error("Error updating display name:", error);
                 alert('Failed to update display name');
+            });
+        }
+    });
+
+    // Update Bio
+    document.getElementById('update-bio').addEventListener('click', () => {
+        const newBio = document.getElementById('bio-input').value.trim();
+        if(newBio) {
+            db.collection('users').doc(currentUser.uid).update({
+                bio: newBio
+            }).then(() => {
+                // Update bio in profile modal
+                document.getElementById('profile-modal-bio').textContent = newBio;
+                alert('Bio updated successfully!');
+            }).catch(error => {
+                console.error("Error updating bio:", error);
+                alert('Failed to update bio');
             });
         }
     });
