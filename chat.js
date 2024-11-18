@@ -27,6 +27,12 @@ const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx
 // Define an array of UIDs for users who should have badges
 const badgeUserUIDs = ["qzf9fO2bBLU0PJhRDSQK9KnMZD32", "xLT0XKgtF5ZnlfX2fLj9hXrTcW02"]; // Replace with actual UIDs
 
+const betaUserUIDs = [
+    "DWjEGCFvdKe50fMiXk9EsHH9j3F3", // Replace with actual user ID
+    "RshQJzHL4tUt34Jqgd96g0DktHk2", // Replace with actual user ID
+    // Add more user IDs as needed
+];
+
 document.querySelector('#sidebar-menu-toggle').addEventListener('click', (event) => {
     event.stopPropagation(); // Prevent event from bubbling up
     const sidebar = document.querySelector('.sidebar');
@@ -960,3 +966,20 @@ function assignAllBadgesToUser(userId) {
     });
 } // Close the function properly
 assignAllBadgesToUser('qzf9fO2bBLU0PJhRDSQK9KnMZD32', 'xLT0XKgtF5ZnlfX2fLj9hXrTcW02');
+
+function assignBetaBadgeToUser(userId) {
+    const badge = 'Beta'; // Define the Beta badge
+    const userDocRef = db.collection('users').doc(userId);
+    
+    userDocRef.update({
+        badges: firebase.firestore.FieldValue.arrayUnion(badge) // Add the Beta badge to the array
+    }).then(() => {
+        console.log(`Beta badge assigned to user ${userId}`);
+    }).catch(error => {
+        console.error("Error assigning Beta badge:", error);
+    });
+}
+
+betaUserUIDs.forEach(userId => {
+    assignBetaBadgeToUser(userId);
+});
