@@ -1189,8 +1189,8 @@ textarea {
 
 /* Adjust image size in the suggestions section */
 .suggestion-item img {
-    width: 50px; /* Smaller image size */
-    height: 50px; /* Smaller image size */
+    width: 20px; /* Smaller image size */
+    height: 20px; /* Smaller image size */
     border-radius: 50%; /* Keep it circular */
     margin-right: 8px; /* Space between image and text */
 }
