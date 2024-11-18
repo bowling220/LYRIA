@@ -148,7 +148,6 @@ auth.onAuthStateChanged(user => {
         window.location.href = 'login.html';
     }
 });
-
 function setupUIEventListeners() {
     // Event listeners for modal buttons
     document.getElementById('settings-btn').addEventListener('click', () => {
@@ -197,28 +196,6 @@ function setupUIEventListeners() {
                 console.error("Error updating display name:", error);
                 alert('Failed to update display name');
             });
-        }
-    });
-
-    // Update Bio
-    document.getElementById('update-bio').addEventListener('click', () => {
-        const newBio = document.getElementById('bio-input').value.trim();
-        if (newBio) {
-            // Ensure userDocRef is pointing to the current user's document
-            const userDocRef = db.collection('users').doc(currentUser.uid);
-            
-            userDocRef.update({
-                bio: newBio
-            }).then(() => {
-                alert('Bio updated successfully!');
-                // Optionally, update the displayed bio in the modal or profile section
-                document.getElementById('profile-modal-bio').textContent = newBio;
-            }).catch(error => {
-                console.error("Error updating bio:", error);
-                alert('Failed to update bio.');
-            });
-        } else {
-            alert('Bio cannot be empty.');
         }
     });
 
@@ -658,7 +635,6 @@ function loadMessages(channelId) {
             alert('Failed to load messages.');
         });
 }
-
 function applyDarkMode() {
     if(darkMode) {
         document.documentElement.style.setProperty('--primary-color', '#1a1a1a');
@@ -1056,30 +1032,8 @@ firebase.auth().onAuthStateChanged(user => {
         }).catch(error => {
             console.error("Error fetching user document:", error);
         });
-
-        // Update bio when the user saves it
-        document.getElementById('update-bio').addEventListener('click', () => {
-            const newBio = document.getElementById('bio-input').value.trim();
-
-            if (newBio) {
-                userDocRef.update({ bio: newBio }).then(() => {
-                    alert('Bio updated successfully!');
-                    // Optionally, update the displayed bio in the modal or profile section
-                    document.getElementById('profile-modal-bio').textContent = newBio;
-                }).catch(error => {
-                    console.error("Error updating bio:", error);
-                    alert('Failed to update bio.');
-                });
-            } else {
-                alert('Bio cannot be empty.');
-            }
-        });
-    } else {
-        // Redirect to login if no user is signed in
-        window.location.href = 'login.html';
     }
 });
- 
 
 function assignAllBadgesToUser(userId) {
     const badges = ['admin', 'DevBadge', 'Mod', 'EarlyAccess']; // List of all badges you want to assign
@@ -1146,3 +1100,48 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
+function loadUsers() {
+    db.collection('users').get().then(snapshot => {
+        const usersList = document.getElementById('users-list'); // Assuming you have a list element
+        usersList.innerHTML = ''; // Clear previous content
+
+        snapshot.forEach(doc => {
+            const userData = doc.data();
+            const listItem = document.createElement('li');
+            listItem.innerHTML = `
+                <span>${userData.displayName}</span>
+                <span>${userData.bio}</span> <!-- Display the correct bio for each user -->
+            `;
+            usersList.appendChild(listItem);
+        });
+    }).catch(error => {
+        console.error("Error loading users:", error);
+    });
+}
+
+// Function to update the user's bio
+function updateUserBio(newBio) {
+    if (currentUser) {
+        db.collection('users').doc(currentUser.uid).update({
+            bio: newBio
+        }).then(() => {
+            console.log("Bio updated successfully.");
+            document.getElementById('bio-input').value = newBio; // Update the input field with the new bio
+        }).catch(error => {
+            console.error("Error updating bio:", error);
+            alert('Failed to update bio.');
+        });
+    }
+}
+
+// Event listener for the bio update button
+document.getElementById('update-bio-btn').addEventListener('click', () => {
+    const newBio = document.getElementById('bio-input').value.trim();
+    if (newBio) {
+        updateUserBio(newBio);
+    } else {
+        alert('Bio cannot be empty.');
+    }
+});
+

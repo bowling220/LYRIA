@@ -85,7 +85,7 @@
             <img id="profile-modal-image" src="assets/icon.png" alt="User Avatar">
             <h2 id="profile-modal-name">User Name</h2>
             <div id="profile-modal-badges" class="badges-container"></div>
-            <p id="profile-modal-bio">Edit Your Bio In Settings</p>
+            <p id="profile-modal-bio">COMING SOON</p>
             <button id="send-friend-request" class="action-btn">Send Friend Request</button>
             <button id="close-profile-modal">Close</button>
         </div>
@@ -114,8 +114,8 @@
         <!-- Update Bio Section -->
         <div class="modal-section">
             <label for="bio-input" class="modal-label">Update Bio:</label>
-            <input type="text" id="bio-input" class="modal-input" placeholder="Enter new bio" value="Im Admin">
-            <button id="update-bio" class="action-btn">Update Bio</button>
+            <input type="text" id="bio-input" class="modal-input" placeholder="COMING SOON" disabled>
+            <button id="update-bio-btn" disabled>Update Bio</button>
         </div>
 
         <!-- Enable Notifications -->
@@ -167,12 +167,9 @@
             mobileMessage.style.display = 'none';
         });
 
-        let profileUserId = null; // Store the ID of the user whose profile is being viewed
-
         // Assuming you have already initialized Firebase and authenticated the user
         firebase.auth().onAuthStateChanged(user => {
             if (user) {
-                // User is signed in
                 const userId = user.uid;
 
                 // Fetch user data from Firestore
@@ -181,11 +178,12 @@
                         const userData = doc.data();
                         document.getElementById('user-name').textContent = userData.displayName;
                         document.getElementById('user-avatar').src = userData.photoURL;
-                        
+
                         // Set initial values for settings
                         document.getElementById('notifications-toggle').checked = userData.notificationsEnabled || false;
-                        document.getElementById('bio-input').value = userData.bio || '';
-                        
+                        document.getElementById('bio-input').value = 'COMING SOON';
+                        document.getElementById('profile-modal-bio').textContent = 'COMING SOON';
+
                         // Set dark mode based on user preference
                         if (userData.darkMode) {
                             document.body.classList.add('dark-mode');
@@ -199,58 +197,53 @@
                 }).catch(error => {
                     console.error("Error getting document:", error);
                 });
-            } else {
-                // No user is signed in, redirect to login
-                window.location.href = 'login.html';
             }
         });
 
         // Function to load friends with images and names
-        // Function to load friends with images and names
-async function loadFriends(userId) {
-    const friendsList = document.getElementById('friends-list');
-    friendsList.innerHTML = ''; // Clear previous content
+        async function loadFriends(userId) {
+            const friendsList = document.getElementById('friends-list');
+            friendsList.innerHTML = ''; // Clear previous content
 
-    try {
-        // Get the current user's document
-        const userDoc = await db.collection('users').doc(userId).get();
+            try {
+                // Get the current user's document
+                const userDoc = await db.collection('users').doc(userId).get();
 
-        if (userDoc.exists) {
-            const userData = userDoc.data();
-            const friends = userData.friends || []; // Get the friends array
+                if (userDoc.exists) {
+                    const userData = userDoc.data();
+                    const friends = userData.friends || []; // Get the friends array
 
-            if (friends.length === 0) {
-                friendsList.innerHTML = '<li>No friends added yet.</li>';
-                return;
-            }
+                    if (friends.length === 0) {
+                        friendsList.innerHTML = '<li>No friends added yet.</li>';
+                        return;
+                    }
 
-            // Loop through each friend's ID
-            for (const friendId of friends) {
-                // Fetch friend's details from the users collection
-                const friendDoc = await db.collection('users').doc(friendId).get();
-                if (friendDoc.exists) {
-                    const friendData = friendDoc.data();
-                    const friendName = friendData.displayName || 'Unknown Friend';
-                    const friendAvatar = friendData.photoURL || 'default-avatar.png';
+                    // Loop through each friend's ID
+                    for (const friendId of friends) {
+                        // Fetch friend's details from the users collection
+                        const friendDoc = await db.collection('users').doc(friendId).get();
+                        if (friendDoc.exists) {
+                            const friendData = friendDoc.data();
+                            const friendName = friendData.displayName || 'Unknown Friend';
+                            const friendAvatar = friendData.photoURL || 'default-avatar.png';
 
-                    // Add the friend's information to the list
-                    const listItem = document.createElement('li');
-                    listItem.innerHTML = `
-                        <img src="${friendAvatar}" alt="${friendName}" class="friend-avatar">
-                        <span class="friend-name">${friendName}</span>
-                    `;
-                    friendsList.appendChild(listItem);
+                            // Add the friend's information to the list
+                            const listItem = document.createElement('li');
+                            listItem.innerHTML = `
+                                <img src="${friendAvatar}" alt="${friendName}" class="friend-avatar">
+                                <span class="friend-name">${friendName}</span>
+                            `;
+                            friendsList.appendChild(listItem);
+                        }
+                    }
+                } else {
+                    friendsList.innerHTML = '<li>No user data found.</li>';
                 }
+            } catch (error) {
+                console.error('Error loading friends:', error);
+                friendsList.innerHTML = '<li>Failed to load friends.</li>';
             }
-        } else {
-            friendsList.innerHTML = '<li>No user data found.</li>';
         }
-    } catch (error) {
-        console.error('Error loading friends:', error);
-        friendsList.innerHTML = '<li>Failed to load friends.</li>';
-    }
-}
-
 
         async function acceptFriendRequest(requestId) {
             const requestDoc = await db.collection('friendRequests').doc(requestId).get();
