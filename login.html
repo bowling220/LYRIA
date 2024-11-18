@@ -129,7 +129,8 @@
                 photoURL: user.photoURL,
                 channels: ["general"],
                 role: "user",
-                badges: [] // Initialize badges array
+                badges: [], // Initialize badges array
+                friends: [] // Initialize friends array
               };
 
               // Check if the current date is before December 1st
@@ -160,7 +161,8 @@
               return db.collection('users').doc(user.uid).set({
                 displayName: "Guest",
                 role: "guest",
-                channels: ["general"]
+                channels: ["general"],
+                friends: [] // Initialize friends array
               });
             }
           }).then(() => window.location.href = 'home.html');

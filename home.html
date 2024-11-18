@@ -185,66 +185,81 @@
 
         // Add friend request functionality
         document.getElementById('send-friend-request').addEventListener('click', async () => {
-            try {
-                const currentUser = firebase.auth().currentUser;
-                if (!currentUser || !profileUserId) {
-                    console.error("Missing user information");
-                    alert('Unable to send friend request - missing user information');
-                    return;
-                }
-
-                console.log("Current User:", currentUser.uid);
-                console.log("Profile User:", profileUserId);
-                
-                // Check if sending request to self
-                if (currentUser.uid === profileUserId) {
-                    alert('You cannot send a friend request to yourself');
-                    return;
-                }
-
-                // Get sender's display name
-                const senderDoc = await db.collection('users').doc(currentUser.uid).get();
-                if (!senderDoc.exists) {
-                    throw new Error("Sender document not found");
-                }
-                const senderData = senderDoc.data();
-                const senderName = senderData.displayName || 'Unknown User';
-
-                // Create friend request document
-                const friendRequestRef = await db.collection('friendRequests').add({
-                    from: currentUser.uid,
-                    to: profileUserId,
-                    status: 'pending',
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                });
-
-                console.log("Friend request created:", friendRequestRef.id);
-
-                // Add notification
-                const inboxRef = await db.collection('inbox').add({
-                    recipientId: profileUserId,
-                    senderId: currentUser.uid,
-                    senderName: senderName,
-                    message: `${senderName} sent you a friend request!`,
-                    type: 'friendRequest',
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                    read: false
-                });
-
-                console.log("Inbox notification created:", inboxRef.id);
-
-                // Update button state
-                const friendRequestBtn = document.getElementById('send-friend-request');
-                friendRequestBtn.textContent = 'Friend Request Sent';
-                friendRequestBtn.disabled = true;
-
-                alert('Friend request sent successfully!');
-                
-            } catch (error) {
-                console.error("Error sending friend request:", error);
-                alert('Failed to send friend request. Please try again. Error: ' + error.message);
+            const currentUser = firebase.auth().currentUser;
+            if (!currentUser || !profileUserId) {
+                alert('Unable to send friend request - missing user information');
+                return;
             }
+
+            // Check if sending request to self
+            if (currentUser.uid === profileUserId) {
+                alert('You cannot send a friend request to yourself');
+                return;
+            }
+
+            // Check if already friends
+            const currentUserDoc = await db.collection('users').doc(currentUser.uid).get();
+            const currentUserData = currentUserDoc.data();
+            if (currentUserData.friends && currentUserData.friends.includes(profileUserId)) {
+                alert('You are already friends with this user');
+                return;
+            }
+
+            // Check if request already sent
+            const existingRequest = await db.collection('friendRequests')
+                .where('from', '==', currentUser.uid)
+                .where('to', '==', profileUserId)
+                .where('status', '==', 'pending')
+                .get();
+
+            if (!existingRequest.empty) {
+                alert('You have already sent a friend request to this user');
+                return;
+            }
+
+            // Create friend request document
+            await db.collection('friendRequests').add({
+                from: currentUser.uid,
+                to: profileUserId,
+                status: 'pending',
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            // Add notification to recipient's inbox
+            const senderName = currentUserData.displayName || 'Unknown User';
+            await db.collection('inbox').add({
+                recipientId: profileUserId,
+                senderId: currentUser.uid,
+                senderName: senderName,
+                message: `${senderName} sent you a friend request!`,
+                type: 'friendRequest',
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                read: false
+            });
+
+            alert('Friend request sent successfully!');
         });
+
+        async function acceptFriendRequest(requestId) {
+            const requestDoc = await db.collection('friendRequests').doc(requestId).get();
+            if (requestDoc.exists) {
+                const requestData = requestDoc.data();
+                const currentUser = firebase.auth().currentUser;
+
+                // Update both users' friends arrays
+                await db.collection('users').doc(currentUser.uid).update({
+                    friends: firebase.firestore.FieldValue.arrayUnion(requestData.from)
+                });
+                await db.collection('users').doc(requestData.from).update({
+                    friends: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
+                });
+
+                // Remove the friend request
+                await db.collection('friendRequests').doc(requestId).delete();
+
+                alert('Friend request accepted!');
+            }
+        }
     </script>
 </body>
 </html>
