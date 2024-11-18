@@ -37,11 +37,16 @@
                 <button class="add-channel-btn" id="add-channel">Add Channel</button>
                 <button class="join-channel-btn" id="join-channel">Join Channel</button>
                 <button class="leave-channel-btn" id="leave-channel">Leave Channel</button>
-                <!-- Friends Section -->
- <div class="friends-section">
-    <h3>Your Friends</h3>
-     <ul class="friends-list" id="friends-list"></ul>
-    </div>
+            </div>
+
+            <!-- Friends Section -->
+            <div class="friends-section">
+                <h3>------------- Friends -------------</h3>
+                <ul class="friends-list" id="friends-list">
+                    <li style="text-align: center; padding: 10px; color: #666; font-size: 12px;">
+                        No friends yet! Click the Inbox button to find new friends.
+                    </li>
+                </ul>
             </div>
 
             <div class="user-profile">
@@ -198,22 +203,80 @@
             const friendsList = document.getElementById('friends-list');
             friendsList.innerHTML = ''; // Clear previous friends
 
-            // Fetch user data to get friends
-            const userDoc = await db.collection('users').doc(userId).get();
-            if (userDoc.exists) {
-                const userData = userDoc.data();
-                const friends = userData.friends || []; // Get friends array
+            try {
+                const userDoc = await db.collection('users').doc(userId).get();
+                if (userDoc.exists) {
+                    const userData = userDoc.data();
+                    const friends = userData.friends || [];
 
-                // Loop through friends and display them
-                for (const friendId of friends) {
-                    const friendDoc = await db.collection('users').doc(friendId).get();
-                    if (friendDoc.exists) {
-                        const friendData = friendDoc.data();
-                        const friendItem = document.createElement('li');
-                        friendItem.textContent = friendData.displayName || 'Unknown User';
-                        friendsList.appendChild(friendItem);
+                    if (friends.length === 0) {
+                        const noFriendsItem = document.createElement('li');
+                        noFriendsItem.style.textAlign = 'center';
+                        noFriendsItem.style.padding = '10px';
+                        noFriendsItem.style.color = '#666';
+                        noFriendsItem.innerHTML = 'No friends yet!<br>Click the Inbox button to find new friends.';
+                        friendsList.appendChild(noFriendsItem);
+                        return;
+                    }
+
+                    for (const friendId of friends) {
+                        const friendDoc = await db.collection('users').doc(friendId).get();
+                        if (friendDoc.exists) {
+                            const friendData = friendDoc.data();
+                            const friendItem = document.createElement('li');
+                            friendItem.className = 'friend-item';
+                            
+                            // Create friend container
+                            const friendContainer = document.createElement('div');
+                            friendContainer.className = 'friend-container';
+                            friendContainer.style.display = 'flex';
+                            friendContainer.style.alignItems = 'center';
+                            friendContainer.style.gap = '10px';
+                            friendContainer.style.padding = '5px';
+                            friendContainer.style.cursor = 'pointer';
+
+                            // Add friend avatar
+                            const avatar = document.createElement('img');
+                            avatar.src = friendData.photoURL || 'assets/default-avatar.png';
+                            avatar.alt = 'Friend avatar';
+                            avatar.style.width = '30px';
+                            avatar.style.height = '30px';
+                            avatar.style.borderRadius = '50%';
+
+                            // Add friend name
+                            const nameSpan = document.createElement('span');
+                            nameSpan.textContent = friendData.displayName || 'Unknown User';
+                            nameSpan.style.flex = '1';
+
+                            // Add elements to container
+                            friendContainer.appendChild(avatar);
+                            friendContainer.appendChild(nameSpan);
+
+                            // Add click event to open chat or profile
+                            friendContainer.addEventListener('click', () => {
+                                // Add your logic here to open chat or profile
+                                console.log(`Clicked on friend: ${friendData.displayName}`);
+                            });
+
+                            // Add hover effect
+                            friendContainer.addEventListener('mouseover', () => {
+                                friendContainer.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+                            });
+                            friendContainer.addEventListener('mouseout', () => {
+                                friendContainer.style.backgroundColor = 'transparent';
+                            });
+
+                            friendItem.appendChild(friendContainer);
+                            friendsList.appendChild(friendItem);
+                        }
                     }
                 }
+            } catch (error) {
+                console.error("Error loading friends:", error);
+                const errorItem = document.createElement('li');
+                errorItem.textContent = 'Error loading friends';
+                errorItem.style.color = 'red';
+                friendsList.appendChild(errorItem);
             }
         }
 
