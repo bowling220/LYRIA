@@ -434,9 +434,17 @@
 
         async function handleFriendRequest(requestId, action, senderId) {
             const currentUser = firebase.auth().currentUser;
-            
+
             try {
                 if (action === 'accept') {
+                    // Fetch the friend request document
+                    const requestDoc = await db.collection('friendRequests').doc(requestId).get();
+                    if (!requestDoc.exists) {
+                        throw new Error("Friend request not found");
+                    }
+
+                    const requestData = requestDoc.data();
+
                     // Add users as friends in both user documents
                     await db.collection('users').doc(currentUser.uid).update({
                         friends: firebase.firestore.FieldValue.arrayUnion(senderId)
@@ -445,15 +453,15 @@
                         friends: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
                     });
                 }
-                
+
                 // Delete the friend request
                 await db.collection('friendRequests').doc(requestId).delete();
-                
+
                 // Refresh the friend requests display
                 loadFriendRequests(currentUser.uid);
             } catch (error) {
                 console.error("Error handling friend request:", error);
-                alert('Error processing friend request');
+                alert('Error processing friend request: ' + error.message);
             }
         }
 
