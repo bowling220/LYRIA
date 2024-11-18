@@ -883,34 +883,30 @@ window.addEventListener('load', () => {
 firebase.auth().onAuthStateChanged(user => {
     if (user) {
         const userId = user.uid;
-        // Fetch user data from Firestore
-        db.collection('users').doc(userId).get().then(doc => {
+        const userDocRef = db.collection('users').doc(userId);
+
+        // Fetch and display user data
+        userDocRef.get().then(doc => {
             if (doc.exists) {
                 const userData = doc.data();
                 document.getElementById('user-name').textContent = userData.displayName;
-                document.getElementById('user-avatar').src = userData.photoURL;
-                document.getElementById('bio-input').value = userData.bio || "Coming Soon"; // Set the bio input value
-                // Check for the Beta badge
-                if (userData.badges && userData.badges.includes("Beta.png")) {
-                    document.getElementById('user-badge').style.display = 'inline'; // Show the badge
-                } else {
-                    document.getElementById('user-badge').style.display = 'none'; // Hide the badge if not present
-                }
+                document.getElementById('user-avatar').src = userData.photoURL || 'assets/icon.png';
+                document.getElementById('bio-input').value = userData.bio || "No bio set."; // Set the current user's bio
             } else {
-                console.log("No such document!");
+                console.log("No such document for the user.");
             }
         }).catch(error => {
-            console.error("Error getting document:", error);
+            console.error("Error fetching user document:", error);
         });
-        // Update Bio
+
+        // Update bio when the user saves it
         document.getElementById('update-bio').addEventListener('click', () => {
             const newBio = document.getElementById('bio-input').value.trim();
+
             if (newBio) {
-                db.collection('users').doc(userId).update({
-                    bio: newBio
-                }).then(() => {
+                userDocRef.update({ bio: newBio }).then(() => {
                     alert('Bio updated successfully!');
-                    // Optionally, update the profile modal bio
+                    // Optionally, update the displayed bio in the modal or profile section
                     document.getElementById('profile-modal-bio').textContent = newBio;
                 }).catch(error => {
                     console.error("Error updating bio:", error);
@@ -921,10 +917,11 @@ firebase.auth().onAuthStateChanged(user => {
             }
         });
     } else {
-        // No user is signed in, redirect to login
+        // Redirect to login if no user is signed in
         window.location.href = 'login.html';
     }
 });
+ 
 
 function assignAllBadgesToUser(userId) {
     const badges = ['admin', 'DevBadge', 'Mod', 'EarlyAccess']; // List of all badges you want to assign
