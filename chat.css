@@ -1196,3 +1196,48 @@ textarea {
     border-radius: 50%;
     margin-right: 4px; /* Reduced from 8px */
 }
+
+/* Friends List Styles */
+.friends-section {
+    padding: 10px; /* Padding around the friends section */
+    background-color: var(--primary-color); /* Background color to match the app */
+    border-radius: 8px; /* Rounded corners */
+    margin-top: 10px; /* Space above the friends section */
+}
+
+.friends-section h3 {
+    font-size: 1.2rem; /* Font size for the section title */
+    color: var(--text-color); /* Text color for the title */
+    margin-bottom: 10px; /* Space below the title */
+}
+
+.friends-list {
+    list-style: none; /* Remove default list styling */
+    padding: 0; /* Remove padding */
+    margin: 0; /* Remove margin */
+}
+
+.friends-list li {
+    display: flex; /* Use flexbox for alignment */
+    align-items: center; /* Center items vertically */
+    padding: 8px; /* Padding for each friend item */
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1); /* Light border for separation */
+    transition: background-color 0.3s; /* Smooth transition for hover effect */
+}
+
+.friends-list li:hover {
+    background-color: rgba(255, 255, 255, 0.1); /* Light background on hover */
+}
+
+.friend-avatar {
+    width: 40px; /* Set width for friend avatar */
+    height: 40px; /* Set height for friend avatar */
+    border-radius: 50%; /* Make the avatar circular */
+    margin-right: 10px; /* Space between avatar and name */
+}
+
+.friend-name {
+    font-size: 1rem; /* Font size for friend name */
+    color: var(--text-color); /* Text color for friend name */
+    font-weight: bold; /* Make the name bold */
+}
