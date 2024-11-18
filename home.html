@@ -150,7 +150,7 @@
             mobileMessage.style.display = 'none';
         });
 
-        let selectedUserId = null; // Store the ID of the user whose profile is being viewed
+        let profileUserId = null; // Store the ID of the user whose profile is being viewed
 
         // Assuming you have already initialized Firebase and authenticated the user
         firebase.auth().onAuthStateChanged(user => {
@@ -185,15 +185,10 @@
 
         // Add friend request functionality
         document.getElementById('send-friend-request').addEventListener('click', async () => {
-            if (!selectedUserId || !firebase.auth().currentUser) {
-                alert('Please select a user to send a friend request to');
-                return;
-            }
-            
             const currentUser = firebase.auth().currentUser;
             
             // Check if sending request to self
-            if (currentUser.uid === selectedUserId) {
+            if (currentUser.uid === profileUserId) {
                 alert('You cannot send a friend request to yourself');
                 return;
             }
@@ -201,7 +196,7 @@
             // Check if already friends
             const currentUserDoc = await db.collection('users').doc(currentUser.uid).get();
             const currentUserData = currentUserDoc.data();
-            if (currentUserData.friends && currentUserData.friends.includes(selectedUserId)) {
+            if (currentUserData.friends && currentUserData.friends.includes(profileUserId)) {
                 alert('You are already friends with this user');
                 return;
             }
@@ -209,7 +204,7 @@
             // Check if request already sent
             const existingRequest = await db.collection('friendRequests')
                 .where('from', '==', currentUser.uid)
-                .where('to', '==', selectedUserId)
+                .where('to', '==', profileUserId)
                 .where('status', '==', 'pending')
                 .get();
 
@@ -226,14 +221,14 @@
                 // Create friend request document
                 await db.collection('friendRequests').add({
                     from: currentUser.uid,
-                    to: selectedUserId,
+                    to: profileUserId,
                     status: 'pending',
                     timestamp: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
                 // Add notification to recipient's inbox
                 await db.collection('inbox').add({
-                    recipientId: selectedUserId,
+                    recipientId: profileUserId,
                     senderId: currentUser.uid,
                     senderName: senderName,
                     message: `${senderName} sent you a friend request!`,
