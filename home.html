@@ -43,15 +43,13 @@
             <div class="friends-section">
                 <h3>------------- Friends -------------</h3>
                 <ul class="friends-list" id="friends-list">
-                    <li style="text-align: center; padding: 10px; color: #666; font-size: 12px;">
-                        No friends yet! Click the Inbox button to find new friends.
-                    </li>
+                    Loading friends...
                 </ul>
             </div>
 
             <div class="user-profile">
-                <img class="avatar" id="user-avatar" src="https://s1.ezgif.com/tmp/ezgif-1-89965b355d.png" alt="User avatar">
-                <span class="username" id="user-name">Username</span>
+                <img class="avatar" id="user-avatar" src="assets/icon.png" alt="User avatar">
+                <span class="username" id="user-name">User</span>
                 <button class="settings-btn" id="settings-btn">Settings</button>
             </div>
 
@@ -80,7 +78,7 @@
             <img id="profile-modal-image" src="assets/icon.png" alt="User Avatar">
             <h2 id="profile-modal-name">User Name</h2>
             <div id="profile-modal-badges" class="badges-container"></div>
-            <p id="profile-modal-bio">Update Your Bio In Settings</p>
+            <p id="profile-modal-bio">Edit Your Bio In Settings</p>
             <button id="send-friend-request" class="action-btn">Send Friend Request</button>
             <button id="close-profile-modal">Close</button>
         </div>
@@ -109,7 +107,7 @@
         <!-- Update Bio Section -->
         <div class="modal-section">
             <label for="bio-input" class="modal-label">Update Bio:</label>
-            <input type="text" id="bio-input" class="modal-input" placeholder="Enter new bio" value="Coming Soon">
+            <input type="text" id="bio-input" class="modal-input" placeholder="Enter new bio" value="Im Admin">
             <button id="update-bio" class="action-btn">Update Bio</button>
         </div>
 
@@ -176,12 +174,14 @@
                         const userData = doc.data();
                         document.getElementById('user-name').textContent = userData.displayName;
                         document.getElementById('user-avatar').src = userData.photoURL;
-
-                        // Check for the Beta badge
-                        if (userData.badges && userData.badges.includes("Beta.png")) {
-                            document.getElementById('user-badge').style.display = 'inline'; // Show the badge
-                        } else {
-                            document.getElementById('user-badge').style.display = 'none'; // Hide the badge if not present
+                        
+                        // Set initial values for settings
+                        document.getElementById('notifications-toggle').checked = userData.notificationsEnabled || false;
+                        document.getElementById('bio-input').value = userData.bio || '';
+                        
+                        // Set dark mode based on user preference
+                        if (userData.darkMode) {
+                            document.body.classList.add('dark-mode');
                         }
 
                         // Load friends
@@ -198,144 +198,52 @@
             }
         });
 
-        // Function to load friends
-        async function loadFriends(userId) {
-            const friendsList = document.getElementById('friends-list');
-            friendsList.innerHTML = ''; // Clear previous friends
+        // Function to load friends with images and names
+        // Function to load friends with images and names
+async function loadFriends(userId) {
+    const friendsList = document.getElementById('friends-list');
+    friendsList.innerHTML = ''; // Clear previous content
 
-            try {
-                const userDoc = await db.collection('users').doc(userId).get();
-                if (userDoc.exists) {
-                    const userData = userDoc.data();
-                    const friends = userData.friends || [];
+    try {
+        // Get the current user's document
+        const userDoc = await db.collection('users').doc(userId).get();
 
-                    if (friends.length === 0) {
-                        const noFriendsItem = document.createElement('li');
-                        noFriendsItem.style.textAlign = 'center';
-                        noFriendsItem.style.padding = '10px';
-                        noFriendsItem.style.color = '#666';
-                        noFriendsItem.innerHTML = 'No friends yet!<br>Click the Inbox button to find new friends.';
-                        friendsList.appendChild(noFriendsItem);
-                        return;
-                    }
+        if (userDoc.exists) {
+            const userData = userDoc.data();
+            const friends = userData.friends || []; // Get the friends array
 
-                    for (const friendId of friends) {
-                        const friendDoc = await db.collection('users').doc(friendId).get();
-                        if (friendDoc.exists) {
-                            const friendData = friendDoc.data();
-                            const friendItem = document.createElement('li');
-                            friendItem.className = 'friend-item';
-                            
-                            // Create friend container
-                            const friendContainer = document.createElement('div');
-                            friendContainer.className = 'friend-container';
-                            friendContainer.style.display = 'flex';
-                            friendContainer.style.alignItems = 'center';
-                            friendContainer.style.gap = '10px';
-                            friendContainer.style.padding = '5px';
-                            friendContainer.style.cursor = 'pointer';
+            if (friends.length === 0) {
+                friendsList.innerHTML = '<li>No friends added yet.</li>';
+                return;
+            }
 
-                            // Add friend avatar
-                            const avatar = document.createElement('img');
-                            avatar.src = friendData.photoURL || 'assets/default-avatar.png';
-                            avatar.alt = 'Friend avatar';
-                            avatar.style.width = '30px';
-                            avatar.style.height = '30px';
-                            avatar.style.borderRadius = '50%';
+            // Loop through each friend's ID
+            for (const friendId of friends) {
+                // Fetch friend's details from the users collection
+                const friendDoc = await db.collection('users').doc(friendId).get();
+                if (friendDoc.exists) {
+                    const friendData = friendDoc.data();
+                    const friendName = friendData.displayName || 'Unknown Friend';
+                    const friendAvatar = friendData.photoURL || 'default-avatar.png';
 
-                            // Add friend name
-                            const nameSpan = document.createElement('span');
-                            nameSpan.textContent = friendData.displayName || 'Unknown User';
-                            nameSpan.style.flex = '1';
-
-                            // Add elements to container
-                            friendContainer.appendChild(avatar);
-                            friendContainer.appendChild(nameSpan);
-
-                            // Add click event to open chat or profile
-                            friendContainer.addEventListener('click', () => {
-                                // Add your logic here to open chat or profile
-                                console.log(`Clicked on friend: ${friendData.displayName}`);
-                            });
-
-                            // Add hover effect
-                            friendContainer.addEventListener('mouseover', () => {
-                                friendContainer.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
-                            });
-                            friendContainer.addEventListener('mouseout', () => {
-                                friendContainer.style.backgroundColor = 'transparent';
-                            });
-
-                            friendItem.appendChild(friendContainer);
-                            friendsList.appendChild(friendItem);
-                        }
-                    }
+                    // Add the friend's information to the list
+                    const listItem = document.createElement('li');
+                    listItem.innerHTML = `
+                        <img src="${friendAvatar}" alt="${friendName}" class="friend-avatar">
+                        <span class="friend-name">${friendName}</span>
+                    `;
+                    friendsList.appendChild(listItem);
                 }
-            } catch (error) {
-                console.error("Error loading friends:", error);
-                const errorItem = document.createElement('li');
-                errorItem.textContent = 'Error loading friends';
-                errorItem.style.color = 'red';
-                friendsList.appendChild(errorItem);
             }
+        } else {
+            friendsList.innerHTML = '<li>No user data found.</li>';
         }
+    } catch (error) {
+        console.error('Error loading friends:', error);
+        friendsList.innerHTML = '<li>Failed to load friends.</li>';
+    }
+}
 
-        // Add friend request functionality
-        document.getElementById('send-friend-request').addEventListener('click', async () => {
-            const currentUser = firebase.auth().currentUser;
-            if (!currentUser || !profileUserId) {
-                alert('Unable to send friend request - missing user information');
-                return;
-            }
-
-            // Check if sending request to self
-            if (currentUser.uid === profileUserId) {
-                alert('You cannot send a friend request to yourself');
-                return;
-            }
-
-            // Check if already friends
-            const currentUserDoc = await db.collection('users').doc(currentUser.uid).get();
-            const currentUserData = currentUserDoc.data();
-            if (currentUserData.friends && currentUserData.friends.includes(profileUserId)) {
-                alert('You are already friends with this user');
-                return;
-            }
-
-            // Check if request already sent
-            const existingRequest = await db.collection('friendRequests')
-                .where('from', '==', currentUser.uid)
-                .where('to', '==', profileUserId)
-                .where('status', '==', 'pending')
-                .get();
-
-            if (!existingRequest.empty) {
-                alert('You have already sent a friend request to this user');
-                return;
-            }
-
-            // Create friend request document
-            await db.collection('friendRequests').add({
-                from: currentUser.uid,
-                to: profileUserId,
-                status: 'pending',
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            });
-
-            // Add notification to recipient's inbox
-            const senderName = currentUserData.displayName || 'Unknown User';
-            await db.collection('inbox').add({
-                recipientId: profileUserId,
-                senderId: currentUser.uid,
-                senderName: senderName,
-                message: `${senderName} sent you a friend request!`,
-                type: 'friendRequest',
-                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                read: false
-            });
-
-            alert('Friend request sent successfully!');
-        });
 
         async function acceptFriendRequest(requestId) {
             const requestDoc = await db.collection('friendRequests').doc(requestId).get();
