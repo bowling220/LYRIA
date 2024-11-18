@@ -186,15 +186,22 @@ function setupUIEventListeners() {
     // Update Bio
     document.getElementById('update-bio').addEventListener('click', () => {
         const newBio = document.getElementById('bio-input').value.trim();
-        if(newBio) {
-            db.collection('users').doc(currentUser.uid).update({
+        if (newBio) {
+            // Ensure userDocRef is pointing to the current user's document
+            const userDocRef = db.collection('users').doc(currentUser.uid);
+            
+            userDocRef.update({
                 bio: newBio
             }).then(() => {
                 alert('Bio updated successfully!');
+                // Optionally, update the displayed bio in the modal or profile section
+                document.getElementById('profile-modal-bio').textContent = newBio;
             }).catch(error => {
                 console.error("Error updating bio:", error);
-                alert('Failed to update bio');
+                alert('Failed to update bio.');
             });
+        } else {
+            alert('Bio cannot be empty.');
         }
     });
 
