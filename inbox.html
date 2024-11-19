@@ -9,10 +9,10 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
-            background-color: #36393f;
-            color: #dcddde;
+            background-color: #2c2f33;
+            color: #ffffff;
             display: flex;
             flex-direction: column;
             height: 100vh;
@@ -20,98 +20,116 @@
         }
 
         .top-header {
-            background-color: #202225;
-            padding: 1rem;
-            font-size: 1.2rem;
-            font-weight: bold;
+            background-color: #23272a;
+            padding: 1.2rem;
+            font-size: 1.3rem;
+            font-weight: 600;
             text-align: center;
-            color: #fff;
+            color: #ffffff;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
         }
 
         .back-btn {
             background: none;
             border: none;
-            color: #fff;
+            color: #ffffff;
             cursor: pointer;
-            font-size: 1rem;
-            padding: 5px 10px;
+            font-size: 1.2rem;
+            padding: 8px 15px;
+            transition: transform 0.2s;
+        }
+
+        .back-btn:hover {
+            transform: scale(1.1);
         }
 
         .inbox-area {
-            padding: 20px;
-            background-color: #2f3136;
+            padding: 25px;
+            background-color: #2c2f33;
             height: 100%;
             overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #202225 #2c2f33;
         }
 
         .inbox-message {
-            background-color: #32353b;
-            margin-bottom: 10px;
-            padding: 15px;
-            border-radius: 5px;
+            background-color: #36393f;
+            margin-bottom: 15px;
+            padding: 20px;
+            border-radius: 8px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
 
         .inbox-message:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
 
         .inbox-message div {
             flex: 1;
+            font-size: 1.1rem;
         }
 
         .friend-request-actions {
             display: flex;
-            gap: 10px;
+            gap: 15px;
         }
 
         .accept-btn, .decline-btn {
-            padding: 10px 15px;
+            padding: 12px 20px;
             border: none;
-            border-radius: 5px;
+            border-radius: 6px;
             cursor: pointer;
-            font-size: 0.9rem;
-            transition: all 0.2s;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .accept-btn {
             background-color: #43b581;
-            color: #fff;
+            color: #ffffff;
         }
 
         .accept-btn:hover {
             background-color: #3ca374;
             transform: scale(1.05);
+            box-shadow: 0 2px 8px rgba(67,181,129,0.4);
         }
 
         .decline-btn {
-            background-color: #e74c3c;
-            color: #fff;
+            background-color: #f04747;
+            color: #ffffff;
         }
 
         .decline-btn:hover {
-            background-color: #d44232;
+            background-color: #dc4242;
             transform: scale(1.05);
+            box-shadow: 0 2px 8px rgba(240,71,71,0.4);
         }
 
         .no-requests {
             text-align: center;
-            color: #888;
-            padding: 2rem;
-            font-size: 1.1rem;
+            color: #99aab5;
+            padding: 3rem;
+            font-size: 1.2rem;
+            font-weight: 500;
         }
 
         .loading {
             text-align: center;
-            color: #fff;
-            padding: 2rem;
+            color: #ffffff;
+            padding: 3rem;
+            font-size: 1.2rem;
+            font-weight: 500;
         }
 
         .loading::after {
@@ -126,12 +144,32 @@
         }
 
         .error-message {
-            background-color: #f0506e;
+            background-color: #f04747;
             color: white;
-            padding: 1rem;
-            border-radius: 5px;
-            margin: 1rem 0;
+            padding: 1.2rem;
+            border-radius: 8px;
+            margin: 1.2rem 0;
             text-align: center;
+            font-weight: 500;
+            box-shadow: 0 2px 10px rgba(240,71,71,0.3);
+        }
+
+        /* Custom scrollbar for webkit browsers */
+        .inbox-area::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .inbox-area::-webkit-scrollbar-track {
+            background: #2c2f33;
+        }
+
+        .inbox-area::-webkit-scrollbar-thumb {
+            background: #202225;
+            border-radius: 4px;
+        }
+
+        .inbox-area::-webkit-scrollbar-thumb:hover {
+            background: #18191c;
         }
     </style>
 </head>
@@ -144,6 +182,7 @@
     <main class="inbox-area" id="inbox-messages">
         <div class="loading">Loading friend requests</div>
     </main>
+
 
     <script>
         // Initialize Firebase
@@ -187,9 +226,9 @@
                     return;
                 }
 
-                // Real-time listener for friend requests
+                // Real-time listener for friend requests and accepted requests
                 const unsubscribe = db.collection("friendRequests")
-                    .where("to", "==", userId)
+                    .where("to", "in", [userId, "accepted_" + userId])
                     .onSnapshot(async (snapshot) => {
                         inboxContainer.innerHTML = "";
                         
@@ -218,26 +257,30 @@
                             messageElement.className = "inbox-message";
 
                             const messageText = document.createElement("div");
-                            messageText.textContent = `${request.fromName} sent you a friend request!`;
+                            if (request.to === userId) {
+                                messageText.textContent = `${request.fromName} sent you a friend request!`;
 
-                            const actions = document.createElement("div");
-                            actions.className = "friend-request-actions";
+                                const actions = document.createElement("div");
+                                actions.className = "friend-request-actions";
 
-                            const acceptButton = document.createElement("button");
-                            acceptButton.className = "accept-btn";
-                            acceptButton.textContent = "Accept";
-                            acceptButton.onclick = () => handleFriendRequest(request.id, "accept", request.from, userId);
+                                const acceptButton = document.createElement("button");
+                                acceptButton.className = "accept-btn";
+                                acceptButton.textContent = "Accept";
+                                acceptButton.onclick = () => handleFriendRequest(request.id, "accept", request.from, userId);
 
-                            const declineButton = document.createElement("button");
-                            declineButton.className = "decline-btn";
-                            declineButton.textContent = "Decline";
-                            declineButton.onclick = () => handleFriendRequest(request.id, "decline", request.from, userId);
+                                const declineButton = document.createElement("button");
+                                declineButton.className = "decline-btn";
+                                declineButton.textContent = "Decline";
+                                declineButton.onclick = () => handleFriendRequest(request.id, "decline", request.from, userId);
 
-                            actions.appendChild(acceptButton);
-                            actions.appendChild(declineButton);
+                                actions.appendChild(acceptButton);
+                                actions.appendChild(declineButton);
+                                messageElement.appendChild(actions);
+                            } else {
+                                messageText.textContent = `${request.fromName} accepted your friend request!`;
+                            }
 
                             messageElement.appendChild(messageText);
-                            messageElement.appendChild(actions);
                             inboxContainer.appendChild(messageElement);
                         });
                     }, error => {
@@ -290,8 +333,11 @@
                         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
 
-                    // Delete the friend request
-                    batch.delete(db.collection("friendRequests").doc(requestId));
+                    // Update the friend request to show it's accepted
+                    batch.update(db.collection("friendRequests").doc(requestId), {
+                        to: "accepted_" + senderId,
+                        acceptedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
 
                     // Commit the batch
                     await batch.commit();
@@ -318,6 +364,8 @@
 
         // Load friend requests when page loads
         document.addEventListener('DOMContentLoaded', loadFriendRequests);
+
+        
     </script>
 </body>
 </html>
