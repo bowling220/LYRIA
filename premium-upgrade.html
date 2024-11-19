@@ -60,8 +60,10 @@
             text-decoration: underline;
         }
         .premium-image {
-            width: 100%;
-            max-width: 300px;
+            margin-top: 50px;
+            width: 40%; /* Set width to 40% of the container */
+            max-width: 150px; /* Set a maximum width */
+            height: auto; /* Maintain aspect ratio */
             margin-bottom: 20px;
         }
         .tier-selection {
@@ -80,11 +82,15 @@
             font-size: 1.2rem;
             color: #ffcc00; /* Highlight color for pricing info */
         }
+        #payment-form {
+            display: none; /* Initially hidden */
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <img src="premium.png" alt="Premium Upgrade" class="premium-image">
+        <img src="assets/premium.png" alt="Premium Upgrade" class="premium-image">
         <h1>Upgrade to Premium</h1>
         <p>Unlock exclusive features and enhance your experience with LYRIA Chat!</p>
         
@@ -97,7 +103,6 @@
             <li>And Much More!</li>
         </ul>
 
-        
         <h2>Choose Your Premium Tier:</h2>
         <div class="tier-selection">
             <label>
@@ -113,12 +118,20 @@
             <p id="selected-yearly-price">Yearly Subscription: $20.00 (Save 16.67%)</p>
         </div>
 
-        <button class="upgrade-btn" id="confirm-upgrade">Upgrade Now</button>
-        <p id="payment-message" style="color: #ffcc00; margin-top: 10px;"></p>
+        <button class="upgrade-btn" id="show-payment-form">Upgrade Now</button>
+        
+        <!-- Payment Form -->
+        <div id="payment-form">
+            <div id="card-container"></div>
+            <button id="confirm-payment" class="upgrade-btn">Confirm Payment</button>
+            <p id="payment-message" style="color: #ffcc00; margin-top: 10px;"></p>
+        </div>
 
         <button class="back-btn" onclick="window.history.back()">Back to Settings</button>
     </div>
 
+    <!-- Square Payment Form -->
+    <script src="https://js.squareup.com/v2/paymentform"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
@@ -138,61 +151,82 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // Add an authentication state observer
-        firebase.auth().onAuthStateChanged((user) => {
-            document.getElementById('confirm-upgrade').disabled = !user; // Disable button if not logged in
+        // Show payment form when the button is clicked
+        document.getElementById('show-payment-form').addEventListener('click', function() {
+            document.getElementById('payment-form').style.display = 'block';
+            initializeSquarePaymentForm();
         });
 
-        // Update pricing info based on selected tier
-        const pricingInfo = document.getElementById('pricing-info');
-        const selectedPrice = document.getElementById('selected-price');
-        const selectedYearlyPrice = document.getElementById('selected-yearly-price');
-        const radioButtons = document.querySelectorAll('input[name="premium-tier"]');
-
-        radioButtons.forEach(radio => {
-            radio.addEventListener('change', () => {
-                if (radio.value === 'premium') {
-                    selectedPrice.textContent = 'You have selected the Premium Tier at $3.00/month.';
-                    selectedYearlyPrice.textContent = 'Yearly Subscription: $36.00 (Save 16.67%)'; // Adjusted yearly price for premium
-                } else {
-                    selectedPrice.textContent = 'You have selected the Basic Tier at $1.67/month.';
-                    selectedYearlyPrice.textContent = 'Yearly Subscription: $20.00 (Save 16.67%)'; // Yearly price for basic
+        // Initialize Square Payment Form
+        function initializeSquarePaymentForm() {
+            const paymentForm = new SqPaymentForm({
+                applicationId: 'sq0idp-LlgStCJs7e3hXxkAiwhDRQ', // Replace with your Square Application ID
+                inputClass: 'sq-input',
+                autoBuild: false,
+                // Customize the CSS for the payment form
+                inputStyles: [{
+                    fontSize: '16px',
+                    padding: '10px',
+                    color: '#000',
+                    backgroundColor: '#fff',
+                    border: '1px solid #ccc',
+                    borderRadius: '5px',
+                }],
+                // Define the card input fields
+                card: {
+                    elementId: 'card-container',
+                    placeholder: 'Card Number',
+                },
+                // Callback functions
+                callbacks: {
+                    cardNonceResponseReceived: function(errors, nonce) {
+                        if (errors) {
+                            console.error('Errors:', errors);
+                            return;
+                        }
+                        processPayment(nonce);
+                    }
                 }
             });
-        });
+            paymentForm.build();
+        }
 
-        document.getElementById('confirm-upgrade').addEventListener('click', async () => {
+        // Process the payment
+        async function processPayment(nonce) {
             const currentUser = firebase.auth().currentUser;
             if (!currentUser) {
                 alert('You must be logged in to upgrade your account.');
                 return;
             }
 
-            const selectedTier = document.querySelector('input[name="premium-tier"]:checked').value; // Get selected tier
-            const paymentMessage = document.getElementById('payment-message');
-            paymentMessage.textContent = 'Processing your upgrade...';
+            const selectedTier = document.querySelector('input[name="premium-tier"]:checked').value;
+            const amount = selectedTier === 'premium' ? '3.00' : '1.67'; // Set amount based on selected tier
 
-            // Simulate a payment process
-            setTimeout(async () => {
-                try {
-                    // Update Firestore to set isPremium and tier
-                    await db.collection('users').doc(currentUser.uid).update({
-                        isPremium: true,
-                        premiumTier: selectedTier // Store the selected tier
-                    });
+            // Send the nonce to your server to process the payment
+            const response = await fetch('/process-payment', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ nonce, amount, userId: currentUser.uid }),
+            });
 
-                    paymentMessage.textContent = 'Thank you for your purchase! Your account has been upgraded to Premium.';
-                    
-                    // Redirect to the home page after a short delay
-                    setTimeout(() => {
-                        window.location.href = 'home.html'; // Redirect to home page after upgrade
-                    }, 3000); // Redirect after 3 seconds
-                } catch (error) {
-                    console.error('Error updating premium status:', error);
-                    paymentMessage.textContent = 'Failed to upgrade your account. Please try again.';
-                }
-            }, 2000); // Simulate a 2-second upgrade processing time
-        });
+            const result = await response.json();
+            if (result.success) {
+                document.getElementById('payment-message').textContent = 'Thank you for your purchase! Your account has been upgraded to Premium.';
+                // Update Firestore to set isPremium and tier
+                await db.collection('users').doc(currentUser.uid).update({
+                    isPremium: true,
+                    premiumTier: selectedTier // Store the selected tier
+                });
+                // Redirect to the home page after a short delay
+                setTimeout(() => {
+                    window.location.href = 'home.html'; // Redirect to home page after upgrade
+                }, 3000); // Redirect after 3 seconds
+            } else {
+                document.getElementById('payment-message').textContent = 'Payment failed. Please try again.';
+            }
+        }
     </script>
 </body>
 </html>
