@@ -1158,3 +1158,83 @@ document.getElementById('update-bio-btn').addEventListener('click', () => {
     }
 });
 
+async function loadFriendRequests(userId) {
+    const inboxMessagesContainer = document.getElementById('inbox-messages');
+    inboxMessagesContainer.innerHTML = ''; // Clear previous content
+
+    console.log("Loading friend requests for user:", userId); // Debug log
+
+    try {
+        const snapshot = await db.collection('friendRequests')
+            .where('to', '==', userId)
+            .get();
+
+        console.log("Friend request snapshot:", snapshot); // Debug log
+
+        if (snapshot.empty) {
+            console.log("No friend requests found."); // Debug log
+            inboxMessagesContainer.innerHTML = '<div class="no-requests">No Friend Requests</div>';
+            return;
+        }
+
+        const promises = snapshot.docs.map(async (doc) => {
+            const requestData = doc.data();
+            console.log('Request data:', requestData); // Debug log
+
+            try {
+                const senderDoc = await db.collection('users').doc(requestData.from).get();
+                if (!senderDoc.exists) {
+                    console.log('Sender document not found:', requestData.from); // Debug log
+                    return null;
+                }
+
+                const senderData = senderDoc.data();
+                console.log('Sender data:', senderData); // Debug log
+
+                const messageElement = document.createElement('div');
+                messageElement.className = 'inbox-message';
+
+                const messageContent = document.createElement('div');
+                messageContent.textContent = `${senderData.displayName || 'Unknown User'} sent you a friend request!`;
+
+                const actionButtons = document.createElement('div');
+                actionButtons.className = 'friend-request-actions';
+
+                const acceptButton = document.createElement('button');
+                acceptButton.className = 'accept-btn';
+                acceptButton.textContent = 'Accept';
+                acceptButton.onclick = () => handleFriendRequest(doc.id, 'accept', requestData.from);
+
+                const declineButton = document.createElement('button');
+                declineButton.className = 'decline-btn';
+                declineButton.textContent = 'Decline';
+                declineButton.onclick = () => handleFriendRequest(doc.id, 'decline', requestData.from);
+
+                actionButtons.appendChild(acceptButton);
+                actionButtons.appendChild(declineButton);
+
+                messageElement.appendChild(messageContent);
+                messageElement.appendChild(actionButtons);
+
+                return messageElement;
+            } catch (error) {
+                console.error('Error processing friend request:', error);
+                return null;
+            }
+        });
+
+        const messageElements = await Promise.all(promises);
+        messageElements
+            .filter(element => element !== null)
+            .forEach(element => inboxMessagesContainer.appendChild(element));
+
+        if (inboxMessagesContainer.children.length === 0) {
+            inboxMessagesContainer.innerHTML = '<div class="no-requests">No Friend Requests</div>';
+        }
+
+    } catch (error) {
+        console.error("Error loading friend requests:", error);
+        inboxMessagesContainer.innerHTML = '<div class="no-requests">Error loading friend requests</div>';
+    }
+}
+

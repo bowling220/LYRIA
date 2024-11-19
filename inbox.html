@@ -337,7 +337,7 @@
     </div>
 
     <div id="version-info">
-        Version: Beta 1.0.4 &copy; 2024 LYRIA. All rights reserved. Trademarked by LYRIA.
+        Version: Beta 2.0.0 &copy; 2024 LYRIA. All rights reserved. Trademarked by LYRIA.
     </div>
 
     <script src="inbox.js"></script>
@@ -410,25 +410,9 @@
         firebase.auth().onAuthStateChanged(user => {
             if (user) {
                 const userId = user.uid;
-
-                // Fetch user data from Firestore
-                db.collection('users').doc(userId).get().then(doc => {
-                    if (doc.exists) {
-                        const userData = doc.data();
-                        document.getElementById('user-name').textContent = userData.displayName;
-                        document.getElementById('user-avatar').src = userData.photoURL || 'assets/icon.png';
-                    } else {
-                        console.log("No such document!");
-                    }
-                }).catch(error => {
-                    console.error("Error getting document:", error);
-                });
-
-                // Load friend requests
-                loadFriendRequests(userId);
+                loadFriendRequests(userId); // Load friend requests for the authenticated user
             } else {
-                // No user is signed in, redirect to login
-                window.location.href = 'login.html';
+                window.location.href = 'login.html'; // Redirect to login if not authenticated
             }
         });
 
@@ -462,13 +446,13 @@
                     await db.collection('users').doc(senderId).update({
                         friends: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
                     });
+
+                    // Delete the friend request
+                    await db.collection('friendRequests').doc(requestId).delete();
+
+                    // Refresh the friend requests display
+                    loadFriendRequests(currentUser.uid);
                 }
-
-                // Delete the friend request
-                await db.collection('friendRequests').doc(requestId).delete();
-
-                // Refresh the friend requests display
-                loadFriendRequests(currentUser.uid);
             } catch (error) {
                 console.error("Error handling friend request:", error);
                 alert('Error processing friend request: ' + error.message);
@@ -477,12 +461,11 @@
 
         async function loadFriendRequests(userId) {
             const inboxMessagesContainer = document.getElementById('inbox-messages');
-            inboxMessagesContainer.innerHTML = ''; // Clear previous messages
+            inboxMessagesContainer.innerHTML = ''; // Clear previous content
 
             console.log("Loading friend requests for user:", userId); // Debug log
 
             try {
-                // Fetch friend requests from Firestore
                 const snapshot = await db.collection('friendRequests')
                     .where('to', '==', userId)
                     .get();
@@ -490,55 +473,128 @@
                 console.log("Friend request snapshot:", snapshot); // Debug log
 
                 if (snapshot.empty) {
+                    console.log("No friend requests found."); // Debug log
                     inboxMessagesContainer.innerHTML = '<div class="no-requests">No Friend Requests</div>';
                     return;
                 }
 
-                const userDoc = await db.collection('users').doc(userId).get();
-                const userData = userDoc.data();
-
-                for (const doc of snapshot.docs) {
+                const promises = snapshot.docs.map(async (doc) => {
                     const requestData = doc.data();
-                    const senderDoc = await db.collection('users').doc(requestData.from).get();
-                    const senderData = senderDoc.data();
+                    console.log('Request data:', requestData); // Debug log
 
-                    // Check if already friends
-                    if (userData.friends && userData.friends.includes(requestData.from)) {
-                        continue; // Skip if already friends
+                    try {
+                        const senderDoc = await db.collection('users').doc(requestData.from).get();
+                        if (!senderDoc.exists) {
+                            console.log('Sender document not found:', requestData.from); // Debug log
+                            return null;
+                        }
+
+                        const senderData = senderDoc.data();
+                        console.log('Sender data:', senderData); // Debug log
+
+                        const messageElement = document.createElement('div');
+                        messageElement.className = 'inbox-message';
+
+                        const messageContent = document.createElement('div');
+                        messageContent.textContent = `${senderData.displayName || 'Unknown User'} sent you a friend request!`;
+
+                        const actionButtons = document.createElement('div');
+                        actionButtons.className = 'friend-request-actions';
+
+                        const acceptButton = document.createElement('button');
+                        acceptButton.className = 'accept-btn';
+                        acceptButton.textContent = 'Accept';
+                        acceptButton.onclick = () => handleFriendRequest(doc.id, 'accept', requestData.from);
+
+                        const declineButton = document.createElement('button');
+                        declineButton.className = 'decline-btn';
+                        declineButton.textContent = 'Decline';
+                        declineButton.onclick = () => handleFriendRequest(doc.id, 'decline', requestData.from);
+
+                        actionButtons.appendChild(acceptButton);
+                        actionButtons.appendChild(declineButton);
+
+                        messageElement.appendChild(messageContent);
+                        messageElement.appendChild(actionButtons);
+
+                        return messageElement;
+                    } catch (error) {
+                        console.error('Error processing friend request:', error);
+                        return null;
                     }
+                });
 
-                    const messageElement = document.createElement('div');
-                    messageElement.className = 'inbox-message';
+                const messageElements = await Promise.all(promises);
+                messageElements
+                    .filter(element => element !== null)
+                    .forEach(element => inboxMessagesContainer.appendChild(element));
 
-                    const messageContent = document.createElement('div');
-                    messageContent.textContent = `${senderData.displayName} sent you a friend request!`;
-
-                    const actionButtons = document.createElement('div');
-                    actionButtons.className = 'friend-request-actions';
-
-                    const acceptButton = document.createElement('button');
-                    acceptButton.className = 'accept-btn';
-                    acceptButton.textContent = 'Accept';
-                    acceptButton.onclick = () => handleFriendRequest(doc.id, 'accept', requestData.from);
-
-                    const declineButton = document.createElement('button');
-                    declineButton.className = 'decline-btn';
-                    declineButton.textContent = 'Decline';
-                    declineButton.onclick = () => handleFriendRequest(doc.id, 'decline', requestData.from);
-
-                    actionButtons.appendChild(acceptButton);
-                    actionButtons.appendChild(declineButton);
-
-                    messageElement.appendChild(messageContent);
-                    messageElement.appendChild(actionButtons);
-
-                    inboxMessagesContainer.appendChild(messageElement);
+                if (inboxMessagesContainer.children.length === 0) {
+                    inboxMessagesContainer.innerHTML = '<div class="no-requests">No Friend Requests</div>';
                 }
+
             } catch (error) {
                 console.error("Error loading friend requests:", error);
                 inboxMessagesContainer.innerHTML = '<div class="no-requests">Error loading friend requests</div>';
             }
         }
+
+        document.getElementById('send-friend-request').addEventListener('click', async () => {
+            const currentUser = firebase.auth().currentUser; // Get the current user
+            if (!currentUser || !profileUserId) {
+                console.error("Missing user information");
+                alert('Unable to send friend request - missing user information');
+                return; // Exit if user information is missing
+            }
+
+            // Check if sending request to self
+            if (currentUser.uid === profileUserId) {
+                alert('You cannot send a friend request to yourself');
+                return;
+            }
+
+            // Check if already friends
+            const currentUserDoc = await db.collection('users').doc(currentUser.uid).get();
+            const currentUserData = currentUserDoc.data();
+            if (currentUserData.friends && currentUserData.friends.includes(profileUserId)) {
+                alert('You are already friends with this user');
+                return;
+            }
+
+            // Check if request already sent
+            const existingRequest = await db.collection('friendRequests')
+                .where('from', '==', currentUser.uid)
+                .where('to', '==', profileUserId)
+                .where('status', '==', 'pending')
+                .get();
+
+            if (!existingRequest.empty) {
+                alert('You have already sent a friend request to this user');
+                return;
+            }
+
+            // Create friend request document
+            await db.collection('friendRequests').add({
+                from: currentUser.uid,
+                to: profileUserId,
+                status: 'pending',
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            // Add notification to recipient's inbox
+            const senderName = currentUserData.displayName || 'Unknown User';
+            await db.collection('inbox').add({
+                recipientId: profileUserId,
+                senderId: currentUser.uid,
+                senderName: senderName,
+                message: `${senderName} sent you a friend request!`,
+                type: 'friendRequest',
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                read: false
+            });
+
+            alert('Friend request sent successfully!');
+        });
     </script>
 </body>
 </html> 
