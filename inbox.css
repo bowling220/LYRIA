@@ -1,0 +1,244 @@
+/* Basic styling for chat interface */
+:root {
+    --primary-color: #36393f;
+    --secondary-color: #5865f2;
+    --accent-color: #43b581;
+    --text-color: #dcddde;
+    --background-color: #2f3136;
+    --channel-hover: #42464d;
+    --message-hover: #32353b;
+    --sidebar-color: #202225;
+    --error-color: #e74c3c;
+    --success-color: #2ecc71;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    background-color: var(--primary-color);
+    color: var(--text-color);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.top-header {
+    background-color: var(--sidebar-color);
+    color: #fff;
+    text-align: center;
+    padding: 0.8rem;
+    font-size: 1.2rem;
+    font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    box-sizing: border-box;
+    height: 60px;
+}
+
+.menu-toggle {
+    display: none;
+    background: none;
+    border: none;
+    color: var(--text-color);
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+.back-button {
+    background: none;
+    border: none;
+    color: var(--text-color);
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 8px;
+    margin-right: 10px;
+}
+
+.back-button:hover {
+    color: var(--secondary-color);
+}
+
+.app-container {
+    display: flex;
+    height: calc(100vh - 60px); /* Match header height */
+    margin-top: 60px; /* Push content below header */
+    overflow: hidden;
+}
+
+/* Sidebar */
+.sidebar {
+    background-color: var(--sidebar-color);
+    width: 250px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+    padding: 1rem;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5);
+}
+
+.user-profile {
+    padding: 1rem;
+    background-color: #292b2f;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    border-radius: 5px;
+    margin-top: auto;
+}
+
+.avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid var(--secondary-color);
+    object-fit: cover;
+    cursor: pointer;
+}
+
+.username {
+    flex: 1;
+    font-weight: bold;
+    font-size: 1rem;
+    color: var(--text-color);
+    margin-left: 0.5rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+}
+
+.inbox-area {
+    flex: 1;
+    padding: 20px;
+    background-color: var(--background-color);
+    overflow-y: auto;
+}
+
+.inbox-area h2 {
+    margin-top: 0;
+    color: var(--text-color);
+}
+
+.messages {
+    margin-top: 20px;
+    height: calc(100vh - 200px); /* Adjust height to fit screen */
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 10px;
+    background-color: #2f3136;
+}
+
+.inbox-message {
+    padding: 10px;
+    border-bottom: 1px solid #444;
+    border-radius: 4px;
+    margin-bottom: 5px;
+    background-color: var(--message-hover);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.inbox-message:last-child {
+    border-bottom: none;
+}
+
+.friend-request-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.accept-btn, .decline-btn {
+    padding: 5px 10px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.accept-btn {
+    background-color: var(--success-color);
+    color: white;
+}
+
+.decline-btn {
+    background-color: var(--error-color);
+    color: white;
+}
+
+.no-requests {
+    text-align: center;
+    padding: 20px;
+    color: #888;
+    font-style: italic;
+}
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.7);
+}
+
+.modal-content {
+    background-color: var(--background-color);
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid var(--text-color);
+    width: 80%;
+    max-width: 500px;
+    border-radius: 5px;
+    position: relative;
+}
+
+.close-button {
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    font-size: 24px;
+    cursor: pointer;
+    color: var(--text-color);
+    background: none;
+    border: none;
+}
+
+.modal-section {
+    margin: 15px 0;
+}
+
+.action-btn {
+    background-color: var(--secondary-color);
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin: 5px 0;
+}
+
+.logout-btn {
+    background-color: var(--error-color);
+}
+
+/* Footer Styles */
+#version-info {
+    position: fixed;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #999;
+    font-size: 10px;
+    text-align: center;
+    padding: 5px;
+    z-index: 100;
+}
