@@ -1242,11 +1242,3 @@ textarea {
     color: var(--text-color); /* Text color for friend name */
     font-weight: bold; /* Make the name bold */
 }
-
-.timestamp {
-    font-size: 0.8rem;
-    color: gray;
-    margin-left: 10px;
-}
-
-
