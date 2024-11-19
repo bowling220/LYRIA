@@ -66,7 +66,7 @@
                 <h2 id="channel-title"># general</h2>
                 <button id="copy-join-code" class="copy-join-code-btn">Invite Others</button>
                 <button id="inbox-btn" onclick="window.location.href='inbox.html'" style="background: none; border: none; color: var(--text-color); cursor: pointer; padding: 8px; font-size: 1.2rem;">
-                    📬 Inbox
+                    📬 Inbox <span id="friend-request-count" style="background: red; color: white; padding: 2px 6px; border-radius: 50%; font-size: 0.8rem; display: none;">1</span>
                 </button>
             </header>
             <div class="messages" id="messages"></div>
@@ -191,6 +191,9 @@
 
                         // Load friends
                         loadFriends(userId);
+                        
+                        // Check for friend requests
+                        checkFriendRequests(userId);
                     } else {
                         console.log("No such document!");
                     }
@@ -199,6 +202,22 @@
                 });
             }
         });
+
+        // Function to check for friend requests
+        function checkFriendRequests(userId) {
+            db.collection('friendRequests')
+                .where('to', '==', userId)
+                .onSnapshot(snapshot => {
+                    const requestCount = snapshot.docs.length;
+                    const countElement = document.getElementById('friend-request-count');
+                    if (requestCount > 0) {
+                        countElement.style.display = 'inline';
+                        countElement.textContent = requestCount;
+                    } else {
+                        countElement.style.display = 'none';
+                    }
+                });
+        }
 
         // Function to load friends with images and names
         async function loadFriends(userId) {

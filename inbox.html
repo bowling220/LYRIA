@@ -31,11 +31,14 @@
             flex-direction: column;
             height: 100vh;
             overflow: hidden;
+            padding-top: 50px; /* Add padding to account for fixed header */
         }
 
         .top-header {
             background-color: var(--sidebar-color);
             position: fixed;
+            top: 0;
+            left: 0;
             color: #fff;
             text-align: center;
             padding: 0.8rem;
@@ -45,7 +48,8 @@
             justify-content: space-between;
             align-items: center;
             width: 100%;
-            z-index: 1000; /* Ensure it stays above other content */
+            box-sizing: border-box;
+            z-index: 1000;
         }
 
         .menu-toggle {
@@ -73,8 +77,9 @@
 
         .app-container {
             display: flex;
-            height: calc(100vh - 50px); /* Subtract header height */
-            overflow: hidden; /* Prevent overflow */
+            height: calc(100vh - 50px);
+            width: 100%;
+            position: relative;
         }
 
         /* Sidebar */
@@ -83,10 +88,11 @@
             width: 250px;
             display: flex;
             flex-direction: column;
-            justify-content: space-between; /* Ensures space between channels and user-profile */
+            justify-content: space-between;
             height: 100%;
-            padding: 1rem; /* Add padding for better spacing */
-            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5); /* Add shadow for depth */
+            padding: 1rem;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5);
+            position: relative;
         }
 
         .user-profile {
@@ -94,33 +100,40 @@
             background-color: #292b2f;
             display: flex;
             align-items: center;
-            justify-content: space-between; /* Distributes space between avatar, username, and button */
+            justify-content: space-between;
             gap: 0.5rem;
-            border-radius: 5px; /* Rounded corners for user profile */
-            margin-top: auto; /* Pushes the user profile to the bottom */
+            border-radius: 5px;
+            margin-top: auto;
         }
 
-        /* Avatar Styling */
         .avatar {
             width: 40px;
             height: 40px;
             border-radius: 50%;
             border: 2px solid var(--secondary-color);
-            object-fit: cover; /* Ensures the image covers the entire area */
-            cursor: pointer; /* Indicates interactivity, e.g., clicking for profile */
+            object-fit: cover;
+            cursor: pointer;
         }
 
-        /* Username Styling */
         .username {
-            flex: 1; /* Allows the username to take up remaining space */
+            flex: 1;
             font-weight: bold;
             font-size: 1rem;
             color: var(--text-color);
-            margin-left: 0.5rem; /* Adds spacing between avatar and username */
-            white-space: nowrap; /* Prevents text from wrapping */
-            overflow: hidden; /* Hides overflowed text */
-            text-overflow: ellipsis; /* Adds ellipsis (...) for overflowed text */
-            cursor: pointer; /* Indicates interactivity, e.g., clicking for profile */
+            margin-left: 0.5rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            cursor: pointer;
+        }
+
+        .settings-btn {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
         }
 
         .inbox-area {
@@ -137,27 +150,41 @@
 
         .messages {
             margin-top: 20px;
-            max-height: 400px;
+            max-height: calc(100vh - 200px);
             overflow-y: auto;
-            border: 1px solid #ccc;
+            border: 1px solid #444;
             border-radius: 5px;
             padding: 10px;
-            background-color: #2f3136; /* Match background color */
+            background-color: #2f3136;
         }
 
         .inbox-message {
             padding: 10px;
-            border-bottom: 1px solid #444; /* Darker border for messages */
+            border-bottom: 1px solid #444;
             border-radius: 4px;
             margin-bottom: 5px;
-            background-color: var(--message-hover); /* Match message hover color */
+            background-color: var(--message-hover);
             display: flex;
+            align-items: center;
             justify-content: space-between;
+        }
+
+        .inbox-message img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .inbox-message .message-content {
+            flex: 1;
+            display: flex;
             align-items: center;
         }
 
-        .inbox-message:last-child {
-            border-bottom: none;
+        .inbox-message .message-content span {
+            font-weight: bold;
+            color: var(--text-color);
         }
 
         .friend-request-actions {
@@ -210,6 +237,7 @@
             max-width: 500px;
             border-radius: 5px;
             position: relative;
+            color: var(--text-color);
         }
 
         .close-button {
@@ -227,6 +255,22 @@
             margin: 15px 0;
         }
 
+        .modal-label {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--text-color);
+        }
+
+        .modal-input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            background-color: var(--primary-color);
+            border: 1px solid var(--text-color);
+            color: var(--text-color);
+            border-radius: 4px;
+        }
+
         .action-btn {
             background-color: var(--secondary-color);
             color: white;
@@ -235,52 +279,23 @@
             border-radius: 4px;
             cursor: pointer;
             margin: 5px 0;
+            width: 100%;
         }
 
         .logout-btn {
             background-color: var(--error-color);
         }
 
-        /* Footer Styles */
         #version-info {
-            position: absolute;
+            position: fixed;
             bottom: 10px;
             left: 50%;
             transform: translateX(-50%);
-            color: #999; /* Lighter color for less visibility */
-            font-size: 10px; /* Smaller font size */
+            color: #999;
+            font-size: 10px;
             text-align: center;
-            padding: 5px; /* Add some padding for spacing */
-        }
-
-        /* Mobile Message Styles */
-        #mobile-message {
-            display: none; /* Hidden by default, shown via JavaScript */
-            background-color: #ffcccb;
-            color: #000;
-            padding: 10px;
-            text-align: center;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            font-size: 14px;
-            font-weight: bold;
-        }
-
-        /* Close button for the mobile message */
-        #close-mobile-message {
-            margin-left: 10px;
-            background-color: #f44336;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            cursor: pointer;
-            border-radius: 3px;
-            font-size: 12px;
-        }
-
-        #close-mobile-message:hover {
-            background-color: #d32f2f;
+            padding: 5px;
+            z-index: 100;
         }
     </style>
 </head>
@@ -479,11 +494,15 @@
             const inboxMessagesContainer = document.getElementById('inbox-messages');
             inboxMessagesContainer.innerHTML = ''; // Clear previous messages
 
+            console.log("Loading friend requests for user:", userId); // Debug log
+
             // Fetch friend requests from Firestore
             const snapshot = await db.collection('friendRequests')
                 .where('to', '==', userId)
                 .where('status', '==', 'pending')
                 .get();
+
+            console.log("Friend request snapshot:", snapshot); // Debug log
 
             if (snapshot.empty) {
                 inboxMessagesContainer.innerHTML = '<div class="no-requests">No Friend Requests</div>';
