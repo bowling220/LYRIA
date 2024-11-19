@@ -1025,19 +1025,19 @@ firebase.auth().onAuthStateChanged(user => {
                 document.getElementById('user-avatar').src = userData.photoURL || 'assets/icon.png';
                 document.getElementById('bio-input').value = userData.bio || "No bio set."; // Set the current user's bio
 
-                // Check if the user is premium and add the premium badge
+                // Check if the user has the premium badge
                 const profileBadges = document.getElementById('profile-modal-badges');
                 profileBadges.innerHTML = ''; // Clear any existing badges
 
-                if (userData.isPremium) {
-                    console.log("User is premium, adding badge."); // Debugging log
+                if (userData.badges && userData.badges.includes('Premium')) {
+                    console.log("User has premium badge, adding badge."); // Debugging log
                     const premiumBadge = document.createElement('img');
                     premiumBadge.src = 'assets/premium.png'; // Path to the premium badge
                     premiumBadge.alt = 'Premium Badge';
                     premiumBadge.className = 'admin-badge'; // Use the same class for styling
                     profileBadges.appendChild(premiumBadge); // Append premium badge to the profile badges
                 } else {
-                    console.log("User is not premium."); // Debugging log
+                    console.log("User does not have the premium badge."); // Debugging log
                 }
             } else {
                 console.log("No such document for the user.");
