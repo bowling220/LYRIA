@@ -465,58 +465,56 @@ function loadChannels() {
         .where('members', 'array-contains', currentUser.uid)
         .get()
         .then(snapshot => {
-            const channels = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const userDocRef = db.collection('users').doc(currentUser.uid);
+            return userDocRef.get().then(userDoc => {
+                const userData = userDoc.data();
+                const favoriteChannels = userData.favoriteChannels || []; // Get user's favorite channels
 
-            // Sort channels: favorites first
-            channels.sort((a, b) => {
-                return (b.favorite === a.favorite) ? 0 : (b.favorite ? 1 : -1);
+                const channels = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data(),
+                    favorite: favoriteChannels.includes(doc.id) // Set favorite based on user's favorites
+                }));
+
+                // Sort channels: favorites first
+                channels.sort((a, b) => (b.favorite === a.favorite) ? 0 : (b.favorite ? 1 : -1));
+
+                channels.forEach(channel => {
+                    const channelElement = document.createElement('li');
+                    const channelContainer = document.createElement('div');
+                    channelContainer.className = 'channel-container';
+
+                    const button = document.createElement('button');
+                    button.className = 'channel-btn';
+                    button.textContent = `#${channel.name}`;
+                    button.setAttribute('data-channel-id', channel.id);
+                    button.onclick = () => {
+                        switchChannel(channel.id);
+                        document.querySelectorAll('.channel-btn').forEach(btn => btn.classList.remove('active-channel'));
+                        button.classList.add('active-channel');
+                        document.getElementById('message-input').placeholder = `Message #${channel.name}`;
+                        if (window.innerWidth <= 768) {
+                            document.querySelector('.sidebar').classList.remove('active');
+                        }
+                    };
+
+                    const favoriteButton = document.createElement('button');
+                    favoriteButton.className = 'favorite-btn';
+                    favoriteButton.innerHTML = channel.favorite ? '★' : '☆';
+                    favoriteButton.onclick = (e) => {
+                        e.stopPropagation();
+                        toggleFavoriteChannel(channel.id, !channel.favorite);
+                    };
+
+                    channelContainer.appendChild(button);
+                    channelContainer.appendChild(favoriteButton);
+                    channelElement.appendChild(channelContainer);
+                    channelsList.appendChild(channelElement);
+                });
             });
-
-            channels.forEach(channel => {
-                const channelElement = document.createElement('li');
-                const channelContainer = document.createElement('div'); // Create a container for the channel name and favorite button
-                channelContainer.className = 'channel-container'; // Add a class for styling
-
-                const button = document.createElement('button');
-                button.className = 'channel-btn';
-                button.textContent = `#${channel.name}`;
-                button.setAttribute('data-channel-id', channel.id); // Add data attribute
-                button.onclick = () => {
-                    switchChannel(channel.id);
-                    document.querySelectorAll('.channel-btn').forEach(btn => btn.classList.remove('active-channel'));
-                    button.classList.add('active-channel');
-                    document.getElementById('message-input').placeholder = `Message #${channel.name}`;
-                    // Close sidebar on mobile after channel selection
-                    if (window.innerWidth <= 768) {
-                        document.querySelector('.sidebar').classList.remove('active');
-                    }
-                };
-
-                // Create a favorite button
-                const favoriteButton = document.createElement('button');
-                favoriteButton.className = 'favorite-btn';
-                favoriteButton.innerHTML = channel.favorite ? '★' : '☆'; // Filled star for favorite, empty star for not favorite
-                favoriteButton.onclick = (e) => {
-                    e.stopPropagation(); // Prevent triggering the channel button click
-                    toggleFavoriteChannel(channel.id, !channel.favorite);
-                };
-
-                // Append the channel button and favorite button to the channel container
-                channelContainer.appendChild(button);
-                channelContainer.appendChild(favoriteButton);
-                channelElement.appendChild(channelContainer); // Append the container to the list item
-                channelsList.appendChild(channelElement);
-            });
-
-            // Load messages for the current channel or default to personal channel
-            if (!currentChannel) {
-                currentChannel = `personal-${currentUser.uid}`;
-            }
-            switchChannel(currentChannel); // Use switchChannel to load messages and peer ID
         })
         .catch(error => {
             console.error("Error loading channels:", error);
-            alert('Failed to load channels.');
         });
 }
 
@@ -1067,14 +1065,29 @@ betaUserUIDs.forEach(userId => {
 });
 
 function toggleFavoriteChannel(channelId, isFavorite) {
-    db.collection('channels').doc(channelId).update({
-        favorite: isFavorite
-    }).then(() => {
-        loadChannels(); // Reload channels to reflect changes
-    }).catch(error => {
-        console.error("Error updating favorite status:", error);
-        alert('Failed to update favorite status.');
-    });
+    const userDocRef = db.collection('users').doc(currentUser.uid); // Reference to the current user's document
+
+    if (isFavorite) {
+        // Add the channel ID to the user's favorite channels
+        userDocRef.update({
+            favoriteChannels: firebase.firestore.FieldValue.arrayUnion(channelId)
+        }).then(() => {
+            loadChannels(); // Reload channels to reflect changes
+        }).catch(error => {
+            console.error("Error adding favorite channel:", error);
+            alert('Failed to update favorite status.');
+        });
+    } else {
+        // Remove the channel ID from the user's favorite channels
+        userDocRef.update({
+            favoriteChannels: firebase.firestore.FieldValue.arrayRemove(channelId)
+        }).then(() => {
+            loadChannels(); // Reload channels to reflect changes
+        }).catch(error => {
+            console.error("Error removing favorite channel:", error);
+            alert('Failed to update favorite status.');
+        });
+    }
 }
 document.addEventListener('DOMContentLoaded', () => {
     // Open the suggestions modal
