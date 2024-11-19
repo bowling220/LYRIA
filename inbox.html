@@ -26,6 +26,18 @@
             font-weight: bold;
             text-align: center;
             color: #fff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 5px 10px;
         }
 
         .inbox-area {
@@ -43,6 +55,12 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .inbox-message:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
         }
 
         .inbox-message div {
@@ -60,6 +78,7 @@
             border-radius: 5px;
             cursor: pointer;
             font-size: 0.9rem;
+            transition: all 0.2s;
         }
 
         .accept-btn {
@@ -67,26 +86,63 @@
             color: #fff;
         }
 
+        .accept-btn:hover {
+            background-color: #3ca374;
+            transform: scale(1.05);
+        }
+
         .decline-btn {
             background-color: #e74c3c;
             color: #fff;
         }
 
+        .decline-btn:hover {
+            background-color: #d44232;
+            transform: scale(1.05);
+        }
+
         .no-requests {
             text-align: center;
             color: #888;
+            padding: 2rem;
+            font-size: 1.1rem;
         }
 
         .loading {
             text-align: center;
             color: #fff;
+            padding: 2rem;
+        }
+
+        .loading::after {
+            content: '...';
+            animation: dots 1.5s steps(5, end) infinite;
+        }
+
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
+        }
+
+        .error-message {
+            background-color: #f0506e;
+            color: white;
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+            text-align: center;
         }
     </style>
 </head>
 <body>
-    <header class="top-header">LYRIA Inbox</header>
+    <header class="top-header">
+        <button class="back-btn" onclick="window.history.back()">←</button>
+        <span>LYRIA Inbox</span>
+        <div style="width: 30px"></div>
+    </header>
     <main class="inbox-area" id="inbox-messages">
-        <div class="loading">Loading friend requests...</div>
+        <div class="loading">Loading friend requests</div>
     </main>
 
     <script>
@@ -108,108 +164,149 @@
          */
         async function loadFriendRequests() {
             const inboxContainer = document.getElementById("inbox-messages");
-            inboxContainer.innerHTML = ""; // Clear previous requests
+            inboxContainer.innerHTML = '<div class="loading">Loading friend requests</div>';
 
             try {
-                // Check if user is still authenticated
-                if (!auth.currentUser) {
-                    window.location.href = "login.html";
+                // Get the user ID from URL parameter
+                const urlParams = new URLSearchParams(window.location.search);
+                const userId = urlParams.get('userId');
+
+                if (!userId) {
+                    showError("No user ID specified. Please log in again.");
                     return;
                 }
 
-                const currentUser = auth.currentUser;
-                const requestsSnapshot = await db.collection("friendRequests")
-                    .where("to", "==", currentUser.uid)
-                    .get();
+                // Real-time listener for friend requests
+                const unsubscribe = db.collection("friendRequests")
+                    .where("to", "==", userId)
+                    .onSnapshot(async (snapshot) => {
+                        inboxContainer.innerHTML = "";
+                        
+                        if (snapshot.empty) {
+                            inboxContainer.innerHTML = '<div class="no-requests">No friend requests at the moment</div>';
+                            return;
+                        }
 
-                if (requestsSnapshot.empty) {
-                    inboxContainer.innerHTML = '<div class="no-requests">No friend requests</div>';
-                    return;
-                }
+                        const requests = [];
+                        for (const doc of snapshot.docs) {
+                            const request = doc.data();
+                            // Fetch sender's latest profile info
+                            try {
+                                const senderDoc = await db.collection("users").doc(request.from).get();
+                                const senderData = senderDoc.data();
+                                request.fromName = senderData?.displayName || "Unknown User";
+                            } catch (error) {
+                                console.error("Error fetching sender data:", error);
+                                request.fromName = "Unknown User";
+                            }
+                            requests.push({ id: doc.id, ...request });
+                        }
 
-                requestsSnapshot.forEach(doc => {
-                    const request = doc.data();
-                    const messageElement = document.createElement("div");
-                    messageElement.className = "inbox-message";
+                        requests.forEach(request => {
+                            const messageElement = document.createElement("div");
+                            messageElement.className = "inbox-message";
 
-                    // Sender name display
-                    const messageText = document.createElement("div");
-                    messageText.textContent = `${request.fromName || "Unknown User"} sent you a friend request!`;
+                            const messageText = document.createElement("div");
+                            messageText.textContent = `${request.fromName} sent you a friend request!`;
 
-                    // Action buttons
-                    const actions = document.createElement("div");
-                    actions.className = "friend-request-actions";
+                            const actions = document.createElement("div");
+                            actions.className = "friend-request-actions";
 
-                    const acceptButton = document.createElement("button");
-                    acceptButton.className = "accept-btn";
-                    acceptButton.textContent = "Accept";
-                    acceptButton.onclick = () => handleFriendRequest(doc.id, "accept", request.from);
+                            const acceptButton = document.createElement("button");
+                            acceptButton.className = "accept-btn";
+                            acceptButton.textContent = "Accept";
+                            acceptButton.onclick = () => handleFriendRequest(request.id, "accept", request.from, userId);
 
-                    const declineButton = document.createElement("button");
-                    declineButton.className = "decline-btn";
-                    declineButton.textContent = "Decline";
-                    declineButton.onclick = () => handleFriendRequest(doc.id, "decline", request.from);
+                            const declineButton = document.createElement("button");
+                            declineButton.className = "decline-btn";
+                            declineButton.textContent = "Decline";
+                            declineButton.onclick = () => handleFriendRequest(request.id, "decline", request.from, userId);
 
-                    actions.appendChild(acceptButton);
-                    actions.appendChild(declineButton);
+                            actions.appendChild(acceptButton);
+                            actions.appendChild(declineButton);
 
-                    messageElement.appendChild(messageText);
-                    messageElement.appendChild(actions);
-                    inboxContainer.appendChild(messageElement);
-                });
+                            messageElement.appendChild(messageText);
+                            messageElement.appendChild(actions);
+                            inboxContainer.appendChild(messageElement);
+                        });
+                    }, error => {
+                        console.error("Error in real-time listener:", error);
+                        showError("Error loading friend requests. Please refresh the page.");
+                    });
+
+                // Clean up listener when page is closed
+                window.addEventListener('unload', () => unsubscribe());
+
             } catch (error) {
                 console.error("Error loading friend requests:", error);
-                inboxContainer.innerHTML = '<div class="no-requests">Error loading friend requests</div>';
+                showError("Error loading friend requests. Please try again later.");
             }
         }
 
         /**
-         * Handle friend request actions: accept or decline.
+         * Display error message to user
+         * @param {string} message - Error message to display
          */
-        async function handleFriendRequest(requestId, action, senderId) {
+        function showError(message) {
+            const inboxContainer = document.getElementById("inbox-messages");
+            inboxContainer.innerHTML = `<div class="error-message">${message}</div>`;
+        }
+
+        /**
+         * Handle friend request actions: accept or decline.
+         * @param {string} requestId - The ID of the friend request document
+         * @param {string} action - The action to take ('accept' or 'decline')
+         * @param {string} senderId - The user ID of the friend request sender
+         * @param {string} userId - The user ID of the request recipient
+         */
+        async function handleFriendRequest(requestId, action, senderId, userId) {
+            const actionButtons = document.querySelectorAll(`button[onclick*="${requestId}"]`);
+            actionButtons.forEach(btn => btn.disabled = true);
+
             try {
-                // Check if user is still authenticated
-                if (!auth.currentUser) {
-                    window.location.href = "login.html";
-                    return;
-                }
-
-                const currentUser = auth.currentUser;
-
                 if (action === "accept") {
+                    // Start a batch write
+                    const batch = db.batch();
+                    
                     // Add each other as friends
-                    await db.collection("users").doc(currentUser.uid).update({
-                        friends: firebase.firestore.FieldValue.arrayUnion(senderId)
+                    batch.update(db.collection("users").doc(userId), {
+                        friends: firebase.firestore.FieldValue.arrayUnion(senderId),
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
 
-                    await db.collection("users").doc(senderId).update({
-                        friends: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
+                    batch.update(db.collection("users").doc(senderId), {
+                        friends: firebase.firestore.FieldValue.arrayUnion(userId),
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
 
-                    alert("Friend request accepted!");
+                    // Delete the friend request
+                    batch.delete(db.collection("friendRequests").doc(requestId));
+
+                    // Commit the batch
+                    await batch.commit();
+
+                    // Create notification for sender
+                    await db.collection("notifications").add({
+                        userId: senderId,
+                        type: "friend_request_accepted",
+                        message: "Your friend request was accepted!",
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        read: false
+                    });
+
                 } else if (action === "decline") {
-                    alert("Friend request declined.");
+                    await db.collection("friendRequests").doc(requestId).delete();
                 }
 
-                // Delete the friend request document
-                await db.collection("friendRequests").doc(requestId).delete();
-
-                // Refresh requests
-                loadFriendRequests();
             } catch (error) {
                 console.error("Error handling friend request:", error);
-                alert("Error processing request.");
+                showError("Error processing request. Please try again.");
+                actionButtons.forEach(btn => btn.disabled = false);
             }
         }
 
-        // Authentication state observer
-        auth.onAuthStateChanged(user => {
-            if (user) {
-                loadFriendRequests(); // Load requests for the logged-in user
-            } else {
-                window.location.href = "login.html"; // Redirect to login if not authenticated
-            }
-        });
+        // Load friend requests when page loads
+        document.addEventListener('DOMContentLoaded', loadFriendRequests);
     </script>
 </body>
 </html>
