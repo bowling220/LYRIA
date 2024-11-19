@@ -102,6 +102,12 @@
          * Load and display friend requests for the logged-in user.
          */
         async function loadFriendRequests() {
+            // Check if user is still authenticated
+            if (!auth.currentUser) {
+                window.location.href = "login.html";
+                return;
+            }
+
             const currentUser = auth.currentUser;
             const inboxContainer = document.getElementById("inbox-messages");
             inboxContainer.innerHTML = ""; // Clear previous requests
@@ -156,6 +162,12 @@
          * Handle friend request actions: accept or decline.
          */
         async function handleFriendRequest(requestId, action, senderId) {
+            // Check if user is still authenticated
+            if (!auth.currentUser) {
+                window.location.href = "login.html";
+                return;
+            }
+
             const currentUser = auth.currentUser;
 
             try {
