@@ -8,25 +8,11 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
     <style>
-        /* Basic styling for chat interface */
-        :root {
-            --primary-color: #36393f;
-            --secondary-color: #5865f2;
-            --accent-color: #43b581;
-            --text-color: #dcddde;
-            --background-color: #2f3136;
-            --channel-hover: #42464d;
-            --message-hover: #32353b;
-            --sidebar-color: #202225;
-            --error-color: #e74c3c;
-            --success-color: #2ecc71;
-        }
-
         body {
             font-family: Arial, sans-serif;
             margin: 0;
-            background-color: var(--primary-color);
-            color: var(--text-color);
+            background-color: #36393f;
+            color: #dcddde;
             display: flex;
             flex-direction: column;
             height: 100vh;
@@ -34,130 +20,33 @@
         }
 
         .top-header {
-            background-color: var(--sidebar-color);
-            position: fixed;
-            color: #fff;
-            text-align: center;
-            padding: 0.8rem;
-            font-size: 1.2rem;
-            font-weight: bold;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
-            z-index: 1000; /* Ensure it stays above other content */
-        }
-
-        .menu-toggle {
-            display: none;
-            background: none;
-            border: none;
-            color: var(--text-color);
-            font-size: 1.5rem;
-            cursor: pointer;
-        }
-
-        .back-button {
-            background: none;
-            border: none;
-            color: var(--text-color);
-            font-size: 1.2rem;
-            cursor: pointer;
-            padding: 8px;
-            margin-right: 10px;
-        }
-
-        .back-button:hover {
-            color: var(--secondary-color);
-        }
-
-        .app-container {
-            display: flex;
-            height: calc(100vh - 50px); /* Subtract header height */
-            overflow: hidden; /* Prevent overflow */
-        }
-
-        /* Sidebar */
-        .sidebar {
-            background-color: var(--sidebar-color);
-            width: 250px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between; /* Ensures space between channels and user-profile */
-            height: 100%;
-            padding: 1rem; /* Add padding for better spacing */
-            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5); /* Add shadow for depth */
-        }
-
-        .user-profile {
+            background-color: #202225;
             padding: 1rem;
-            background-color: #292b2f;
-            display: flex;
-            align-items: center;
-            justify-content: space-between; /* Distributes space between avatar, username, and button */
-            gap: 0.5rem;
-            border-radius: 5px; /* Rounded corners for user profile */
-            margin-top: auto; /* Pushes the user profile to the bottom */
-        }
-
-        /* Avatar Styling */
-        .avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            border: 2px solid var(--secondary-color);
-            object-fit: cover; /* Ensures the image covers the entire area */
-            cursor: pointer; /* Indicates interactivity, e.g., clicking for profile */
-        }
-
-        /* Username Styling */
-        .username {
-            flex: 1; /* Allows the username to take up remaining space */
+            font-size: 1.2rem;
             font-weight: bold;
-            font-size: 1rem;
-            color: var(--text-color);
-            margin-left: 0.5rem; /* Adds spacing between avatar and username */
-            white-space: nowrap; /* Prevents text from wrapping */
-            overflow: hidden; /* Hides overflowed text */
-            text-overflow: ellipsis; /* Adds ellipsis (...) for overflowed text */
-            cursor: pointer; /* Indicates interactivity, e.g., clicking for profile */
+            text-align: center;
+            color: #fff;
         }
 
         .inbox-area {
-            flex: 1;
             padding: 20px;
-            background-color: var(--background-color);
+            background-color: #2f3136;
+            height: 100%;
             overflow-y: auto;
-        }
-
-        .inbox-area h2 {
-            margin-top: 0;
-            color: var(--text-color);
-        }
-
-        .messages {
-            margin-top: 20px;
-            max-height: 400px;
-            overflow-y: auto;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            padding: 10px;
-            background-color: #2f3136; /* Match background color */
         }
 
         .inbox-message {
-            padding: 10px;
-            border-bottom: 1px solid #444; /* Darker border for messages */
-            border-radius: 4px;
-            margin-bottom: 5px;
-            background-color: var(--message-hover); /* Match message hover color */
+            background-color: #32353b;
+            margin-bottom: 10px;
+            padding: 15px;
+            border-radius: 5px;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        .inbox-message:last-child {
-            border-bottom: none;
+        .inbox-message div {
+            flex: 1;
         }
 
         .friend-request-actions {
@@ -166,435 +55,144 @@
         }
 
         .accept-btn, .decline-btn {
-            padding: 5px 10px;
+            padding: 10px 15px;
             border: none;
-            border-radius: 4px;
+            border-radius: 5px;
             cursor: pointer;
+            font-size: 0.9rem;
         }
 
         .accept-btn {
-            background-color: var(--success-color);
-            color: white;
+            background-color: #43b581;
+            color: #fff;
         }
 
         .decline-btn {
-            background-color: var(--error-color);
-            color: white;
+            background-color: #e74c3c;
+            color: #fff;
         }
 
         .no-requests {
             text-align: center;
-            padding: 20px;
             color: #888;
-            font-style: italic;
-        }
-
-        /* Settings Modal Styles */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.7);
-        }
-
-        .modal-content {
-            background-color: var(--background-color);
-            margin: 15% auto;
-            padding: 20px;
-            border: 1px solid var(--text-color);
-            width: 80%;
-            max-width: 500px;
-            border-radius: 5px;
-            position: relative;
-        }
-
-        .close-button {
-            position: absolute;
-            right: 10px;
-            top: 10px;
-            font-size: 24px;
-            cursor: pointer;
-            color: var(--text-color);
-            background: none;
-            border: none;
-        }
-
-        .modal-section {
-            margin: 15px 0;
-        }
-
-        .action-btn {
-            background-color: var(--secondary-color);
-            color: white;
-            padding: 8px 16px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            margin: 5px 0;
-        }
-
-        .logout-btn {
-            background-color: var(--error-color);
-        }
-
-        /* Footer Styles */
-        #version-info {
-            position: absolute;
-            bottom: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            color: #999; /* Lighter color for less visibility */
-            font-size: 10px; /* Smaller font size */
-            text-align: center;
-            padding: 5px; /* Add some padding for spacing */
-        }
-
-        /* Mobile Message Styles */
-        #mobile-message {
-            display: none; /* Hidden by default, shown via JavaScript */
-            background-color: #ffcccb;
-            color: #000;
-            padding: 10px;
-            text-align: center;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            font-size: 14px;
-            font-weight: bold;
-        }
-
-        /* Close button for the mobile message */
-        #close-mobile-message {
-            margin-left: 10px;
-            background-color: #f44336;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            cursor: pointer;
-            border-radius: 3px;
-            font-size: 12px;
-        }
-
-        #close-mobile-message:hover {
-            background-color: #d32f2f;
         }
     </style>
 </head>
 <body>
-    <header class="top-header">
-        <button class="back-button" onclick="window.location.href='home.html'">← Back</button>
-        <span style="flex: 1; text-align: center;">LYRIA Inbox</span>
-    </header>
-    <div class="app-container">
-        <button class="menu-toggle" id="sidebar-menu-toggle">☰</button>
-        <div class="sidebar">
-            <div class="user-profile">
-                <img class="avatar" id="user-avatar" src="https://s1.ezgif.com/tmp/ezgif-1-89965b355d.png" alt="User avatar">
-                <span class="username" id="user-name">Username</span>
-                <button class="settings-btn" id="settings-btn">Settings</button>
-            </div>
-        </div>
-        <main class="inbox-area">
-            <h2>Friend Requests</h2>
-            <div class="messages" id="inbox-messages"></div>
-        </main>
-    </div>
+    <header class="top-header">LYRIA Inbox</header>
+    <main class="inbox-area" id="inbox-messages">
+        <div class="no-requests">Loading friend requests...</div>
+    </main>
 
-    <!-- Settings Modal -->
-    <div id="settings-modal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="settings-modal-title">
-        <div class="modal-content">
-            <button id="close-modal" class="close-button" aria-label="Close Settings Modal">&times;</button>
-            <h2 id="settings-modal-title">Settings</h2>
-            
-            <!-- Toggle Dark Mode -->
-            <div class="modal-section">
-                <button id="toggle-dark-mode" class="action-btn">Toggle Dark Mode</button>
-            </div>
-            
-            <!-- Update Display Name -->
-            <div class="modal-section">
-                <label for="display-name-input" class="modal-label">Update Display Name:</label>
-                <input type="text" id="display-name-input" class="modal-input" placeholder="Enter new display name">
-                <button id="update-display-name" class="action-btn">Update Name</button>
-            </div>
-            
-            <!-- Update Bio Section -->
-            <div class="modal-section">
-                <label for="bio-input" class="modal-label">Update Bio:</label>
-                <input type="text" id="bio-input" class="modal-input" placeholder="Enter new bio" value="Coming Soon">
-                <button id="update-bio" class="action-btn">Update Bio</button>
-            </div>
-
-            <!-- Logout Button -->
-            <div class="modal-section">
-                <button id="logout-btn" class="action-btn logout-btn">Logout</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="version-info">
-        Version: Beta 2.0.0 &copy; 2024 LYRIA. All rights reserved. Trademarked by LYRIA.
-    </div>
-
-    <script src="inbox.js"></script>
     <script>
         // Initialize Firebase
         const firebaseConfig = {
-            apiKey: "AIzaSyDORsM0Dz9d_ZxqVd8zjNXwsEdR1_aVF7g",
-            authDomain: "lyria-cfc06.firebaseapp.com", 
-            projectId: "lyria-cfc06",
-            storageBucket: "lyria-cfc06.appspot.com",
-            messagingSenderId: "309881717815",
-            appId: "1:309881717815:web:c8e9a4007341ab17ecebb2",
-            measurementId: "G-0EMBBE255Z",
-            databaseURL: "https://lyria-cfc06-default-rtdb.firebaseio.com"
+            apiKey: "your-api-key",
+            authDomain: "your-auth-domain",
+            projectId: "your-project-id",
+            storageBucket: "your-storage-bucket",
+            messagingSenderId: "your-messaging-sender-id",
+            appId: "your-app-id"
         };
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
 
-        // Settings Modal Functionality
-        const settingsModal = document.getElementById('settings-modal');
-        const settingsBtn = document.getElementById('settings-btn');
-        const closeModal = document.getElementById('close-modal');
-        const logoutBtn = document.getElementById('logout-btn');
-        const updateDisplayNameBtn = document.getElementById('update-display-name');
-        const displayNameInput = document.getElementById('display-name-input');
-
-        settingsBtn.addEventListener('click', () => {
-            settingsModal.style.display = 'block';
-        });
-
-        closeModal.addEventListener('click', () => {
-            settingsModal.style.display = 'none';
-        });
-
-        window.addEventListener('click', (event) => {
-            if (event.target === settingsModal) {
-                settingsModal.style.display = 'none';
-            }
-        });
-
-        // Update Display Name
-        updateDisplayNameBtn.addEventListener('click', () => {
-            const newDisplayName = displayNameInput.value.trim();
-            if (newDisplayName) {
-                const user = auth.currentUser;
-                db.collection('users').doc(user.uid).update({
-                    displayName: newDisplayName
-                }).then(() => {
-                    document.getElementById('user-name').textContent = newDisplayName;
-                    displayNameInput.value = '';
-                    alert('Display name updated successfully!');
-                }).catch(error => {
-                    console.error("Error updating display name:", error);
-                    alert('Error updating display name');
-                });
-            }
-        });
-
-        // Logout functionality
-        logoutBtn.addEventListener('click', () => {
-            auth.signOut().then(() => {
-                window.location.href = 'login.html';
-            }).catch((error) => {
-                console.error("Error signing out:", error);
-            });
-        });
-
-        // Auth state observer
-        firebase.auth().onAuthStateChanged(user => {
-            if (user) {
-                const userId = user.uid;
-                loadFriendRequests(userId); // Load friend requests for the authenticated user
-            } else {
-                window.location.href = 'login.html'; // Redirect to login if not authenticated
-            }
-        });
-
-        async function handleFriendRequest(requestId, action, senderId) {
-            const currentUser = firebase.auth().currentUser;
-
-            if (!currentUser) {
-                alert('You must be logged in to accept friend requests.');
-                return;
-            }
+        /**
+         * Load and display friend requests for the logged-in user.
+         */
+        async function loadFriendRequests() {
+            const currentUser = auth.currentUser;
+            const inboxContainer = document.getElementById("inbox-messages");
+            inboxContainer.innerHTML = ""; // Clear previous requests
 
             try {
-                if (action === 'accept') {
-                    // Fetch the friend request document
-                    const requestDoc = await db.collection('friendRequests').doc(requestId).get();
-                    if (!requestDoc.exists) {
-                        throw new Error("Friend request not found");
-                    }
-
-                    const requestData = requestDoc.data();
-
-                    // Check if the current user is the intended recipient
-                    if (requestData.to !== currentUser.uid) {
-                        throw new Error("You are not authorized to accept this friend request.");
-                    }
-
-                    // Add users as friends in both user documents
-                    await db.collection('users').doc(currentUser.uid).update({
-                        friends: firebase.firestore.FieldValue.arrayUnion(senderId)
-                    });
-                    await db.collection('users').doc(senderId).update({
-                        friends: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
-                    });
-
-                    // Delete the friend request
-                    await db.collection('friendRequests').doc(requestId).delete();
-
-                    // Refresh the friend requests display
-                    loadFriendRequests(currentUser.uid);
-                }
-            } catch (error) {
-                console.error("Error handling friend request:", error);
-                alert('Error processing friend request: ' + error.message);
-            }
-        }
-
-        async function loadFriendRequests(userId) {
-            const inboxMessagesContainer = document.getElementById('inbox-messages');
-            inboxMessagesContainer.innerHTML = ''; // Clear previous content
-
-            console.log("Loading friend requests for user:", userId); // Debug log
-
-            try {
-                const snapshot = await db.collection('friendRequests')
-                    .where('to', '==', userId)
+                const requestsSnapshot = await db.collection("friendRequests")
+                    .where("to", "==", currentUser.uid)
                     .get();
 
-                console.log("Friend request snapshot:", snapshot); // Debug log
-
-                if (snapshot.empty) {
-                    console.log("No friend requests found."); // Debug log
-                    inboxMessagesContainer.innerHTML = '<div class="no-requests">No Friend Requests</div>';
+                if (requestsSnapshot.empty) {
+                    inboxContainer.innerHTML = '<div class="no-requests">No friend requests</div>';
                     return;
                 }
 
-                const promises = snapshot.docs.map(async (doc) => {
-                    const requestData = doc.data();
-                    console.log('Request data:', requestData); // Debug log
+                requestsSnapshot.forEach(doc => {
+                    const request = doc.data();
+                    const messageElement = document.createElement("div");
+                    messageElement.className = "inbox-message";
 
-                    try {
-                        const senderDoc = await db.collection('users').doc(requestData.from).get();
-                        if (!senderDoc.exists) {
-                            console.log('Sender document not found:', requestData.from); // Debug log
-                            return null;
-                        }
+                    // Sender name display
+                    const messageText = document.createElement("div");
+                    messageText.textContent = `${request.fromName || "Unknown User"} sent you a friend request!`;
 
-                        const senderData = senderDoc.data();
-                        console.log('Sender data:', senderData); // Debug log
+                    // Action buttons
+                    const actions = document.createElement("div");
+                    actions.className = "friend-request-actions";
 
-                        const messageElement = document.createElement('div');
-                        messageElement.className = 'inbox-message';
+                    const acceptButton = document.createElement("button");
+                    acceptButton.className = "accept-btn";
+                    acceptButton.textContent = "Accept";
+                    acceptButton.onclick = () => handleFriendRequest(doc.id, "accept", request.from);
 
-                        const messageContent = document.createElement('div');
-                        messageContent.textContent = `${senderData.displayName || 'Unknown User'} sent you a friend request!`;
+                    const declineButton = document.createElement("button");
+                    declineButton.className = "decline-btn";
+                    declineButton.textContent = "Decline";
+                    declineButton.onclick = () => handleFriendRequest(doc.id, "decline", request.from);
 
-                        const actionButtons = document.createElement('div');
-                        actionButtons.className = 'friend-request-actions';
+                    actions.appendChild(acceptButton);
+                    actions.appendChild(declineButton);
 
-                        const acceptButton = document.createElement('button');
-                        acceptButton.className = 'accept-btn';
-                        acceptButton.textContent = 'Accept';
-                        acceptButton.onclick = () => handleFriendRequest(doc.id, 'accept', requestData.from);
-
-                        const declineButton = document.createElement('button');
-                        declineButton.className = 'decline-btn';
-                        declineButton.textContent = 'Decline';
-                        declineButton.onclick = () => handleFriendRequest(doc.id, 'decline', requestData.from);
-
-                        actionButtons.appendChild(acceptButton);
-                        actionButtons.appendChild(declineButton);
-
-                        messageElement.appendChild(messageContent);
-                        messageElement.appendChild(actionButtons);
-
-                        return messageElement;
-                    } catch (error) {
-                        console.error('Error processing friend request:', error);
-                        return null;
-                    }
+                    messageElement.appendChild(messageText);
+                    messageElement.appendChild(actions);
+                    inboxContainer.appendChild(messageElement);
                 });
-
-                const messageElements = await Promise.all(promises);
-                messageElements
-                    .filter(element => element !== null)
-                    .forEach(element => inboxMessagesContainer.appendChild(element));
-
-                if (inboxMessagesContainer.children.length === 0) {
-                    inboxMessagesContainer.innerHTML = '<div class="no-requests">No Friend Requests</div>';
-                }
-
             } catch (error) {
                 console.error("Error loading friend requests:", error);
-                inboxMessagesContainer.innerHTML = '<div class="no-requests">Error loading friend requests</div>';
+                inboxContainer.innerHTML = '<div class="no-requests">Error loading friend requests</div>';
             }
         }
 
-        document.getElementById('send-friend-request').addEventListener('click', async () => {
-            const currentUser = firebase.auth().currentUser; // Get the current user
-            if (!currentUser || !profileUserId) {
-                console.error("Missing user information");
-                alert('Unable to send friend request - missing user information');
-                return; // Exit if user information is missing
+        /**
+         * Handle friend request actions: accept or decline.
+         */
+        async function handleFriendRequest(requestId, action, senderId) {
+            const currentUser = auth.currentUser;
+
+            try {
+                if (action === "accept") {
+                    // Add each other as friends
+                    await db.collection("users").doc(currentUser.uid).update({
+                        friends: firebase.firestore.FieldValue.arrayUnion(senderId)
+                    });
+
+                    await db.collection("users").doc(senderId).update({
+                        friends: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
+                    });
+
+                    alert("Friend request accepted!");
+                } else if (action === "decline") {
+                    alert("Friend request declined.");
+                }
+
+                // Delete the friend request document
+                await db.collection("friendRequests").doc(requestId).delete();
+
+                // Refresh requests
+                loadFriendRequests();
+            } catch (error) {
+                console.error("Error handling friend request:", error);
+                alert("Error processing request.");
             }
+        }
 
-            // Check if sending request to self
-            if (currentUser.uid === profileUserId) {
-                alert('You cannot send a friend request to yourself');
-                return;
+        // Authentication state observer
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                loadFriendRequests(); // Load requests for the logged-in user
+            } else {
+                window.location.href = "login.html"; // Redirect to login if not authenticated
             }
-
-            // Check if already friends
-            const currentUserDoc = await db.collection('users').doc(currentUser.uid).get();
-            const currentUserData = currentUserDoc.data();
-            if (currentUserData.friends && currentUserData.friends.includes(profileUserId)) {
-                alert('You are already friends with this user');
-                return;
-            }
-
-            // Check if request already sent
-            const existingRequest = await db.collection('friendRequests')
-                .where('from', '==', currentUser.uid)
-                .where('to', '==', profileUserId)
-                .where('status', '==', 'pending')
-                .get();
-
-            if (!existingRequest.empty) {
-                alert('You have already sent a friend request to this user');
-                return;
-            }
-
-            // Create friend request document
-            await db.collection('friendRequests').add({
-                from: currentUser.uid,
-                to: profileUserId,
-                status: 'pending',
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            });
-
-            // Add notification to recipient's inbox
-            const senderName = currentUserData.displayName || 'Unknown User';
-            await db.collection('inbox').add({
-                recipientId: profileUserId,
-                senderId: currentUser.uid,
-                senderName: senderName,
-                message: `${senderName} sent you a friend request!`,
-                type: 'friendRequest',
-                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                read: false
-            });
-
-            alert('Friend request sent successfully!');
         });
     </script>
 </body>
-</html> 
+</html>
