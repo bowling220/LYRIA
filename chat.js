@@ -1026,9 +1026,11 @@ firebase.auth().onAuthStateChanged(user => {
                 document.getElementById('bio-input').value = userData.bio || "No bio set."; // Set the current user's bio
 
                 // Check if the user is premium and add the premium badge
+                const profileBadges = document.getElementById('profile-modal-badges');
+                profileBadges.innerHTML = ''; // Clear any existing badges
+
                 if (userData.isPremium) {
                     console.log("User is premium, adding badge."); // Debugging log
-                    const profileBadges = document.getElementById('profile-modal-badges');
                     const premiumBadge = document.createElement('img');
                     premiumBadge.src = 'assets/premium.png'; // Path to the premium badge
                     premiumBadge.alt = 'Premium Badge';
