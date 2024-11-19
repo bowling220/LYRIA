@@ -104,6 +104,20 @@
             <button id="toggle-dark-mode" class="action-btn">Toggle Dark Mode</button>
         </div>
         
+        <!-- Update Profile Image -->
+        <div class="modal-section">
+            <label for="profile-image-input" class="modal-label">Update Profile Image:</label>
+            <input type="file" id="profile-image-input" class="modal-input" accept="image/*">
+            <button id="update-profile-image" class="action-btn">Update Image</button>
+            <p class="premium-info" style="color: #ffcc00;">Premium users can change their profile picture.</p>
+        </div>
+
+        <!-- Upgrade to Premium Section -->
+        <div class="modal-section">
+            <button id="upgrade-to-premium" class="action-btn">Upgrade to Premium</button>
+            <p style="color: #ffcc00;">Unlock premium features by upgrading your account!</p>
+        </div>
+
         <!-- Update Display Name -->
         <div class="modal-section">
             <label for="display-name-input" class="modal-label">Update Display Name:</label>
@@ -117,7 +131,7 @@
             <input type="text" id="bio-input" class="modal-input" placeholder="COMING SOON" disabled>
             <button id="update-bio-btn" disabled>Update Bio</button>
         </div>
-
+        
         <!-- Enable Notifications -->
         <div class="modal-section">
             <label class="toggle-switch">
@@ -126,7 +140,7 @@
                 Enable Notifications
             </label>
         </div>
-
+        
         <!-- Toggle Badge Visibility (only visible if user has the admin badge) -->
         <div class="modal-section" id="badge-visibility-section" style="display: none;">
             <label class="toggle-switch">
@@ -135,7 +149,7 @@
                 Show Badges
             </label>
         </div>
-
+        
         <!-- Logout Button -->
         <div class="modal-section">
             <button id="logout-btn" class="action-btn logout-btn">Logout</button>
@@ -177,7 +191,7 @@
                     if (doc.exists) {
                         const userData = doc.data();
                         document.getElementById('user-name').textContent = userData.displayName;
-                        document.getElementById('user-avatar').src = userData.photoURL;
+                        document.getElementById('user-avatar').src = userData.photoURL || 'assets/icon.png';
 
                         // Set initial values for settings
                         document.getElementById('notifications-toggle').checked = userData.notificationsEnabled || false;
@@ -314,6 +328,73 @@
                 alert('Friend request accepted!');
             }
         }
+
+        // Add event listener for profile image update
+        document.getElementById('update-profile-image').addEventListener('click', async () => {
+            const currentUser = firebase.auth().currentUser;
+            if (!currentUser) return;
+
+            try {
+                // Fetch user data from Firestore
+                const userDoc = await db.collection('users').doc(currentUser.uid).get();
+                if (!userDoc.exists) {
+                    console.error("User document does not exist.");
+                    return;
+                }
+
+                const userData = userDoc.data();
+                
+                // Check if the user is premium
+                if (!userData.isPremium) {
+                    alert('This feature is only available to premium users. Please upgrade your account to change your profile picture.');
+                    return;
+                }
+
+                const fileInput = document.getElementById('profile-image-input');
+                const file = fileInput.files[0];
+
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = async (e) => {
+                        const base64Image = e.target.result;
+
+                        // Update user's photoURL in Firestore with base64 string
+                        await db.collection('users').doc(currentUser.uid).update({
+                            photoURL: base64Image
+                        });
+
+                        // Update all UI elements showing the user's avatar
+                        const avatarElements = document.querySelectorAll(`img[src="${document.getElementById('user-avatar').src}"]`);
+                        avatarElements.forEach(element => {
+                            element.src = base64Image;
+                        });
+
+                        // Update profile modal image if it exists
+                        const profileModalImage = document.getElementById('profile-modal-image');
+                        if (profileModalImage) {
+                            profileModalImage.src = base64Image;
+                        }
+
+                        // Force refresh of friends list to update avatar there
+                        loadFriends(currentUser.uid);
+
+                        alert('Profile image updated successfully!');
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    alert('Please select an image file first.');
+                }
+            } catch (error) {
+                console.error('Error updating profile image:', error);
+                alert('Failed to update profile image. Please try again.');
+            }
+        });
+
+        // Add event listener for the upgrade to premium button
+        document.getElementById('upgrade-to-premium').addEventListener('click', () => {
+            // Redirect to a payment page or show a modal for payment options
+            window.location.href = 'premium-upgrade.html'; // Replace with your actual upgrade page
+        });
     </script>
 
     <!-- Suggestions Modal -->

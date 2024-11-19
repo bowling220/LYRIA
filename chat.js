@@ -148,6 +148,7 @@ auth.onAuthStateChanged(user => {
         window.location.href = 'login.html';
     }
 });
+
 function setupUIEventListeners() {
     // Event listeners for modal buttons
     document.getElementById('settings-btn').addEventListener('click', () => {
@@ -384,26 +385,31 @@ document.getElementById('join-channel').addEventListener('click', () => {
     });
 }
 
-function sendMessage() {
+async function sendMessage() {
     const messageInput = document.getElementById('message-input');
     const messageText = messageInput.value.trim();
+    if (!messageText) return;
 
-    if (messageText && currentChannel) {
-        db.collection('channels').doc(currentChannel)
-            .collection('messages').add({
-                message: messageText,
-                sender: currentUser.displayName || 'User',
-                senderId: currentUser.uid, // Include sender's UID
-                senderPhotoURL: currentUser.photoURL || 'assets/icon.png', // Include sender's photo URL
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            }).then(() => {
-                messageInput.value = '';
-                // Reset typing status
-                setTypingStatus(false);
-            }).catch(error => {
-                console.error("Error sending message:", error);
-                alert('Failed to send message.');
-            });
+    const currentUser = firebase.auth().currentUser;
+    if (!currentUser) return;
+
+    // Get the latest user data from Firestore to ensure we have the current photoURL
+    try {
+        const userDoc = await db.collection('users').doc(currentUser.uid).get();
+        const userData = userDoc.data();
+        
+        const messageData = {
+            senderId: currentUser.uid,
+            sender: currentUser.displayName || 'User',
+            senderPhotoURL: userData.photoURL || 'assets/icon.png', // Use the photoURL from Firestore
+            message: messageText,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        await db.collection('channels').doc(currentChannel).collection('messages').add(messageData);
+        messageInput.value = ''; // Clear the input after sending
+    } catch (error) {
+        console.error("Error sending message:", error);
     }
 }
 
@@ -523,43 +529,28 @@ function generateJoinCode() {
 }
 
 function loadMessages(channelId) {
-    console.log('loadMessages called with channelId:', channelId);
-
-    if (unsubscribeFromMessages) {
-        unsubscribeFromMessages();
-        unsubscribeFromMessages = null;
-    }
-
     const messagesContainer = document.getElementById('messages');
     messagesContainer.innerHTML = '';
-    const channelTitle = document.getElementById('channel-title');
-
-    db.collection('channels').doc(channelId).get().then(doc => {
-        if (doc.exists) {
-            const channelName = doc.data().name;
-            channelTitle.textContent = `#${channelName}`;
-            document.getElementById('message-input').placeholder = `Message #${channelName}`;
-        }
-    }).catch(error => {
-        console.error("Error fetching channel data:", error);
-        alert('Failed to fetch channel data.');
-    });
 
     unsubscribeFromMessages = db.collection('channels').doc(channelId).collection('messages')
         .orderBy('timestamp')
         .onSnapshot(snapshot => {
-            messagesContainer.innerHTML = '';
-
-            snapshot.forEach(doc => {
+            snapshot.forEach(async doc => {
                 const message = doc.data();
+                
+                // Get the latest user data to ensure we have the current photo URL
+                const userDoc = await db.collection('users').doc(message.senderId).get();
+                const userData = userDoc.data();
+                
                 const messageElement = document.createElement('div');
                 messageElement.className = 'message';
 
                 const senderElement = document.createElement('div');
                 senderElement.className = 'sender';
 
+                // Create the sender's avatar image element using the latest photo URL from Firestore
                 const senderAvatarElement = document.createElement('img');
-                senderAvatarElement.src = message.senderPhotoURL || 'assets/icon.png';
+                senderAvatarElement.src = userData ? userData.photoURL : 'assets/icon.png';
                 senderAvatarElement.className = 'sender-avatar';
                 senderAvatarElement.setAttribute('data-uid', message.senderId);
                 senderAvatarElement.addEventListener('click', () => {
@@ -576,47 +567,6 @@ function loadMessages(channelId) {
                 });
                 senderElement.appendChild(senderNameElement);
 
-                // Check if the sender has any badges
-                const userDocRef = db.collection('users').doc(message.senderId);
-                userDocRef.get().then(userDoc => {
-                    if (userDoc.exists) {
-                        const userData = userDoc.data();
-                        console.log(`User data for ${message.senderId}:`, userData); // Debugging log
-
-                        // Check for badges
-                        if (userData.badges && Array.isArray(userData.badges)) {
-                            userData.badges.forEach(badge => {
-                                const badgeElement = document.createElement('img');
-                                badgeElement.src = `assets/${badge}.png`; // Ensure this path is correct
-                                badgeElement.alt = `${badge} Badge`;
-                                badgeElement.className = 'admin-badge'; // Use the same class for styling
-                                senderElement.appendChild(badgeElement); // Append badge to the sender element
-                            });
-                        }
-
-                        // Check if the sender has the feature badge
-                        if (featureUserUIDs.includes(message.senderId)) {
-                            const featureBadge = document.createElement('img');
-                            featureBadge.src = 'assets/feature.png'; // Path to the feature badge
-                            featureBadge.alt = 'Feature Badge';
-                            featureBadge.className = 'admin-badge'; // Use the same class for styling
-                            senderElement.appendChild(featureBadge); // Append feature badge to the sender element
-                        }
-                    } else {
-                        console.log(`No user data found for ${message.senderId}`); // Debugging log
-                    }
-
-                    // Create and append timestamp **after badges**
-                    const timestampElement = document.createElement('span');
-                    timestampElement.className = 'message-timestamp';
-                    const timestamp = message.timestamp ? message.timestamp.toDate() : new Date();
-                    const timeString = timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                    timestampElement.textContent = timeString;
-                    senderElement.appendChild(timestampElement);
-                }).catch(error => {
-                    console.error("Error fetching user data:", error);
-                });
-
                 const messageContentElement = document.createElement('div');
                 messageContentElement.className = 'message-content';
                 messageContentElement.textContent = message.message;
@@ -630,9 +580,9 @@ function loadMessages(channelId) {
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }, error => {
             console.error("Error loading messages:", error);
-            alert('Failed to load messages.');
         });
 }
+
 function applyDarkMode() {
     if(darkMode) {
         document.documentElement.style.setProperty('--primary-color', '#1a1a1a');
