@@ -107,14 +107,14 @@
         <!-- Update Profile Image -->
         <div class="modal-section">
             <label for="profile-image-input" class="modal-label">Update Profile Image:</label>
-            <input type="file" id="profile-image-input" class="modal-input" accept="image/*">
-            <button id="update-profile-image" class="action-btn">Update Image</button>
+            <input type="file" id="profile-image-input" class="modal-input" accept="image/*" disabled>
+            <button id="update-profile-image" class="action-btn" disabled>Update Image (Premium)</button>
             <p class="premium-info" style="color: #ffcc00;">Premium users can change their profile picture.</p>
         </div>
 
         <!-- Upgrade to Premium Section -->
         <div class="modal-section">
-            <button id="upgrade-to-premium" class="action-btn">Upgrade to Premium</button>
+            <button id="upgrade-to-premium" class="action-btn upgrade-btn">👑 Upgrade to Premium</button>
             <p style="color: #ffcc00;">Unlock premium features by upgrading your account!</p>
         </div>
 
@@ -128,8 +128,9 @@
         <!-- Update Bio Section -->
         <div class="modal-section">
             <label for="bio-input" class="modal-label">Update Bio:</label>
-            <input type="text" id="bio-input" class="modal-input" placeholder="COMING SOON" disabled>
-            <button id="update-bio-btn" disabled>Update Bio</button>
+            <input type="text" id="bio-input" class="modal-input" placeholder="Coming Soon" disabled>
+            <button id="update-bio-btn" class="action-btn" disabled>Update Bio (Coming Soon)</button>
+            <p class="premium-info" style="color: #ffcc00;">This feature is currently coming soon.</p>
         </div>
         
         <!-- Enable Notifications -->
@@ -208,6 +209,15 @@
                         
                         // Check for friend requests
                         checkFriendRequests(userId);
+
+                        // Check if user is premium and unlock features
+                        if (userData.isPremium) {
+                            // Enable premium features
+                            document.getElementById('profile-image-input').disabled = false;
+                            document.getElementById('update-profile-image').disabled = false;
+                            document.getElementById('bio-input').disabled = false;
+                            document.getElementById('update-bio-btn').disabled = false;
+                        }
                     } else {
                         console.log("No such document!");
                     }

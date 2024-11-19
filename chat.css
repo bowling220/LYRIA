@@ -780,7 +780,7 @@ textarea {
 }
 
 .modal-content {
-    background-color: var(--background-color);
+    background-color: #2f3136;
     color: #fff;
     padding: 20px;
     border-radius: 8px;
@@ -1241,4 +1241,124 @@ textarea {
     font-size: 0.9rem; /* Reduced font size for friend name */
     color: var(--text-color); /* Text color for friend name */
     font-weight: bold; /* Make the name bold */
+}
+
+.modal-content {
+    background-color: #2f3136; /* Dark background for the modal */
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+.modal-section {
+    margin-bottom: 15px; /* Space between sections */
+}
+
+.modal-label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.modal-input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #fff;
+    color: #000;
+}
+
+.action-btn {
+    background-color: #43b581; /* Green button color */
+    color: #ffffff;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.action-btn:hover {
+    background-color: #3ca374; /* Darker green on hover */
+}
+
+.toggle-switch {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.toggle-switch input {
+    display: none; /* Hide the default checkbox */
+}
+
+.slider {
+    position: relative;
+    width: 34px;
+    height: 20px;
+    background-color: #ccc;
+    border-radius: 34px;
+    transition: background-color 0.2s;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 2px;
+    bottom: 2px;
+    background-color: white;
+    border-radius: 50%;
+    transition: transform 0.2s;
+}
+
+input:checked + .slider {
+    background-color: #43b581; /* Green when checked */
+}
+
+input:checked + .slider:before {
+    transform: translateX(14px); /* Move the slider */
+}
+
+.logout-btn {
+    background-color: #f44336; /* Red for logout */
+}
+
+.logout-btn:hover {
+    background-color: #d32f2f; /* Darker red on hover */
+}
+
+.upgrade-btn {
+    background-color: #ffcc00; /* Bright yellow for the upgrade button */
+    color: #000; /* Black text for contrast */
+    border: none;
+    padding: 12px 20px;
+    border-radius: 5px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.upgrade-btn:hover {
+    background-color: #e6b800; /* Darker yellow on hover */
+}
+
+.premium-info {
+    font-size: 0.9rem;
+    margin-top: 5px;
+}
+
+.modal-input:disabled {
+    background-color: #d3d3d3; /* Light gray background for disabled input */
+    color: #a9a9a9; /* Dark gray text for disabled input */
+    cursor: not-allowed; /* Change cursor to indicate it's not clickable */
+}
+
+.action-btn:disabled {
+    background-color: #d3d3d3; /* Light gray background for disabled button */
+    color: #a9a9a9; /* Dark gray text for disabled button */
+    cursor: not-allowed; /* Change cursor to indicate it's not clickable */
+    border: 1px solid #a9a9a9; /* Dark gray border for disabled button */
 }

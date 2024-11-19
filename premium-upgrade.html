@@ -45,6 +45,7 @@
             cursor: pointer;
             font-size: 1.2rem;
             transition: background-color 0.3s;
+            margin-top: 20px;
         }
         .upgrade-btn:hover {
             background-color: #3ca374;
@@ -58,10 +59,32 @@
             font-size: 1rem;
             text-decoration: underline;
         }
+        .premium-image {
+            width: 100%;
+            max-width: 300px;
+            margin-bottom: 20px;
+        }
+        .tier-selection {
+            margin: 20px 0;
+            padding: 10px;
+            background-color: #2f3136;
+            border-radius: 5px;
+        }
+        .tier-selection label {
+            display: block;
+            margin: 10px 0;
+            cursor: pointer;
+        }
+        .pricing-info {
+            margin-top: 20px;
+            font-size: 1.2rem;
+            color: #ffcc00; /* Highlight color for pricing info */
+        }
     </style>
 </head>
 <body>
     <div class="container">
+        <img src="premium.png" alt="Premium Upgrade" class="premium-image">
         <h1>Upgrade to Premium</h1>
         <p>Unlock exclusive features and enhance your experience with LYRIA Chat!</p>
         
@@ -70,13 +93,25 @@
             <li>Change your profile picture</li>
             <li>Access to premium channels</li>
             <li>Priority customer support</li>
-            <li>Exclusive badges and rewards</li>
+            <li>Exclusive badges</li>
             <li>And Much More!</li>
         </ul>
 
-        <h2>Pricing:</h2>
-        <p><strong>Monthly Subscription:</strong> $1.67</p>
-        <p><strong>Yearly Subscription:</strong> $20.00 (Save 16.67%)</p>
+        
+        <h2>Choose Your Premium Tier:</h2>
+        <div class="tier-selection">
+            <label>
+                <input type="radio" name="premium-tier" value="basic" checked> Basic Tier - $1.67/month
+            </label>
+            <label>
+                <input type="radio" name="premium-tier" value="premium"> Premium Tier - $3.00/month
+            </label>
+        </div>
+
+        <div class="pricing-info" id="pricing-info">
+            <p id="selected-price">You have selected the Basic Tier at $1.67/month.</p>
+            <p id="selected-yearly-price">Yearly Subscription: $20.00 (Save 16.67%)</p>
+        </div>
 
         <button class="upgrade-btn" id="confirm-upgrade">Upgrade Now</button>
         <p id="payment-message" style="color: #ffcc00; margin-top: 10px;"></p>
@@ -108,6 +143,24 @@
             document.getElementById('confirm-upgrade').disabled = !user; // Disable button if not logged in
         });
 
+        // Update pricing info based on selected tier
+        const pricingInfo = document.getElementById('pricing-info');
+        const selectedPrice = document.getElementById('selected-price');
+        const selectedYearlyPrice = document.getElementById('selected-yearly-price');
+        const radioButtons = document.querySelectorAll('input[name="premium-tier"]');
+
+        radioButtons.forEach(radio => {
+            radio.addEventListener('change', () => {
+                if (radio.value === 'premium') {
+                    selectedPrice.textContent = 'You have selected the Premium Tier at $3.00/month.';
+                    selectedYearlyPrice.textContent = 'Yearly Subscription: $36.00 (Save 16.67%)'; // Adjusted yearly price for premium
+                } else {
+                    selectedPrice.textContent = 'You have selected the Basic Tier at $1.67/month.';
+                    selectedYearlyPrice.textContent = 'Yearly Subscription: $20.00 (Save 16.67%)'; // Yearly price for basic
+                }
+            });
+        });
+
         document.getElementById('confirm-upgrade').addEventListener('click', async () => {
             const currentUser = firebase.auth().currentUser;
             if (!currentUser) {
@@ -115,17 +168,17 @@
                 return;
             }
 
-            // Here you would typically handle the payment process
-            // For demonstration, we'll just show a success message
+            const selectedTier = document.querySelector('input[name="premium-tier"]:checked').value; // Get selected tier
             const paymentMessage = document.getElementById('payment-message');
-            paymentMessage.textContent = 'Processing your payment...';
+            paymentMessage.textContent = 'Processing your upgrade...';
 
-            // Simulate a payment process (replace this with actual payment logic)
+            // Simulate a payment process
             setTimeout(async () => {
                 try {
-                    // Update Firestore to set isPremium to true
+                    // Update Firestore to set isPremium and tier
                     await db.collection('users').doc(currentUser.uid).update({
-                        isPremium: true
+                        isPremium: true,
+                        premiumTier: selectedTier // Store the selected tier
                     });
 
                     paymentMessage.textContent = 'Thank you for your purchase! Your account has been upgraded to Premium.';
@@ -138,7 +191,7 @@
                     console.error('Error updating premium status:', error);
                     paymentMessage.textContent = 'Failed to upgrade your account. Please try again.';
                 }
-            }, 2000); // Simulate a 2-second payment processing time
+            }, 2000); // Simulate a 2-second upgrade processing time
         });
     </script>
 </body>
