@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Upgrade to Premium - LYRIA Chat</title>
-    <link rel="stylesheet" href="style.css"> <!-- Link to your main CSS file -->
+    <link rel="stylesheet" href="style.css">
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -14,77 +14,128 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
+            padding: 20px;
         }
         .container {
             background-color: #36393f;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
             width: 90%;
-            max-width: 600px;
+            max-width: 700px;
             text-align: center;
         }
         h1 {
-            margin-bottom: 20px;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+            color: #fff;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        h2 {
+            color: #7289da;
+            margin: 30px 0 20px;
+            font-size: 1.8rem;
         }
         .feature-list {
             text-align: left;
-            margin: 20px 0;
+            margin: 30px auto;
+            max-width: 400px;
+            list-style-position: inside;
+            padding: 0;
         }
         .feature-list li {
-            margin: 10px 0;
+            margin: 15px 0;
+            font-size: 1.1rem;
+            padding: 10px;
+            background-color: #2f3136;
+            border-radius: 8px;
         }
         .upgrade-btn {
-            background-color: #43b581;
+            background: linear-gradient(45deg, #43b581, #3ca374);
             color: #ffffff;
             border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
+            padding: 15px 30px;
+            border-radius: 8px;
             cursor: pointer;
             font-size: 1.2rem;
-            transition: background-color 0.3s;
-            margin-top: 20px;
+            transition: all 0.3s ease;
+            margin: 20px 10px;
+            box-shadow: 0 4px 15px rgba(67, 181, 129, 0.3);
         }
         .upgrade-btn:hover {
-            background-color: #3ca374;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(67, 181, 129, 0.4);
+        }
+        .cancel-btn {
+            background-color: red;
+            color: #ffffff;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+            margin: 20px auto;
+            box-shadow: 0 4px 15px rgba(255, 0, 0, 0.3);
+            display: block;
+        }
+        .cancel-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 0, 0, 0.4);
         }
         .back-btn {
-            margin-top: 20px;
+            margin-top: 30px;
             background: none;
-            border: none;
+            border: 2px solid #ffffff;
             color: #ffffff;
             cursor: pointer;
             font-size: 1rem;
-            text-decoration: underline;
+            padding: 10px 20px;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+        .back-btn:hover {
+            background: rgba(255,255,255,0.1);
         }
         .premium-image {
-            margin-top: 50px;
-            width: 40%; /* Set width to 40% of the container */
-            max-width: 150px; /* Set a maximum width */
-            height: auto; /* Maintain aspect ratio */
-            margin-bottom: 20px;
+            width: 200px;
+            margin: 0 auto 30px;
+            display: block;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
         }
         .tier-selection {
-            margin: 20px 0;
-            padding: 10px;
+            margin: 30px auto;
+            padding: 20px;
             background-color: #2f3136;
-            border-radius: 5px;
+            border-radius: 10px;
+            max-width: 400px;
+            text-align: left;
         }
         .tier-selection label {
             display: block;
-            margin: 10px 0;
+            margin: 15px 0;
             cursor: pointer;
+            padding: 15px;
+            border-radius: 8px;
+            transition: background-color 0.3s;
+        }
+        .tier-selection label:hover {
+            background-color: #36393f;
         }
         .pricing-info {
-            margin-top: 20px;
-            font-size: 1.2rem;
-            color: #ffcc00; /* Highlight color for pricing info */
+            margin: 30px 0;
+            font-size: 1.3rem;
+            color: #ffcc00;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
-        #payment-form {
-            display: none; /* Initially hidden */
+        #payment-message {
+            font-size: 1.1rem;
             margin-top: 20px;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: rgba(255,204,0,0.1);
         }
     </style>
 </head>
@@ -118,20 +169,13 @@
             <p id="selected-yearly-price">Yearly Subscription: $20.00 (Save 16.67%)</p>
         </div>
 
-        <button class="upgrade-btn" id="show-payment-form">Upgrade Now</button>
-        
-        <!-- Payment Form -->
-        <div id="payment-form">
-            <div id="card-container"></div>
-            <button id="confirm-payment" class="upgrade-btn">Confirm Payment</button>
-            <p id="payment-message" style="color: #ffcc00; margin-top: 10px;"></p>
-        </div>
+        <button class="upgrade-btn" id="confirm-upgrade">Upgrade Now</button>
+        <button class="cancel-btn" id="cancel-upgrade" style="display: none;">Cancel Subscription</button>
+        <p id="payment-message" style="color: #ffcc00; margin-top: 10px;"></p>
 
-        <button class="back-btn" onclick="window.history.back()">Back to Settings</button>
+        <button class="back-btn" onclick="window.history.back()">Back Home</button>
     </div>
 
-    <!-- Square Payment Form -->
-    <script src="https://js.squareup.com/v2/paymentform"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
@@ -151,82 +195,107 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // Show payment form when the button is clicked
-        document.getElementById('show-payment-form').addEventListener('click', function() {
-            document.getElementById('payment-form').style.display = 'block';
-            initializeSquarePaymentForm();
+        // Add an authentication state observer
+        firebase.auth().onAuthStateChanged(async (user) => {
+            if (user) {
+                document.getElementById('confirm-upgrade').disabled = false; // Enable button if logged in
+                const userDoc = await db.collection('users').doc(user.uid).get();
+                if (userDoc.exists && userDoc.data().isPremium) {
+                    document.getElementById('cancel-upgrade').style.display = 'block'; // Show cancel button if premium
+                }
+            } else {
+                document.getElementById('confirm-upgrade').disabled = true; // Disable button if not logged in
+            }
         });
 
-        // Initialize Square Payment Form
-        function initializeSquarePaymentForm() {
-            const paymentForm = new SqPaymentForm({
-                applicationId: 'sq0idp-LlgStCJs7e3hXxkAiwhDRQ', // Replace with your Square Application ID
-                inputClass: 'sq-input',
-                autoBuild: false,
-                // Customize the CSS for the payment form
-                inputStyles: [{
-                    fontSize: '16px',
-                    padding: '10px',
-                    color: '#000',
-                    backgroundColor: '#fff',
-                    border: '1px solid #ccc',
-                    borderRadius: '5px',
-                }],
-                // Define the card input fields
-                card: {
-                    elementId: 'card-container',
-                    placeholder: 'Card Number',
-                },
-                // Callback functions
-                callbacks: {
-                    cardNonceResponseReceived: function(errors, nonce) {
-                        if (errors) {
-                            console.error('Errors:', errors);
-                            return;
-                        }
-                        processPayment(nonce);
-                    }
+        // Update pricing info based on selected tier
+        const pricingInfo = document.getElementById('pricing-info');
+        const selectedPrice = document.getElementById('selected-price');
+        const selectedYearlyPrice = document.getElementById('selected-yearly-price');
+        const radioButtons = document.querySelectorAll('input[name="premium-tier"]');
+
+        radioButtons.forEach(radio => {
+            radio.addEventListener('change', () => {
+                if (radio.value === 'premium') {
+                    selectedPrice.textContent = 'You have selected the Premium Tier at $3.00/month.';
+                    selectedYearlyPrice.textContent = 'Yearly Subscription: $36.00 (Save 16.67%)'; // Adjusted yearly price for premium
+                } else {
+                    selectedPrice.textContent = 'You have selected the Basic Tier at $1.67/month.';
+                    selectedYearlyPrice.textContent = 'Yearly Subscription: $20.00 (Save 16.67%)'; // Yearly price for basic
                 }
             });
-            paymentForm.build();
-        }
+        });
 
-        // Process the payment
-        async function processPayment(nonce) {
+        document.getElementById('confirm-upgrade').addEventListener('click', async () => {
             const currentUser = firebase.auth().currentUser;
             if (!currentUser) {
                 alert('You must be logged in to upgrade your account.');
                 return;
             }
 
-            const selectedTier = document.querySelector('input[name="premium-tier"]:checked').value;
-            const amount = selectedTier === 'premium' ? '3.00' : '1.67'; // Set amount based on selected tier
+            const selectedTier = document.querySelector('input[name="premium-tier"]:checked').value; // Get selected tier
+            const paymentMessage = document.getElementById('payment-message');
+            paymentMessage.textContent = 'Processing your upgrade...';
 
-            // Send the nonce to your server to process the payment
-            const response = await fetch('/process-payment', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ nonce, amount, userId: currentUser.uid }),
-            });
+            // Simulate a payment process
+            setTimeout(async () => {
+                try {
+                    // Update Firestore to set isPremium and tier
+                    await db.collection('users').doc(currentUser.uid).update({
+                        isPremium: true,
+                        premiumTier: selectedTier // Store the selected tier
+                    });
 
-            const result = await response.json();
-            if (result.success) {
-                document.getElementById('payment-message').textContent = 'Thank you for your purchase! Your account has been upgraded to Premium.';
-                // Update Firestore to set isPremium and tier
-                await db.collection('users').doc(currentUser.uid).update({
-                    isPremium: true,
-                    premiumTier: selectedTier // Store the selected tier
-                });
-                // Redirect to the home page after a short delay
-                setTimeout(() => {
-                    window.location.href = 'home.html'; // Redirect to home page after upgrade
-                }, 3000); // Redirect after 3 seconds
-            } else {
-                document.getElementById('payment-message').textContent = 'Payment failed. Please try again.';
+                    paymentMessage.textContent = 'Thank you for your purchase! Your account has been upgraded to Premium.';
+                    
+                    // Show cancel button after upgrade
+                    document.getElementById('cancel-upgrade').style.display = 'block';
+
+                    // Redirect to the home page after a short delay
+                    setTimeout(() => {
+                        window.location.href = 'home.html'; // Redirect to home page after upgrade
+                    }, 3000); // Redirect after 3 seconds
+                } catch (error) {
+                    console.error('Error updating premium status:', error);
+                    paymentMessage.textContent = 'Failed to upgrade your account. Please try again.';
+                }
+            }, 2000); // Simulate a 2-second upgrade processing time
+        });
+
+        document.getElementById('cancel-upgrade').addEventListener('click', async () => {
+            const currentUser = firebase.auth().currentUser;
+            if (!currentUser) {
+                alert('You must be logged in to cancel your subscription.');
+                return;
             }
-        }
+
+            const paymentMessage = document.getElementById('payment-message');
+            paymentMessage.textContent = 'Cancelling your subscription...';
+
+            // Simulate cancellation process
+            setTimeout(async () => {
+                try {
+                    // Update Firestore to set isPremium to false
+                    await db.collection('users').doc(currentUser.uid).update({
+                        isPremium: false,
+                        premiumTier: null // Clear the premium tier
+                    });
+
+                    paymentMessage.textContent = 'Your subscription has been cancelled. We hope to see you again!';
+                    
+                    // Hide cancel button after cancellation
+                    document.getElementById('cancel-upgrade').style.display = 'none';
+
+                    // Redirect to the home page after a short delay
+                    setTimeout(() => {
+                        window.location.href = 'home.html'; // Redirect to home page after cancellation
+                    }, 3000); // Redirect after 3 seconds
+                } catch (error) {
+                    console.error('Error cancelling subscription:', error);
+                    paymentMessage.textContent = 'Failed to cancel your subscription. Please try again.';
+                }
+            }, 2000); // Simulate a 2-second cancellation processing time
+        });
     </script>
 </body>
 </html>
