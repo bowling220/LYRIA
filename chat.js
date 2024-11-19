@@ -1029,7 +1029,7 @@ firebase.auth().onAuthStateChanged(user => {
                 const profileBadges = document.getElementById('profile-modal-badges');
                 profileBadges.innerHTML = ''; // Clear any existing badges
 
-                if (userData.badges && userData.badges.includes('Premium')) {
+                if (userData.badges && userData.badges.includes('premium')) {
                     console.log("User has premium badge, adding badge."); // Debugging log
                     const premiumBadge = document.createElement('img');
                     premiumBadge.src = 'assets/premium.png'; // Path to the premium badge
