@@ -148,7 +148,6 @@ auth.onAuthStateChanged(user => {
         window.location.href = 'login.html';
     }
 });
-
 function setupUIEventListeners() {
     // Event listeners for modal buttons
     document.getElementById('settings-btn').addEventListener('click', () => {
@@ -393,24 +392,34 @@ async function sendMessage() {
     const currentUser = firebase.auth().currentUser;
     if (!currentUser) return;
 
-    // Get the latest user data from Firestore to ensure we have the current photoURL
-    try {
-        const userDoc = await db.collection('users').doc(currentUser.uid).get();
-        const userData = userDoc.data();
-        
-        const messageData = {
-            senderId: currentUser.uid,
-            sender: currentUser.displayName || 'User',
-            senderPhotoURL: userData.photoURL || 'assets/icon.png', // Use the photoURL from Firestore
-            message: messageText,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        };
+    // Determine the badge for the current user
+    const badge = getUserBadge(currentUser.uid); // Function to get the user's badge
 
+    const messageData = {
+        senderId: currentUser.uid,
+        sender: currentUser.displayName || 'User',
+        senderPhotoURL: currentUser.photoURL || 'assets/icon.png', // Include the sender's photo URL
+        message: messageText,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(), // Use Firestore server timestamp
+        badge: badge // Include the badge in the message data
+    };
+
+    try {
         await db.collection('channels').doc(currentChannel).collection('messages').add(messageData);
         messageInput.value = ''; // Clear the input after sending
     } catch (error) {
         console.error("Error sending message:", error);
     }
+}
+
+// Example function to get the user's badge
+function getUserBadge(userId) {
+    // Logic to determine the badge based on userId
+    // This is just a placeholder; implement your own logic
+    if (badgeUserUIDs.includes(userId)) {
+        return 'Admin'; // Example badge
+    }
+    return null; // No badge
 }
 
 function setTypingStatus(isTyping) {
@@ -530,32 +539,31 @@ function generateJoinCode() {
 
 function loadMessages(channelId) {
     const messagesContainer = document.getElementById('messages');
-    messagesContainer.innerHTML = '';
+    messagesContainer.innerHTML = ''; // Clear previous messages
 
     unsubscribeFromMessages = db.collection('channels').doc(channelId).collection('messages')
-        .orderBy('timestamp')
+        .orderBy('timestamp') // Ensure messages are ordered by timestamp
         .onSnapshot(snapshot => {
-            snapshot.forEach(async doc => {
+            messagesContainer.innerHTML = ''; // Clear previous messages on snapshot update
+            snapshot.forEach(doc => {
                 const message = doc.data();
-                
-                // Get the latest user data to ensure we have the current photo URL
-                const userDoc = await db.collection('users').doc(message.senderId).get();
-                const userData = userDoc.data();
-                
                 const messageElement = document.createElement('div');
                 messageElement.className = 'message';
 
-                const senderElement = document.createElement('div');
-                senderElement.className = 'sender';
+                // Format the timestamp
+                const timestamp = message.timestamp ? new Date(message.timestamp.toDate()).toLocaleString() : 'Just now';
 
-                // Create the sender's avatar image element using the latest photo URL from Firestore
+                // Create the sender's avatar image element
                 const senderAvatarElement = document.createElement('img');
-                senderAvatarElement.src = userData ? userData.photoURL : 'assets/icon.png';
+                senderAvatarElement.src = message.senderPhotoURL || 'assets/icon.png'; // Use the sender's photo URL
                 senderAvatarElement.className = 'sender-avatar';
                 senderAvatarElement.setAttribute('data-uid', message.senderId);
                 senderAvatarElement.addEventListener('click', () => {
                     showUserProfileModal(message.senderId);
                 });
+
+                const senderElement = document.createElement('div');
+                senderElement.className = 'sender';
                 senderElement.appendChild(senderAvatarElement);
 
                 const senderNameElement = document.createElement('span');
@@ -571,18 +579,33 @@ function loadMessages(channelId) {
                 messageContentElement.className = 'message-content';
                 messageContentElement.textContent = message.message;
 
+                // Create a timestamp element
+                const timestampElement = document.createElement('span');
+                timestampElement.className = 'timestamp';
+                timestampElement.textContent = timestamp; // Display the formatted timestamp
+
+                // Create a badge element if applicable
+                const badgeElement = document.createElement('span');
+                badgeElement.className = 'badge';
+                if (message.badge) {
+                    badgeElement.textContent = message.badge; // Display the badge if it exists
+                } else {
+                    badgeElement.style.display = 'none'; // Hide if no badge
+                }
+
                 messageElement.appendChild(senderElement);
                 messageElement.appendChild(messageContentElement);
+                messageElement.appendChild(timestampElement); // Append timestamp
+                messageElement.appendChild(badgeElement); // Append badge
 
                 messagesContainer.appendChild(messageElement);
             });
 
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            messagesContainer.scrollTop = messagesContainer.scrollHeight; // Scroll to the bottom
         }, error => {
             console.error("Error loading messages:", error);
         });
 }
-
 function applyDarkMode() {
     if(darkMode) {
         document.documentElement.style.setProperty('--primary-color', '#1a1a1a');
