@@ -244,7 +244,7 @@
                     await db.collection('users').doc(currentUser.uid).update({
                         isPremium: true,
                         premiumTier: selectedTier, // Store the selected tier
-                        badges: firebase.firestore.FieldValue.arrayUnion('Premium') // Add premium badge
+                        badges: firebase.firestore.FieldValue.arrayUnion('premium') // Add premium badge
                     });
 
                     paymentMessage.textContent = 'Thank you for your purchase! Your account has been upgraded to Premium.';
