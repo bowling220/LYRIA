@@ -76,12 +76,17 @@
             text-align: center;
             color: #888;
         }
+
+        .loading {
+            text-align: center;
+            color: #fff;
+        }
     </style>
 </head>
 <body>
     <header class="top-header">LYRIA Inbox</header>
     <main class="inbox-area" id="inbox-messages">
-        <div class="no-requests">Loading friend requests...</div>
+        <div class="loading">Loading friend requests...</div>
     </main>
 
     <script>
@@ -102,17 +107,17 @@
          * Load and display friend requests for the logged-in user.
          */
         async function loadFriendRequests() {
-            // Check if user is still authenticated
-            if (!auth.currentUser) {
-                window.location.href = "login.html";
-                return;
-            }
-
-            const currentUser = auth.currentUser;
             const inboxContainer = document.getElementById("inbox-messages");
             inboxContainer.innerHTML = ""; // Clear previous requests
 
             try {
+                // Check if user is still authenticated
+                if (!auth.currentUser) {
+                    window.location.href = "login.html";
+                    return;
+                }
+
+                const currentUser = auth.currentUser;
                 const requestsSnapshot = await db.collection("friendRequests")
                     .where("to", "==", currentUser.uid)
                     .get();
@@ -162,15 +167,15 @@
          * Handle friend request actions: accept or decline.
          */
         async function handleFriendRequest(requestId, action, senderId) {
-            // Check if user is still authenticated
-            if (!auth.currentUser) {
-                window.location.href = "login.html";
-                return;
-            }
-
-            const currentUser = auth.currentUser;
-
             try {
+                // Check if user is still authenticated
+                if (!auth.currentUser) {
+                    window.location.href = "login.html";
+                    return;
+                }
+
+                const currentUser = auth.currentUser;
+
                 if (action === "accept") {
                     // Add each other as friends
                     await db.collection("users").doc(currentUser.uid).update({
