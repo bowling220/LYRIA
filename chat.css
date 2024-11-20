@@ -353,15 +353,16 @@ textarea {
 
 /* Close Button */
 .close-button {
-    position: absolute;
-    top: 15px;
-    right: 20px;
+    position: absolute; /* Position it absolutely within the modal content */
+    top: 10px; /* Adjust top position */
+    right: 20px; /* Adjust right position */
     background: none;
     border: none;
     font-size: 1.5rem;
     color: var(--text-color);
     cursor: pointer;
     transition: color 0.3s ease;
+    z-index: 1001; /* Ensure it's above the modal background */
 }
 
 .close-button:hover {
@@ -412,21 +413,21 @@ textarea {
 
 /* Action Buttons */
 .action-btn {
-    padding: 0.6rem 1rem;
-    background-color: var(--secondary-color);
-    color: #fff;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 1rem;
-    align-self: flex-start;
-    transition: background-color 0.3s ease, transform 0.2s ease;
-    margin-top: 0.5rem; /* Add margin to separate from other elements */
+    padding: 10px; /* Padding for buttons */
+    background-color: var(--secondary-color); /* Default background color for buttons */
+    color: #ffffff; /* White text for contrast */
+    border: none; /* Remove default border */
+    border-radius: 5px; /* Rounded corners */
+    cursor: pointer; /* Pointer cursor on hover */
+    transition: background-color 0.3s ease, transform 0.2s ease; /* Smooth transitions */
+    width: 100%; /* Full width for buttons */
+    margin-top: 10px; /* Space above buttons */
 }
 
-.action-btn:hover {
-    background-color: #4a5de2;
-    transform: translateY(-2px);
+/* Specific hover effect for Update Bio button */
+.update-bio-btn:hover {
+    background-color: #e74c3c !important; /* Change to red on hover */
+    transform: translateY(-2px); /* Slight lift effect */
 }
 
 .logout-btn {
@@ -531,6 +532,7 @@ textarea {
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5); /* Softer shadow for depth */
     animation: fadeIn 0.3s ease; /* Smooth fade-in effect */
     position: relative; /* Set position to relative for absolute positioning of close button */
+    padding-top: 40px; /* Add padding to the top to prevent content from hiding behind the close button */
 }
 
 #profile-modal-image {
@@ -765,7 +767,7 @@ textarea {
     }
 }
 
-/* Settings Modal */
+/* Settings Modal Styles */
 .modal {
     display: none; /* Hidden by default */
     position: fixed;
@@ -780,21 +782,25 @@ textarea {
 }
 
 .modal-content {
-    background-color: #2f3136;
-    color: #fff;
-    padding: 20px;
-    border-radius: 8px;
-    width: 300px;
-    text-align: center;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Soft shadow */
+    background-color: #2f3136; /* Background color for modal */
+    color: #fff; /* Text color */
+    padding: 20px; /* Padding inside the modal */
+    border-radius: 8px; /* Rounded corners */
+    width: 90%; /* Responsive width */
+    max-width: 400px; /* Maximum width to fit better on smaller screens */
+    text-align: left; /* Left-align text */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5); /* Soft shadow */
     animation: fadeIn 0.3s ease; /* Smooth fade-in effect */
+    overflow-y: auto; /* Allow scrolling if content exceeds height */
+    max-height: 80vh; /* Limit height to fit within the viewport */
     position: relative; /* Set position to relative for absolute positioning of close button */
+    padding-top: 40px; /* Add padding to the top to prevent content from hiding behind the close button */
 }
 
 /* Close Button */
 .close-button {
     position: absolute; /* Position it absolutely within the modal content */
-    top: 15px; /* Adjust top position */
+    top: 10px; /* Adjust top position */
     right: 20px; /* Adjust right position */
     background: none;
     border: none;
@@ -812,123 +818,78 @@ textarea {
 /* Modal Title */
 .modal-content h2 {
     color: var(--text-color);
-    margin-bottom: 1.5rem;
-    font-size: 1.5rem;
-    text-align: center;
+    margin-bottom: 1rem; /* Space below the title */
+    font-size: 1.5rem; /* Adjusted font size for title */
+    text-align: center; /* Center title */
 }
 
 /* Modal Sections */
 .modal-section {
-    margin-bottom: 1.5rem; /* Increase bottom margin for spacing */
-    display: flex;
-    flex-direction: column;
+    margin-bottom: 15px; /* Space between sections */
+    padding: 10px; /* Padding inside each section */
+    background-color: #36393f; /* Background color for each section */
+    border-radius: 8px; /* Rounded corners for sections */
 }
 
 /* Labels */
 .modal-label {
     color: var(--text-color);
     margin-bottom: 0.5rem; /* Ensure there's space below the label */
-    font-weight: bold;
+    font-weight: bold; /* Bold text for labels */
 }
 
 /* Input Fields */
 .modal-input {
-    padding: 0.5rem 0.75rem;
-    border: 1px solid #444;
-    border-radius: 5px;
-    background-color: var(--primary-color);
-    color: var(--text-color);
-    font-size: 1rem;
-    transition: border-color 0.3s ease;
-}
-
-.modal-input::placeholder {
-    color: #999;
-}
-
-.modal-input:focus {
-    border-color: var(--secondary-color);
-    outline: none;
+    padding: 10px; /* Padding for input fields */
+    border: 1px solid #444; /* Border color */
+    border-radius: 5px; /* Rounded corners */
+    background-color: var(--background-color); /* Background color */
+    color: var(--text-color); /* Text color */
+    font-size: 1rem; /* Font size */
+    width: 100%; /* Full width */
+    margin-bottom: 10px; /* Space below input fields */
 }
 
 /* Action Buttons */
 .action-btn {
-    padding: 0.6rem 1rem;
-    background-color: var(--secondary-color);
-    color: #fff;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 1rem;
-    align-self: flex-start;
-    transition: background-color 0.3s ease, transform 0.2s ease;
-    margin-top: 0.5rem; /* Add margin to separate from other elements */
+    padding: 10px; /* Padding for buttons */
+    background-color: var(--secondary-color); /* Background color for buttons */
+    color: #ffffff; /* White text for contrast */
+    border: none; /* Remove default border */
+    border-radius: 5px; /* Rounded corners */
+    cursor: pointer; /* Pointer cursor on hover */
+    transition: background-color 0.3s ease, transform 0.2s ease; /* Smooth transitions */
+    width: 100%; /* Full width for buttons */
+    margin-top: 10px; /* Space above buttons */
 }
 
+/* Hover Effects for Buttons */
 .action-btn:hover {
-    background-color: #4a5de2;
-    transform: translateY(-2px);
+    background-color: #4a5de2; /* Darker shade on hover */
+    transform: translateY(-2px); /* Slight lift effect */
 }
 
-.logout-btn {
-    background-color: #e74c3c;
-}
-
-.logout-btn:hover {
-    background-color: #c0392b;
-}
-
-/* Toggle Switch */
+/* Toggle Switch Styles */
 .toggle-switch {
-    position: relative;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    cursor: pointer;
+    display: flex; /* Flexbox for alignment */
+    align-items: center; /* Center items vertically */
+    cursor: pointer; /* Pointer cursor on hover */
 }
 
-.toggle-switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
-
+/* Toggle Switch Slider */
 .toggle-switch .slider {
     position: relative;
-    width: 50px;
-    height: 24px;
-    background-color: #ccc;
-    border-radius: 24px;
-    transition: background-color 0.4s;
+    width: 50px; /* Width of the toggle switch */
+    height: 24px; /* Height of the toggle switch */
+    background-color: #ccc; /* Background color */
+    border-radius: 24px; /* Rounded corners */
+    transition: background-color 0.4s; /* Smooth transition */
+    margin-left: 10px; /* Space between label and toggle */
 }
 
-.toggle-switch .slider::before {
-    content: "";
-    position: absolute;
-    width: 18px;
-    height: 18px;
-    left: 3px;
-    bottom: 3px;
-    background-color: white;
-    border-radius: 50%;
-    transition: transform 0.4s;
-}
-
+/* Active State for Toggle Switch */
 .toggle-switch input:checked + .slider {
-    background-color: var(--secondary-color);
-}
-
-.toggle-switch input:checked + .slider::before {
-    transform: translateX(26px);
-}
-
-/* Responsive Adjustments */
-@media (max-width: 768px) {
-    .modal-content {
-        margin: 1rem;
-        max-height: 90vh;
-        overflow-y: auto;
-    }
+    background-color: var(--secondary-color); /* Change background when checked */
 }
 
 /* Fade-in Animation */
@@ -943,88 +904,11 @@ textarea {
     }
 }
 
-/* Mobile Styles */
+/* Responsive Adjustments */
 @media (max-width: 768px) {
-    body {
-        font-size: 14px; /* Adjust base font size for better readability */
-    }
-
-    .top-header {
-        padding: 0.5rem; /* Adjust padding for mobile */
-        font-size: 1.1rem; /* Slightly smaller font size */
-    }
-
-    .app-container {
-        flex-direction: column; /* Stack elements vertically */
-        height: calc(100vh - 50px); /* Adjust height to fit the viewport */
-    }
-
-    .sidebar {
-        display: none; /* Hide sidebar by default */
-        width: 100%; /* Full width on mobile */
-        position: absolute; /* Position it absolutely */
-        top: 0; /* Align to the top */
-        left: 0; /* Align to the left */
-        background-color: var(--sidebar-color); /* Background color */
-        z-index: 10; /* Ensure it appears above other content */
-    }
-
-    .sidebar.active {
-        display: flex; /* Show sidebar when active */
-        flex-direction: column; /* Stack items vertically */
-    }
-
-    .menu-toggle {
-        display: block; /* Ensure toggle button is visible */
-        font-size: 2rem; /* Larger size for visibility */
-        z-index: 20; /* Ensure it appears above other content */
-    }
-
-    .channels {
-        flex: 0 0 auto; /* Prevent channels from growing */
-        padding: 1rem;
-        overflow-y: auto; /* Allow scrolling if channels exceed viewport height */
-    }
-
-    .messages {
-        flex: 1; /* Allow messages area to take remaining space */
-        height: calc(100vh - 150px); /* Adjust height for header and input area */
-        padding: 0.6rem;
-        overflow-y: auto; /* Allow scrolling for messages */
-    }
-
-    .message-input {
-        padding: 0.6rem; /* Adjust padding for input area */
-        position: relative; /* Change to relative for better positioning */
-        background-color: var(--primary-color); /* Ensure background color matches */
-    }
-
-    .send-btn {
-        padding: 0.5rem; /* Increase padding */
-        min-width: 70px; /* Ensure minimum width for buttons */
-    }
-
     .modal-content {
-        width: 90%; /* Full width for modals */
-        max-width: 400px; /* Limit max width */
-        margin: 0 auto; /* Center modal */
-    }
-
-    .close-button {
-        font-size: 1.5rem; /* Adjust close button size */
-    }
-
-    .toggle-switch {
-        width: 60px; /* Adjust toggle switch width */
-    }
-
-    .toggle-switch .slider {
-        height: 26px; /* Adjust height for better touch target */
-    }
-
-    .toggle-switch .slider::before {
-        width: 20px; /* Adjust width for better touch target */
-        height: 20px; /* Adjust height for better touch target */
+        margin: 1rem;
+        max-height: 90vh; /* Allow more height on smaller screens */
     }
 }
 
@@ -1361,4 +1245,162 @@ input:checked + .slider:before {
     color: #a9a9a9; /* Dark gray text for disabled button */
     cursor: not-allowed; /* Change cursor to indicate it's not clickable */
     border: 1px solid #a9a9a9; /* Dark gray border for disabled button */
+}
+
+/* Tooltip Container */
+.tooltip-container {
+    position: relative; /* Position relative for absolute positioning of tooltip */
+    display: inline-block; /* Inline block to wrap the button */
+}
+
+/* Tooltip Styles */
+.tooltip {
+    visibility: hidden; /* Hidden by default */
+    width: 120px; /* Width of the tooltip */
+    background-color: rgba(0, 0, 0, 0.8); /* Dark background */
+    color: #fff; /* White text */
+    text-align: center; /* Center text */
+    border-radius: 5px; /* Rounded corners */
+    padding: 5px; /* Padding inside the tooltip */
+    position: absolute; /* Position absolutely */
+    z-index: 1; /* Ensure it appears above other elements */
+    bottom: 125%; /* Position above the button */
+    left: 50%; /* Center horizontally */
+    margin-left: -60px; /* Adjust to center */
+    opacity: 0; /* Start invisible */
+    transition: opacity 0.3s; /* Smooth transition */
+}
+
+/* Show the tooltip on hover */
+.tooltip-container:hover .tooltip {
+    visibility: visible; /* Show tooltip */
+    opacity: 1; /* Fade in */
+}
+
+/* Ensure the modal has a fixed height and allows scrolling */
+.modal {
+    overflow: hidden; /* Prevent scrolling of the modal itself */
+}
+
+/* Modal Content */
+.modal-content {
+    background-color: #2f3136; /* Background color for modal */
+    color: #fff; /* Text color */
+    padding: 20px; /* Padding inside the modal */
+    border-radius: 8px; /* Rounded corners */
+    width: 90%; /* Responsive width */
+    max-width: 400px; /* Maximum width to fit better on smaller screens */
+    text-align: left; /* Left-align text */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5); /* Soft shadow */
+    animation: fadeIn 0.3s ease; /* Smooth fade-in effect */
+    overflow-y: auto; /* Allow scrolling if content exceeds height */
+    max-height: 80vh; /* Limit height to fit within the viewport */
+    position: relative; /* Set position to relative for absolute positioning of close button */
+}
+
+/* Modal Sections */
+.modal-section {
+    display: flex; /* Use flexbox for layout */
+    flex-direction: column; /* Stack items vertically */
+    justify-content: center; /* Center items vertically */
+    align-items: stretch; /* Stretch items to full width */
+    margin-bottom: 20px; /* Space between sections */
+    padding: 15px; /* Padding inside each section */
+    background-color: #36393f; /* Background color for each section */
+    border-radius: 8px; /* Rounded corners for sections */
+    width: 100%; /* Full width */
+    box-sizing: border-box; /* Include padding and border in element's total width and height */
+}
+
+/* Close Button */
+.close-button {
+    position: absolute; /* Position it absolutely within the modal content */
+    top: 10px; /* Adjust top position */
+    right: 20px; /* Adjust right position */
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--text-color);
+    cursor: pointer;
+    transition: color 0.3s ease;
+    z-index: 1001; /* Ensure it's above the modal background */
+}
+
+/* Ensure the modal has a fixed height and allows scrolling */
+.modal {
+    overflow: hidden; /* Prevent scrolling of the modal itself */
+}
+
+/* Tooltip Styles */
+.tooltip {
+    visibility: hidden; /* Hidden by default */
+    width: 120px; /* Width of the tooltip */
+    background-color: rgba(0, 0, 0, 0.8); /* Dark background */
+    color: #fff; /* White text */
+    text-align: center; /* Center text */
+    border-radius: 5px; /* Rounded corners */
+    padding: 5px; /* Padding inside the tooltip */
+    position: absolute; /* Position absolutely */
+    z-index: 1; /* Ensure it appears above other elements */
+    bottom: 125%; /* Position above the button */
+    left: 50%; /* Center horizontally */
+    margin-left: -60px; /* Adjust to center */
+    opacity: 0; /* Start invisible */
+    transition: opacity 0.3s; /* Smooth transition */
+}
+
+/* Show the tooltip on hover */
+.tooltip-container:hover .tooltip {
+    visibility: visible; /* Show tooltip */
+    opacity: 1; /* Fade in */
+}
+
+/* Fixed Height for Uniformity */
+.modal-section.fixed-height {
+    height: 100px; /* Fixed height for uniformity */
+}
+
+/* Action Buttons */
+.action-btn {
+    padding: 10px; /* Padding for buttons */
+    background-color: var(--secondary-color); /* Background color for buttons */
+    color: #ffffff; /* White text for contrast */
+    border: none; /* Remove default border */
+    border-radius: 5px; /* Rounded corners */
+    cursor: pointer; /* Pointer cursor on hover */
+    transition: background-color 0.3s ease, transform 0.2s ease; /* Smooth transitions */
+    width: 100%; /* Full width for buttons */
+    margin-top: 10px; /* Space above buttons */
+}
+
+/* Tooltip Styles */
+.tooltip {
+    visibility: hidden; /* Hidden by default */
+    width: 120px; /* Width of the tooltip */
+    background-color: rgba(0, 0, 0, 0.8); /* Dark background */
+    color: #fff; /* White text */
+    text-align: center; /* Center text */
+    border-radius: 5px; /* Rounded corners */
+    padding: 5px; /* Padding inside the tooltip */
+    position: absolute; /* Position absolutely */
+    z-index: 1; /* Ensure it appears above other elements */
+    bottom: 125%; /* Position above the button */
+    left: 50%; /* Center horizontally */
+    margin-left: -60px; /* Adjust to center */
+    opacity: 0; /* Start invisible */
+    transition: opacity 0.3s; /* Smooth transition */
+}
+
+/* Show the tooltip on hover */
+.tooltip-container:hover .tooltip {
+    visibility: visible; /* Show tooltip */
+    opacity: 1; /* Fade in */
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .modal-content {
+        margin: 1rem;
+        max-height: 90vh; /* Allow more height on smaller screens */
+    }
 }
