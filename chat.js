@@ -27,6 +27,81 @@ const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx
 // Define an array of UIDs for users who should have badges
 const badgeUserUIDs = ["qzf9fO2bBLU0PJhRDSQK9KnMZD32", "xLT0XKgtF5ZnlfX2fLj9hXrTcW02"]; // Replace with actual UIDs
 
+// Hardcoded badge details
+const badgeDetails = {
+    "Beta": {
+        description: "Awarded to beta testers.",
+        userCount: 150 // Example number of users who have this badge
+    },
+    "admin": {
+        description: "Awarded to administrators.",
+        userCount: 2 // Example number of users who have this badge
+    },
+    "VIP": {
+        description: "Awarded to very important persons.",
+        userCount: 30 // Example number of users who have this badge
+    },
+    // Add more badges as needed
+};
+
+// Function to display badges with hover tooltips
+function displayBadges(userId) {
+    const badgesContainer = document.getElementById('profile-modal-badges');
+    badgesContainer.innerHTML = ''; // Clear previous badges
+
+    db.collection('users').doc(userId).get().then(doc => {
+        if (doc.exists) {
+            const userData = doc.data();
+
+            if (userData.badges && Array.isArray(userData.badges)) {
+                userData.badges.forEach(badge => {
+                    const badgeDiv = document.createElement('div');
+                    badgeDiv.className = 'badge';
+                    badgeDiv.setAttribute('data-badge-name', badge);
+
+                    const badgeImage = document.createElement('img');
+                    badgeImage.src = `assets/${badge}.png`; // Assuming badge images are stored in assets
+                    badgeImage.alt = `${badge} Badge`;
+                    badgeImage.className = 'badge-image';
+
+                    // Add a tooltip for badge details
+                    const tooltip = document.createElement('div');
+                    tooltip.className = 'tooltip';
+                    const details = badgeDetails[badge];
+                    if (details) {
+                        tooltip.innerHTML = `
+                            <strong>${badge}</strong><br>
+                            ${details.description}<br>
+                            <strong>Users:</strong> ${details.userCount}
+                        `;
+                    } else {
+                        tooltip.innerHTML = `<strong>${badge}</strong><br>No details available.`;
+                    }
+
+                    badgeDiv.appendChild(badgeImage);
+                    badgeDiv.appendChild(tooltip);
+                    badgesContainer.appendChild(badgeDiv);
+
+                    // Show tooltip on hover
+                    badgeDiv.addEventListener('mouseenter', () => {
+                        tooltip.style.visibility = 'visible';
+                        tooltip.style.opacity = '1';
+                    });
+
+                    badgeDiv.addEventListener('mouseleave', () => {
+                        tooltip.style.visibility = 'hidden';
+                        tooltip.style.opacity = '0';
+                    });
+                });
+            }
+        }
+    }).catch(error => {
+        console.error("Error fetching user data:", error);
+    });
+}
+
+
+
 const betaUserUIDs = [
     "DWjEGCFvdKe50fMiXk9EsHH9j3F3", // Replace with actual user ID
     "RshQJzHL4tUt34Jqgd96g0DktHk2", // Replace with actual user ID
@@ -53,23 +128,6 @@ document.addEventListener('click', (e) => {
     }
 });
 
-function addOrUpdateBadge(badgeName, description = "No description available.", rarity = "common") {
-    const badgeRef = db.collection('badges').doc(badgeName);
-
-    // Set the badge data
-    badgeRef.set({
-        name: badgeName,
-        description: description,
-        rarity: rarity,
-        awardedTo: [] // Initialize with an empty array
-    }, { merge: true }) // Use merge to update existing documents
-    .then(() => {
-        console.log(`Badge ${badgeName} added/updated successfully.`);
-    })
-    .catch(error => {
-        console.error("Error adding/updating badge:", error);
-    });
-}
 
 // Authenticate the user and load settings
 auth.onAuthStateChanged(user => {
@@ -857,8 +915,13 @@ function showUserProfileModal(uid) {
                     badgeDiv.className = 'badge';
                     badgeDiv.setAttribute('data-badge-name', badge);
                     
-                    // Set the click event to show badge info
-                    badgeDiv.onclick = () => showBadgeInfo(badge); 
+                    // Set the click event to show badge details
+                    badgeDiv.onclick = () => {
+                        const details = badgeDetails[badge];
+                        if (details) {
+                            showBadgePreview(badge, details.description, details.userCount);
+                        }
+                    };
 
                     const badgeImage = document.createElement('img');
                     badgeImage.src = `assets/${badge}.png`; // Assuming badge images are stored in assets
@@ -1264,24 +1327,10 @@ async function loadUserProfile(userId) {
         console.error("User document does not exist.");
     }
 }
-document.getElementById('close-badge-modal').addEventListener('click', () => {
-    const badgeModal = document.getElementById('badge-modal');
-    badgeModal.style.display = 'none'; // Hide the modal
-});
 
-// Example function to add a badge to Firestore
-function addBadge(badgeName, description, rarity, awardedTo) {
-    db.collection('badges').doc(badgeName).set({
-        name: badgeName,
-        description: description,
-        rarity: rarity,
-        awardedTo: awardedTo
-    }).then(() => {
-        console.log(`Badge ${badgeName} added successfully.`);
-    }).catch(error => {
-        console.error("Error adding badge:", error);
-    });
-}
-// Example usage
-addBadge("Beta", "Awarded to beta testers.", "rare", ["userId1", "userId2"]);
+
+
+
+
+
 

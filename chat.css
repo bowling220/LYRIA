@@ -1491,3 +1491,224 @@ input:checked + .slider:before {
     right: 10px;
     cursor: pointer;
 }
+.badge-modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.85);
+    justify-content: center;
+    align-items: center;
+}
+
+.badge-modal-content {
+    background-color: var(--background-color);
+    border-radius: 12px;
+    padding: 30px 40px;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.badge-modal img {
+    width: 100px;
+    height: 100px;
+    margin-bottom: 20px;
+    border-radius: 50%;
+    border: 4px solid var(--secondary-color);
+    box-shadow: 0 0 20px rgba(88, 101, 242, 0.4);
+    transition: all 0.3s ease;
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 5px;
+}
+
+.badge-modal img:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 30px rgba(88, 101, 242, 0.6);
+}
+
+.close-button {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    cursor: pointer;
+    color: var(--text-color);
+    font-size: 24px;
+    opacity: 0.7;
+    transition: all 0.2s ease;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.close-button:hover {
+    opacity: 1;
+    background-color: rgba(255, 255, 255, 0.2);
+    transform: rotate(90deg);
+}
+
+h2 {
+    font-size: 24px;
+    margin: 0 0 15px 0;
+    color: var(--secondary-color);
+    font-weight: 700;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+p {
+    font-size: 15px;
+    margin: 0 0 12px 0;
+    line-height: 1.6;
+    color: var(--text-color);
+    text-align: center;
+    opacity: 0.9;
+}
+
+/* Animation for modal */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -45%);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%);
+    }
+}
+
+.badge-modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    top: 50%; /* Center vertically */
+    left: 50%; /* Center horizontally */
+    transform: translate(-50%, -50%); /* Offset to center */
+    background: #2c2f33; /* Dark background */
+    color: #ffffff; /* White text */
+    padding: 20px; /* Padding inside the modal */
+    border-radius: 8px; /* Rounded corners */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5); /* Shadow for depth */
+    z-index: 1000; /* Ensure it appears above other elements */
+    width: 300px; /* Set a fixed width for the modal */
+    max-width: 90%; /* Responsive width */
+    text-align: center; /* Center text */
+    animation: fadeIn 0.3s ease; /* Fade-in animation */
+}
+
+.badge-modal-content {
+    display: flex;
+    flex-direction: column; /* Stack items vertically */
+    align-items: center; /* Center items horizontally */
+}
+
+.badge-modal img {
+    width: 80px; /* Set a fixed size for badge images */
+    height: 80px; /* Set a fixed size for badge images */
+    margin-bottom: 15px; /* Space below the image */
+    border-radius: 50%; /* Circular badge image */
+    border: 3px solid #7289da; /* Border color */
+    transition: transform 0.3s; /* Smooth scaling effect */
+}
+
+.badge-modal img:hover {
+    transform: scale(1.1); /* Slightly enlarge on hover */
+}
+
+h2 {
+    font-size: 1.5rem; /* Larger font size for the badge name */
+    margin: 10px 0; /* Margin for spacing */
+    color: #7289da; /* Use a distinct color for the badge name */
+}
+
+p {
+    font-size: 0.9rem; /* Standard font size for description */
+    margin: 5px 0; /* Margin for spacing */
+    line-height: 1.4; /* Improve readability */
+}
+
+/* Close button styling */
+.close-button {
+    position: absolute; /* Position close button */
+    top: 10px; /* Distance from top */
+    right: 10px; /* Distance from right */
+    cursor: pointer; /* Pointer cursor */
+    color: #ff4444; /* Red color for close button */
+    font-size: 1.5rem; /* Larger font size */
+    z-index: 1002; /* Ensure it appears above the modal content and overlay */
+}
+
+.close-button:hover {
+    color: #ff0000; /* Change color on hover */
+}
+
+/* Animation for modal */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -40%);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%);
+    }
+}
+
+/* Modal Overlay */
+.modal-overlay {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    top: 0; /* Cover the entire screen */
+    left: 0; /* Cover the entire screen */
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    background: rgba(0, 0, 0, 0.7); /* Semi-transparent black background */
+    z-index: 999; /* Ensure it appears below the modal */
+}
+
+/* Badge Preview Modal */
+#badgeModal-Preview {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    top: 50%; /* Center vertically */
+    left: 50%; /* Center horizontally */
+    transform: translate(-50%, -50%); /* Offset to center */
+    background: rgba(44, 47, 51, 0.95); /* Semi-transparent dark background */
+    color: #ffffff; /* White text */
+    padding: 20px; /* Padding inside the modal */
+    border-radius: 8px; /* Rounded corners */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5); /* Shadow for depth */
+    z-index: 1000; /* Ensure it appears above other elements */
+    width: 300px; /* Set a fixed width for the modal */
+    max-width: 90%; /* Responsive width */
+    text-align: center; /* Center text */
+    animation: fadeIn 0.3s ease; /* Fade-in animation */
+}
+
+/* Overlay for the badge preview modal */
+#badgeModal-Preview-overlay {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    top: 0; /* Cover the entire screen */
+    left: 0; /* Cover the entire screen */
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    background: rgba(0, 0, 0, 0.7); /* Semi-transparent black background */
+    z-index: 999; /* Ensure it appears below the modal */
+}
+
+#badgeModal-Preview .close-button {
+    z-index: 1002; /* Ensure it appears above the badge preview modal */
+}
