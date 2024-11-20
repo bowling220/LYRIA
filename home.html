@@ -177,6 +177,15 @@
             if (isMobileDevice()) {
                 mobileMessage.style.display = 'block';
             }
+
+            // Load last visited channel from localStorage
+            const lastChannel = localStorage.getItem('lastVisitedChannel');
+            if (lastChannel) {
+                // Update channel title and load messages for last visited channel
+                document.getElementById('channel-title').textContent = `# ${lastChannel}`;
+                // Assuming you have a function to load channel messages
+                loadChannelMessages(lastChannel);
+            }
         });
 
         // Close the mobile message
@@ -407,6 +416,12 @@
         document.getElementById('upgrade-to-premium').addEventListener('click', () => {
             // Redirect to a payment page or show a modal for payment options
             window.location.href = 'premium-upgrade.html'; // Replace with your actual upgrade page
+        });
+
+        // Save current channel before leaving
+        window.addEventListener('beforeunload', () => {
+            const currentChannel = document.getElementById('channel-title').textContent.replace('# ', '');
+            localStorage.setItem('lastVisitedChannel', currentChannel);
         });
     </script>
 
