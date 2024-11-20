@@ -183,92 +183,10 @@
             if (lastChannel) {
                 // Update channel title and load messages for last visited channel
                 document.getElementById('channel-title').textContent = `# ${lastChannel}`;
+                // Assuming you have a function to load channel messages
                 loadChannelMessages(lastChannel);
             }
-
-            // Load all channels and highlight current one
-            loadChannels();
         });
-
-        // Function to load all channels and highlight current one
-        async function loadChannels() {
-            const channelsList = document.getElementById('channels-list');
-            const currentChannel = document.getElementById('channel-title').textContent.replace('# ', '');
-            
-            try {
-                const snapshot = await db.collection('channels').get();
-                channelsList.innerHTML = '';
-                
-                snapshot.forEach(doc => {
-                    const channel = doc.data();
-                    const li = document.createElement('li');
-                    li.textContent = channel.name;
-                    li.className = 'channel-item';
-                    
-                    // Highlight current channel
-                    if (channel.name === currentChannel) {
-                        li.classList.add('active-channel');
-                    }
-                    
-                    li.onclick = () => {
-                        // Remove highlight from all channels
-                        document.querySelectorAll('.channel-item').forEach(item => {
-                            item.classList.remove('active-channel');
-                        });
-                        
-                        // Add highlight to clicked channel
-                        li.classList.add('active-channel');
-                        
-                        // Update channel title and load messages
-                        document.getElementById('channel-title').textContent = `# ${channel.name}`;
-                        loadChannelMessages(channel.name);
-                        
-                        // Save to localStorage
-                        localStorage.setItem('lastVisitedChannel', channel.name);
-                    };
-                    
-                    channelsList.appendChild(li);
-                });
-            } catch (error) {
-                console.error('Error loading channels:', error);
-            }
-        }
-
-        // Function to load channel messages
-        async function loadChannelMessages(channelName) {
-            const messagesDiv = document.getElementById('messages');
-            messagesDiv.innerHTML = '';
-            
-            try {
-                const snapshot = await db.collection('channels')
-                    .doc(channelName)
-                    .collection('messages')
-                    .orderBy('timestamp')
-                    .get();
-                
-                snapshot.forEach(doc => {
-                    const message = doc.data();
-                    const messageElement = document.createElement('div');
-                    messageElement.className = 'message';
-                    messageElement.innerHTML = `
-                        <img src="${message.userAvatar || 'assets/icon.png'}" alt="User Avatar" class="message-avatar">
-                        <div class="message-content">
-                            <div class="message-header">
-                                <span class="message-author">${message.userName}</span>
-                                <span class="message-time">${message.timestamp.toDate().toLocaleString()}</span>
-                            </div>
-                            <div class="message-text">${message.text}</div>
-                        </div>
-                    `;
-                    messagesDiv.appendChild(messageElement);
-                });
-                
-                // Scroll to bottom of messages
-                messagesDiv.scrollTop = messagesDiv.scrollHeight;
-            } catch (error) {
-                console.error('Error loading messages:', error);
-            }
-        }
 
         // Close the mobile message
         document.getElementById('close-mobile-message').addEventListener('click', () => {
