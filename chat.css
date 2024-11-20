@@ -485,9 +485,9 @@ textarea {
 /* Badge Styles */
 .badges-container, #profile-modal-badges {
     display: flex;
-    align-items: center;
-    gap: 5px; /* Increased space between badges */
-    margin-top: 5px;
+    justify-content: center; /* Center badges horizontally */
+    align-items: center; /* Center badges vertically */
+    margin-bottom: 10px; /* Space below badges */
 }
 
 .admin-badge {
@@ -1412,4 +1412,82 @@ input:checked + .slider:before {
         margin: 1rem;
         max-height: 90vh; /* Allow more height on smaller screens */
     }
+}
+
+.badges-container {
+    display: flex;
+    justify-content: center; /* Center badges horizontally */
+    align-items: center; /* Center badges vertically */
+    margin-bottom: 10px; /* Space below badges */
+}
+
+.badge {
+    position: relative; /* Position relative for tooltip positioning */
+    margin: 0 5px; /* Space between badges */
+    cursor: pointer; /* Indicate that it's clickable */
+}
+
+.badge-image {
+    width: 40px; /* Set a fixed size for badges */
+    height: 40px; /* Set a fixed size for badges */
+}
+
+.tooltip {
+    visibility: hidden; /* Hidden by default */
+    width: 120px; /* Width of the tooltip */
+    background-color: rgba(0, 0, 0, 0.8); /* Dark background */
+    color: #fff; /* White text */
+    text-align: center; /* Center text */
+    border-radius: 5px; /* Rounded corners */
+    padding: 5px; /* Padding inside the tooltip */
+    position: absolute; /* Position absolutely */
+    z-index: 1; /* Ensure it appears above other elements */
+    bottom: 125%; /* Position above the badge */
+    left: 50%; /* Center horizontally */
+    margin-left: -60px; /* Adjust to center */
+    opacity: 0; /* Start invisible */
+    transition: opacity 0.3s; /* Smooth transition */
+}
+
+/* Show the tooltip on hover */
+.badge:hover .tooltip {
+    visibility: visible; /* Show tooltip */
+    opacity: 1; /* Fade in */
+}
+
+.tooltip {
+    visibility: hidden;
+    opacity: 0;
+    position: absolute;
+    background-color: #333;
+    color: #fff;
+    padding: 5px;
+    border-radius: 5px;
+    font-size: 12px;
+    transition: opacity 0.3s;
+}
+
+.badge:hover .tooltip {
+    visibility: visible;
+    opacity: 1;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+}
+
+#close-badge-modal {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    cursor: pointer;
 }

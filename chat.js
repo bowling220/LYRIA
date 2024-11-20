@@ -53,6 +53,24 @@ document.addEventListener('click', (e) => {
     }
 });
 
+function addOrUpdateBadge(badgeName, description = "No description available.", rarity = "common") {
+    const badgeRef = db.collection('badges').doc(badgeName);
+
+    // Set the badge data
+    badgeRef.set({
+        name: badgeName,
+        description: description,
+        rarity: rarity,
+        awardedTo: [] // Initialize with an empty array
+    }, { merge: true }) // Use merge to update existing documents
+    .then(() => {
+        console.log(`Badge ${badgeName} added/updated successfully.`);
+    })
+    .catch(error => {
+        console.error("Error adding/updating badge:", error);
+    });
+}
+
 // Authenticate the user and load settings
 auth.onAuthStateChanged(user => {
     if (user) {
@@ -148,6 +166,7 @@ auth.onAuthStateChanged(user => {
         window.location.href = 'login.html';
     }
 });
+
 function setupUIEventListeners() {
     // Event listeners for modal buttons
     document.getElementById('settings-btn').addEventListener('click', () => {
@@ -834,11 +853,25 @@ function showUserProfileModal(uid) {
             // Check if the user has any badges
             if (userData.badges && Array.isArray(userData.badges)) {
                 userData.badges.forEach(badge => {
-                    const badgeElement = document.createElement('img');
-                    badgeElement.src = `assets/${badge}.png`; // Ensure this path is correct
-                    badgeElement.alt = `${badge} Badge`;
-                    badgeElement.className = 'admin-badge';
-                    profileBadges.appendChild(badgeElement); // Append badge to the profile badges
+                    const badgeDiv = document.createElement('div');
+                    badgeDiv.className = 'badge';
+                    badgeDiv.setAttribute('data-badge-name', badge);
+                    
+                    // Set the click event to show badge info
+                    badgeDiv.onclick = () => showBadgeInfo(badge); 
+
+                    const badgeImage = document.createElement('img');
+                    badgeImage.src = `assets/${badge}.png`; // Assuming badge images are stored in assets
+                    badgeImage.alt = `${badge} Badge`;
+                    badgeImage.className = 'badge-image';
+
+                    const tooltip = document.createElement('span');
+                    tooltip.className = 'tooltip';
+                    tooltip.textContent = badge; // Show badge name in tooltip
+
+                    badgeDiv.appendChild(badgeImage);
+                    badgeDiv.appendChild(tooltip);
+                    profileBadges.appendChild(badgeDiv);
                 });
             }
 
@@ -1075,6 +1108,26 @@ function assignBetaBadgeToUser(userId) {
     });
 }
 
+function showBadgeInfo(badgeName) {
+    db.collection('badges').doc(badgeName).get().then(doc => {
+        if (doc.exists) {
+            const badgeData = doc.data();
+            const badgeDetails = `
+                <h2>${badgeData.name}</h2>
+                <p>${badgeData.description}</p>
+                <p><strong>Rarity:</strong> ${badgeData.rarity}</p>
+                <p><strong>Holders:</strong> ${badgeData.awardedTo.length}</p>
+            `;
+            const badgeModalContent = document.getElementById('badge-modal-content');
+            badgeModalContent.innerHTML = badgeDetails; // Set the modal content
+            document.getElementById('badge-modal').style.display = 'block'; // Show the modal
+        } else {
+            console.error("Badge does not exist.");
+        }
+    }).catch(error => {
+        console.error("Error fetching badge details:", error);
+    });
+}
 betaUserUIDs.forEach(userId => {
     assignBetaBadgeToUser(userId);
 });
@@ -1172,3 +1225,63 @@ document.getElementById('update-bio-btn').addEventListener('click', () => {
         alert('Bio cannot be empty.');
     }
 });
+
+async function loadUserProfile(userId) {
+    const userDoc = await db.collection('users').doc(userId).get();
+    if (userDoc.exists) {
+        const userData = userDoc.data();
+        
+        // Update profile modal with user data
+        document.getElementById('profile-modal-name').textContent = userData.displayName || 'User Name';
+        document.getElementById('profile-modal-bio').textContent = userData.bio || 'COMING SOON';
+        
+        // Clear existing badges
+        const badgesContainer = document.getElementById('profile-modal-badges');
+        badgesContainer.innerHTML = ''; // Clear previous badges
+
+        // Loop through user's badges and create badge elements
+        userData.badges.forEach(badge => {
+            const badgeDiv = document.createElement('div');
+            badgeDiv.className = 'badge';
+            badgeDiv.setAttribute('data-badge-name', badge); // Set badge name for tooltip
+            badgeDiv.onclick = () => showBadgeInfo(badge); // Set click event
+
+            const badgeImage = document.createElement('img');
+            badgeImage.src = `assets/${badge}.png`; // Assuming badge images are stored in assets
+            badgeImage.alt = `${badge} Badge`;
+            badgeImage.className = 'badge-image';
+
+            const tooltip = document.createElement('span');
+            tooltip.className = 'tooltip';
+            tooltip.textContent = badge; // Set tooltip text
+
+            // Append elements to badgeDiv
+            badgeDiv.appendChild(badgeImage);
+            badgeDiv.appendChild(tooltip);
+            badgesContainer.appendChild(badgeDiv);
+        });
+    } else {
+        console.error("User document does not exist.");
+    }
+}
+document.getElementById('close-badge-modal').addEventListener('click', () => {
+    const badgeModal = document.getElementById('badge-modal');
+    badgeModal.style.display = 'none'; // Hide the modal
+});
+
+// Example function to add a badge to Firestore
+function addBadge(badgeName, description, rarity, awardedTo) {
+    db.collection('badges').doc(badgeName).set({
+        name: badgeName,
+        description: description,
+        rarity: rarity,
+        awardedTo: awardedTo
+    }).then(() => {
+        console.log(`Badge ${badgeName} added successfully.`);
+    }).catch(error => {
+        console.error("Error adding badge:", error);
+    });
+}
+// Example usage
+addBadge("Beta", "Awarded to beta testers.", "rare", ["userId1", "userId2"]);
+
