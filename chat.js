@@ -100,8 +100,6 @@ function displayBadges(userId) {
     });
 }
 
-
-
 const betaUserUIDs = [
     "DWjEGCFvdKe50fMiXk9EsHH9j3F3", // Replace with actual user ID
     "RshQJzHL4tUt34Jqgd96g0DktHk2", // Replace with actual user ID
@@ -127,7 +125,6 @@ document.addEventListener('click', (e) => {
         sidebar.classList.remove('active');
     }
 });
-
 
 // Authenticate the user and load settings
 auth.onAuthStateChanged(user => {

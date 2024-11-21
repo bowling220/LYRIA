@@ -1,22 +1,39 @@
-import * as React from 'react';
+import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createStackNavigator } from '@react-navigation/stack';
 import HomeScreen from './screens/HomeScreen';
 import ChatScreen from './screens/ChatScreen';
-import ProfileScreen from './screens/ProfileScreen';
-import SettingsScreen from './screens/SettingsScreen';
+import ChannelManagementScreen from './screens/ChannelManagementScreen';
 
-const Stack = createNativeStackNavigator();
+const Stack = createStackNavigator();
 
-export default function App() {
+const App = () => {
     return (
         <NavigationContainer>
-            <Stack.Navigator initialRouteName="Home">
-                <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
-                <Stack.Screen name="Chat" component={ChatScreen} />
-                <Stack.Screen name="Profile" component={ProfileScreen} />
-                <Stack.Screen name="Settings" component={SettingsScreen} />
+            <Stack.Navigator 
+                initialRouteName="Home"
+                screenOptions={{
+                    headerShown: false
+                }}
+            >
+                <Stack.Screen 
+                    name="Home" 
+                    component={HomeScreen}
+                    options={{ headerShown: false }}
+                />
+                <Stack.Screen 
+                    name="Chat" 
+                    component={ChatScreen}
+                    options={{ headerShown: false }}
+                />
+                <Stack.Screen 
+                    name="ChannelManagement" 
+                    component={ChannelManagementScreen}
+                    options={{ headerShown: false }}
+                />
             </Stack.Navigator>
         </NavigationContainer>
     );
-}
+};
+
+export default App;
