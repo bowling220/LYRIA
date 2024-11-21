@@ -85,14 +85,27 @@
         width: 80%; /* Could be more or less, depending on screen size */
     }
 
+    /* Notification styling */
+    #notification {
+      display: none; /* Hidden by default */
+      background-color: rgba(255, 255, 0, 0.8); /* Yellow background */
+      color: black;
+      padding: 10px;
+      border-radius: 5px;
+      margin-top: 20px;
+      text-align: center;
+      position: relative;
+      z-index: 1000; /* Sit on top */
+    }
   </style>
 </head>
-<body>
+<body onload="document.getElementById('notification').style.display = 'block'">
   <div class="wrapper">
     <h2>Welcome to LYRIA</h2>
     <button id="google-signin" class="google-button">Login with Google</button>
     <button id="guest-login" class="guest-button">Continue as Guest</button>
     <p id="error-message"></p>
+    <div id="notification">Some chats have been deleted for space limit. If your channel has been deleted, please create a new one. Thank you!</div>
   </div>
 
   <script>
@@ -142,7 +155,9 @@
 
               return db.collection('users').doc(user.uid).set(userData);
             }
-          }).then(() => window.location.href = 'home.html');
+          }).then(() => {
+            window.location.href = 'home.html';
+          });
         })
         .catch(error => {
           document.getElementById('error-message').textContent = error.message;
@@ -165,7 +180,9 @@
                 friends: [] // Initialize friends array
               });
             }
-          }).then(() => window.location.href = 'home.html');
+          }).then(() => {
+            window.location.href = 'home.html';
+          });
         })
         .catch(error => {
           document.getElementById('error-message').textContent = error.message;
@@ -176,6 +193,11 @@
     document.getElementById('close-welcome-modal').addEventListener('click', () => {
       document.getElementById('welcome-modal').style.display = 'none';
     });
+
+    // Auto-hide notification after 5 seconds
+    setTimeout(() => {
+      document.getElementById('notification').style.display = 'none';
+    }, 5000);
   </script>
 
   <footer>
