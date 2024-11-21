@@ -145,8 +145,8 @@ body {
     padding: 1rem;
     background-color: #292b2f;
     display: flex;
-    align-items: center;
-    justify-content: space-between; /* Distributes space between avatar, username, and button */
+    align-items: center; /* Center items vertically */
+    justify-content: center; /* Center items horizontally */
     gap: 0.5rem;
     width: 100%;
     box-sizing: border-box;
@@ -522,30 +522,27 @@ textarea {
 }
 
 .modal-content {
-    background-color: #2f3136;
-    color: #fff;
-    padding: 20px;
-    border-radius: 12px; /* More rounded corners */
-    width: 90%; /* Full width for smaller screens */
-    max-width: 400px; /* Limit max width */
-    text-align: center;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5); /* Softer shadow for depth */
-    animation: fadeIn 0.3s ease; /* Smooth fade-in effect */
-    position: relative; /* Set position to relative for absolute positioning of close button */
-    padding-top: 40px; /* Add padding to the top to prevent content from hiding behind the close button */
+    display: flex; /* Use flexbox for layout */
+    flex-direction: column; /* Stack items vertically */
+    align-items: center; /* Center items horizontally */
+    justify-content: center; /* Center items vertically */
+    background-color: #2f3136; /* Background color for modal */
+    color: #fff; /* Text color */
+    padding: 20px; /* Padding inside the modal */
+    border-radius: 8px; /* Rounded corners */
+    width: 90%; /* Responsive width */
+    max-width: 400px; /* Maximum width to fit better on smaller screens */
+    text-align: center; /* Center-align text */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5); /* Soft shadow */
 }
 
 #profile-modal-image {
-    width: 100px; /* Slightly larger image */
-    height: 100px; /* Slightly larger image */
-    border-radius: 50%; /* Keep it circular */
-    margin-bottom: 10px;
-    border: 3px solid var(--secondary-color); /* Add border to the image */
-    transition: transform 0.3s; /* Add transition for hover effect */
-}
-
-#profile-modal-image:hover {
-    transform: scale(1.05); /* Slightly enlarge on hover */
+    width: 80px; /* Set a fixed width for the avatar */
+    height: 80px; /* Set a fixed height for the avatar */
+    border-radius: 50%; /* Make it circular */
+    border: 2px solid var(--secondary-color); /* Optional: Add a border */
+    object-fit: cover; /* Ensures the image covers the entire area */
+    margin-bottom: 1rem; /* Space below the image */
 }
 
 #profile-modal-name {
@@ -1403,4 +1400,13 @@ input:checked + .slider:before {
         margin: 1rem;
         max-height: 90vh; /* Allow more height on smaller screens */
     }
+}
+
+/* Badge Image Styling */
+.badge-image {
+    width: 40px; /* Set a fixed width */
+    height: 40px; /* Set a fixed height */
+    border-radius: 4px; /* Optional: Add some rounding to the corners */
+    object-fit: cover; /* Ensures the image covers the area without distortion */
+    margin: 0.2rem; /* Add some spacing around the badges */
 }
