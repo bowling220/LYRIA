@@ -320,7 +320,7 @@
 
     <footer>
         <div id="version-info">
-            LYRIA News Version: Beta 2.0.0<br>
+            LYRIA News Version: Beta 2.0.5<br>
             &copy; 2024 LYRIA. All rights reserved. Trademarked by LYRIA.
         </div>
     </footer>
@@ -332,10 +332,10 @@
             : 'Download LYRIA Browser for Windows?';
         
         if (confirm(message)) {
-            // Replace 'your-render-url' with your actual Render URL
+            // Replace these with your actual Google Drive file IDs
             let downloadUrl = platform === 'mac'
-                ? 'https://lyria.onrender.com/downloads/LyriaWebBrowser-1.0.0-arm64.dmg'
-                : 'https://lyria.onrender.com/downloads/LyriaWebBrowser1.0.0.exe';
+                ? 'https://drive.google.com/file/d/1ktHB1OkAlNTAa7ZFGwNuJj6HXCt9VIpY/view?usp=share_link'
+                : 'https://drive.google.com/file/d/1p3GwavOx9Nw9WMFxtfa-Pjoc6wBVNmMU/view?usp=share_link';
                 
             // Trigger the download
             window.location.href = downloadUrl;
