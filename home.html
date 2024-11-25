@@ -436,6 +436,47 @@
             const currentChannel = document.getElementById('channel-title').textContent.replace('# ', '');
             localStorage.setItem('lastVisitedChannel', currentChannel);
         });
+
+        let isDragging = false;
+        let startX;
+        let sidebar = document.querySelector('.sidebar');
+
+        document.getElementById('sidebar-menu-toggle').addEventListener('click', () => {
+            sidebar.classList.toggle('open');
+        });
+
+        sidebar.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            startX = e.clientX; // Get the initial mouse position
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                let currentX = e.clientX;
+                let deltaX = currentX - startX;
+
+                // Move the sidebar based on mouse movement
+                if (deltaX > 0) { // Dragging to the right
+                    sidebar.style.transform = `translateX(${Math.min(deltaX, sidebar.offsetWidth)}px)`;
+                }
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (isDragging) {
+                isDragging = false;
+
+                // Check if the sidebar is dragged more than half its width
+                if (parseInt(sidebar.style.transform.replace('translateX(', '').replace('px)', '')) > sidebar.offsetWidth / 2) {
+                    sidebar.classList.add('open'); // Open the sidebar
+                } else {
+                    sidebar.classList.remove('open'); // Close the sidebar
+                }
+
+                // Reset the transform
+                sidebar.style.transform = 'translateX(0)';
+            }
+        });
     </script>
 
     <!-- Suggestions Modal -->

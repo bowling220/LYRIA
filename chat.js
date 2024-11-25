@@ -1325,9 +1325,38 @@ async function loadUserProfile(userId) {
     }
 }
 
+document.getElementById('change-background-btn').addEventListener('click', () => {
+    const colorPicker = document.getElementById('background-color-picker');
+    const imageInput = document.getElementById('background-image-input');
 
+    // Toggle visibility of color picker and image input
+    if (colorPicker.style.display === 'none') {
+        colorPicker.style.display = 'block';
+        imageInput.style.display = 'none';
+    } else {
+        colorPicker.style.display = 'none';
+        imageInput.style.display = 'block';
+    }
+});
 
+// Change background color
+document.getElementById('background-color-picker').addEventListener('input', (event) => {
+    const chatArea = document.querySelector('.chat-area');
+    chatArea.style.backgroundColor = event.target.value;
+});
 
+// Change background image
+document.getElementById('background-image-input').addEventListener('change', (event) => {
+    const chatArea = document.querySelector('.chat-area');
+    const file = event.target.files[0];
 
-
-
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            chatArea.style.backgroundImage = `url(${e.target.result})`;
+            chatArea.style.backgroundSize = 'cover'; // Optional: Cover the entire area
+            chatArea.style.backgroundPosition = 'center'; // Optional: Center the image
+        };
+        reader.readAsDataURL(file);
+    }
+});

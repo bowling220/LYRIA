@@ -113,6 +113,31 @@
         .home-button:hover {
             background-color: #2980b9;
         }
+
+        .download-button {
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.1em;
+            margin: 10px;
+            transition: background-color 0.3s;
+            display: inline-block;
+        }
+
+        .download-button:hover {
+            background-color: #219a52;
+        }
+
+        .download-section {
+            text-align: center;
+            padding: 20px;
+            background: #34495e;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
     </style>
 
     <script type="module">
@@ -231,6 +256,16 @@
     </header>
 
     <div class="news-container">
+        <div class="download-section">
+            <h2>Download LYRIA Web Browser</h2>
+            <button class="download-button" onclick="window.location.href='downloads/LyriaWebBrowser-1.0.0-arm64.dmg'">
+                <span>🍎 Download for Mac</span>
+            </button>
+            <button class="download-button" onclick="window.location.href='downloads/LyriaWebBrowser1.0.0.exe'">
+                <span>🪟 Download for Windows</span>
+            </button>
+        </div>
+
         <h2>Latest News</h2>
         <div class="news-article">
             <h3>Voice Call Feature Coming Soon!</h3>
@@ -285,7 +320,7 @@
 
     <footer>
         <div id="version-info">
-            LYRIA News Version: Beta 1.0.0<br>
+            LYRIA News Version: Beta 2.0.0<br>
             &copy; 2024 LYRIA. All rights reserved. Trademarked by LYRIA.
         </div>
     </footer>
