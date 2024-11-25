@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LYRIA Chat - News Feed</title>
+    <link rel="stylesheet" href="chat.css">
+    <link rel="stylesheet" href="voiceCall.css">
+    <style>
+        .news-container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            height: calc(100vh - 140px); /* Account for header and footer */
+            overflow-y: auto;
+        }
+
+        .news-article {
+            background: #2c3e50;
+            color: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+        }
+
+        .news-article:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .news-article h3 {
+            color: white;
+            margin-bottom: 10px;
+            font-size: 1.4em;
+        }
+
+        .date {
+            color: #ccc;
+            font-style: italic;
+        }
+
+        .read-more {
+            display: inline-block;
+            margin-top: 15px;
+            color: #3498db;
+            text-decoration: none;
+            font-weight: bold;
+            transition: color 0.2s;
+        }
+
+        .read-more:hover {
+            color: #2980b9;
+            text-decoration: underline;
+        }
+
+        .like-button {
+            background: none;
+            border: none;
+            color: #3498db;
+            cursor: pointer;
+            font-size: 1em;
+            margin-top: 10px;
+        }
+
+        .top-header {
+            background: #2c3e50;
+            color: white;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        footer {
+            background: #2c3e50;
+            color: white;
+            padding: 15px;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            text-align: center;
+        }
+
+        #version-info {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .home-button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: auto; /* Align to the right */
+            font-size: 1em;
+            transition: background-color 0.3s;
+        }
+
+        .home-button:hover {
+            background-color: #2980b9;
+        }
+    </style>
+
+    <script type="module">
+        // Importing Firebase app and Firestore modules
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js';
+        import { getFirestore, doc, updateDoc, increment, onSnapshot, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js';
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDORsM0Dz9d_ZxqVd8zjNXwsEdR1_aVF7g",
+            authDomain: "lyria-cfc06.firebaseapp.com", 
+            projectId: "lyria-cfc06",
+            storageBucket: "lyria-cfc06.appspot.com",
+            messagingSenderId: "309881717815",
+            appId: "1:309881717815:web:c8e9a4007341ab17ecebb2",
+            measurementId: "G-0EMBBE255Z",
+            databaseURL: "https://lyria-cfc06-default-rtdb.firebaseio.com"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Function to like or unlike a post
+        window.toggleLike = async function(postId) {
+            const userId = "currentUserId"; // Replace with actual user ID
+            const userLikeRef = doc(db, 'userLikes', userId, 'likes', postId);
+            const postRef = doc(db, 'posts', postId);
+
+            const userLikeDoc = await getDoc(userLikeRef);
+            const postDoc = await getDoc(postRef);
+
+            if (userLikeDoc.exists() && userLikeDoc.data().liked) {
+                // User has already liked the post, so we remove the like
+                const currentLikes = postDoc.data().likes || 0;
+                if (currentLikes > 0) {
+                    await updateDoc(postRef, {
+                        likes: increment(-1)
+                    });
+                }
+                // Remove the user's like
+                await setDoc(userLikeRef, { liked: false });
+                console.log(`Unliked post: ${postId}`);
+                // Update button text to "👍 Like"
+                document.getElementById(postId + '-like-button').innerText = '👍 Like';
+            } else {
+                // User has not liked the post, so we add the like
+                await updateDoc(postRef, {
+                    likes: increment(1)
+                });
+                await setDoc(userLikeRef, { liked: true });
+                console.log(`Liked post: ${postId}`);
+                // Update button text to "👎 Unlike"
+                document.getElementById(postId + '-like-button').innerText = '👎 Unlike';
+            }
+
+            // Refresh the like count display
+            fetchLikes(postId); // Refresh the like count display
+        };
+
+        // Function to fetch and display likes for a post
+        function fetchLikes(postId) {
+            const postRef = doc(db, 'posts', postId);
+            onSnapshot(postRef, (docSnapshot) => {
+                if (docSnapshot.exists()) {
+                    const likes = docSnapshot.data().likes || 0;
+                    document.getElementById(postId + '-likes').innerText = likes + ' Likes';
+                } else {
+                    console.log("No such document!");
+                }
+            }, (error) => {
+                console.error("Error fetching likes: ", error);
+            });
+        }
+
+        // Function to check if the user has liked the post
+        async function checkUserLike(postId) {
+            const userId = "currentUserId"; // Replace with actual user ID
+            const userLikeRef = doc(db, 'userLikes', userId, 'likes', postId);
+            const userLikeDoc = await getDoc(userLikeRef);
+
+            // Update the button text based on whether the user has liked the post
+            if (userLikeDoc.exists() && userLikeDoc.data().liked) {
+                document.getElementById(postId + '-like-button').innerText = '👎 Unlike';
+            } else {
+                document.getElementById(postId + '-like-button').innerText = '👍 Like';
+            }
+        }
+
+        // Call fetchLikes and checkUserLike for each post when the page loads
+        window.onload = function () {
+            const postIds = [
+                'voice-call-feature',
+                'news-articles-making',
+                'friend-request-launch',
+                'beta-tester-recognition',
+                'guest-access',
+                'ui-improvements',
+                'initial-release'
+            ];
+
+            postIds.forEach(postId => {
+                fetchLikes(postId);
+                checkUserLike(postId);
+            });
+        };
+    </script>
+
+</head>
+
+<body>
+    <header class="top-header">
+        <button class="menu-toggle" onclick="window.location.href='home.html'">☰</button>
+        <span style="flex: 1; text-align: center;">LYRIA News Feed</span>
+        <button class="home-button" onclick="window.location.href='home.html'">Home</button>
+    </header>
+
+    <div class="news-container">
+        <h2>Latest News</h2>
+        <div class="news-article">
+            <h3>Voice Call Feature Coming Soon!</h3>
+            <p>Published on: <span class="date">2025-01-01</span></p>
+            <p>We're working on implementing voice call capabilities! Soon you'll be able to have voice conversations with your friends on LYRIA. The feature will include high-quality audio, mute controls, and seamless integration with our existing chat system.</p>
+            <button class="like-button" id="voice-call-feature-like-button" onclick="toggleLike('voice-call-feature')">👍 Like</button>
+            <span id="voice-call-feature-likes">0 Likes</span>
+        </div>
+        <div class="news-article">
+            <h3>News Articles in the making!</h3>
+            <p>Published on: <span class="date">2024-11-22</span></p>
+            <p>We're excited to announce the launch of our new friend request system! Users can now send, accept, and decline friend requests through their inbox. The system includes a pending section for new requests and a history section to track past interactions. Friend requests will show the sender's display name and timestamp for better tracking.</p>
+            <button class="like-button" id="news-articles-making-like-button" onclick="toggleLike('news-articles-making')">👍 Like</button>
+            <span id="news-articles-making-likes">0 Likes</span>
+        </div>
+        <div class="news-article">
+            <h3>New Friend Request System Launch!</h3>
+            <p>Published on: <span class="date">2024-01-15</span></p>
+            <p>We're excited to announce the launch of our new friend request system! Users can now send, accept, and decline friend requests through their inbox. The system includes a pending section for new requests and a history section to track past interactions. Friend requests will show the sender's display name and timestamp for better tracking.</p>
+            <button class="like-button" id="friend-request-launch-like-button" onclick="toggleLike('friend-request-launch')">👍 Like</button>
+            <span id="friend-request-launch-likes">0 Likes</span>
+        </div>
+        <div class="news-article">
+            <h3>Beta Tester Recognition Program</h3>
+            <p>Published on: <span class="date">2024-01-14</span></p>
+            <p>As a special thank you to our early adopters, we're awarding Beta Tester badges to all users who sign up during our beta phase! These exclusive badges will be a permanent recognition of your early support of LYRIA. Join now to claim your Beta Tester status!</p>
+            <button class="like-button" id="beta-tester-recognition-like-button" onclick="toggleLike('beta-tester-recognition')">👍 Like</button>
+            <span id="beta-tester-recognition-likes">0 Likes</span>
+        </div>
+        <div class="news-article">
+            <h3>Guest Access Now Available</h3>
+            <p>Published on: <span class="date">2024-01-13</span></p>
+            <p>Try LYRIA before signing up! We've introduced a guest login feature that allows users to explore our platform. Guest users get access to general channels and can experience our core features. Guest accounts come with basic functionality including access to the general channel and friend system.</p>
+            <button class="like-button" id="guest-access-like-button" onclick="toggleLike('guest-access')">👍 Like</button>
+            <span id="guest-access-likes">0 Likes</span>
+        </div>
+        <div class="news-article">
+            <h3>UI Improvements for a Cleaner Experience</h3>
+            <p>Published on: <span class="date">2024-01-12</span></p>
+            <p>We've revamped the UI with a fresh and clean design! The new layout is more intuitive, with easy access to all major features, and looks great on both desktop and mobile. We're also introducing dark mode and a new set of emojis for richer conversations.</p>
+            <button class="like-button" id="ui-improvements-like-button" onclick="toggleLike('ui-improvements')">👍 Like</button>
+            <span id="ui-improvements-likes">0 Likes</span>
+        </div>
+        <div class="news-article">
+            <h3>Initial Release of LYRIA!</h3>
+            <p>Published on: <span class="date">2023-12-01</span></p>
+            <p>The moment has finally arrived! LYRIA is now live! We're proud to announce the official launch of our platform, bringing you a new and innovative way to chat with friends, join groups, and stay connected with the community.</p>
+            <button class="like-button" id="initial-release-like-button" onclick="toggleLike('initial-release')">👍 Like</button>
+            <span id="initial-release-likes">0 Likes</span>
+        </div>
+    </div>
+
+    <footer>
+        <div id="version-info">
+            LYRIA News Version: Beta 1.0.0<br>
+            &copy; 2024 LYRIA. All rights reserved. Trademarked by LYRIA.
+        </div>
+    </footer>
+</body>
+
+</html>
