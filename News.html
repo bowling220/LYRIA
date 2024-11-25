@@ -258,10 +258,10 @@
     <div class="news-container">
         <div class="download-section">
             <h2>Download LYRIA Web Browser</h2>
-            <button class="download-button" onclick="window.location.href='downloads/LyriaWebBrowser-1.0.0-arm64.dmg'">
+            <button class="download-button" onclick="confirmDownload('mac')">
                 <span>🍎 Download for Mac</span>
             </button>
-            <button class="download-button" onclick="window.location.href='downloads/LyriaWebBrowser1.0.0.exe'">
+            <button class="download-button" onclick="confirmDownload('windows')">
                 <span>🪟 Download for Windows</span>
             </button>
         </div>
@@ -324,6 +324,26 @@
             &copy; 2024 LYRIA. All rights reserved. Trademarked by LYRIA.
         </div>
     </footer>
+
+    <script>
+    function confirmDownload(platform) {
+        let message = platform === 'mac' 
+            ? 'Download LYRIA Browser for Mac?' 
+            : 'Download LYRIA Browser for Windows?';
+        
+        if (confirm(message)) {
+            // Replace 'your-render-url' with your actual Render URL
+            let downloadUrl = platform === 'mac'
+                ? 'https://lyria.onrender.com/downloads/LyriaWebBrowser-1.0.0-arm64.dmg'
+                : 'https://lyria.onrender.com/downloads/LyriaWebBrowser1.0.0.exe';
+                
+            // Trigger the download
+            window.location.href = downloadUrl;
+            
+            alert('Thank you for downloading LYRIA Browser! Your download will begin shortly.');
+        }
+    }
+    </script>
 </body>
 
 </html>
