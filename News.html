@@ -161,6 +161,18 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
+        // Function to format like count
+        function formatLikes(likes) {
+            if (likes >= 1000000000) {
+                return (likes / 1000000000).toFixed(1) + 'B';
+            } else if (likes >= 1000000) {
+                return (likes / 1000000).toFixed(1) + 'M';
+            } else if (likes >= 1000) {
+                return (likes / 1000).toFixed(1) + 'K';
+            }
+            return likes.toString();
+        }
+
         // Function to like or unlike a post
         window.toggleLike = async function(postId) {
             const userId = "currentUserId"; // Replace with actual user ID
@@ -195,7 +207,7 @@
             }
 
             // Refresh the like count display
-            fetchLikes(postId); // Refresh the like count display
+            fetchLikes(postId);
         };
 
         // Function to fetch and display likes for a post
@@ -204,7 +216,7 @@
             onSnapshot(postRef, (docSnapshot) => {
                 if (docSnapshot.exists()) {
                     const likes = docSnapshot.data().likes || 0;
-                    document.getElementById(postId + '-likes').innerText = likes + ' Likes';
+                    document.getElementById(postId + '-likes').innerText = formatLikes(likes) + ' Likes';
                 } else {
                     console.log("No such document!");
                 }
