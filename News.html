@@ -84,6 +84,7 @@
             padding: 15px;
             display: flex;
             align-items: center;
+            justify-content: space-between;
             position: sticky;
             top: 0;
             z-index: 100;
@@ -119,7 +120,6 @@
             padding: 10px 15px;
             border-radius: 5px;
             cursor: pointer;
-            margin-left: auto;
             font-size: 1em;
             transition: background-color 0.3s;
         }
@@ -315,6 +315,108 @@
         .guest-post .article-author {
             color: #e74c3c;
         }
+
+        .user-submitted {
+            position: relative;
+            border-left: 4px solid #FF1493;
+        }
+
+        .user-submitted-tag {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: linear-gradient(45deg, #FF1493, #FF69B4);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: bold;
+            text-transform: uppercase;
+            box-shadow: 0 2px 4px rgba(255, 20, 147, 0.3);
+        }
+
+        .fab-container {
+            position: fixed;
+            top: 80px;
+            right: 30px;
+            z-index: 1000;
+        }
+
+        .fab {
+            background: linear-gradient(135deg, #00ffff, #ff69b4, #4169e1);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            width: 56px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 
+                0 0 15px rgba(0, 255, 255, 0.3),
+                0 0 30px rgba(255, 105, 180, 0.2),
+                0 0 45px rgba(65, 105, 225, 0.1);
+            transition: all 0.3s ease;
+            overflow: hidden;
+            position: relative;
+            transform: rotate(45deg);
+            animation: shimmer 3s infinite;
+            background-size: 200% 200%;
+        }
+
+        .fab:hover {
+            width: 160px;
+            transform: rotate(0deg);
+            background: linear-gradient(135deg, #ff69b4, #4169e1, #00ffff);
+            box-shadow: 
+                0 0 20px rgba(0, 255, 255, 0.4),
+                0 0 40px rgba(255, 105, 180, 0.3),
+                0 0 60px rgba(65, 105, 225, 0.2);
+        }
+
+        .fab-icon {
+            font-size: 24px;
+            position: absolute;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            transition: all 0.3s ease;
+            top: 50%;
+        }
+
+        .fab-text {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            opacity: 0;
+            transition: all 0.3s ease;
+            font-size: 16px;
+            font-weight: bold;
+            transform: rotate(-45deg);
+            white-space: nowrap;
+        }
+
+        .fab:hover .fab-icon {
+            opacity: 0;
+            transform: translate(-50%, -50%) rotate(0deg);
+        }
+
+        .fab:hover .fab-text {
+            opacity: 1;
+            transform: rotate(0deg);
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
     </style>
 
     <script type="module">
@@ -500,45 +602,58 @@
             });
         };
 
-        // Function to toggle user articles section
-        window.toggleUserArticles = function() {
-            const section = document.getElementById('user-article-section');
-            const button = document.getElementById('toggle-user-articles');
-            if (section.style.display === 'none') {
-                section.style.display = 'block';
-                button.textContent = 'Hide Article Creation';
+        // Function to toggle the user articles section
+        function toggleUserArticles() {
+            const userArticleSection = document.getElementById('user-article-section');
+            if (userArticleSection.style.display === 'none' || userArticleSection.style.display === '') {
+                userArticleSection.style.display = 'block';
+                // Scroll to the form
+                userArticleSection.scrollIntoView({ behavior: 'smooth' });
             } else {
-                section.style.display = 'none';
-                button.textContent = 'Show Article Creation';
+                userArticleSection.style.display = 'none';
             }
-        };
+        }
 
-        // Handle form submission
-        document.getElementById('article-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const title = document.getElementById('article-title').value;
-            const body = document.getElementById('article-body').value;
-            const tags = document.getElementById('article-tags').value
-                .split(',')
-                .map(tag => tag.trim())
-                .filter(tag => tag.length > 0);
+        // Move this inside your module script section
+        document.addEventListener('DOMContentLoaded', () => {
+            const articleForm = document.getElementById('article-form');
+            if (articleForm) {
+                articleForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    
+                    const authorName = document.getElementById('article-author').value.trim() || 'LYRIA';
+                    const title = document.getElementById('article-title').value.trim();
+                    const body = document.getElementById('article-body').value.trim();
+                    const tags = document.getElementById('article-tags').value
+                        .split(',')
+                        .map(tag => tag.trim())
+                        .filter(tag => tag.length > 0);
 
-            try {
-                await addDoc(collection(db, 'userArticles'), {
-                    title,
-                    body,
-                    tags,
-                    timestamp: new Date().toISOString(),
-                    likes: 0
+                    if (!title || !body) {
+                        alert('Please fill in both title and content fields');
+                        return;
+                    }
+
+                    try {
+                        await addDoc(collection(db, 'userArticles'), {
+                            authorName,
+                            title,
+                            body,
+                            tags,
+                            timestamp: new Date().toISOString()
+                        });
+
+                        // Clear form
+                        articleForm.reset();
+                        alert('Article submitted successfully!');
+                        
+                        // Hide the form after successful submission
+                        document.getElementById('user-article-section').style.display = 'none';
+                    } catch (error) {
+                        console.error('Error submitting article:', error);
+                        alert('Error submitting article. Please try again.');
+                    }
                 });
-
-                // Clear form
-                e.target.reset();
-                alert('Article submitted successfully!');
-            } catch (error) {
-                console.error('Error submitting article:', error);
-                alert('Error submitting article. Please try again.');
             }
         });
 
@@ -547,39 +662,30 @@
             const q = query(collection(db, 'userArticles'), orderBy('timestamp', 'desc'));
             
             onSnapshot(q, (snapshot) => {
-                const articlesList = document.getElementById('user-articles-list');
-                articlesList.innerHTML = ''; // Clear existing articles
+                const newsContainer = document.querySelector('.news-container');
+                const firstNewsArticle = newsContainer.querySelector('.news-article');
 
                 snapshot.forEach((doc) => {
                     const article = doc.data();
                     const articleElement = document.createElement('div');
-                    articleElement.className = 'news-article';
+                    articleElement.className = 'news-article user-submitted';
                     
-                    // Add 'guest-post' class if it's a guest post
-                    if (article.isGuestPost) {
-                        articleElement.classList.add('guest-post');
-                    }
-
                     articleElement.innerHTML = `
+                        <div class="user-submitted-tag">User Submitted</div>
                         <h3>${article.title}</h3>
                         <div class="article-meta">
-                            <span class="article-author">By: ${article.authorName}</span>
+                            <span class="article-author">By: ${article.authorName || 'LYRIA'}</span>
                             <span class="date">Published on: ${formatDate(article.timestamp)}</span>
                         </div>
                         <p>${article.body}</p>
                         <div class="article-tags">
                             ${article.tags.map(tag => `<span class="article-tag">${tag}</span>`).join('')}
                         </div>
-                        <button class="like-button" id="${doc.id}-like-button" onclick="toggleLike('${doc.id}')">
-                            👍 Like
-                        </button>
-                        <span id="${doc.id}-likes">${formatLikes(article.likes || 0)} Likes</span>
                     `;
-                    articlesList.appendChild(articleElement);
 
-                    // Check like status if user is logged in
-                    if (auth.currentUser) {
-                        checkUserLike(doc.id);
+                    // Insert after the "Latest News" heading and before the first news article
+                    if (firstNewsArticle) {
+                        newsContainer.insertBefore(articleElement, firstNewsArticle);
                     }
                 });
             });
@@ -595,6 +701,12 @@
     <header class="top-header">
         <button class="menu-toggle" onclick="window.location.href='home.html'">☰</button>
         <span style="flex: 1; text-align: center;">LYRIA News Feed</span>
+        <div class="fab-container">
+            <button class="fab" id="create-article-button" onclick="toggleUserArticles()">
+                <span class="fab-icon">+</span>
+                <span class="fab-text">Create Article</span>
+            </button>
+        </div>
         <button class="home-button" onclick="window.location.href='home.html'">Home</button>
     </header>
 
@@ -755,12 +867,16 @@
         </div>
 
         <!-- Toggle Button for User Articles -->
-        <button id="toggle-user-articles" onclick="toggleUserArticles()">Show User Articles</button>
 
         <!-- User Inputted Articles Section -->
         <div class="user-article-section" id="user-article-section" style="display: none;">
             <h3>Create New Article</h3>
             <form id="article-form" class="article-form">
+                <div class="form-group">
+                    <label for="article-author">Author Name:</label>
+                    <input type="text" id="article-author" placeholder="Enter your name (optional)">
+                </div>
+                
                 <div class="form-group">
                     <label for="article-title">Title:</label>
                     <input type="text" id="article-title" required placeholder="Enter article title...">
@@ -781,6 +897,9 @@
             
             <div id="user-articles-list"></div>
         </div>
+
+        <!-- Floating Action Button for Creating Articles -->
+       
     </div>
 
     <footer>
@@ -812,28 +931,18 @@
         const userArticleSection = document.getElementById('user-article-section');
         if (userArticleSection.style.display === 'none' || userArticleSection.style.display === '') {
             userArticleSection.style.display = 'block';
-            document.getElementById('toggle-user-articles').innerText = 'Hide User Articles';
+            // Scroll to the form
+            userArticleSection.scrollIntoView({ behavior: 'smooth' });
         } else {
             userArticleSection.style.display = 'none';
-            document.getElementById('toggle-user-articles').innerText = 'Show User Articles';
         }
     }
 
     // Function to submit a user article
     async function submitUserArticle() {
-        const user = auth.currentUser;
-        let authorName = 'Guest User';
-        let authorEmail = 'guest@lyria.com';
-        let authorId = 'guest';
-
-        if (user) {
-            authorName = user.displayName || 'LYRIA User';
-            authorEmail = user.email;
-            authorId = user.uid;
-        }
-
-        const title = document.getElementById('article-title').value;
-        const body = document.getElementById('article-body').value;
+        const authorName = document.getElementById('article-author').value.trim() || 'LYRIA';
+        const title = document.getElementById('article-title').value.trim();
+        const body = document.getElementById('article-body').value.trim();
         const tags = document.getElementById('article-tags').value
             .split(',')
             .map(tag => tag.trim())
@@ -846,15 +955,11 @@
 
         try {
             await addDoc(collection(db, 'userArticles'), {
+                authorName,
                 title,
                 body,
                 tags,
-                timestamp: new Date().toISOString(),
-                likes: 0,
-                authorId: authorId,
-                authorName: authorName,
-                authorEmail: authorEmail,
-                isGuestPost: !user // Flag to indicate if this is a guest post
+                timestamp: new Date().toISOString()
             });
 
             // Clear form
@@ -866,42 +971,35 @@
         }
     }
 
-    // Modified loadUserArticles function
+    // Load and display user articles
     function loadUserArticles() {
         const q = query(collection(db, 'userArticles'), orderBy('timestamp', 'desc'));
         
         onSnapshot(q, (snapshot) => {
-            const articlesList = document.getElementById('user-articles-list');
-            articlesList.innerHTML = ''; // Clear existing articles
+            const newsContainer = document.querySelector('.news-container');
+            const firstNewsArticle = newsContainer.querySelector('.news-article');
 
             snapshot.forEach((doc) => {
                 const article = doc.data();
                 const articleElement = document.createElement('div');
-                articleElement.className = 'news-article';
+                articleElement.className = 'news-article user-submitted';
                 
-                // Add 'guest-post' class if it's a guest post
-                if (article.isGuestPost) {
-                    articleElement.classList.add('guest-post');
-                }
-
                 articleElement.innerHTML = `
+                    <div class="user-submitted-tag">User Submitted</div>
                     <h3>${article.title}</h3>
                     <div class="article-meta">
-                        <span class="article-author">By: ${article.authorName}</span>
+                        <span class="article-author">By: ${article.authorName || 'LYRIA'}</span>
                         <span class="date">Published on: ${formatDate(article.timestamp)}</span>
                     </div>
                     <p>${article.body}</p>
                     <div class="article-tags">
                         ${article.tags.map(tag => `<span class="article-tag">${tag}</span>`).join('')}
                     </div>
-
-                    <span id="${doc.id}-likes">${formatLikes(article.likes || 0)} Likes</span>
                 `;
-                articlesList.appendChild(articleElement);
 
-                // Check like status if user is logged in
-                if (auth.currentUser) {
-                    checkUserLike(doc.id);
+                // Insert after the "Latest News" heading and before the first news article
+                if (firstNewsArticle) {
+                    newsContainer.insertBefore(articleElement, firstNewsArticle);
                 }
             });
         });
