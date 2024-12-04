@@ -639,11 +639,11 @@
             });
         };
 
-        // Function to toggle the user articles section
-        function toggleUserArticles() {
+        // Make toggleUserArticles available globally
+        window.toggleUserArticles = function() {
             // Check if user is blocked from creating articles
             const currentUser = auth.currentUser;
-            const blockedUsers = ['gqzxU1sa58Pm06EiqbUXaK3AOW13', 'dOVyjlLfVXPA9cWO2VCxR5zfgKW2'];
+            const blockedUsers = ['', 'dOVyjlLfVXPA9cWO2VCxR5zfgKW2'];
             
             if (currentUser && blockedUsers.includes(currentUser.uid)) {
                 alert('You do not have permission to create articles.');
@@ -658,7 +658,7 @@
             } else {
                 userArticleSection.style.display = 'none';
             }
-        }
+        };
 
         // Add this function to handle button visibility
         function updateCreateButtonVisibility() {
@@ -666,7 +666,7 @@
             if (!createButton) return;
 
             onAuthStateChanged(auth, (user) => {
-                const blockedUsers = ['gqzxU1sa58Pm06EiqbUXaK3AOW13', 'dOVyjlLfVXPA9cWO2VCxR5zfgKW2'];
+                const blockedUsers = ['', 'dOVyjlLfVXPA9cWO2VCxR5zfgKW2'];
                 
                 if (user && blockedUsers.includes(user.uid)) {
                     createButton.style.display = 'none';
@@ -764,7 +764,7 @@
 
         // Add this function to check for banned users
         function checkBannedUser() {
-            const blockedUsers = ['gqzxU1sa58Pm06EiqbUXaK3AOW13', 'dOVyjlLfVXPA9cWO2VCxR5zfgKW2'];
+            const blockedUsers = ['', 'dOVyjlLfVXPA9cWO2VCxR5zfgKW2'];
             
             onAuthStateChanged(auth, (user) => {
                 if (user && blockedUsers.includes(user.uid)) {
@@ -793,6 +793,30 @@
             updateCreateButtonVisibility();
             // ... rest of your existing DOMContentLoaded code ...
         });
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/@fingerprintjs/fingerprintjs@3/dist/fp.min.js"></script>
+
+    <script>
+    async function getDeviceFingerprint() {
+        const fp = await FingerprintJS.load();
+        const result = await fp.get();
+        return result.visitorId;
+    }
+
+    async function checkAndStoreDeviceFingerprint() {
+        const deviceId = await getDeviceFingerprint();
+        
+        // Check against banned devices in your database
+        const bannedDevices = await getBannedDevicesFromDatabase(); // Implement this function to fetch banned devices
+        if (bannedDevices.includes(deviceId)) {
+            alert('This device is not allowed to create accounts');
+            return;
+        }
+
+        // Store the device ID in your database when a new account is created
+        await storeDeviceIdInDatabase(deviceId); // Implement this function to store the device ID
+    }
     </script>
 
 </head>
@@ -1108,27 +1132,6 @@
             window.location.href = downloadUrl;
             
             alert('Thank you for downloading LYRIA Browser! Your download will begin shortly.');
-        }
-    }
-
-    // Function to toggle the user articles section
-    function toggleUserArticles() {
-        // Check if user is blocked from creating articles
-        const currentUser = auth.currentUser;
-        const blockedUsers = ['gqzxU1sa58Pm06EiqbUXaK3AOW13', 'dOVyjlLfVXPA9cWO2VCxR5zfgKW2'];
-        
-        if (currentUser && blockedUsers.includes(currentUser.uid)) {
-            alert('You do not have permission to create articles.');
-            return;
-        }
-
-        const userArticleSection = document.getElementById('user-article-section');
-        if (userArticleSection.style.display === 'none' || userArticleSection.style.display === '') {
-            userArticleSection.style.display = 'block';
-            // Scroll to the form
-            userArticleSection.scrollIntoView({ behavior: 'smooth' });
-        } else {
-            userArticleSection.style.display = 'none';
         }
     }
 
