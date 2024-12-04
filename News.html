@@ -12,7 +12,8 @@
             max-width: 800px;
             margin: 20px auto;
             padding: 20px;
-            height: calc(100vh - 140px); /* Account for header and footer */
+            padding-bottom: 200px; /* Add padding at bottom to prevent footer overlap */
+            height: calc(100vh - 140px);
             overflow-y: auto;
         }
 
@@ -20,10 +21,11 @@
             background: #2c3e50;
             color: white;
             border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
+            padding: 15px;
+            margin-bottom: 15px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             transition: transform 0.2s;
+            font-size: 0.9em;
         }
 
         .news-article:hover {
@@ -84,6 +86,7 @@
             bottom: 0;
             width: 100%;
             text-align: center;
+            z-index: 100;
         }
 
         #version-info {
@@ -94,8 +97,8 @@
         body {
             margin: 0;
             padding: 0;
-            height: 100vh;
-            overflow: hidden;
+            min-height: 100vh;
+            position: relative;
         }
 
         .home-button {
@@ -105,7 +108,7 @@
             padding: 10px 15px;
             border-radius: 5px;
             cursor: pointer;
-            margin-left: auto; /* Align to the right */
+            margin-left: auto;
             font-size: 1em;
             transition: background-color 0.3s;
         }
@@ -187,6 +190,24 @@
 
         button:hover {
             background-color: #0056b3;
+        }
+
+        .create-post-button {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.2em;
+            margin: 20px 0;
+            transition: background-color 0.3s;
+            display: block;
+            width: 100%;
+        }
+
+        .create-post-button:hover {
+            background-color: #c0392b;
         }
     </style>
 
@@ -344,7 +365,8 @@
                 'initial-release',
                 'browser-removal',
                 'browser-release',
-                'article1'
+                'article1',
+                'create-news'
             ];
 
             postIds.forEach(postId => {
@@ -367,6 +389,20 @@
     <div class="news-container">
       
         <h2>Latest News</h2>
+
+        <div class="news-article">
+            <h3>Create Your Own News Posts - Coming Soon!</h3>
+            <p>Published on: <span class="date">2024-12-03</span></p>
+            <p>Get ready to become a LYRIA news contributor! Soon you'll be able to create and share your own news posts with the LYRIA community. Share updates, announcements, and stories that matter to you. Stay tuned for this exciting feature!</p>
+            <button class="like-button" id="create-news-like-button" onclick="toggleLike('create-news')">👍 Like</button>
+            <span id="create-news-likes">0 Likes</span>
+            <div class="comment-section">
+                <h4>Comments</h4>
+                <textarea id="comment-input-create-news" placeholder="Add a comment..."></textarea>
+                <button onclick="submitComment('create-news')">Post Comment</button>
+                <div id="comments-list-create-news"></div>
+            </div>
+        </div>
 
         <div class="news-article">
             <h3>We Need Your Suggestions for LYRIA!</h3>
@@ -508,6 +544,7 @@
     </div>
 
     <footer>
+        <button class="create-post-button" onclick="alert('Coming soon! This feature will be available in the next few updates.')" style="margin-top: 15px;">Create Your Own Post</button>
         <div id="version-info">
             LYRIA News Version: Beta 3.0.0<br>
             &copy; 2024 LYRIA. All rights reserved. Trademarked by LYRIA.
