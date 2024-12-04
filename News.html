@@ -894,9 +894,7 @@
                     <div class="article-tags">
                         ${article.tags.map(tag => `<span class="article-tag">${tag}</span>`).join('')}
                     </div>
-                    <button class="like-button" id="${doc.id}-like-button" onclick="toggleLike('${doc.id}')">
-                        👍 Like
-                    </button>
+
                     <span id="${doc.id}-likes">${formatLikes(article.likes || 0)} Likes</span>
                 `;
                 articlesList.appendChild(articleElement);
