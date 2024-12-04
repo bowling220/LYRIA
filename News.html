@@ -268,17 +268,17 @@
     </header>
 
     <div class="news-container">
-        <div class="download-section">
-            <h2>Download LYRIA Web Browser</h2>
-            <button class="download-button" onclick="confirmDownload('mac')">
-                <span>🍎 Download for Mac</span>
-            </button>
-            <button class="download-button" onclick="confirmDownload('windows')">
-                <span>🪟 Download for Windows</span>
-            </button>
-        </div>
+      
 
         <h2>Latest News</h2>
+
+        <div class="news-article">
+            <h3>LYRIA Browser Temporarily Removed for Bug Fixes</h3>
+            <p>Published on: <span class="date">2024-11-28</span></p>
+            <p>As part of our ongoing efforts to ensure the highest quality experience for our users, we have temporarily removed the LYRIA Web Browser from our platform. This decision was made to address several bugs and issues that have been reported by our users. We are working diligently to resolve these issues and improve the overall performance of the browser. We apologize for any inconvenience this may cause and appreciate your patience as we work to bring back a better, more reliable browser experience.</p>
+            <button class="like-button" id="browser-removal-like-button" onclick="toggleLike('browser-removal')">👍 Like</button>
+            <span id="browser-removal-likes">0 Likes</span>
+        </div>
         <div class="news-article">
             <h3>LYRIA Web Browser Now Available!</h3>
             <p>Published on: <span class="date">2024-11-25</span></p>
@@ -339,7 +339,7 @@
 
     <footer>
         <div id="version-info">
-            LYRIA News Version: Beta 2.0.5<br>
+            LYRIA News Version: Beta 3.0.0<br>
             &copy; 2024 LYRIA. All rights reserved. Trademarked by LYRIA.
         </div>
     </footer>

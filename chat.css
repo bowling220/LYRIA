@@ -1410,3 +1410,16 @@ input:checked + .slider:before {
     object-fit: cover; /* Ensures the image covers the area without distortion */
     margin: 0.2rem; /* Add some spacing around the badges */
 }
+
+pre {
+    background-color: #f5f5f5; /* Light background for code */
+    border: 1px solid #ccc; /* Border around code block */
+    border-radius: 4px; /* Rounded corners */
+    padding: 10px; /* Padding inside the code block */
+    overflow-x: auto; /* Allow horizontal scrolling if needed */
+}
+
+code {
+    font-family: monospace; /* Use a monospace font for code */
+    white-space: pre-wrap; /* Preserve whitespace */
+}

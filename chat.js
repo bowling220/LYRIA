@@ -302,13 +302,16 @@ function setupUIEventListeners() {
 
     // Send message
     document.getElementById('send-button').addEventListener('click', () => {
-        sendMessage();
+        const messageInput = document.getElementById('message-input');
+        const messageText = messageInput.value; // Get the value from the textarea
+        sendMessage(messageText); // Call sendMessage with the input value
     });
 
     document.getElementById('message-input').addEventListener('keypress', (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
-            sendMessage();
+            const messageText = messageInput.value; // Get the value from the textarea
+            sendMessage(messageText); // Call sendMessage with the input value
         }
     });
 
@@ -458,27 +461,42 @@ document.getElementById('join-channel').addEventListener('click', () => {
     });
 }
 
-function sendMessage() {
+function sendMessage(messageText, isCode = false) {
     const messageInput = document.getElementById('message-input');
-    const messageText = messageInput.value.trim();
+    
+    // Check if messageText is defined and not null
+    if (typeof messageText !== 'string' || messageText.trim() === '') {
+        console.error("Message text is undefined or not a string.");
+        return; // Exit the function if messageText is invalid
+    }
 
-    if (messageText && currentChannel) {
+    // Format the message as code if isCode is true
+    const message = isCode ? `<pre><code>${escapeHtml(messageText)}</code></pre>` : messageText.trim();
+
+    if (message && currentChannel) {
         db.collection('channels').doc(currentChannel)
             .collection('messages').add({
-                message: messageText,
+                message: message,
                 sender: currentUser.displayName || 'User',
-                senderId: currentUser.uid, // Include sender's UID
-                senderPhotoURL: currentUser.photoURL || 'assets/icon.png', // Include sender's photo URL
+                senderId: currentUser.uid,
+                senderPhotoURL: currentUser.photoURL || 'assets/icon.png',
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             }).then(() => {
-                messageInput.value = '';
-                // Reset typing status
+                messageInput.value = ''; // Clear the input after sending
                 setTypingStatus(false);
             }).catch(error => {
                 console.error("Error sending message:", error);
                 alert('Failed to send message.');
             });
     }
+}
+function escapeHtml(unsafe) {
+    return unsafe
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
 }
 
 function setTypingStatus(isTyping) {
@@ -1381,3 +1399,16 @@ document.getElementById('background-image-input').addEventListener('change', (ev
         reader.readAsDataURL(file);
     }
 });
+
+function displayMessage(messageData) {
+    const messageElement = document.createElement('div');
+    messageElement.className = 'message';
+
+    // Use innerHTML to render HTML content
+    messageElement.innerHTML = `
+        <strong>${messageData.sender}</strong>: ${messageData.message}
+        <span class="message-timestamp">${formatTimestamp(messageData.timestamp)}</span>
+    `;
+
+    document.getElementById('messages').appendChild(messageElement);
+}
