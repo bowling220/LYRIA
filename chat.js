@@ -684,7 +684,28 @@ function loadMessages(channelId) {
                     const timestampElement = document.createElement('span');
                     timestampElement.className = 'message-timestamp';
                     const timestamp = message.timestamp ? message.timestamp.toDate() : new Date();
-                    const timeString = timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    const now = new Date();
+                    const timeDiff = Math.floor((now - timestamp) / (1000 * 60 * 60 * 24)); // Difference in days
+
+                    let timeString;
+
+                    if (timeDiff < 1) {
+                        // Less than a day ago, show time
+                        const options = { hour: '2-digit', minute: '2-digit', hour12: true };
+                        const time = timestamp.toLocaleTimeString([], options); // Format time
+                        timeString = `Today at ${time}`; // e.g., "Today at 3:45 PM"
+                    } else if (timeDiff === 1) {
+                        // 1 day ago
+                        timeString = 'Yesterday';
+                    } else if (timeDiff < 7) {
+                        // Less than a week ago
+                        timeString = `${timeDiff} days ago`;
+                    } else {
+                        // More than a week ago, show the day of the week
+                        const options = { weekday: 'long' };
+                        timeString = timestamp.toLocaleDateString(undefined, options); // e.g., "Tuesday"
+                    }
+
                     timestampElement.textContent = timeString;
                     senderElement.appendChild(timestampElement);
                 }).catch(error => {
