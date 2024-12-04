@@ -478,6 +478,29 @@
                 sidebar.style.transform = 'translateX(0)';
             }
         });
+
+
+
+        function submitSuggestion(articleId) {
+            const suggestionInput = document.getElementById(`suggestion-input-${articleId.split('-')[1]}`);
+            const suggestionText = suggestionInput.value;
+
+            if (suggestionText.trim() !== '') {
+                const suggestionList = document.getElementById(`suggestion-list-${articleId.split('-')[1]}`);
+                const suggestionElement = document.createElement('div');
+                suggestionElement.className = 'comment';
+                suggestionElement.innerText = suggestionText;
+
+                suggestionList.appendChild(suggestionElement);
+                suggestionInput.value = ''; // Clear the input after submitting
+
+                // Optionally, save the suggestion to Firestore
+                const suggestionRef = doc(db, 'suggestions', articleId);
+                setDoc(suggestionRef, { suggestion: suggestionText }, { merge: true });
+            }
+        }
+
+   
     </script>
 
     <!-- Suggestions Modal -->

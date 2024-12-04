@@ -138,12 +138,62 @@
             border-radius: 8px;
             margin-bottom: 20px;
         }
+
+        .comment-section {
+            margin-top: 10px;
+            padding: 10px;
+            background: #34495e;
+            border-radius: 5px;
+        }
+
+        .comment {
+            background: #d1ecf1;
+            border-radius: 5px;
+            padding: 10px;
+            margin-top: 10px;
+            color: #333;
+        }
+
+        .comment .comment-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .comment .comment-content {
+            word-wrap: break-word;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        button {
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
     </style>
 
     <script type="module">
         // Importing Firebase app and Firestore modules
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js';
-        import { getFirestore, doc, updateDoc, increment, onSnapshot, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js';
+        import { getFirestore, doc, updateDoc, increment, onSnapshot, setDoc, getDoc, collection, addDoc, query, orderBy, getDocs } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js';
 
         // Your web app's Firebase configuration
         const firebaseConfig = {
@@ -173,6 +223,11 @@
             return likes.toString();
         }
 
+        // Function to format date
+        function formatDate(date) {
+            return new Date(date).toLocaleString();
+        }
+
         // Function to like or unlike a post
         window.toggleLike = async function(postId) {
             const userId = "currentUserId"; // Replace with actual user ID
@@ -190,10 +245,7 @@
                         likes: increment(-1)
                     });
                 }
-                // Remove the user's like
                 await setDoc(userLikeRef, { liked: false });
-                console.log(`Unliked post: ${postId}`);
-                // Update button text to "👍 Like"
                 document.getElementById(postId + '-like-button').innerText = '👍 Like';
             } else {
                 // User has not liked the post, so we add the like
@@ -201,12 +253,9 @@
                     likes: increment(1)
                 });
                 await setDoc(userLikeRef, { liked: true });
-                console.log(`Liked post: ${postId}`);
-                // Update button text to "👎 Unlike"
                 document.getElementById(postId + '-like-button').innerText = '👎 Unlike';
             }
 
-            // Refresh the like count display
             fetchLikes(postId);
         };
 
@@ -217,11 +266,7 @@
                 if (docSnapshot.exists()) {
                     const likes = docSnapshot.data().likes || 0;
                     document.getElementById(postId + '-likes').innerText = formatLikes(likes) + ' Likes';
-                } else {
-                    console.log("No such document!");
                 }
-            }, (error) => {
-                console.error("Error fetching likes: ", error);
             });
         }
 
@@ -231,7 +276,6 @@
             const userLikeRef = doc(db, 'userLikes', userId, 'likes', postId);
             const userLikeDoc = await getDoc(userLikeRef);
 
-            // Update the button text based on whether the user has liked the post
             if (userLikeDoc.exists() && userLikeDoc.data().liked) {
                 document.getElementById(postId + '-like-button').innerText = '👎 Unlike';
             } else {
@@ -239,8 +283,57 @@
             }
         }
 
-        // Call fetchLikes and checkUserLike for each post when the page loads
-        window.onload = function () {
+        // Function to submit a comment
+        window.submitComment = async function(articleId) {
+            const commentInput = document.getElementById(`comment-input-${articleId}`);
+            const commentText = commentInput.value.trim();
+
+            if (commentText !== '') {
+                try {
+                    const commentsRef = collection(db, 'articles', articleId, 'comments');
+                    await addDoc(commentsRef, {
+                        text: commentText,
+                        timestamp: new Date().toISOString(),
+                        userId: "currentUserId", // Replace with actual user ID
+                        username: "Anonymous User" // Replace with actual username
+                    });
+
+                    commentInput.value = '';
+                    await fetchComments(articleId);
+                } catch (error) {
+                    console.error("Error adding comment: ", error);
+                }
+            }
+        };
+
+        // Function to fetch and display comments
+        async function fetchComments(articleId) {
+            const commentsRef = collection(db, 'articles', articleId, 'comments');
+            const q = query(commentsRef, orderBy('timestamp', 'desc'));
+            
+            // Set up real-time listener for comments
+            onSnapshot(q, (snapshot) => {
+                const commentsList = document.getElementById(`comments-list-${articleId}`);
+                commentsList.innerHTML = '';
+
+                snapshot.forEach((doc) => {
+                    const comment = doc.data();
+                    const commentElement = document.createElement('div');
+                    commentElement.className = 'comment';
+                    commentElement.innerHTML = `
+                        <div class="comment-header">
+                            <span>${comment.username}</span>
+                            <span>${formatDate(comment.timestamp)}</span>
+                        </div>
+                        <div class="comment-content">${comment.text}</div>
+                    `;
+                    commentsList.appendChild(commentElement);
+                });
+            });
+        }
+
+        // Initialize likes and comments when page loads
+        window.onload = function() {
             const postIds = [
                 'voice-call-feature',
                 'news-articles-making',
@@ -248,12 +341,16 @@
                 'beta-tester-recognition',
                 'guest-access',
                 'ui-improvements',
-                'initial-release'
+                'initial-release',
+                'browser-removal',
+                'browser-release',
+                'article1'
             ];
 
             postIds.forEach(postId => {
                 fetchLikes(postId);
                 checkUserLike(postId);
+                fetchComments(postId);
             });
         };
     </script>
@@ -269,8 +366,19 @@
 
     <div class="news-container">
       
-
         <h2>Latest News</h2>
+
+        <div class="news-article">
+            <h3>We Need Your Suggestions for LYRIA!</h3>
+            <p>Published on: <span class="date">2024-12-01</span></p>
+            <p>As we continue to grow and evolve, we want to hear from you! We're looking for suggestions on how to improve and expand the LYRIA platform. What features would you like to see added? What changes would make your experience better? Share your ideas with us and help shape the future of LYRIA!</p>
+            <div class="comment-section">
+                <h4>Comments</h4>
+                <textarea id="comment-input-article1" placeholder="Add a comment..."></textarea>
+                <button onclick="submitComment('article1')">Post Comment</button>
+                <div id="comments-list-article1"></div>
+            </div>
+        </div>
 
         <div class="news-article">
             <h3>LYRIA Browser Temporarily Removed for Bug Fixes</h3>
@@ -278,62 +386,124 @@
             <p>As part of our ongoing efforts to ensure the highest quality experience for our users, we have temporarily removed the LYRIA Web Browser from our platform. This decision was made to address several bugs and issues that have been reported by our users. We are working diligently to resolve these issues and improve the overall performance of the browser. We apologize for any inconvenience this may cause and appreciate your patience as we work to bring back a better, more reliable browser experience.</p>
             <button class="like-button" id="browser-removal-like-button" onclick="toggleLike('browser-removal')">👍 Like</button>
             <span id="browser-removal-likes">0 Likes</span>
+            <div class="comment-section">
+                <h4>Comments</h4>
+                <textarea id="comment-input-browser-removal" placeholder="Add a comment..."></textarea>
+                <button onclick="submitComment('browser-removal')">Post Comment</button>
+                <div id="comments-list-browser-removal"></div>
+            </div>
         </div>
+
         <div class="news-article">
             <h3>LYRIA Web Browser Now Available!</h3>
             <p>Published on: <span class="date">2024-11-25</span></p>
             <p>We're thrilled to announce the release of our very own LYRIA Web Browser! Now available for both Mac and Windows, our browser offers a seamless and integrated experience with the LYRIA platform. Features include enhanced privacy controls, built-in chat functionality, and optimized performance for LYRIA services. Download now to experience the web the LYRIA way!</p>
             <button class="like-button" id="browser-release-like-button" onclick="toggleLike('browser-release')">👍 Like</button>
             <span id="browser-release-likes">0 Likes</span>
+            <div class="comment-section">
+                <h4>Comments</h4>
+                <textarea id="comment-input-browser-release" placeholder="Add a comment..."></textarea>
+                <button onclick="submitComment('browser-release')">Post Comment</button>
+                <div id="comments-list-browser-release"></div>
+            </div>
         </div>
+
         <div class="news-article">
             <h3>Voice Call Feature Coming Soon!</h3>
             <p>Published on: <span class="date">2024-11-22</span></p>
             <p>We're working on implementing voice call capabilities! Soon you'll be able to have voice conversations with your friends on LYRIA. The feature will include high-quality audio, mute controls, and seamless integration with our existing chat system.</p>
             <button class="like-button" id="voice-call-feature-like-button" onclick="toggleLike('voice-call-feature')">👍 Like</button>
             <span id="voice-call-feature-likes">0 Likes</span>
+            <div class="comment-section">
+                <h4>Comments</h4>
+                <textarea id="comment-input-voice-call" placeholder="Add a comment..."></textarea>
+                <button onclick="submitComment('voice-call')">Post Comment</button>
+                <div id="comments-list-voice-call"></div>
+            </div>
         </div>
+
         <div class="news-article">
             <h3>News Articles in the making!</h3>
             <p>Published on: <span class="date">2024-11-22</span></p>
             <p>We're excited to announce the launch of our new friend request system! Users can now send, accept, and decline friend requests through their inbox. The system includes a pending section for new requests and a history section to track past interactions. Friend requests will show the sender's display name and timestamp for better tracking.</p>
             <button class="like-button" id="news-articles-making-like-button" onclick="toggleLike('news-articles-making')">👍 Like</button>
             <span id="news-articles-making-likes">0 Likes</span>
+            <div class="comment-section">
+                <h4>Comments</h4>
+                <textarea id="comment-input-news-articles" placeholder="Add a comment..."></textarea>
+                <button onclick="submitComment('news-articles')">Post Comment</button>
+                <div id="comments-list-news-articles"></div>
+            </div>
         </div>
+
         <div class="news-article">
             <h3>New Friend Request System Launch!</h3>
             <p>Published on: <span class="date">2024-01-15</span></p>
             <p>We're excited to announce the launch of our new friend request system! Users can now send, accept, and decline friend requests through their inbox. The system includes a pending section for new requests and a history section to track past interactions. Friend requests will show the sender's display name and timestamp for better tracking.</p>
             <button class="like-button" id="friend-request-launch-like-button" onclick="toggleLike('friend-request-launch')">👍 Like</button>
             <span id="friend-request-launch-likes">0 Likes</span>
+            <div class="comment-section">
+                <h4>Comments</h4>
+                <textarea id="comment-input-friend-request" placeholder="Add a comment..."></textarea>
+                <button onclick="submitComment('friend-request')">Post Comment</button>
+                <div id="comments-list-friend-request"></div>
+            </div>
         </div>
+
         <div class="news-article">
             <h3>Beta Tester Recognition Program</h3>
             <p>Published on: <span class="date">2024-01-14</span></p>
             <p>As a special thank you to our early adopters, we're awarding Beta Tester badges to all users who sign up during our beta phase! These exclusive badges will be a permanent recognition of your early support of LYRIA. Join now to claim your Beta Tester status!</p>
             <button class="like-button" id="beta-tester-recognition-like-button" onclick="toggleLike('beta-tester-recognition')">👍 Like</button>
             <span id="beta-tester-recognition-likes">0 Likes</span>
+            <div class="comment-section">
+                <h4>Comments</h4>
+                <textarea id="comment-input-beta-tester" placeholder="Add a comment..."></textarea>
+                <button onclick="submitComment('beta-tester')">Post Comment</button>
+                <div id="comments-list-beta-tester"></div>
+            </div>
         </div>
+
         <div class="news-article">
             <h3>Guest Access Now Available</h3>
             <p>Published on: <span class="date">2024-01-13</span></p>
             <p>Try LYRIA before signing up! We've introduced a guest login feature that allows users to explore our platform. Guest users get access to general channels and can experience our core features. Guest accounts come with basic functionality including access to the general channel and friend system.</p>
             <button class="like-button" id="guest-access-like-button" onclick="toggleLike('guest-access')">👍 Like</button>
             <span id="guest-access-likes">0 Likes</span>
+            <div class="comment-section">
+                <h4>Comments</h4>
+                <textarea id="comment-input-guest-access" placeholder="Add a comment..."></textarea>
+                <button onclick="submitComment('guest-access')">Post Comment</button>
+                <div id="comments-list-guest-access"></div>
+            </div>
         </div>
+
         <div class="news-article">
             <h3>UI Improvements for a Cleaner Experience</h3>
             <p>Published on: <span class="date">2024-01-12</span></p>
             <p>We've revamped the UI with a fresh and clean design! The new layout is more intuitive, with easy access to all major features, and looks great on both desktop and mobile. We're also introducing dark mode and a new set of emojis for richer conversations.</p>
             <button class="like-button" id="ui-improvements-like-button" onclick="toggleLike('ui-improvements')">👍 Like</button>
             <span id="ui-improvements-likes">0 Likes</span>
+            <div class="comment-section">
+                <h4>Comments</h4>
+                <textarea id="comment-input-ui-improvements" placeholder="Add a comment..."></textarea>
+                <button onclick="submitComment('ui-improvements')">Post Comment</button>
+                <div id="comments-list-ui-improvements"></div>
+            </div>
         </div>
+
         <div class="news-article">
             <h3>Initial Release of LYRIA!</h3>
             <p>Published on: <span class="date">2023-12-01</span></p>
             <p>The moment has finally arrived! LYRIA is now live! We're proud to announce the official launch of our platform, bringing you a new and innovative way to chat with friends, join groups, and stay connected with the community.</p>
             <button class="like-button" id="initial-release-like-button" onclick="toggleLike('initial-release')">👍 Like</button>
             <span id="initial-release-likes">0 Likes</span>
+            <div class="comment-section">
+                <h4>Comments</h4>
+                <textarea id="comment-input-initial-release" placeholder="Add a comment..."></textarea>
+                <button onclick="submitComment('initial-release')">Post Comment</button>
+                <div id="comments-list-initial-release"></div>
+            </div>
         </div>
     </div>
 
@@ -351,12 +521,10 @@
             : 'Download LYRIA Browser for Windows?';
         
         if (confirm(message)) {
-            // Replace these with your actual Google Drive file IDs
             let downloadUrl = platform === 'mac'
                 ? 'https://drive.google.com/file/d/1ktHB1OkAlNTAa7ZFGwNuJj6HXCt9VIpY/view?usp=share_link'
                 : 'https://drive.google.com/file/d/1p3GwavOx9Nw9WMFxtfa-Pjoc6wBVNmMU/view?usp=share_link';
                 
-            // Trigger the download
             window.location.href = downloadUrl;
             
             alert('Thank you for downloading LYRIA Browser! Your download will begin shortly.');
