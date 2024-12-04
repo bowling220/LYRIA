@@ -713,6 +713,91 @@
     <div class="news-container">
       
         <h2>Latest News</h2>
+        <div class="news-article" style="animation: fadeInScale 0.8s ease-out">
+            <h3 style="animation: slideInRight 1s ease-out">Create Your Own Articles - Now Live! 🎉</h3>
+            <p>Published on: <span class="date" style="animation: fadeIn 1.2s ease-out">2024-01-15</span></p>
+            <p style="animation: slideInLeft 1.4s ease-out">The wait is over! You can now create and share your own articles on LYRIA News. Click the + button in the top-right corner to start sharing your stories, updates, and announcements with the LYRIA community. Your voice matters - start contributing today!</p>
+            <div style="animation: bounceIn 1.6s ease-out">
+                <button class="like-button" id="article-creation-like-button" onclick="toggleLike('article-creation')">👍 Like</button>
+                <span id="article-creation-likes">0 Likes</span>
+            </div>
+            <div class="comment-section" style="animation: fadeInUp 1.8s ease-out">
+                <h4>Comments</h4>
+                <textarea id="comment-input-article-creation" placeholder="Add a comment..."></textarea>
+                <button onclick="submitComment('article-creation')">Post Comment</button>
+                <div id="comments-list-article-creation"></div>
+            </div>
+        </div>
+
+        <style>
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes bounceIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.3);
+            }
+            50% {
+                opacity: 0.9;
+                transform: scale(1.1);
+            }
+            80% {
+                opacity: 1;
+                transform: scale(0.9);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        </style>
 
         <div class="news-article">
             <h3>Create Your Own News Posts - Coming Soon!</h3>
