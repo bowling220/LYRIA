@@ -764,7 +764,7 @@
 
         // Add this function to check for banned users
         function checkBannedUser() {
-            const blockedUsers = ['', 'dOVyjlLfVXPA9cWO2VCxR5zfgKW2'];
+            const blockedUsers = ['', ''];
             
             onAuthStateChanged(auth, (user) => {
                 if (user && blockedUsers.includes(user.uid)) {
