@@ -604,6 +604,15 @@
 
         // Function to toggle the user articles section
         function toggleUserArticles() {
+            // Check if user is blocked from creating articles
+            const currentUser = auth.currentUser;
+            const blockedUsers = ['gqzxU1sa58Pm06EiqbUXaK3AOW13', 'dOVyjlLfVXPA9cWO2VCxR5zfgKW2'];
+            
+            if (currentUser && blockedUsers.includes(currentUser.uid)) {
+                alert('You do not have permission to create articles.');
+                return;
+            }
+
             const userArticleSection = document.getElementById('user-article-section');
             if (userArticleSection.style.display === 'none' || userArticleSection.style.display === '') {
                 userArticleSection.style.display = 'block';
@@ -613,6 +622,28 @@
                 userArticleSection.style.display = 'none';
             }
         }
+
+        // Add this function to handle button visibility
+        function updateCreateButtonVisibility() {
+            const createButton = document.getElementById('create-article-button');
+            if (!createButton) return;
+
+            onAuthStateChanged(auth, (user) => {
+                const blockedUsers = ['gqzxU1sa58Pm06EiqbUXaK3AOW13', 'dOVyjlLfVXPA9cWO2VCxR5zfgKW2'];
+                
+                if (user && blockedUsers.includes(user.uid)) {
+                    createButton.style.display = 'none';
+                } else {
+                    createButton.style.display = 'flex';
+                }
+            });
+        }
+
+        // Call this in your window.onload or DOMContentLoaded
+        document.addEventListener('DOMContentLoaded', () => {
+            updateCreateButtonVisibility();
+            // ... rest of your existing DOMContentLoaded code ...
+        });
 
         // Move this inside your module script section
         document.addEventListener('DOMContentLoaded', () => {
@@ -1013,6 +1044,15 @@
 
     // Function to toggle the user articles section
     function toggleUserArticles() {
+        // Check if user is blocked from creating articles
+        const currentUser = auth.currentUser;
+        const blockedUsers = ['gqzxU1sa58Pm06EiqbUXaK3AOW13', 'dOVyjlLfVXPA9cWO2VCxR5zfgKW2'];
+        
+        if (currentUser && blockedUsers.includes(currentUser.uid)) {
+            alert('You do not have permission to create articles.');
+            return;
+        }
+
         const userArticleSection = document.getElementById('user-article-section');
         if (userArticleSection.style.display === 'none' || userArticleSection.style.display === '') {
             userArticleSection.style.display = 'block';
