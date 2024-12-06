@@ -468,7 +468,6 @@
             localStorage.setItem('lastVisitedChannel', currentChannel);
         });
 
-        // Sidebar dragging logic
         let isDragging = false;
         let startX;
         let sidebar = document.querySelector('.sidebar');
@@ -477,47 +476,7 @@
             sidebar.classList.toggle('open');
         });
 
-        sidebar.addEventListener('mousedown', (e) => {
-            isDragging = true;
-            startX = e.clientX; // Get the initial mouse position
-        });
-
-        // Prevent dragging when clicking on buttons or other elements
-        document.addEventListener('mousedown', (e) => {
-            if (!sidebar.contains(e.target) && !document.getElementById('sidebar-menu-toggle').contains(e.target)) {
-                isDragging = false; // Stop dragging if clicking outside the sidebar
-            }
-        });
-
-        document.addEventListener('mousemove', (e) => {
-            if (isDragging) {
-                let currentX = e.clientX;
-                let deltaX = currentX - startX;
-
-                // Move the sidebar based on mouse movement
-                if (deltaX > 0) { // Dragging to the right
-                    sidebar.style.transform = `translateX(${Math.min(deltaX, sidebar.offsetWidth)}px)`;
-                }
-            }
-        });
-
-        document.addEventListener('mouseup', () => {
-            if (isDragging) {
-                isDragging = false;
-
-                // Check if the sidebar is dragged more than half its width
-                if (parseInt(sidebar.style.transform.replace('translateX(', '').replace('px)', '')) > sidebar.offsetWidth / 2) {
-                    sidebar.classList.add('open'); // Open the sidebar
-                } else {
-                    sidebar.classList.remove('open'); // Close the sidebar
-                }
-
-                // Reset the transform
-                sidebar.style.transform = 'translateX(0)';
-            }
-        });
-
-
+        // Remove all dragging logic
 
         function submitSuggestion(articleId) {
             const suggestionInput = document.getElementById(`suggestion-input-${articleId.split('-')[1]}`);
