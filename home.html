@@ -87,10 +87,9 @@
             <div id="typing-status" class="typing-status" style="display: none;"></div>
             <div class="message-input">
                 <textarea id="message-input" placeholder="Message #" style="height: 15px;"></textarea>
-                <button id="send-button" class="send-btn" 
-                style="background-color: rgba(255, 255, 255, 0.2); color: rgb(0, 0, 0); border: 1px solid rgba(255, 255, 255, 0.4); padding: 6px 12px; font-size: 14px; cursor: pointer; border-radius: 8px; backdrop-filter: blur(4px);">
-                Send
-            </button>
+                <button id="send-button" class="send-btn" style="background-color: rgba(255, 255, 255, 0.2); color: rgb(0, 0, 0); border: 1px solid rgba(255, 255, 255, 0.4); padding: 6px 12px; font-size: 14px; cursor: pointer; border-radius: 8px; backdrop-filter: blur(4px);">
+                    Send
+                </button>
             </div>
         </main>
     </div>
@@ -142,12 +141,8 @@
         <!-- Update Bio Section -->
         <div class="modal-section">
             <label for="bio-input" class="modal-label">Update Bio:</label>
-            <input type="text" id="bio-input" class="modal-input" placeholder="Coming Soon" disabled>
-            <div class="tooltip-container">
-                <button id="update-bio-btn" class="action-btn update-bio-btn" disabled>Update Bio</button>
-                <span class="tooltip">Coming Soon</span>
-            </div>
-            <p class="premium-info" style="color: #ffcc00;">This feature is currently coming soon.</p>
+            <input type="text" id="bio-input" class="modal-input" placeholder="Enter your new bio">
+            <button id="update-bio-btn" class="action-btn">Update Bio</button>
         </div>
         
         <!-- Enable Notifications -->
@@ -511,6 +506,310 @@
             }
         }
 
+        // Add this after your existing Firebase initialization
+        const GIPHY_API_KEY = 'hVCy8PF3vcOo65OlFeniKs2e4pvsjO3W'; // Replace with your Giphy API key
+        const GIF_COOLDOWN = 30000; // 30 seconds cooldown between GIFs
+        let lastGifTime = 0;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const gifButton = document.getElementById('gif-button');
+            const gifModal = document.getElementById('gif-modal');
+            const closeGifModal = document.getElementById('close-gif-modal');
+            const gifSearch = document.getElementById('gif-search');
+            const gifResults = document.getElementById('gif-results');
+
+            if (gifButton && gifModal) {
+                gifButton.addEventListener('click', () => {
+                    gifModal.style.display = 'block';
+                    searchGifs('trending');
+                });
+            }
+
+            if (closeGifModal) {
+                closeGifModal.addEventListener('click', () => {
+                    gifModal.style.display = 'none';
+                });
+            }
+
+            if (gifSearch) {
+                gifSearch.addEventListener('input', debounce((e) => {
+                    const query = e.target.value.trim();
+                    if (query) {
+                        searchGifs(query);
+                    } else {
+                        searchGifs('trending');
+                    }
+                }, 500));
+            }
+        });
+
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        async function searchGifs(query) {
+            const gifResults = document.getElementById('gif-results');
+            if (!gifResults) return;
+
+            try {
+                const endpoint = query === 'trending' 
+                    ? `https://api.giphy.com/v1/gifs/trending?api_key=${GIPHY_API_KEY}&limit=20`
+                    : `https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_API_KEY}&q=${query}&limit=20`;
+                
+                const response = await fetch(endpoint);
+                const data = await response.json();
+                
+                gifResults.innerHTML = '';
+                data.data.forEach(gif => {
+                    const img = document.createElement('img');
+                    img.src = gif.images.fixed_height_small.url;
+                    img.style.cursor = 'pointer';
+                    img.style.width = '100%';
+                    img.style.height = 'auto';
+                    img.onclick = () => selectGif(gif.images.fixed_height.url);
+                    gifResults.appendChild(img);
+                });
+            } catch (error) {
+                console.error('Error fetching GIFs:', error);
+            }
+        }
+
+        async function selectGif(gifUrl) {
+            console.log('selectGif called with URL:', gifUrl); // Log the GIF URL
+
+            const gifModal = document.getElementById('gif-modal');
+            const now = Date.now();
+            
+            // Cooldown check
+            if (now - lastGifTime < GIF_COOLDOWN) {
+                const remainingTime = Math.ceil((GIF_COOLDOWN - (now - lastGifTime)) / 1000);
+                alert(`Please wait ${remainingTime} seconds before sending another GIF`);
+                return;
+            }
+
+            const currentUser = firebase.auth().currentUser;
+            if (!currentUser) {
+                console.error('No current user found');
+                alert('You must be logged in to send a GIF.');
+                return;
+            }
+
+            try {
+                // Get current channel name without the '#' symbol
+                const channelTitle = document.getElementById('channel-title').textContent.replace('# ', '');
+                console.log('Sending GIF to channel:', channelTitle);
+
+                // Create message data
+                const messageData = {
+                    userId: currentUser.uid,
+                    displayName: currentUser.displayName || 'Anonymous',
+                    content: gifUrl,
+                    type: 'gif',
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                };
+
+                console.log('Message data to be sent:', messageData); // Log the message data
+
+                // Save message in the correct path: channels/{channelId}/messages
+                await db.collection('channels').doc(channelTitle).collection('messages').add(messageData);
+                console.log('GIF message saved successfully');
+
+                lastGifTime = now;
+                if (gifModal) {
+                    gifModal.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error sending GIF:', error);
+                alert('Failed to send GIF. Please try again.');
+            }
+        }
+
+        // Object to keep track of unread messages for each channel
+        let unreadMessages = {};
+
+        // Function to load channels that the user has joined
+        async function loadJoinedChannels(userId) {
+            const channelsList = document.getElementById('channels-list');
+            channelsList.innerHTML = ''; // Clear previous content
+
+            // Fetch user data to get the list of joined channels
+            const userDoc = await db.collection('users').doc(userId).get();
+            if (userDoc.exists) {
+                const userData = userDoc.data();
+                const joinedChannels = userData.joinedChannels || []; // Assuming 'joinedChannels' is an array of channel IDs
+
+                // Fetch channels from Firestore based on joined channels
+                const channelsSnapshot = await db.collection('channels').where(firebase.firestore.FieldPath.documentId(), 'in', joinedChannels).get();
+                channelsSnapshot.forEach(doc => {
+                    const channelId = doc.id;
+                    const channelData = doc.data();
+                    const channelName = channelData.name || channelId;
+
+                    // Create a list item for the channel
+                    const listItem = document.createElement('li');
+                    listItem.innerHTML = `
+                        <span class="channel-name" onclick="joinChannel('${channelId}')">${channelName}</span>
+                        <span class="unread-count" id="unread-${channelId}" style="display: none; background: red; color: white; border-radius: 50%; padding: 2px 6px; font-size: 0.8rem; margin-left: 5px;"></span>
+                    `;
+                    channelsList.appendChild(listItem);
+
+                    // Initialize unread messages count for the channel
+                    unreadMessages[channelId] = 0;
+                });
+            }
+        }
+
+        // Function to join a channel
+        function joinChannel(channelId) {
+            // Reset unread messages count when joining the channel
+            unreadMessages[channelId] = 0;
+            updateUnreadCount(channelId);
+
+            // Load messages for the selected channel
+            loadChannelMessages(channelId);
+        }
+
+        // Function to update unread message count display
+        function updateUnreadCount(channelId) {
+            const unreadCountElement = document.getElementById(`unread-${channelId}`);
+            if (unreadMessages[channelId] > 0) {
+                unreadCountElement.textContent = unreadMessages[channelId];
+                unreadCountElement.style.display = 'inline';
+            } else {
+                unreadCountElement.style.display = 'none';
+            }
+        }
+
+        // Modify the message listener to track unread messages
+        function setupMessageListener() {
+            const channelTitle = document.getElementById('channel-title').textContent.replace('# ', '');
+            console.log('Setting up message listener for channel:', channelTitle);
+
+            // Set up real-time listener for messages in the specific channel
+            return db.collection('channels').doc(channelTitle).collection('messages')
+                .orderBy('timestamp', 'asc')  // Ensure messages are in order
+                .onSnapshot((snapshot) => {
+                    snapshot.docChanges().forEach((change) => {
+                        if (change.type === 'added') {
+                            const message = change.doc.data();
+                            console.log('Processing message:', message);
+                            displayMessage(message);
+
+                            // Check if the current channel is not the one receiving the message
+                            if (channelTitle !== message.channelId) {
+                                // Increment unread message count for the channel
+                                unreadMessages[message.channelId] = (unreadMessages[message.channelId] || 0) + 1;
+                                updateUnreadCount(message.channelId);
+                            }
+                        }
+                    });
+                }, (error) => {
+                    console.error('Error in message listener:', error);
+                });
+        }
+
+        // Function to display a single message
+        function displayMessage(message) {
+            const messagesContainer = document.getElementById('messages');
+            if (!messagesContainer) {
+                console.error('Messages container not found!');
+                return;
+            }
+
+            console.log('Displaying message:', message); // Log the message being displayed
+
+            const messageElement = document.createElement('div');
+            messageElement.className = 'message';
+
+            if (message.type === 'gif') {
+                console.log('Rendering GIF message:', message.content);
+                messageElement.innerHTML = `
+                    <div class="message-header">
+                        <strong>${message.displayName}</strong>
+                        <span class="timestamp">${message.timestamp ? new Date(message.timestamp.toDate()).toLocaleString() : 'Just now'}</span>
+                    </div>
+                    <div class="message-content">
+                        <img src="${message.content}" alt="GIF" style="max-width: 300px; max-height: 300px; border-radius: 8px;">
+                    </div>
+                `;
+            } else {
+                messageElement.innerHTML = `
+                    <div class="message-header">
+                        <strong>${message.displayName}</strong>
+                        <span class="timestamp">${message.timestamp ? new Date(message.timestamp.toDate()).toLocaleString() : 'Just now'}</span>
+                    </div>
+                    <div class="message-content">
+                        ${message.content}
+                    </div>
+                `;
+            }
+
+            messagesContainer.appendChild(messageElement);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight; // Scroll to the bottom
+        }
+
+        // Call loadJoinedChannels when the page loads
+        window.addEventListener('load', () => {
+            const userId = firebase.auth().currentUser.uid; // Get the current user's ID
+            loadJoinedChannels(userId);
+            // Set up the message listener for the currently selected channel
+            setupMessageListener();
+        });
+
+        // Function to update the user's bio
+        document.getElementById('update-bio-btn').addEventListener('click', async () => {
+            const currentUser = firebase.auth().currentUser;
+            if (!currentUser) return;
+
+            const newBio = document.getElementById('bio-input').value.trim();
+            if (newBio === '') {
+                alert('Bio cannot be empty.');
+                return;
+            }
+
+            try {
+                // Update user's bio in Firestore
+                await db.collection('users').doc(currentUser.uid).update({
+                    bio: newBio
+                });
+
+                // Update the bio displayed in the profile modal
+                document.getElementById('profile-modal-bio').textContent = newBio;
+
+                alert('Bio updated successfully!');
+            } catch (error) {
+                console.error('Error updating bio:', error);
+                alert('Failed to update bio. Please try again.');
+            }
+        });
+
+        // Function to load user data and display the bio
+        async function loadUserData(userId) {
+            const userDoc = await db.collection('users').doc(userId).get();
+            if (userDoc.exists) {
+                const userData = userDoc.data();
+                document.getElementById('user-name').textContent = userData.displayName;
+                document.getElementById('user-avatar').src = userData.photoURL || 'assets/icon.png';
+                document.getElementById('bio-input').value = userData.bio || ''; // Set initial bio value
+                document.getElementById('profile-modal-bio').textContent = userData.bio || 'No bio available'; // Display bio in profile modal
+            }
+        }
+
+        // Call loadUserData when the user is authenticated
+        firebase.auth().onAuthStateChanged(user => {
+            if (user) {
+                const userId = user.uid;
+                loadUserData(userId);
+            }
+        });
    
     </script>
 
@@ -522,7 +821,6 @@
             <iframe src="https://docs.google.com/forms/d/13N4gBgbZOyxgNzUuc8OHCVXlJ6j81BaS7wG-ZRQKbj0/viewform?embedded=true" width="100%" height="500" frameborder="0" marginheight="0" marginwidth="0">Loading…</iframe>
         </div>
     </div>
-
 
 </body>
 </html>

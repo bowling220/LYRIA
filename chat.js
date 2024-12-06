@@ -1,3 +1,29 @@
+function setupMessageListener() {
+    const channelTitle = document.getElementById('channel-title').textContent.replace('# ', '');
+    console.log('Setting up message listener for channel:', channelTitle);
+
+    // Clear existing messages first
+    const messagesContainer = document.getElementById('messages');
+    if (messagesContainer) {
+        messagesContainer.innerHTML = ''; // Clear previous messages
+    }
+
+    // Set up real-time listener for messages in the specific channel
+    return db.collection('channels').doc(channelTitle).collection('messages')
+        .orderBy('timestamp', 'asc')  // Ensure messages are in order
+        .onSnapshot((snapshot) => {
+            console.log('Received snapshot with changes');
+            snapshot.docChanges().forEach((change) => {
+                if (change.type === 'added') {
+                    const message = change.doc.data();
+                    console.log('Processing message:', message); // Log the message being processed
+                    displayMessage(message);
+                }
+            });
+        }, (error) => {
+            console.error('Error in message listener:', error);
+        });
+}
 const firebaseConfig = {
     apiKey: "AIzaSyDORsM0Dz9d_ZxqVd8zjNXwsEdR1_aVF7g",
     authDomain: "lyria-cfc06.firebaseapp.com", 
@@ -1400,15 +1426,107 @@ document.getElementById('background-image-input').addEventListener('change', (ev
     }
 });
 
-function displayMessage(messageData) {
+
+// In your message listener/handler
+db.collection('messages').where('channelId', '==', currentChannel)
+    .orderBy('timestamp')
+    .onSnapshot((snapshot) => {
+        snapshot.docChanges().forEach((change) => {
+            if (change.type === 'added') {
+                const message = change.doc.data();
+                const messageElement = document.createElement('div');
+                
+                // Use the renderMessage function to handle different message types
+                messageElement.innerHTML = renderMessage(message);
+                
+                messagesContainer.appendChild(messageElement);
+                scrollToBottom();
+            }
+        });
+    });
+
+    function displayMessage(message) {
+        const messagesContainer = document.getElementById('messages');
+        if (!messagesContainer) {
+            console.error('Messages container not found!');
+            return;
+        }
+    
+        console.log('Displaying message:', message); // Log the message being displayed
+    
+        const messageElement = document.createElement('div');
+        messageElement.className = 'message';
+    
+        if (message.type === 'gif') {
+            console.log('Rendering GIF message:', message.content);
+            messageElement.innerHTML = `
+                <div class="message-header">
+                    <strong>${message.displayName || 'Anonymous'}</strong>
+                    <span class="timestamp">${message.timestamp ? new Date(message.timestamp.toDate()).toLocaleString() : 'Just now'}</span>
+                </div>
+                <div class="message-content">
+                    <img src="${message.content}" alt="GIF" style="max-width: 300px; max-height: 300px; border-radius: 8px;">
+                </div>
+            `;
+        } else {
+            messageElement.innerHTML = `
+                <div class="message-header">
+                    <strong>${message.displayName || 'Anonymous'}</strong>
+                    <span class="timestamp">${message.timestamp ? new Date(message.timestamp.toDate()).toLocaleString() : 'Just now'}</span>
+                </div>
+                <div class="message-content">
+                    ${message.content}
+                </div>
+            `;
+        }
+    
+        messagesContainer.appendChild(messageElement);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight; // Scroll to the bottom
+    }
+
+function handleNewMessage(message) {
+    const messagesContainer = document.getElementById('messages');
     const messageElement = document.createElement('div');
     messageElement.className = 'message';
 
-    // Use innerHTML to render HTML content
-    messageElement.innerHTML = `
-        <strong>${messageData.sender}</strong>: ${messageData.message}
-        <span class="message-timestamp">${formatTimestamp(messageData.timestamp)}</span>
-    `;
+    if (message.type === 'gif') {
+        messageElement.innerHTML = `
+            <div class="message-header">
+                <strong>${message.displayName}</strong>
+                <span class="timestamp">${formatTimestamp(message.timestamp)}</span>
+            </div>
+            <div class="message-content">
+                <img src="${message.content}" alt="GIF" style="max-width: 300px; max-height: 300px; border-radius: 8px;">
+            </div>
+        `;
+    } else {
+        // Your existing message rendering code
+        messageElement.innerHTML = `
+            <div class="message-header">
+                <strong>${message.displayName}</strong>
+                <span class="timestamp">${formatTimestamp(message.timestamp)}</span>
+            </div>
+            <div class="message-content">
+                ${message.content}
+            </div>
+        `;
+    }
 
-    document.getElementById('messages').appendChild(messageElement);
+    messagesContainer.appendChild(messageElement);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
 }
+
+// Update your message listener
+db.collection('messages')
+    .where('channelId', '==', currentChannel)
+    .orderBy('timestamp')
+    .onSnapshot((snapshot) => {
+        snapshot.docChanges().forEach((change) => {
+            if (change.type === 'added') {
+                const message = change.doc.data();
+                console.log('New message received:', message);
+                handleNewMessage(message);
+            }
+        });
+    });
+
