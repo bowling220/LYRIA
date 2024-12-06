@@ -838,6 +838,25 @@
       
         <h2>Latest News</h2>
         <div class="news-article" style="animation: fadeInScale 0.8s ease-out">
+            <h3 style="animation: slideInRight 1s ease-out">Introducing Our New Status Feature! 🚀</h3>
+            <p>Published on: <span class="date" style="animation: fadeIn 1.2s ease-out">2024-12-06</span></p>
+            <p style="animation: slideInLeft 1.4s ease-out">We are excited to announce the launch of our new status feature on the LYRIA platform! This allows users to set their current status, making it easier to communicate availability and engage with others. Whether you're available, busy, or away, you can now share your status with the community.</p>
+            <div class="image-gallery" style="animation: fadeIn 1.6s ease-out">
+                <img src="assets/status-feature.png" alt="New Status Feature" style="width: 50%; max-width: 250px; border-radius: 8px; margin-bottom: 10px;">
+            </div>
+            <p style="animation: slideInLeft 1.4s ease-out">To set your status, simply navigate to your profile and choose from the available options. We believe this feature will enhance your experience and foster better communication within our community. Try it out today!</p>
+            <div style="animation: bounceIn 1.6s ease-out">
+                <button class="like-button" id="status-feature-like-button" onclick="toggleLike('status-feature')">👍 Like</button>
+                <span id="status-feature-likes">0 Likes</span>
+            </div>
+            <div class="comment-section" style="animation: fadeInUp 1.8s ease-out">
+                <h4>Comments</h4>
+                <textarea id="comment-input-status-feature" placeholder="Add a comment..."></textarea>
+                <button onclick="submitComment('status-feature')">Post Comment</button>
+                <div id="comments-list-status-feature"></div>
+            </div>
+        </div>
+        <div class="news-article" style="animation: fadeInScale 0.8s ease-out">
             <h3 style="animation: slideInRight 1s ease-out">Create Your Own Articles - Now Live! 🎉</h3>
             <p>Published on: <span class="date" style="animation: fadeIn 1.2s ease-out">2024-12-04</span></p>
             <p style="animation: slideInLeft 1.4s ease-out">The wait is over! You can now create and share your own articles on LYRIA News. Click the + button in the top-right corner to start sharing your stories, updates, and announcements with the LYRIA community. Your voice matters - start contributing today!</p>

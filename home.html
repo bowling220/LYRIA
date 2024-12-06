@@ -58,9 +58,14 @@
                 <ul class="friends-list" id="friends-list">
                     Add Some Friends!
                 </ul>
-                <div class="friend-status">
+                <div class="set-status">
                     <h4>Set Your Status</h4>
-                    <input type="text" id="status-input" placeholder="What's your status?">
+                    <select id="status-select">
+                        <option value="">Select Status</option>
+                        <option value="available">Available</option>
+                        <option value="busy">Busy</option>
+                        <option value="away">Away</option>
+                    </select>
                     <button id="update-status-btn" class="action-btn">Update Status</button>
                 </div>
             </div>
@@ -349,8 +354,7 @@
                             listItem.innerHTML = `
                                 <img src="${friendAvatar}" alt="${friendName}" class="friend-avatar">
                                 <span class="friend-name">${friendName}</span>
-                                <span class="friend-status" style="display: inline-block; width: 10px; height: 10px; background-color: ${statusColor}; border-radius: 50%; margin-left: 10px;"></span>
-                                <span class="friend-status-text">${friendStatus}</span>
+                                <span class="friend-status" style="display: inline-block; width: 10px; height: 10px; background-color: ${statusColor}; border-radius: 50%; margin-left: 10px; margin-right: 5px;"></span>
                                 <button onclick="removeFriend('${friendId}')" class="remove-friend-btn" style="margin-left: auto; background: none; border: none; color: #ff4444; cursor: pointer;">
                                     ❌
                                 </button>
@@ -373,7 +377,7 @@
         async function acceptFriendRequest(requestId) {
             const requestDoc = await db.collection('friendRequests').doc(requestId).get();
             if (requestDoc.exists) {
-                const requestData = requestDoc.data();
+                const requestData = requestDoc.data();  
                 const currentUser = firebase.auth().currentUser;
 
                 // Update both users' friends arrays
@@ -811,7 +815,7 @@
             }
         });
 
-        // Function to load user data and display the bio
+        // Function to load user data and display the bio and status
         async function loadUserData(userId) {
             const userDoc = await db.collection('users').doc(userId).get();
             if (userDoc.exists) {
@@ -820,6 +824,10 @@
                 document.getElementById('user-avatar').src = userData.photoURL || 'assets/icon.png';
                 document.getElementById('bio-input').value = userData.bio || ''; // Set initial bio value
                 document.getElementById('profile-modal-bio').textContent = userData.bio || 'No bio available'; // Display bio in profile modal
+                
+                // Set the user's status in the dropdown
+                const statusSelect = document.getElementById('status-select');
+                statusSelect.value = userData.status || ''; // Set the status if it exists
             }
         }
 
@@ -836,56 +844,25 @@
             const currentUser = firebase.auth().currentUser;
             if (!currentUser) return;
 
-            const newStatus = document.getElementById('status-input').value.trim();
-            if (newStatus === '') {
-                alert('Status cannot be empty.');
+            const selectedStatus = document.getElementById('status-select').value;
+            if (selectedStatus === '') {
+                alert('Please select a status.');
                 return;
             }
 
             try {
                 // Update user's status in Firestore
                 await db.collection('users').doc(currentUser.uid).update({
-                    status: newStatus
+                    status: selectedStatus
                 });
 
                 alert('Status updated successfully!');
+                loadFriends(currentUser.uid); // Reload friends to reflect the new status
             } catch (error) {
                 console.error('Error updating status:', error);
                 alert('Failed to update status. Please try again.');
             }
         });
-
-        // Function to load friends and their statuses
-        async function loadFriends(userId) {
-            const friendsList = document.getElementById('friends-list');
-            friendsList.innerHTML = ''; // Clear previous content
-
-            try {
-                const userDoc = await db.collection('users').doc(userId).get();
-                if (userDoc.exists) {
-                    const userData = userDoc.data();
-                    const friends = userData.friends || [];
-
-                    for (const friendId of friends) {
-                        const friendDoc = await db.collection('users').doc(friendId).get();
-                        if (friendDoc.exists) {
-                            const friendData = friendDoc.data();
-                            const friendName = friendData.displayName || 'Unknown Friend';
-                            const friendStatus = friendData.status || 'No status set';
-
-                            const listItem = document.createElement('li');
-                            listItem.innerHTML = `
-                                <span class="friend-name">${friendName}</span>
-                                <span class="friend-status">${friendStatus}</span>
-                            `;
-                            friendsList.appendChild(listItem);
-                        }
-                    }
-                }
-            } catch (error) {
-                console.error('Error loading friends:', error);
-            }
-        }
    
     </script>
 

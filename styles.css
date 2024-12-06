@@ -341,3 +341,21 @@
         z-index: 10; /* Ensure it appears above other content */
     }
 }
+
+.friend-status {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-left: 10px; /* Space between name and status */
+    margin-right: 5px; /* Space between status and bubble */
+    border: 2px solid white; /* Optional: border for better visibility */
+}
+
+.friend-status-text {
+    padding: 5px;
+    border-radius: 12px; /* Rounded corners for the bubble */
+    background-color: #4CAF50; /* Default color, will be overridden by JS */
+    color: white;
+    font-size: 0.9rem; /* Font size for the status text */
+}
