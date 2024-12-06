@@ -58,6 +58,11 @@
                 <ul class="friends-list" id="friends-list">
                     Add Some Friends!
                 </ul>
+                <div class="friend-status">
+                    <h4>Set Your Status</h4>
+                    <input type="text" id="status-input" placeholder="What's your status?">
+                    <button id="update-status-btn" class="action-btn">Update Status</button>
+                </div>
             </div>
 
             <!-- Suggestions Section -->
@@ -325,12 +330,27 @@
                             const friendData = friendDoc.data();
                             const friendName = friendData.displayName || 'Unknown Friend';
                             const friendAvatar = friendData.photoURL || 'default-avatar.png';
+                            const friendStatus = friendData.status || 'No status set';
+
+                            // Determine status color based on the status text
+                            let statusColor;
+                            if (friendStatus.toLowerCase() === 'available') {
+                                statusColor = 'green';
+                            } else if (friendStatus.toLowerCase() === 'busy') {
+                                statusColor = 'red';
+                            } else if (friendStatus.toLowerCase() === 'away') {
+                                statusColor = 'orange';
+                            } else {
+                                statusColor = 'gray'; // Default color for unknown status
+                            }
 
                             // Add the friend's information to the list with remove button
                             const listItem = document.createElement('li');
                             listItem.innerHTML = `
                                 <img src="${friendAvatar}" alt="${friendName}" class="friend-avatar">
                                 <span class="friend-name">${friendName}</span>
+                                <span class="friend-status" style="display: inline-block; width: 10px; height: 10px; background-color: ${statusColor}; border-radius: 50%; margin-left: 10px;"></span>
+                                <span class="friend-status-text">${friendStatus}</span>
                                 <button onclick="removeFriend('${friendId}')" class="remove-friend-btn" style="margin-left: auto; background: none; border: none; color: #ff4444; cursor: pointer;">
                                     ❌
                                 </button>
@@ -810,6 +830,62 @@
                 loadUserData(userId);
             }
         });
+
+        // Add event listener for updating status
+        document.getElementById('update-status-btn').addEventListener('click', async () => {
+            const currentUser = firebase.auth().currentUser;
+            if (!currentUser) return;
+
+            const newStatus = document.getElementById('status-input').value.trim();
+            if (newStatus === '') {
+                alert('Status cannot be empty.');
+                return;
+            }
+
+            try {
+                // Update user's status in Firestore
+                await db.collection('users').doc(currentUser.uid).update({
+                    status: newStatus
+                });
+
+                alert('Status updated successfully!');
+            } catch (error) {
+                console.error('Error updating status:', error);
+                alert('Failed to update status. Please try again.');
+            }
+        });
+
+        // Function to load friends and their statuses
+        async function loadFriends(userId) {
+            const friendsList = document.getElementById('friends-list');
+            friendsList.innerHTML = ''; // Clear previous content
+
+            try {
+                const userDoc = await db.collection('users').doc(userId).get();
+                if (userDoc.exists) {
+                    const userData = userDoc.data();
+                    const friends = userData.friends || [];
+
+                    for (const friendId of friends) {
+                        const friendDoc = await db.collection('users').doc(friendId).get();
+                        if (friendDoc.exists) {
+                            const friendData = friendDoc.data();
+                            const friendName = friendData.displayName || 'Unknown Friend';
+                            const friendStatus = friendData.status || 'No status set';
+
+                            const listItem = document.createElement('li');
+                            listItem.innerHTML = `
+                                <span class="friend-name">${friendName}</span>
+                                <span class="friend-status">${friendStatus}</span>
+                            `;
+                            friendsList.appendChild(listItem);
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading friends:', error);
+            }
+        }
    
     </script>
 
