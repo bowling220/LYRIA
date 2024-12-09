@@ -78,7 +78,6 @@
                         <h4 style="color: #fff; margin-bottom: 12px;">Your Status</h4>
                         <div class="status-wrapper" style="display: flex; flex-direction: column; gap: 12px;">
                             <select id="status-select" class="enhanced-select" style="background: rgba(0,0,0,0.3); color: white; padding: 10px; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; width: 100%;">
-                                <option value="">Set your status...</option>
                                 <option value="online">🟢 Online</option>
                                 <option value="idle">🟡 Idle</option>
                                 <option value="dnd">🔴 Do Not Disturb</option>
@@ -104,11 +103,28 @@
                     const friendElements = document.querySelectorAll('.friends-list li');
                     
                     friendElements.forEach(friend => {
+                        const friendStatus = friend.getAttribute('data-status') || 'online'; // Default to online if not set
                         if (category === 'all') {
                             friend.style.display = 'flex';
+                            // Update status indicator based on actual status
+                            const statusDot = friend.querySelector('.status-indicator');
+                            if (statusDot) {
+                                switch(friendStatus) {
+                                    case 'online':
+                                        statusDot.style.backgroundColor = '#43b581';
+                                        break;
+                                    case 'idle':
+                                        statusDot.style.backgroundColor = '#faa61a';
+                                        break;
+                                    case 'dnd':
+                                        statusDot.style.backgroundColor = '#f04747';
+                                        break;
+                                    case 'invisible':
+                                        statusDot.style.backgroundColor = '#747f8d';
+                                        break;
+                                }
+                            }
                         } else {
-                            // Get the friend's status from a data attribute or class
-                            const friendStatus = friend.getAttribute('data-status');
                             friend.style.display = friendStatus === category ? 'flex' : 'none';
                         }
                     });
