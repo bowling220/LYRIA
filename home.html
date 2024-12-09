@@ -52,21 +52,27 @@
             <button class="join-channel-btn" id="news-feed-button" onclick="window.location.href='News.html'">News Feed <span style="background: #ff4444; color: white; padding: 2px 6px; border-radius: 10px; font-size: 0.8rem;">NEW</span></button>
 
 
-            <!-- Friends Section -->
-            <div class="friends-section">
-                <h3>Friends</h3>
-                <ul class="friends-list" id="friends-list">
-                    Add Some Friends!
-                </ul>
-                <div class="set-status">
-                    <h4>Set Your Status</h4>
-                    <select id="status-select">
-                        <option value="">Select Status</option>
-                        <option value="available">Available</option>
-                        <option value="busy">Busy</option>
-                        <option value="away">Away</option>
-                    </select>
-                    <button id="update-status-btn" class="action-btn">Update Status</button>
+            <!-- Button to open Friends Modal -->
+            <button id="open-friends-modal" class="action-btn">Open Friends</button>
+
+            <!-- Friends Modal -->
+            <div id="friends-modal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="friends-modal-title">
+                <div class="modal-content">
+                    <button id="close-friends-modal" class="close-button" aria-label="Close Friends Modal">&times;</button>
+                    <h2 id="friends-modal-title">Friends</h2>
+                    <ul class="friends-list" id="friends-list">
+                        Add Some Friends!
+                    </ul>
+                    <div class="set-status">
+                        <h4>Set Your Status</h4>
+                        <select id="status-select">
+                            <option value="">Select Status</option>
+                            <option value="available">Available</option>
+                            <option value="busy">Busy</option>
+                            <option value="away">Away</option>
+                        </select>
+                        <button id="update-status-btn" class="action-btn">Update Status</button>
+                    </div>
                 </div>
             </div>
 
@@ -829,6 +835,17 @@
                 console.error('Error updating status:', error);
                 alert('Failed to update status. Please try again.');
             }
+        });
+
+        // Open Friends Modal
+        document.getElementById('open-friends-modal').addEventListener('click', () => {
+            document.getElementById('friends-modal').style.display = 'block';
+            loadFriends(firebase.auth().currentUser.uid); // Load friends when modal opens
+        });
+
+        // Close Friends Modal
+        document.getElementById('close-friends-modal').addEventListener('click', () => {
+            document.getElementById('friends-modal').style.display = 'none';
         });
    
     </script>
