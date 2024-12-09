@@ -717,38 +717,25 @@
         // Function to display a single message
         function displayMessage(message) {
             const messagesContainer = document.getElementById('messages');
-            if (!messagesContainer) {
-                console.error('Messages container not found!');
-                return;
-            }
-
-            console.log('Displaying message:', message); // Log the message being displayed
-
             const messageElement = document.createElement('div');
             messageElement.className = 'message';
 
-            if (message.type === 'gif') {
-                console.log('Rendering GIF message:', message.content);
-                messageElement.innerHTML = `
-                    <div class="message-header">
-                        <strong>${message.displayName}</strong>
-                        <span class="timestamp">${message.timestamp ? new Date(message.timestamp.toDate()).toLocaleString() : 'Just now'}</span>
-                    </div>
-                    <div class="message-content">
-                        <img src="${message.content}" alt="GIF" style="max-width: 300px; max-height: 300px; border-radius: 8px;">
-                    </div>
-                `;
-            } else {
-                messageElement.innerHTML = `
-                    <div class="message-header">
-                        <strong>${message.displayName}</strong>
-                        <span class="timestamp">${message.timestamp ? new Date(message.timestamp.toDate()).toLocaleString() : 'Just now'}</span>
-                    </div>
-                    <div class="message-content">
-                        ${message.content}
-                    </div>
-                `;
-            }
+            const currentUser = firebase.auth().currentUser;
+            const isAdmin = currentUser && currentUser.admin; // Check if the user is an admin
+
+            console.log('Current User:', currentUser);
+            console.log('Is Admin:', isAdmin);
+
+            messageElement.innerHTML = `
+                <div class="message-header">
+                    <strong>${message.displayName}</strong>
+                    <span class="timestamp">${message.timestamp ? new Date(message.timestamp.toDate()).toLocaleString() : 'Just now'}</span>
+                    ${isAdmin ? `<button class="pin-message-btn" onclick="pinMessage('${message.id}')">📌</button>` : ''}
+                </div>
+                <div class="message-content">
+                    ${message.content}
+                </div>
+            `;
 
             messagesContainer.appendChild(messageElement);
             messagesContainer.scrollTop = messagesContainer.scrollHeight; // Scroll to the bottom
@@ -848,6 +835,50 @@
         document.getElementById('close-friends-modal').addEventListener('click', () => {
             document.getElementById('friends-modal').style.display = 'none';
         });
+
+        async function pinMessage(messageId) {
+            const currentUser = firebase.auth().currentUser;
+            if (!currentUser) return;
+
+            try {
+                // Update the message in Firestore to mark it as pinned
+                await db.collection('channels').doc(currentChannelId).collection('messages').doc(messageId).update({
+                    pinned: true
+                });
+
+                alert('Message pinned successfully!');
+                // Optionally, refresh the messages to show the pinned message at the top
+                loadChannelMessages(currentChannelId);
+            } catch (error) {
+                console.error('Error pinning message:', error);
+                alert('Failed to pin message. Please try again.');
+            }
+        }
+
+        async function loadChannelMessages(channelId) {
+            const messagesContainer = document.getElementById('messages');
+            messagesContainer.innerHTML = ''; // Clear previous messages
+
+            // Fetch messages from Firestore
+            const messagesSnapshot = await db.collection('channels').doc(channelId).collection('messages')
+                .orderBy('timestamp', 'asc').get();
+
+            // Display pinned messages first
+            messagesSnapshot.forEach(doc => {
+                const message = { id: doc.id, ...doc.data() };
+                if (message.pinned) {
+                    displayMessage(message); // Display pinned messages
+                }
+            });
+
+            // Then display regular messages
+            messagesSnapshot.forEach(doc => {
+                const message = { id: doc.id, ...doc.data() };
+                if (!message.pinned) {
+                    displayMessage(message); // Display regular messages
+                }
+            });
+        }
    
     </script>
 
