@@ -430,7 +430,7 @@ document.getElementById('join-channel').addEventListener('click', () => {
                         console.log(`User ${currentUser.displayName} added to channel ${channel.name}`); // Log user addition
 
                         // Send a welcome message to the channel
-                        const welcomeMessage = `Welcome to ${channel.name}, ${currentUser.displayName || 'User'}! We're glad to have you here.`;
+                        const welcomeMessage = `Welcome to ${channel.name}, **${currentUser.displayName || 'User'}**! We're glad to have you here.`;
                         return db.collection('channels').doc(channel.id).collection('messages').add({
                             message: welcomeMessage,
                             sender: 'System',
