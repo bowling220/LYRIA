@@ -1477,3 +1477,134 @@ code {
     color: #666;
     font-size: 0.8em;
 }
+
+/* Modal Background */
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1000; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgba(0, 0, 0, 0.7); /* Dark background with opacity */
+}
+
+/* Modal Content */
+.modal-content {
+    background-color: #2c2f33; /* Darker background for the modal */
+    margin: auto; /* Center the modal */
+    padding: 30px; /* Increased padding inside the modal */
+    border: 1px solid #888; /* Gray border */
+    border-radius: 8px; /* Rounded corners */
+    width: 90%; /* Full width with some margin */
+    max-width: 600px; /* Maximum width */
+    min-height: 400px; /* Minimum height for the modal */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5); /* Shadow effect */
+    display: flex; /* Use flexbox for layout */
+    flex-direction: column; /* Stack children vertically */
+    justify-content: space-between; /* Space out children */
+}
+
+/* Modal Header */
+.modal-content h2 {
+    margin: 0 0 15px; /* Margin below the heading */
+    font-size: 1.5rem; /* Font size for the heading */
+    color: #ffffff; /* White text color */
+}
+
+/* Modal Buttons */
+.action-btn {
+    background-color: #5865f2; /* Primary button color */
+    color: white; /* Text color */
+    border: none; /* No border */
+    padding: 10px 15px; /* Padding */
+    text-align: center; /* Centered text */
+    text-decoration: none; /* No underline */
+    display: inline-block; /* Inline-block for button */
+    font-size: 1rem; /* Font size */
+    margin: 5px 2px; /* Margin around buttons */
+    cursor: pointer; /* Pointer cursor on hover */
+    border-radius: 5px; /* Rounded corners */
+    transition: background-color 0.3s; /* Transition effect */
+}
+
+/* Button Hover Effect */
+.action-btn:hover {
+    background-color: #4752c4; /* Darker shade on hover */
+}
+
+/* Modal Section */
+.modal-section {
+    margin-bottom: 20px; /* Space between sections */
+}
+
+/* Modal Labels */
+.modal-label {
+    display: block; /* Block display for labels */
+    margin-bottom: 5px; /* Space below labels */
+    font-weight: bold; /* Bold text */
+    color: #ffffff; /* White text color */
+}
+
+/* Input Fields */
+.modal-input {
+    width: 100%; /* Full width */
+    padding: 10px; /* Padding */
+    border: 1px solid #ccc; /* Light gray border */
+    border-radius: 4px; /* Rounded corners */
+    box-sizing: border-box; /* Include padding in width */
+    background-color: #40444b; /* Dark input background */
+    color: #ffffff; /* White text color */
+}
+
+/* Toggle Switch */
+.toggle-switch {
+    display: flex; /* Flexbox for toggle */
+    align-items: center; /* Center items */
+}
+
+/* Slider for Toggle */
+.slider {
+    position: relative;
+    width: 34px; /* Width of the slider */
+    height: 20px; /* Height of the slider */
+    background-color: #ccc; /* Background color */
+    border-radius: 34px; /* Rounded corners */
+    transition: background-color 0.4s; /* Transition effect */
+}
+
+/* Slider Circle */
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 16px; /* Height of the circle */
+    width: 16px; /* Width of the circle */
+    left: 2px; /* Position from the left */
+    bottom: 2px; /* Position from the bottom */
+    background-color: white; /* Circle color */
+    border-radius: 50%; /* Circle shape */
+    transition: transform 0.4s; /* Transition effect */
+}
+
+/* Checked State */
+input:checked + .slider {
+    background-color: #5865f2; /* Color when checked */
+}
+
+input:checked + .slider:before {
+    transform: translateX(14px); /* Move circle to the right */
+}
+
+/* Close Button */
+.close-button {
+    background: none; /* No background */
+    border: none; /* No border */
+    color: #ffffff; /* White text color */
+    font-size: 1.5rem; /* Font size */
+    cursor: pointer; /* Pointer cursor */
+    position: absolute; /* Positioning */
+    top: 10px; /* Position from the top */
+    right: 15px; /* Position from the right */
+}

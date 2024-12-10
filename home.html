@@ -25,6 +25,27 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.3.1/peerjs.min.js"></script>
         <script src="https://cdn.agora.io/sdk/release/AgoraRTC_N.js"></script>
         <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9049091067762501" crossorigin="anonymous"></script>
+        <style>
+            /* Background Options */
+            #background-options {
+                display: flex; /* Use flexbox for layout */
+                justify-content: space-around; /* Space out the images */
+                flex-wrap: wrap; /* Allow wrapping to the next line if needed */
+                margin-top: 10px; /* Space above the options */
+            }
+
+            .background-option {
+                cursor: pointer; /* Pointer cursor on hover */
+                width: 50px; /* Smaller width for thumbnails */
+                height: auto; /* Maintain aspect ratio */
+                border: 2px solid transparent; /* Default border */
+                transition: border-color 0.3s; /* Transition for border color */
+            }
+
+            .background-option:hover {
+                border-color: #5865f2; /* Highlight border on hover */
+            }
+        </style>
     </head>
 <body>
     <!-- Mobile Experience Message -->
@@ -111,7 +132,7 @@
         </main>
     </div>
     <div id="profile-modal">
-        <div class="modal-content">
+        <div class="modal-content" style="background-image: url('assets/default-background.jpg'); background-size: cover; background-position: center;">
             <img id="profile-modal-image" src="assets/icon.png" alt="User Avatar">
             <h2 id="profile-modal-name">User Name</h2>
             <div id="profile-modal-badges" class="badges-container"></div>
@@ -121,7 +142,7 @@
         </div>
     </div>
 <div id="version-info" style="position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); color: var(--text-color); font-size: 12px; font-weight: bold; text-shadow: 1px 1px 2px var(--background-color);">
-    Version: Beta 3.0.1 &copy; 2024 LYRIA. All rights reserved. Trademarked by LYRIA.
+    Version: 5.0.1 &copy; 2024 LYRIA. All rights reserved. Trademarked by LYRIA.
 </div>
 <!-- Settings Modal -->
 <div id="settings-modal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="settings-modal-title">
@@ -141,6 +162,8 @@
             <button id="update-profile-image" class="action-btn" disabled>Update Image (Premium)</button>
             <p class="premium-info" style="color: #ffcc00;">Premium users can change their profile picture.</p>
         </div>
+
+      
 
         <!-- Upgrade to Premium Section -->
         <div class="modal-section">
@@ -192,6 +215,27 @@
     <script src="chat.js"></script>
 
     <script>
+        function changeBackground(image) {
+            document.body.style.backgroundImage = `url(${image})`;
+        }
+
+        function changeProfileImage(image) {
+            const profileModalImage = document.getElementById('profile-modal-image');
+            profileModalImage.src = image; // Update the profile image
+
+            const currentUser = firebase.auth().currentUser;
+            if (currentUser) {
+                // Update Firestore with the new background image
+                db.collection('users').doc(currentUser.uid).update({
+                    backgroundImage: image
+                }).then(() => {
+                    console.log('Background image updated successfully!');
+                }).catch((error) => {
+                    console.error('Error updating background image:', error);
+                });
+            }
+        }
+
         // Detect if the user is on a mobile device
         function isMobileDevice() {
             return /Mobi|Android|iPhone|iPad|iPod|Windows Phone/i.test(navigator.userAgent);
@@ -407,59 +451,14 @@
             const currentUser = firebase.auth().currentUser;
             if (!currentUser) return;
 
-            try {
-                // Fetch user data from Firestore
-                const userDoc = await db.collection('users').doc(currentUser.uid).get();
-                if (!userDoc.exists) {
-                    console.error("User document does not exist.");
-                    return;
-                }
+            const fileInput = document.getElementById('profile-image-input');
+            const file = fileInput.files[0];
 
-                const userData = userDoc.data();
-                
-                // Check if the user is premium
-                if (!userData.isPremium) {
-                    alert('This feature is only available to premium users. Please upgrade your account to change your profile picture.');
-                    return;
-                }
-
-                const fileInput = document.getElementById('profile-image-input');
-                const file = fileInput.files[0];
-
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = async (e) => {
-                        const base64Image = e.target.result;
-
-                        // Update user's photoURL in Firestore with base64 string
-                        await db.collection('users').doc(currentUser.uid).update({
-                            photoURL: base64Image
-                        });
-
-                        // Update all UI elements showing the user's avatar
-                        const avatarElements = document.querySelectorAll(`img[src="${document.getElementById('user-avatar').src}"]`);
-                        avatarElements.forEach(element => {
-                            element.src = base64Image;
-                        });
-
-                        // Update profile modal image if it exists
-                        const profileModalImage = document.getElementById('profile-modal-image');
-                        if (profileModalImage) {
-                            profileModalImage.src = base64Image;
-                        }
-
-                        // Force refresh of friends list to update avatar there
-                        loadFriends(currentUser.uid);
-
-                        alert('Profile image updated successfully!');
-                    };
-                    reader.readAsDataURL(file);
-                } else {
-                    alert('Please select an image file first.');
-                }
-            } catch (error) {
-                console.error('Error updating profile image:', error);
-                alert('Failed to update profile image. Please try again.');
+            if (file) {
+                // Show confirmation modal
+                document.getElementById('confirm-image-change-modal').style.display = 'block';
+            } else {
+                alert('Please select an image file first.');
             }
         });
 
@@ -644,23 +643,27 @@
                 const userData = userDoc.data();
                 const joinedChannels = userData.joinedChannels || []; // Assuming 'joinedChannels' is an array of channel IDs
 
-                // Fetch channels from Firestore based on joined channels
-                const channelsSnapshot = await db.collection('channels').where(firebase.firestore.FieldPath.documentId(), 'in', joinedChannels).get();
-                channelsSnapshot.forEach(doc => {
-                    const channelId = doc.id;
-                    const channelData = doc.data();
-                    const channelName = channelData.name || channelId;
+                // Set up a real-time listener for the channels
+                const channelsRef = db.collection('channels').where(firebase.firestore.FieldPath.documentId(), 'in', joinedChannels);
+                channelsRef.onSnapshot((channelsSnapshot) => {
+                    channelsList.innerHTML = ''; // Clear previous content
 
-                    // Create a list item for the channel
-                    const listItem = document.createElement('li');
-                    listItem.innerHTML = `
-                        <span class="channel-name" onclick="joinChannel('${channelId}')">${channelName}</span>
-                        <span class="unread-count" id="unread-${channelId}" style="display: none; background: red; color: white; border-radius: 50%; padding: 2px 6px; font-size: 0.8rem; margin-left: 5px;"></span>
-                    `;
-                    channelsList.appendChild(listItem);
+                    channelsSnapshot.forEach(doc => {
+                        const channelId = doc.id;
+                        const channelData = doc.data();
+                        const channelName = channelData.name || channelId;
 
-                    // Initialize unread messages count for the channel
-                    unreadMessages[channelId] = 0;
+                        // Create a list item for the channel
+                        const listItem = document.createElement('li');
+                        listItem.innerHTML = `
+                            <span class="channel-name" onclick="joinChannel('${channelId}')">${channelName}</span>
+                            <span class="unread-count" id="unread-${channelId}" style="display: none; background: red; color: white; border-radius: 50%; padding: 2px 6px; font-size: 0.8rem; margin-left: 5px;"></span>
+                        `;
+                        channelsList.appendChild(listItem);
+                    });
+                }, (error) => {
+                    console.error('Error fetching channels:', error);
+                    // Optionally, you can implement retry logic here
                 });
             }
         }
@@ -879,6 +882,60 @@
                 }
             });
         }
+
+        // Handle confirmation of image change
+        document.getElementById('confirm-image-change-btn').addEventListener('click', async () => {
+            const currentUser = firebase.auth().currentUser;
+            const fileInput = document.getElementById('profile-image-input');
+            const file = fileInput.files[0];
+
+            if (file) {
+                try {
+                    const reader = new FileReader();
+                    reader.onload = async (e) => {
+                        const base64Image = e.target.result;
+
+                        // Update user's photoURL in Firestore with base64 string
+                        await db.collection('users').doc(currentUser.uid).update({
+                            photoURL: base64Image
+                        });
+
+                        // Update all UI elements showing the user's avatar
+                        const avatarElements = document.querySelectorAll(`img[src="${document.getElementById('user-avatar').src}"]`);
+                        avatarElements.forEach(element => {
+                            element.src = base64Image;
+                        });
+
+                        // Update profile modal image if it exists
+                        const profileModalImage = document.getElementById('profile-modal-image');
+                        if (profileModalImage) {
+                            profileModalImage.src = base64Image;
+                        }
+
+                        // Force refresh of friends list to update avatar there
+                        loadFriends(currentUser.uid);
+
+                        alert('Profile image updated successfully!');
+                        // Close the confirmation modal
+                        document.getElementById('confirm-image-change-modal').style.display = 'none';
+                    };
+                    reader.readAsDataURL(file);
+                } catch (error) {
+                    console.error('Error updating profile image:', error);
+                    alert('Failed to update profile image. Please try again.');
+                }
+            }
+        });
+
+        // Handle cancellation of image change
+        document.getElementById('cancel-image-change-btn').addEventListener('click', () => {
+            document.getElementById('confirm-image-change-modal').style.display = 'none'; // Close the modal
+        });
+
+        // Close the confirmation modal when the close button is clicked
+        document.getElementById('close-confirm-image-change-modal').addEventListener('click', () => {
+            document.getElementById('confirm-image-change-modal').style.display = 'none'; // Close the modal
+        });
    
     </script>
 
@@ -890,6 +947,7 @@
             <iframe src="https://docs.google.com/forms/d/13N4gBgbZOyxgNzUuc8OHCVXlJ6j81BaS7wG-ZRQKbj0/viewform?embedded=true" width="100%" height="500" frameborder="0" marginheight="0" marginwidth="0">Loading…</iframe>
         </div>
     </div>
+
 
 </body>
 </html>
