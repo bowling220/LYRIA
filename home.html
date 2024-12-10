@@ -136,7 +136,7 @@
             <img id="profile-modal-image" src="assets/icon.png" alt="User Avatar">
             <h2 id="profile-modal-name">User Name</h2>
             <div id="profile-modal-badges" class="badges-container"></div>
-            <p id="profile-modal-bio">COMING SOON</p>
+            <p id="profile-modal-bio" style="color: #1E90FF;">COMING SOON</p>
             <button id="send-friend-request" class="action-btn">Send Friend Request</button>
             <button id="close-profile-modal">Close</button>
         </div>
@@ -181,7 +181,7 @@
         <!-- Update Bio Section -->
         <div class="modal-section">
             <label for="bio-input" class="modal-label">Update Bio:</label>
-            <input type="text" id="bio-input" class="modal-input" placeholder="Enter your new bio">
+            <input type="text" id="bio-input" class="modal-input" placeholder="Enter your bio">
             <button id="update-bio-btn" class="action-btn">Update Bio</button>
         </div>
         
@@ -754,28 +754,31 @@
 
         // Function to update the user's bio
         document.getElementById('update-bio-btn').addEventListener('click', async () => {
-            const currentUser = firebase.auth().currentUser;
-            if (!currentUser) return;
+            const currentUser = firebase.auth().currentUser; // Get the currently authenticated user
+            if (!currentUser) return; // Exit if no user is authenticated
 
-            const newBio = document.getElementById('bio-input').value.trim();
+            const newBio = document.getElementById('bio-input').value.trim(); // Get the new bio from input
             if (newBio === '') {
-                alert('Bio cannot be empty.');
+                alert('Bio cannot be empty.'); // Alert if the bio is empty
                 return;
             }
 
             try {
-                // Update user's bio in Firestore
+                // Update the user's bio in Firestore
                 await db.collection('users').doc(currentUser.uid).update({
-                    bio: newBio
+                    bio: newBio // Update only the current user's bio
                 });
 
-                // Update the bio displayed in the profile modal
-                document.getElementById('profile-modal-bio').textContent = newBio;
+                // Optionally update the displayed bio in the UI
+                const bioProfile = document.getElementById('profile-modal-bio');
+                if (bioProfile) {
+                    bioProfile.innerHTML = `<span style="color: #1E90FF;">${newBio}</span>`; // Update the displayed bio
+                }
 
-                alert('Bio updated successfully!');
+                alert('Bio updated successfully!'); // Alert on success
             } catch (error) {
-                console.error('Error updating bio:', error);
-                alert('Failed to update bio. Please try again.');
+                console.error('Error updating bio:', error); // Log the error for debugging
+                alert('Failed to update bio. Please try again.'); // Alert on failure
             }
         });
 
@@ -786,12 +789,8 @@
                 const userData = userDoc.data();
                 document.getElementById('user-name').textContent = userData.displayName;
                 document.getElementById('user-avatar').src = userData.photoURL || 'assets/icon.png';
-                document.getElementById('bio-input').value = userData.bio || ''; // Set initial bio value
-                document.getElementById('profile-modal-bio').textContent = userData.bio || 'No bio available'; // Display bio in profile modal
-                
-                // Set the user's status in the dropdown
-                const statusSelect = document.getElementById('status-select');
-                statusSelect.value = userData.status || ''; // Set the status if it exists
+                document.getElementById('bio-input').value = userData.bio || 'No Bio'; // Set initial bio value
+                document.getElementById('profile-modal-bio').innerHTML = userData.bio ? `<span style="color: #1E90FF;">${userData.bio}</span>` : 'No bio available'; // Display bio in profile modal
             }
         }
 
