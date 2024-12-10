@@ -643,6 +643,12 @@
                 const userData = userDoc.data();
                 const joinedChannels = userData.joinedChannels || []; // Assuming 'joinedChannels' is an array of channel IDs
 
+                // Check if the joinedChannels array is empty
+                if (joinedChannels.length === 0) {
+                    channelsList.innerHTML = '<li></li>'; // Inform the user
+                    return; // Exit the function
+                }
+
                 // Set up a real-time listener for the channels
                 const channelsRef = db.collection('channels').where(firebase.firestore.FieldPath.documentId(), 'in', joinedChannels);
                 channelsRef.onSnapshot((channelsSnapshot) => {
@@ -681,11 +687,13 @@
         // Function to update unread message count display
         function updateUnreadCount(channelId) {
             const unreadCountElement = document.getElementById(`unread-${channelId}`);
-            if (unreadMessages[channelId] > 0) {
-                unreadCountElement.textContent = unreadMessages[channelId];
-                unreadCountElement.style.display = 'inline';
-            } else {
-                unreadCountElement.style.display = 'none';
+            if (unreadCountElement) { // Check if the element exists
+                if (unreadMessages[channelId] > 0) {
+                    unreadCountElement.textContent = unreadMessages[channelId];
+                    unreadCountElement.style.display = 'inline';
+                } else {
+                    unreadCountElement.style.display = 'none';
+                }
             }
         }
 
