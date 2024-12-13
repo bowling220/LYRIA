@@ -26,7 +26,8 @@
         <script src="https://cdn.agora.io/sdk/release/AgoraRTC_N.js"></script>
         <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9049091067762501" crossorigin="anonymous"></script>
         <script src="//code.tidio.co/rzuzmsphuoxttdacaxphfdtzkx0oglgf.js" async></script>
-        <style>
+
+       <style>
             /* Background Options */
             #background-options {
                 display: flex; /* Use flexbox for layout */
@@ -70,6 +71,8 @@
                 <button class="add-channel-btn" id="add-channel">Add Channel</button>
                 <button class="join-channel-btn" id="join-channel">Join Channel</button>
                 <button class="leave-channel-btn" id="leave-channel">Leave Channel</button>
+
+
 
             </div>
             <button class="join-channel-btn" id="news-feed-button" onclick="window.location.href='News.html'">News Feed <span style="background: #ff4444; color: white; padding: 2px 6px; border-radius: 10px; font-size: 0.8rem;">NEW</span></button>
@@ -126,7 +129,7 @@
             <div id="typing-status" class="typing-status" style="display: none;"></div>
             <div class="message-input">
                 <textarea id="message-input" placeholder="Message #" style="height: 15px;"></textarea>
-                <button id="send-button" class="send-btn" style="background-color: rgba(255, 255, 255, 0.2); color: rgb(0, 0, 0); border: 1px solid rgba(255, 255, 255, 0.4); padding: 6px 12px; font-size: 14px; cursor: pointer; border-radius: 8px; backdrop-filter: blur(4px);">
+                <button id="send-button" class="send-btn" style="background-color: rgba(255, 255, 255, 0.2); color: rgb(0, 0, 0); border: 1px solid rgba(255, 255, 255, 0.4); padding: 6px 12px; font-size: 14px; cursor: pointer; border-radius: 8px; backdrop-filter: blur(4px); margin-right: 100px;">
                     Send
                 </button>
             </div>
@@ -646,7 +649,7 @@
 
                 // Check if the joinedChannels array is empty
                 if (joinedChannels.length === 0) {
-                    channelsList.innerHTML = '<li>No joined channels.</li>'; // Inform the user
+                    channelsList.innerHTML = '<li></li>'; // Inform the user
                     return; // Exit the function
                 }
 
