@@ -46,6 +46,22 @@
             .background-option:hover {
                 border-color: #5865f2; /* Highlight border on hover */
             }
+            .centered-heading {
+    text-align: center; /* Centers the heading */
+}
+
+.info-text {
+    color: rgb(255, 0, 0); /* White color for the information part */
+    background-color: #1e272e; /* Dark background to make it stand out */
+    padding: 5px 10px; /* Add padding to make it feel more like a tag */
+    border-radius: 5px; /* Slightly rounded corners for a soft look */
+    font-size: 1rem; /* Slightly smaller font size to differentiate */
+    margin-left: 10px; /* Space it out from the main heading */
+    display: inline-block; /* Keep it inline with the heading */
+}
+
+
+
         </style>
     </head>
 <body>
@@ -65,7 +81,7 @@
         <button class="menu-toggle" id="sidebar-menu-toggle">☰</button>
         <div class="sidebar">
             <div class="channels">
-                <h3>Channels</h3>
+                <h3 class="centered-heading">Channels<span class="info-text">You Might Need To Refresh Once, If More Please Let Me Know!</span></h3>
                 <ul class="channels-list" id="channels-list"></ul>
                 <button class="add-channel-btn" id="add-channel">Add Channel</button>
                 <button class="join-channel-btn" id="join-channel">Join Channel</button>
