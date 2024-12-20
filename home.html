@@ -647,7 +647,7 @@ async function loadJoinedChannels(userId) {
 
         // Check if the joinedChannels array is empty
         if (joinedChannels.length === 0) {
-            channelsList.innerHTML = '<li>No joined channels</li>'; // Inform the user
+            channelsList.innerHTML = '<li></li>'; // Inform the user
             return; // Exit the function
         }
 
