@@ -638,7 +638,6 @@
 // Function to load channels that the user has joined
 async function loadJoinedChannels(userId) {
     const channelsList = document.getElementById('channels-list');
-    channelsList.innerHTML = ''; // Clear previous content initially
 
     // Fetch user data to get the list of joined channels
     const userDoc = await db.collection('users').doc(userId).get();
@@ -648,32 +647,29 @@ async function loadJoinedChannels(userId) {
 
         // Check if the joinedChannels array is empty
         if (joinedChannels.length === 0) {
-            channelsList.innerHTML = '<li>No channels joined yet.</li>'; // Inform the user
+            channelsList.innerHTML = '<li>No joined channels</li>'; // Inform the user
             return; // Exit the function
         }
 
         // Set up a real-time listener for the channels
         const channelsRef = db.collection('channels').where(firebase.firestore.FieldPath.documentId(), 'in', joinedChannels);
-        
-        // Real-time listener for channels
         channelsRef.onSnapshot((channelsSnapshot) => {
-            // Instead of clearing the list each time, we will just add the new items
+            // Only add channels that are not already in the list
             channelsSnapshot.forEach(doc => {
                 const channelId = doc.id;
                 const channelData = doc.data();
                 const channelName = channelData.name || channelId;
 
-                // Check if the channel is already in the list to prevent duplicates
-                let existingChannel = document.getElementById(channelId);
-                if (!existingChannel) {
+                // Check if the channel is already in the list
+                if (!document.getElementById(`channel-${channelId}`)) {
                     // Create a list item for the channel
                     const listItem = document.createElement('li');
-                    listItem.id = channelId; // Set the ID of the list item to be the channel ID
+                    listItem.id = `channel-${channelId}`; // Unique ID for the channel
                     listItem.innerHTML = `
                         <span class="channel-name" onclick="joinChannel('${channelId}')">${channelName}</span>
                         <span class="unread-count" id="unread-${channelId}" style="display: none; background: red; color: white; border-radius: 50%; padding: 2px 6px; font-size: 0.8rem; margin-left: 5px;"></span>
                     `;
-                    channelsList.appendChild(listItem); // Append the new list item
+                    channelsList.appendChild(listItem);
                 }
             });
         }, (error) => {
