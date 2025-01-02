@@ -651,9 +651,16 @@
         // Object to keep track of unread messages for each channel
         let unreadMessages = {};
 
+let channelsLoaded = false; // Flag to check if channels have been loaded
+
 // Function to load channels that the user has joined
 async function loadJoinedChannels(userId) {
     const channelsList = document.getElementById('channels-list');
+
+    // Check if channels have already been loaded
+    if (channelsLoaded) {
+        return; // Exit if channels are already loaded
+    }
 
     // Fetch user data to get the list of joined channels
     const userDoc = await db.collection('users').doc(userId).get();
@@ -688,10 +695,33 @@ async function loadJoinedChannels(userId) {
             console.error('Error fetching channels:', error);
             alert('Failed to load channels. Please try again later.');
         });
+
+        channelsLoaded = true; // Set the flag to true after loading channels
     } else {
         channelsList.innerHTML = '<li>No user data found.</li>'; // Inform if no user data
     }
 }
+
+// Call loadJoinedChannels when the page loads
+window.addEventListener('load', () => {
+    const userId = firebase.auth().currentUser.uid; // Get the current user's ID
+    loadJoinedChannels(userId);
+});
+
+// Function to add a new channel and update the list
+async function addChannel(channelId) {
+    const channelsList = document.getElementById('channels-list');
+    const channelName = "New Channel"; // Replace with actual channel name logic
+
+    // Create a list item for the new channel
+    const listItem = document.createElement('li');
+    listItem.id = `channel-${channelId}`; // Unique ID for the channel
+    listItem.innerHTML = `
+        <span class="channel-name" onclick="joinChannel('${channelId}')">${channelName}</span>
+    `;
+    channelsList.appendChild(listItem);
+}
+
         // Function to join a channel
         function joinChannel(channelId) {
             // Reset unread messages count when joining the channel
