@@ -670,16 +670,18 @@
 // Function to load channels that the user has joined
 async function loadJoinedChannels(userId) {
     const channelsList = document.getElementById('channels-list');
+    console.log('Loading channels for user:', userId); // Debug log
 
     // Fetch user data to get the list of joined channels
     const userDoc = await db.collection('users').doc(userId).get();
     if (userDoc.exists) {
         const userData = userDoc.data();
         const joinedChannels = userData.joinedChannels || []; // Assuming 'joinedChannels' is an array of channel IDs
+        console.log('Joined channels:', joinedChannels); // Debug log
 
         // Check if the joinedChannels array is empty
         if (joinedChannels.length === 0) {
-            channelsList.innerHTML = '<li></li>'; // Inform the user
+            channelsList.innerHTML = '<li>No channels joined.</li>'; // Inform the user
             return; // Exit the function
         }
 
@@ -694,6 +696,7 @@ async function loadJoinedChannels(userId) {
                 const channelId = doc.id;
                 const channelData = doc.data();
                 const channelName = channelData.name || channelId;
+                console.log('Channel loaded:', channelName); // Debug log
 
                 // Create a list item for the channel
                 const listItem = document.createElement('li');
@@ -708,6 +711,8 @@ async function loadJoinedChannels(userId) {
             console.error('Error fetching channels:', error);
             alert('Failed to load channels. Please try again later.');
         });
+    } else {
+        console.log('User document does not exist.'); // Debug log
     }
 }
         // Function to join a channel
