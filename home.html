@@ -676,7 +676,7 @@ async function loadJoinedChannels(userId) {
     const userDoc = await db.collection('users').doc(userId).get();
     if (userDoc.exists) {
         const userData = userDoc.data();
-        const joinedChannels = userData.joinedChannels || []; // Assuming 'joinedChannels' is an array of channel IDs
+        const joinedChannels = userData.channels || []; // Reference the channels array
         console.log('Joined channels:', joinedChannels); // Debug log
 
         // Check if the joinedChannels array is empty
