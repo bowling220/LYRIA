@@ -132,18 +132,24 @@ function callPeer(peerId) {
     handleCallEvents(call);
 }
 
-// Event listener for the voice call button
-document.getElementById('make-voice-call').addEventListener('click', () => {
-    const buttonText = document.getElementById('make-voice-call').textContent;
-    if (buttonText === 'Make Voice Call' || buttonText === 'Join Call') {
-        startOrJoinCall();
-    }
-});
+// Event listener for the voice call button (check if element exists)
+const voiceCallButton = document.getElementById('make-voice-call');
+if (voiceCallButton) {
+    voiceCallButton.addEventListener('click', () => {
+        const buttonText = voiceCallButton.textContent;
+        if (buttonText === 'Make Voice Call' || buttonText === 'Join Call') {
+            startOrJoinCall();
+        }
+    });
+}
 
-// Add event listener for ending the call
-document.getElementById('end-call').addEventListener('click', () => {
-    endGroupCall();
-});
+// Add event listener for ending the call (check if element exists)
+const endCallButton = document.getElementById('end-call');
+if (endCallButton) {
+    endCallButton.addEventListener('click', () => {
+        endGroupCall();
+    });
+}
 
 // Function to end the group call
 function endGroupCall() {

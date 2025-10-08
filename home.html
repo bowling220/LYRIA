@@ -254,6 +254,23 @@
     <script src="voiceCall.js"></script>
     <script src="chat.js"></script>
 
+    <!-- Firebase initialization check -->
+    <script>
+        // Wait for Firebase to be initialized before using it
+        function waitForFirebase() {
+            if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
+                // Firebase is ready, initialize the rest of the app
+                console.log('Firebase initialized, starting home page...');
+            } else {
+                // Wait and try again
+                setTimeout(waitForFirebase, 100);
+            }
+        }
+
+        // Start waiting for Firebase
+        waitForFirebase();
+    </script>
+
     <script>
         function changeBackground(image) {
             document.body.style.backgroundImage = `url(${image})`;
@@ -309,8 +326,11 @@
             if (user) {
                 const userId = user.uid;
 
-                // Fetch user data from Firestore
-                db.collection('users').doc(userId).get().then(doc => {
+                // Wait for Firebase to be ready before using db
+                function waitForDb() {
+                    if (typeof db !== 'undefined') {
+                        // Fetch user data from Firestore
+                        db.collection('users').doc(userId).get().then(doc => {
                     if (doc.exists) {
                         const userData = doc.data();
                         document.getElementById('user-name').textContent = userData.displayName;
@@ -343,9 +363,15 @@
                     } else {
                         console.log("No such document!");
                     }
-                }).catch(error => {
-                    console.error("Error getting document:", error);
-                });
+                        }).catch(error => {
+                            console.error("Error getting document:", error);
+                        });
+
+                    } else {
+                        // db is not ready yet, wait and try again
+                        setTimeout(waitForDb, 100);
+                    }
+                }
 
                 // Check if the user is the one to be banned
                 if (userId === '') {
@@ -357,6 +383,9 @@
                         newsButton.title = 'Access to News Feed is restricted.';
                     }
                 }
+
+                // Start waiting for db to be ready
+                waitForDb();
             }
         });
 
@@ -518,9 +547,12 @@
         let startX;
         let sidebar = document.querySelector('.sidebar');
 
-        document.getElementById('sidebar-menu-toggle').addEventListener('click', () => {
-            sidebar.classList.toggle('open');
-        });
+        const sidebarToggle = document.getElementById('sidebar-menu-toggle');
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('open');
+            });
+        }
 
         // Remove all dragging logic
 
@@ -838,13 +870,26 @@ async function loadJoinedChannels(userId) {
 
         // Function to load user data and display the bio and status
         async function loadUserData(userId) {
-            const userDoc = await db.collection('users').doc(userId).get();
-            if (userDoc.exists) {
-                const userData = userDoc.data();
-                document.getElementById('user-name').textContent = userData.displayName;
-                document.getElementById('user-avatar').src = userData.photoURL || 'assets/icon.png';
-                document.getElementById('bio-input').value = userData.bio || 'No Bio'; // Set initial bio value
-                document.getElementById('profile-modal-bio').innerHTML = userData.bio ? `<span style="color: #1E90FF;">${userData.bio}</span>` : 'No bio available'; // Display bio in profile modal
+            // Wait for db to be ready
+            function waitForDbInLoadUserData() {
+                if (typeof db !== 'undefined') {
+                        .then(userDoc => {
+                            if (userDoc.exists) {
+                            const userData = userDoc.data();
+                            document.getElementById('user-name').textContent = userData.displayName;
+                            document.getElementById('user-avatar').src = userData.photoURL || 'assets/icon.png';
+                            document.getElementById('bio-input').value = userData.bio || 'No Bio'; // Set initial bio value
+                                document.getElementById('profile-modal-bio').innerHTML = userData.bio ? `<span style="color: #1E90FF;">${userData.bio}</span>` : 'No bio available'; // Display bio in profile modal
+                            }
+                        }).catch(error => {
+                            console.error('Error loading user data:', error);
+                        });
+                    } else {
+                        setTimeout(waitForDbInLoadUserData, 100);
+                    }
+                }
+
+                waitForDbInLoadUserData();
             }
         }
 
@@ -852,7 +897,17 @@ async function loadJoinedChannels(userId) {
         firebase.auth().onAuthStateChanged(user => {
             if (user) {
                 const userId = user.uid;
-                loadUserData(userId);
+
+                // Wait for db to be ready before loading user data
+                function waitForDbForUserData() {
+                    if (typeof db !== 'undefined') {
+                        loadUserData(userId);
+                    } else {
+                        setTimeout(waitForDbForUserData, 100);
+                    }
+                }
+
+                waitForDbForUserData();
             }
         });
 

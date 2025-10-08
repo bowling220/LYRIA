@@ -935,9 +935,7 @@ if (userAvatar) {
 
 
 
-userAvatar.addEventListener('click', () => {
-    showUserProfileModal(currentUser ? currentUser.uid : null);
-});
+// Profile modal click handler moved above
 
 
 
@@ -1367,8 +1365,6 @@ firebase.auth().onAuthStateChanged(user => {
     console.error('Firebase initialization failed:', error);
     if (window.utils) {
         window.utils.showError('Failed to initialize chat application');
-    }
-});
     }
 });
 
