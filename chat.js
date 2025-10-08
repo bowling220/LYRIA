@@ -305,6 +305,11 @@ function setupUIEventListeners() {
         document.getElementById('profile-modal').style.display = 'none';
     });
 
+    // Close Profile Modal when clicking backdrop
+    document.querySelector('.modal-backdrop').addEventListener('click', () => {
+        document.getElementById('profile-modal').style.display = 'none';
+    });
+
     // Toggle Dark Mode
     document.getElementById('toggle-dark-mode').addEventListener('click', () => {
         darkMode = !darkMode;
@@ -920,13 +925,7 @@ window.addEventListener('keydown', (event) => {
 const userAvatar = document.getElementById('user-avatar');
 if (userAvatar) {
     userAvatar.addEventListener('click', () => {
-        // Directly open the modal for testing
-        const profileModal = document.getElementById('profile-modal');
-        if (profileModal) {
-            profileModal.style.display = 'flex';
-        } else {
-            console.error("Profile modal element not found.");
-        }
+        showUserProfileModal(currentUser ? currentUser.uid : null);
     });
 } else {
     console.error("User avatar element not found.");
@@ -1059,7 +1058,7 @@ function showUserProfileModal(uid) {
                 sendFriendRequestBtn.style.display = 'none'; // Hide the button if it's the same user
             }
 
-            document.getElementById('profile-modal').style.display = 'flex';
+            document.getElementById('profile-modal').style.display = 'block';
         }
     }).catch(error => {
         console.error("Error fetching user data:", error);

@@ -171,14 +171,15 @@
             </div>
         </main>
     </div>
-    <div id="profile-modal">
+    <div id="profile-modal" class="modal">
+        <div class="modal-backdrop"></div>
         <div class="modal-content" style="background-image: url('assets/default-background.jpg'); background-size: cover; background-position: center;">
             <img id="profile-modal-image" src="assets/icon.png" alt="User Avatar">
             <h2 id="profile-modal-name">User Name</h2>
             <div id="profile-modal-badges" class="badges-container"></div>
             <p id="profile-modal-bio" style="color: #1E90FF;">COMING SOON</p>
             <button id="send-friend-request" class="action-btn">Send Friend Request</button>
-            <button id="close-profile-modal">Close</button>
+            <button id="close-profile-modal" class="close-button">×</button>
         </div>
     </div>
 <div id="version-info" style="position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); color: var(--text-color); font-size: 12px; font-weight: bold; text-shadow: 1px 1px 2px var(--background-color);">

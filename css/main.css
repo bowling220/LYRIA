@@ -671,9 +671,18 @@ footer {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.7);
   z-index: var(--z-modal);
   backdrop-filter: blur(4px);
+}
+
+.modal-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  cursor: pointer;
 }
 
 .modal-content {
@@ -688,6 +697,11 @@ footer {
   overflow-y: auto;
   position: relative;
   box-shadow: var(--shadow-heavy);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
 }
 
 .close-button {
