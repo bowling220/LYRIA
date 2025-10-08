@@ -186,16 +186,26 @@
 
     <script>
         // Initialize Firebase
+        // Load environment variables for security
+        window.env = window.env || {
+            VITE_FIREBASE_API_KEY: "AIzaSyAVmCYgkVfYeX7yNFPoOWpMy1Jra3mMZIs",
+            VITE_FIREBASE_AUTH_DOMAIN: "lyria-c2cae.firebaseapp.com",
+            VITE_FIREBASE_PROJECT_ID: "lyria-c2cae",
+            VITE_FIREBASE_STORAGE_BUCKET: "lyria-c2cae.firebasestorage.app",
+            VITE_FIREBASE_MESSAGING_SENDER_ID: "1077016298588",
+            VITE_FIREBASE_APP_ID: "1:1077016298588:web:bb0dfcd532632ca5bd5299",
+            VITE_FIREBASE_MEASUREMENT_ID: "G-4QXTS7DWPZ"
+        };
+
         const firebaseConfig = {
-  apiKey: "AIzaSyDORsM0Dz9d_ZxqVd8zjNXwsEdR1_aVF7g",
-  authDomain: "lyria-cfc06.firebaseapp.com",
-  databaseURL: "https://lyria-cfc06-default-rtdb.firebaseio.com",
-  projectId: "lyria-cfc06",
-  storageBucket: "lyria-cfc06.firebasestorage.app",
-  messagingSenderId: "309881717815",
-  appId: "1:309881717815:web:c8e9a4007341ab17ecebb2",
-  measurementId: "G-0EMBBE255Z"
-};
+            apiKey: window.env.VITE_FIREBASE_API_KEY,
+            authDomain: window.env.VITE_FIREBASE_AUTH_DOMAIN,
+            projectId: window.env.VITE_FIREBASE_PROJECT_ID,
+            storageBucket: window.env.VITE_FIREBASE_STORAGE_BUCKET,
+            messagingSenderId: window.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+            appId: window.env.VITE_FIREBASE_APP_ID,
+            measurementId: window.env.VITE_FIREBASE_MEASUREMENT_ID
+        };
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();

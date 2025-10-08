@@ -4,61 +4,54 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="LYRIA - A real-time messaging platform">
-    <title>LYRIA - Maintenance</title>
+    <title>LYRIA Chat</title>
     <link rel="stylesheet" href="styles.css">
-    <link rel="icon" type="image/jpeg" href="assets/icon.png"> <!-- Updated path and type -->
-    
-    <!-- Inline CSS for maintenance overlay -->
-    <style>
-        /* Full-height container */
-        body, html {
-            height: 100%;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            justify-content: center; /* Center horizontally */
-            align-items: center;     /* Center vertically */
-            background-color: #2f3136; /* Optional: Background color */
-            color: #ffffff; /* Optional: Text color */
-            font-family: Arial, sans-serif; /* Optional: Font */
-            position: relative; /* For positioning the overlay */
-        }
-        /* Responsive Image */
-        img {
-            max-width: 50%;
-            height: auto;
-        }
-        /* Footer Styling */
-        footer {
-            position: fixed;
-            bottom: 10px;
-            text-align: center;
-            font-size: 0.9em;
-        }
-        /* Maintenance Overlay Styling */
-        .maintenance-overlay {
-            position: fixed; /* Cover the entire screen */
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.8); /* Semi-transparent background */
-            color: white; /* Text color */
-            display: flex;
-            flex-direction: column;
-            justify-content: center; /* Center vertically */
-            align-items: center; /* Center horizontally */
-            z-index: 1000; /* Ensure it is on top of other content */
-        }
-    </style>
+    <link rel="icon" type="image/jpeg" href="assets/icon.png">
 </head>
 <body>
-    <div class="maintenance-overlay">
-        <h1>Maintenance Mode</h1>
-        <p>We are currently undergoing maintenance. Please check back later.</p>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <img src="assets/logo.png" alt="LYRIA Logo">
+                <h1>LYRIA</h1>
+            </div>
+            <nav>
+                <a href="login.html" class="btn">Login</a>
+                <a href="home.html" class="btn primary">Enter Chat</a>
+            </nav>
+        </header>
+
+        <main>
+            <section class="hero">
+                <h2>Welcome to LYRIA Chat</h2>
+                <p>Connect with friends, join channels, and chat in real-time.</p>
+                <div class="features">
+                    <div class="feature">
+                        <img src="assets/feature.png" alt="Real-time messaging">
+                        <h3>Real-time Messaging</h3>
+                        <p>Instant communication with friends and communities.</p>
+                    </div>
+                    <div class="feature">
+                        <img src="assets/status-feature.png" alt="Status updates">
+                        <h3>Status Updates</h3>
+                        <p>Share your current status and see what others are up to.</p>
+                    </div>
+                    <div class="feature">
+                        <img src="assets/premium.png" alt="Premium features">
+                        <h3>Premium Features</h3>
+                        <p>Unlock exclusive features with our premium subscription.</p>
+                    </div>
+                </div>
+                <div class="cta-buttons">
+                    <a href="login.html" class="btn primary">Get Started</a>
+                    <a href="premium-upgrade.html" class="btn secondary">Upgrade to Premium</a>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            &copy; 2024 LYRIA. All rights reserved. Trademarked by LYRIA.
+        </footer>
     </div>
-    <footer>
-        &copy; 2024 LYRIA. All rights reserved. Trademarked by LYRIA.
-    </footer>
 </body>
 </html>
