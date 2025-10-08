@@ -10,16 +10,22 @@
         <meta name="keywords" content="education, chat, communication, students, teachers, learning, collaboration">
         <meta name="author" content="Bowling220 & TurquoiseBrush">
         <meta name="robots" content="index, follow">
-        <meta name="theme-color" content="#5865f2"> <!-- Optional: Sets the theme color for mobile browsers -->
+        <meta name="theme-color" content="#5865f2">
+        <link rel="preconnect" href="https://www.gstatic.com">
+        <link rel="dns-prefetch" href="https://cdn.agora.io">
+        <link rel="preload" href="assets/icon.png" as="image">
     
-        <link rel="stylesheet" href="style.css">
-        <link rel="stylesheet" href="chat.css">
-        <link rel="stylesheet" href="voiceCall.css">
+        <link rel="stylesheet" href="css/main.css">
         
         <!-- Firebase SDKs -->
         <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
         <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
         <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+        
+        <!-- Utility Scripts -->
+        <script src="js/config.js"></script>
+        <script src="js/utils.js"></script>
+        <script src="js/performance.js"></script>
         
         <!-- PeerJS and Agora RTC SDK -->
         <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.3.1/peerjs.min.js"></script>
@@ -90,11 +96,10 @@
     </div>
 
     <header class="top-header">
-        <button class="menu-toggle">☰</button>
-        <span style="flex: 1; text-align: center;">LYRIA Chat</span>
+        <button class="menu-toggle" id="header-menu-toggle" aria-label="Toggle navigation menu" aria-expanded="false">☰</button>
+        <h1 style="flex: 1; text-align: center; margin: 0; font-size: 1.2rem;">LYRIA Chat</h1>
     </header>
     <div class="app-container">
-        <button class="menu-toggle" id="sidebar-menu-toggle">☰</button>
         <div class="sidebar">
             <div class="channels">
                 <h3 class="centered-heading">Channels<span class="info-text">You Might Need To Refresh Once, If More Please Let Me Know!</span></h3>
@@ -245,8 +250,8 @@
     </div>
 </div>
 
-    <!-- Include voicecall.js before chat.js -->
-    <script src="voicecall.js"></script>
+    <!-- Include voiceCall.js before chat.js -->
+    <script src="voiceCall.js"></script>
     <script src="chat.js"></script>
 
     <script>

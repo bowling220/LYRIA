@@ -3,10 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="LYRIA - A real-time messaging platform">
-    <title>LYRIA Chat</title>
-    <link rel="stylesheet" href="styles.css">
-    <link rel="icon" type="image/jpeg" href="assets/icon.png">
+    <meta name="description" content="LYRIA - A secure real-time messaging platform for communities and friends">
+    <meta name="keywords" content="chat, messaging, real-time, community, friends">
+    <meta name="author" content="LYRIA Team">
+    <title>LYRIA Chat - Connect in Real Time</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="icon" type="image/png" href="assets/icon.png">
+    <link rel="preload" href="assets/logo.png" as="image">
+    <link rel="preconnect" href="https://www.gstatic.com">
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+    <meta name="theme-color" content="#5865f2">
+    <meta name="robots" content="index, follow">
 </head>
 <body>
     <div class="container">
@@ -22,28 +29,30 @@
         </header>
 
         <main>
-            <section class="hero">
-                <h2>Welcome to LYRIA Chat</h2>
-                <p>Connect with friends, join channels, and chat in real-time.</p>
-                <div class="features">
-                    <div class="feature">
-                        <img src="assets/feature.png" alt="Real-time messaging">
+            <section class="hero" aria-labelledby="hero-title">
+                <h2 id="hero-title">Welcome to LYRIA Chat</h2>
+                <p class="hero-subtitle">Connect with friends, join channels, and chat in real-time.</p>
+                
+                <div class="features" role="list" aria-label="Platform features">
+                    <article class="feature" role="listitem">
+                        <img src="assets/feature.png" alt="" role="presentation">
                         <h3>Real-time Messaging</h3>
                         <p>Instant communication with friends and communities.</p>
-                    </div>
-                    <div class="feature">
-                        <img src="assets/status-feature.png" alt="Status updates">
+                    </article>
+                    <article class="feature" role="listitem">
+                        <img src="assets/status-feature.png" alt="" role="presentation">
                         <h3>Status Updates</h3>
                         <p>Share your current status and see what others are up to.</p>
-                    </div>
-                    <div class="feature">
-                        <img src="assets/premium.png" alt="Premium features">
+                    </article>
+                    <article class="feature" role="listitem">
+                        <img src="assets/premium.png" alt="" role="presentation">
                         <h3>Premium Features</h3>
                         <p>Unlock exclusive features with our premium subscription.</p>
-                    </div>
+                    </article>
                 </div>
-                <div class="cta-buttons">
-                    <a href="login.html" class="btn primary">Get Started</a>
+                
+                <div class="cta-buttons" role="group" aria-label="Action buttons">
+                    <a href="login.html" class="btn primary" aria-describedby="hero-subtitle">Get Started</a>
                     <a href="premium-upgrade.html" class="btn secondary">Upgrade to Premium</a>
                 </div>
             </section>

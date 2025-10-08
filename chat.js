@@ -24,21 +24,27 @@ function setupMessageListener() {
             console.error('Error in message listener:', error);
         });
 }
-// Firebase configuration - loaded from environment variables for security
-const firebaseConfig = {
-    apiKey: window?.env?.VITE_FIREBASE_API_KEY || "AIzaSyAVmCYgkVfYeX7yNFPoOWpMy1Jra3mMZIs",
-    authDomain: window?.env?.VITE_FIREBASE_AUTH_DOMAIN || "lyria-c2cae.firebaseapp.com",
-    projectId: window?.env?.VITE_FIREBASE_PROJECT_ID || "lyria-c2cae",
-    storageBucket: window?.env?.VITE_FIREBASE_STORAGE_BUCKET || "lyria-c2cae.firebasestorage.app",
-    messagingSenderId: window?.env?.VITE_FIREBASE_MESSAGING_SENDER_ID || "1077016298588",
-    appId: window?.env?.VITE_FIREBASE_APP_ID || "1:1077016298588:web:bb0dfcd532632ca5bd5299",
-    measurementId: window?.env?.VITE_FIREBASE_MEASUREMENT_ID || "G-4QXTS7DWPZ"
-};
+// Use the configured Firebase instances from config.js
+let auth, db;
 
-// Initialize Firebase
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
+// Wait for Firebase to be initialized
+const initializeFirebase = async () => {
+    if (window.firebaseConfig) {
+        try {
+            await window.firebaseConfig.initialize();
+            auth = window.firebaseConfig.getAuth();
+            db = window.firebaseConfig.getFirestore();
+            console.log('Firebase initialized for chat module');
+        } catch (error) {
+            console.error('Failed to initialize Firebase:', error);
+            if (window.utils) {
+                window.utils.showError('Failed to connect to chat service. Please refresh the page.');
+            }
+        }
+    } else {
+        console.error('Firebase config not found');
+    }
+};
 
 let currentUser;
 let currentChannel;
@@ -134,26 +140,60 @@ const betaUserUIDs = [
 
 const featureUserUIDs = ["miu0tI2oHJUiNx2gxtPwSpJ136w1", "dIc6q6xdqsTuiVC9JWGQT9XVH6T2"]; // Add the UID for the feature badge
 
-document.querySelector('#sidebar-menu-toggle').addEventListener('click', (event) => {
-    event.stopPropagation(); // Prevent event from bubbling up
+// Mobile menu toggle functionality
+function setupMobileMenu() {
+    const headerToggle = document.querySelector('#header-menu-toggle');
     const sidebar = document.querySelector('.sidebar');
-    sidebar.classList.toggle('active');
-});
+    
+    if (!headerToggle || !sidebar) return;
+    
+    headerToggle.addEventListener('click', (event) => {
+        event.stopPropagation();
+        const isOpen = sidebar.classList.toggle('open');
+        headerToggle.setAttribute('aria-expanded', isOpen.toString());
+        
+        // Focus management for accessibility
+        if (isOpen) {
+            const firstFocusable = sidebar.querySelector('button, input, [tabindex]:not([tabindex="-1"])');
+            if (firstFocusable) {
+                firstFocusable.focus();
+            }
+        }
+    });
+}
+
+// Call setup after DOM loads
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupMobileMenu);
+} else {
+    setupMobileMenu();
+}
 
 // Close sidebar when clicking outside on mobile
 document.addEventListener('click', (e) => {
     const sidebar = document.querySelector('.sidebar');
-    const menuToggle = document.querySelector('.menu-toggle');
+    const headerToggle = document.querySelector('#header-menu-toggle');
+    
+    if (!sidebar || !headerToggle) return;
+    
     if (window.innerWidth <= 768 && 
         !sidebar.contains(e.target) && 
-        !menuToggle.contains(e.target) &&
-        sidebar.classList.contains('active')) {
-        sidebar.classList.remove('active');
+        !headerToggle.contains(e.target) &&
+        sidebar.classList.contains('open')) {
+        sidebar.classList.remove('open');
+        headerToggle.setAttribute('aria-expanded', 'false');
     }
 });
 
-// Authenticate the user and load settings
-auth.onAuthStateChanged(user => {
+// Initialize Firebase and setup authentication
+initializeFirebase().then(() => {
+    if (!auth) {
+        console.error('Auth not initialized');
+        return;
+    }
+
+    // Authenticate the user and load settings
+    auth.onAuthStateChanged((user) => {
     if (user) {
         currentUser = user;
         const userDocRef = db.collection('users').doc(user.uid);
@@ -195,8 +235,10 @@ auth.onAuthStateChanged(user => {
             };
 
             // Display user information
-            document.getElementById('user-name').textContent = userData.displayName;
-            document.getElementById('user-avatar').src = userData.photoURL;
+            const nameEl = document.getElementById('user-name');
+            const avatarEl = document.getElementById('user-avatar');
+            if (nameEl) nameEl.textContent = userData.displayName;
+            if (avatarEl) avatarEl.src = userData.photoURL;
 
             // Check if the user's UID is in the badgeUserUIDs array
             if (badgeUserUIDs.includes(user.uid)) {
@@ -1106,6 +1148,116 @@ function fetchUsers() {
 // Call fetchUsers when the app initializes
 fetchUsers();
 
+// Helper function to setup channel management
+function setupChannelManagement() {
+    // Add channel button functionality
+    const addChannelBtn = document.getElementById('add-channel');
+    if (addChannelBtn) {
+        addChannelBtn.addEventListener('click', () => {
+            const channelName = prompt('Enter channel name:');
+            if (channelName && window.utils) {
+                const sanitizedName = window.utils.sanitizeInput(channelName);
+                if (sanitizedName) {
+                    createChannel(sanitizedName);
+                }
+            }
+        });
+    }
+    
+    // Join channel button functionality
+    const joinChannelBtn = document.getElementById('join-channel');
+    if (joinChannelBtn) {
+        joinChannelBtn.addEventListener('click', () => {
+            const joinCode = prompt('Enter channel join code:');
+            if (joinCode && window.utils) {
+                const sanitizedCode = window.utils.sanitizeInput(joinCode);
+                if (sanitizedCode) {
+                    joinChannelByCode(sanitizedCode);
+                }
+            }
+        });
+    }
+}
+
+// Helper function to setup general chat functionality
+function setupChatFunctionality() {
+    // Message input handling
+    const messageInput = document.getElementById('message-input');
+    const sendButton = document.getElementById('send-button');
+    
+    if (messageInput && sendButton) {
+        // Enhanced message sending with validation
+        const sendMessage = () => {
+            const message = messageInput.value.trim();
+            if (message && window.utils) {
+                const sanitizedMessage = window.utils.sanitizeInput(message);
+                if (sanitizedMessage.length > 0 && sanitizedMessage.length <= 1000) {
+                    // Send message logic here
+                    messageInput.value = '';
+                } else {
+                    window.utils.showWarning('Message must be between 1 and 1000 characters');
+                }
+            }
+        };
+        
+        sendButton.addEventListener('click', sendMessage);
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+    }
+    
+    // Setup other event listeners
+    setupModalEventListeners();
+}
+
+// Helper function to setup modal event listeners
+function setupModalEventListeners() {
+    // Settings modal
+    const settingsBtn = document.getElementById('settings-btn');
+    const settingsModal = document.getElementById('settings-modal');
+    
+    if (settingsBtn && settingsModal) {
+        settingsBtn.addEventListener('click', () => {
+            settingsModal.style.display = 'flex';
+        });
+    }
+    
+    // Close modals on outside click
+    document.addEventListener('click', (e) => {
+        if (e.target.classList.contains('modal')) {
+            e.target.style.display = 'none';
+        }
+    });
+    
+    // Close modals on Escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            const openModal = document.querySelector('.modal[style*="flex"]');
+            if (openModal) {
+                openModal.style.display = 'none';
+            }
+        }
+    });
+}
+
+// Placeholder functions for channel operations
+function createChannel(name) {
+    if (window.utils) {
+        window.utils.showInfo(`Creating channel: ${name}`);
+        // Implement channel creation logic
+    }
+}
+
+function joinChannelByCode(code) {
+    if (window.utils) {
+        window.utils.showInfo(`Joining channel with code: ${code}`);
+        // Implement join channel logic
+    }
+}
+
 // Add event listener for input to handle tagging
 const messageInput = document.getElementById('message-input');
 const suggestionsContainer = document.createElement('div');
@@ -1197,12 +1349,26 @@ firebase.auth().onAuthStateChanged(user => {
                 } else {
                     console.log("User does not have the premium badge."); // Debugging log
                 }
-            } else {
-                console.log("No such document for the user.");
-            }
-        }).catch(error => {
-            console.error("Error fetching user document:", error);
-        });
+        } else {
+            console.log("No such document!");
+        }
+    }).catch(error => {
+        console.error("Error getting document:", error);
+    });
+
+    // Setup channel management
+    setupChannelManagement();
+    
+    // Setup other chat functionality
+    setupChatFunctionality();
+});
+
+}).catch(error => {
+    console.error('Firebase initialization failed:', error);
+    if (window.utils) {
+        window.utils.showError('Failed to initialize chat application');
+    }
+});
     }
 });
 
