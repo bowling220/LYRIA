@@ -1,17 +1,37 @@
-// Firebase configuration - loaded from environment variables for security
-// In production, these should be replaced with actual environment variable values
-const firebaseConfig = {
-    apiKey: window?.env?.VITE_FIREBASE_API_KEY || "AIzaSyAVmCYgkVfYeX7yNFPoOWpMy1Jra3mMZIs",
-    authDomain: window?.env?.VITE_FIREBASE_AUTH_DOMAIN || "lyria-c2cae.firebaseapp.com",
-    projectId: window?.env?.VITE_FIREBASE_PROJECT_ID || "lyria-c2cae",
-    storageBucket: window?.env?.VITE_FIREBASE_STORAGE_BUCKET || "lyria-c2cae.firebasestorage.app",
-    messagingSenderId: window?.env?.VITE_FIREBASE_MESSAGING_SENDER_ID || "1077016298588",
-    appId: window?.env?.VITE_FIREBASE_APP_ID || "1:1077016298588:web:bb0dfcd532632ca5bd5299",
-    measurementId: window?.env?.VITE_FIREBASE_MEASUREMENT_ID || "G-4QXTS7DWPZ"
-};
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
+// Use the already initialized Firebase instance from config.js
+// Wait for Firebase to be ready
+function initializeInboxFirebase() {
+    if (window.firebaseConfig && window.firebaseConfig.initialized) {
+        return Promise.resolve({
+            auth: window.firebaseConfig.getAuth(),
+            db: window.firebaseConfig.getFirestore()
+        });
+    } else {
+        return new Promise((resolve) => {
+            const checkFirebase = () => {
+                if (window.firebaseConfig && window.firebaseConfig.initialized) {
+                    resolve({
+                        auth: window.firebaseConfig.getAuth(),
+                        db: window.firebaseConfig.getFirestore()
+                    });
+                } else {
+                    setTimeout(checkFirebase, 100);
+                }
+            };
+            checkFirebase();
+        });
+    }
+}
+
+// Initialize Firebase for inbox
+let auth, db;
+initializeInboxFirebase().then(({ auth: authInstance, db: dbInstance }) => {
+    auth = authInstance;
+    db = dbInstance;
+    console.log('Firebase initialized for inbox');
+}).catch(error => {
+    console.error('Failed to initialize Firebase for inbox:', error);
+});
 
 // Settings Modal Functionality
 const settingsModal = document.getElementById('settings-modal');

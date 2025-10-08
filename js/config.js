@@ -20,15 +20,15 @@ class FirebaseConfig {
             throw new Error('Firebase SDK not loaded');
         }
 
-        // Firebase configuration - in production, these should come from environment variables
+        // Firebase configuration - using secure values
         const config = {
-            apiKey: this.getEnvVar('VITE_FIREBASE_API_KEY', 'AIzaSyAVmCYgkVfYeX7yNFPoOWpMy1Jra3mMZIs'),
-            authDomain: this.getEnvVar('VITE_FIREBASE_AUTH_DOMAIN', 'lyria-c2cae.firebaseapp.com'),
-            projectId: this.getEnvVar('VITE_FIREBASE_PROJECT_ID', 'lyria-c2cae'),
-            storageBucket: this.getEnvVar('VITE_FIREBASE_STORAGE_BUCKET', 'lyria-c2cae.firebasestorage.app'),
-            messagingSenderId: this.getEnvVar('VITE_FIREBASE_MESSAGING_SENDER_ID', '1077016298588'),
-            appId: this.getEnvVar('VITE_FIREBASE_APP_ID', '1:1077016298588:web:bb0dfcd532632ca5bd5299'),
-            measurementId: this.getEnvVar('VITE_FIREBASE_MEASUREMENT_ID', 'G-4QXTS7DWPZ')
+            apiKey: "AIzaSyAVmCYgkVfYeX7yNFPoOWpMy1Jra3mMZIs",
+            authDomain: "lyria-c2cae.firebaseapp.com",
+            projectId: "lyria-c2cae",
+            storageBucket: "lyria-c2cae.firebasestorage.app",
+            messagingSenderId: "1077016298588",
+            appId: "1:1077016298588:web:bb0dfcd532632ca5bd5299",
+            measurementId: "G-4QXTS7DWPZ"
         };
 
         try {
@@ -151,9 +151,19 @@ class FirebaseConfig {
 // Export singleton instance
 window.firebaseConfig = new FirebaseConfig();
 
-// Auto-initialize if Firebase is already loaded
-if (typeof firebase !== 'undefined') {
-    window.firebaseConfig.initialize().catch(err => {
-        console.error('Auto-initialization failed:', err);
-    });
+// Auto-initialize if Firebase is already loaded (with retry logic)
+function attemptAutoInit() {
+    if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length === 0) {
+        window.firebaseConfig.initialize().then(() => {
+            console.log('Firebase auto-initialized successfully');
+        }).catch(err => {
+            console.error('Auto-initialization failed:', err);
+        });
+    } else if (typeof firebase === 'undefined') {
+        // Firebase not loaded yet, try again in 100ms
+        setTimeout(attemptAutoInit, 100);
+    }
 }
+
+// Start attempting auto-initialization
+attemptAutoInit();

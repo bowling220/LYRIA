@@ -125,19 +125,43 @@
       VITE_FIREBASE_MEASUREMENT_ID: "G-4QXTS7DWPZ"
     };
 
-    const firebaseConfig = {
-      apiKey: window.env.VITE_FIREBASE_API_KEY,
-      authDomain: window.env.VITE_FIREBASE_AUTH_DOMAIN,
-      projectId: window.env.VITE_FIREBASE_PROJECT_ID,
-      storageBucket: window.env.VITE_FIREBASE_STORAGE_BUCKET,
-      messagingSenderId: window.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-      appId: window.env.VITE_FIREBASE_APP_ID,
-      measurementId: window.env.VITE_FIREBASE_MEASUREMENT_ID
-    };
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    
-    const db = firebase.firestore();
+    // Initialize Firebase for login page
+    function initializeLoginFirebase() {
+        if (window.firebaseConfig && window.firebaseConfig.initialized) {
+            return window.firebaseConfig.getAuth();
+        }
+
+        // If config is available but not initialized, initialize it
+        if (window.firebaseConfig) {
+            window.firebaseConfig.initialize();
+            return window.firebaseConfig.getAuth();
+        }
+
+        // Fallback: initialize directly if config.js wasn't loaded
+        const fallbackConfig = {
+            apiKey: window.env.VITE_FIREBASE_API_KEY,
+            authDomain: window.env.VITE_FIREBASE_AUTH_DOMAIN,
+            projectId: window.env.VITE_FIREBASE_PROJECT_ID,
+            storageBucket: window.env.VITE_FIREBASE_STORAGE_BUCKET,
+            messagingSenderId: window.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+            appId: window.env.VITE_FIREBASE_APP_ID,
+            measurementId: window.env.VITE_FIREBASE_MEASUREMENT_ID
+        };
+        firebase.initializeApp(fallbackConfig);
+        return firebase.auth();
+    }
+
+    const auth = initializeLoginFirebase();
+
+    // Initialize Firestore
+    function getFirestore() {
+        if (window.firebaseConfig && window.firebaseConfig.initialized) {
+            return window.firebaseConfig.getFirestore();
+        }
+        return firebase.firestore();
+    }
+
+    const db = getFirestore();
 
     // Google Sign-In Button Event
     document.getElementById('google-signin').addEventListener('click', function() {

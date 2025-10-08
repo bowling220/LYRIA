@@ -874,12 +874,13 @@ async function loadJoinedChannels(userId) {
             // Wait for db to be ready
             function waitForDbInLoadUserData() {
                 if (typeof db !== 'undefined') {
+                    db.collection('users').doc(userId).get()
                         .then(userDoc => {
                             if (userDoc.exists) {
-                            const userData = userDoc.data();
-                            document.getElementById('user-name').textContent = userData.displayName;
-                            document.getElementById('user-avatar').src = userData.photoURL || 'assets/icon.png';
-                            document.getElementById('bio-input').value = userData.bio || 'No Bio'; // Set initial bio value
+                                const userData = userDoc.data();
+                                document.getElementById('user-name').textContent = userData.displayName;
+                                document.getElementById('user-avatar').src = userData.photoURL || 'assets/icon.png';
+                                document.getElementById('bio-input').value = userData.bio || 'No Bio'; // Set initial bio value
                                 document.getElementById('profile-modal-bio').innerHTML = userData.bio ? `<span style="color: #1E90FF;">${userData.bio}</span>` : 'No bio available'; // Display bio in profile modal
                             }
                         }).catch(error => {

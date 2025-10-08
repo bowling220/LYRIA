@@ -1358,7 +1358,6 @@ firebase.auth().onAuthStateChanged(user => {
     
     // Setup other chat functionality
     setupChatFunctionality();
-});
 
 }).catch(error => {
     console.error('Firebase initialization failed:', error);

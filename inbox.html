@@ -197,18 +197,42 @@
             VITE_FIREBASE_MEASUREMENT_ID: "G-4QXTS7DWPZ"
         };
 
-        const firebaseConfig = {
-            apiKey: window.env.VITE_FIREBASE_API_KEY,
-            authDomain: window.env.VITE_FIREBASE_AUTH_DOMAIN,
-            projectId: window.env.VITE_FIREBASE_PROJECT_ID,
-            storageBucket: window.env.VITE_FIREBASE_STORAGE_BUCKET,
-            messagingSenderId: window.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-            appId: window.env.VITE_FIREBASE_APP_ID,
-            measurementId: window.env.VITE_FIREBASE_MEASUREMENT_ID
-        };
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
+        // Initialize Firebase for inbox
+        function initializeInboxFirebase() {
+            if (window.firebaseConfig && window.firebaseConfig.initialized) {
+                return {
+                    auth: window.firebaseConfig.getAuth(),
+                    db: window.firebaseConfig.getFirestore()
+                };
+            }
+
+            // If config is available but not initialized, initialize it
+            if (window.firebaseConfig) {
+                window.firebaseConfig.initialize();
+                return {
+                    auth: window.firebaseConfig.getAuth(),
+                    db: window.firebaseConfig.getFirestore()
+                };
+            }
+
+            // Fallback: initialize directly if config.js wasn't loaded
+            const fallbackConfig = {
+                apiKey: window.env.VITE_FIREBASE_API_KEY,
+                authDomain: window.env.VITE_FIREBASE_AUTH_DOMAIN,
+                projectId: window.env.VITE_FIREBASE_PROJECT_ID,
+                storageBucket: window.env.VITE_FIREBASE_STORAGE_BUCKET,
+                messagingSenderId: window.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+                appId: window.env.VITE_FIREBASE_APP_ID,
+                measurementId: window.env.VITE_FIREBASE_MEASUREMENT_ID
+            };
+            firebase.initializeApp(fallbackConfig);
+            return {
+                auth: firebase.auth(),
+                db: firebase.firestore()
+            };
+        }
+
+        const { auth, db } = initializeInboxFirebase();
 
         /**
          * Load and display friend requests for the logged-in user.
