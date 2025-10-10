@@ -311,8 +311,15 @@
             if (lastChannel) {
                 // Update channel title and load messages for last visited channel
                 document.getElementById('channel-title').textContent = `# ${lastChannel}`;
-                // Assuming you have a function to load channel messages
-                loadChannelMessages(lastChannel);
+                // Defer loading messages until Firestore is available
+                const tryLoadLastChannel = () => {
+                    if (window.db) {
+                        loadChannelMessages(lastChannel);
+                    } else {
+                        setTimeout(tryLoadLastChannel, 100);
+                    }
+                };
+                tryLoadLastChannel();
             }
         });
 
@@ -831,12 +838,24 @@ async function loadJoinedChannels(userId) {
             messagesContainer.scrollTop = messagesContainer.scrollHeight; // Scroll to the bottom
         }
 
-        // Call loadJoinedChannels when the page loads
+        // Call loadJoinedChannels when the page loads (wait for Firestore)
         window.addEventListener('load', () => {
-            const userId = firebase.auth().currentUser.uid; // Get the current user's ID
-            loadJoinedChannels(userId);
-            // Set up the message listener for the currently selected channel
-            setupMessageListener();
+            const boot = () => {
+                if (!window.db) {
+                    setTimeout(boot, 100);
+                    return;
+                }
+                const currentUser = firebase.auth().currentUser;
+                if (!currentUser) {
+                    setTimeout(boot, 100);
+                    return;
+                }
+                const userId = currentUser.uid;
+                loadJoinedChannels(userId);
+                // Set up the message listener for the currently selected channel
+                setupMessageListener();
+            };
+            boot();
         });
 
         // Function to update the user's bio
@@ -992,8 +1011,9 @@ async function loadJoinedChannels(userId) {
             });
         }
 
-        // Handle confirmation of image change
-        document.getElementById('confirm-image-change-btn').addEventListener('click', async () => {
+        // Handle confirmation of image change (guard element exists)
+        const confirmImageBtn = document.getElementById('confirm-image-change-btn');
+        if (confirmImageBtn) confirmImageBtn.addEventListener('click', async () => {
             const currentUser = firebase.auth().currentUser;
             const fileInput = document.getElementById('profile-image-input');
             const file = fileInput.files[0];

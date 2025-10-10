@@ -34,6 +34,9 @@ const initializeFirebase = async () => {
             await window.firebaseConfig.initialize();
             auth = window.firebaseConfig.getAuth();
             db = window.firebaseConfig.getFirestore();
+            // Expose globally for inline scripts that expect these
+            window.auth = auth;
+            window.db = db;
             console.log('Firebase initialized for chat module');
         } catch (error) {
             console.error('Failed to initialize Firebase:', error);
@@ -1681,16 +1684,5 @@ function handleNewMessage(message) {
 }
 
 // Update your message listener
-db.collection('messages')
-    .where('channelId', '==', currentChannel)
-    .orderBy('timestamp')
-    .onSnapshot((snapshot) => {
-        snapshot.docChanges().forEach((change) => {
-            if (change.type === 'added') {
-                const message = change.doc.data();
-                console.log('New message received:', message);
-                handleNewMessage(message);
-            }
-        });
-    });
+// Removed duplicate unguarded listener to avoid early usage before initialization
 
