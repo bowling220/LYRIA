@@ -1256,12 +1256,12 @@ function joinChannelByCode(code) {
 }
 
 // Add event listener for input to handle tagging
-const messageInput = document.getElementById('message-input');
+const tagMessageInput = document.getElementById('message-input');
 const suggestionsContainer = document.createElement('div');
 suggestionsContainer.className = 'suggestions-container';
 document.body.appendChild(suggestionsContainer); // Append to body or a specific container
 
-messageInput.addEventListener('input', (e) => {
+tagMessageInput.addEventListener('input', (e) => {
     const value = e.target.value;
     const atIndex = value.lastIndexOf('@');
 
@@ -1280,15 +1280,15 @@ messageInput.addEventListener('input', (e) => {
             suggestionItem.onclick = () => {
                 // Replace the @username with the selected username
                 const newMessage = value.substring(0, atIndex + 1) + user.displayName + ' ';
-                messageInput.value = newMessage;
+                tagMessageInput.value = newMessage;
                 suggestionsContainer.innerHTML = ''; // Clear suggestions
-                messageInput.focus(); // Refocus on input
+                tagMessageInput.focus(); // Refocus on input
             };
             suggestionsContainer.appendChild(suggestionItem);
         });
 
         // Position the suggestions container above the message input
-        const rect = messageInput.getBoundingClientRect();
+        const rect = tagMessageInput.getBoundingClientRect();
         suggestionsContainer.style.top = `${rect.top - suggestionsContainer.offsetHeight - 5}px`; // Position above with a small gap
         suggestionsContainer.style.left = `${rect.left}px`;
         suggestionsContainer.style.width = `${rect.width}px`;
@@ -1318,51 +1318,50 @@ window.addEventListener('load', () => {
     }
 });
 
-// Assuming you have already initialized Firebase and authenticated the user
-firebase.auth().onAuthStateChanged(user => {
+// Setup authentication state change handler
+auth.onAuthStateChanged(user => {
     if (user) {
+        currentUser = user;
         const userId = user.uid;
-        const userDocRef = db.collection('users').doc(userId);
 
         // Fetch and display user data
-        userDocRef.get().then(doc => {
+        db.collection('users').doc(userId).get().then(doc => {
             if (doc.exists) {
                 const userData = doc.data();
                 document.getElementById('user-name').textContent = userData.displayName;
                 document.getElementById('user-avatar').src = userData.photoURL || 'assets/icon.png';
-                document.getElementById('bio-input').value = userData.bio || "No bio set."; // Set the current user's bio
+
+                // Set bio if available
+                if (userData.bio) {
+                    document.getElementById('bio-input').value = userData.bio;
+                }
 
                 // Check if the user has the premium badge
                 const profileBadges = document.getElementById('profile-modal-badges');
-                profileBadges.innerHTML = ''; // Clear any existing badges
+                if (profileBadges) {
+                    profileBadges.innerHTML = ''; // Clear any existing badges
 
-                if (userData.badges && userData.badges.includes('premium')) {
-                    console.log("User has premium badge, adding badge."); // Debugging log
-                    const premiumBadge = document.createElement('img');
-                    premiumBadge.src = 'assets/premium.png'; // Path to the premium badge
-                    premiumBadge.alt = 'Premium Badge';
-                    premiumBadge.className = 'admin-badge'; // Use the same class for styling
-                    profileBadges.appendChild(premiumBadge); // Append premium badge to the profile badges
-                } else {
-                    console.log("User does not have the premium badge."); // Debugging log
+                    if (userData.badges && userData.badges.includes('premium')) {
+                        const premiumBadge = document.createElement('img');
+                        premiumBadge.src = 'assets/premium.png';
+                        premiumBadge.alt = 'Premium Badge';
+                        premiumBadge.className = 'admin-badge';
+                        profileBadges.appendChild(premiumBadge);
+                    }
                 }
-        } else {
-            console.log("No such document!");
-        }
-    }).catch(error => {
-        console.error("Error getting document:", error);
-    });
+            } else {
+                console.log("No user document found");
+            }
+        }).catch(error => {
+            console.error("Error getting user document:", error);
+        });
 
-    // Setup channel management
-    setupChannelManagement();
-    
-    // Setup other chat functionality
-    setupChatFunctionality();
-
-}).catch(error => {
-    console.error('Firebase initialization failed:', error);
-    if (window.utils) {
-        window.utils.showError('Failed to initialize chat application');
+        // Setup channel management and chat functionality
+        setupChannelManagement();
+        setupChatFunctionality();
+    } else {
+        // User is signed out, redirect to login
+        window.location.href = 'login.html';
     }
 });
 
@@ -1588,22 +1587,27 @@ document.getElementById('background-image-input').addEventListener('change', (ev
 
 
 // In your message listener/handler
-db.collection('messages').where('channelId', '==', currentChannel)
-    .orderBy('timestamp')
-    .onSnapshot((snapshot) => {
-        snapshot.docChanges().forEach((change) => {
-            if (change.type === 'added') {
-                const message = change.doc.data();
-                const messageElement = document.createElement('div');
-                
-                // Use the renderMessage function to handle different message types
-                messageElement.innerHTML = renderMessage(message);
-                
-                messagesContainer.appendChild(messageElement);
-                scrollToBottom();
-            }
+// Guarded top-level listener (prevent errors if elements are not yet ready)
+if (typeof db !== 'undefined' && typeof currentChannel !== 'undefined') {
+    db.collection('messages').where('channelId', '==', currentChannel)
+        .orderBy('timestamp')
+        .onSnapshot((snapshot) => {
+            const messagesContainer = document.getElementById('messages');
+            if (!messagesContainer) return;
+            snapshot.docChanges().forEach((change) => {
+                if (change.type === 'added') {
+                    const message = change.doc.data();
+                    const messageElement = document.createElement('div');
+                    // Use the renderMessage function to handle different message types
+                    messageElement.innerHTML = renderMessage(message);
+                    messagesContainer.appendChild(messageElement);
+                    if (typeof scrollToBottom === 'function') {
+                        scrollToBottom();
+                    }
+                }
+            });
         });
-    });
+}
 
     function displayMessage(message) {
         const messagesContainer = document.getElementById('messages');

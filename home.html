@@ -820,7 +820,7 @@ async function loadJoinedChannels(userId) {
                 <div class="message-header">
                     <strong>${message.displayName}</strong>
                     <span class="timestamp">${message.timestamp ? new Date(message.timestamp.toDate()).toLocaleString() : 'Just now'}</span>
-                    ${isAdmin ? `<button class="pin-message-btn" onclick="pinMessage('${message.id}')">📌</button>` : ''}
+                    ${isAdmin ? '<button class="pin-message-btn" onclick="pinMessage(\'' + message.id + '\')">📌</button>' : ''}
                 </div>
                 <div class="message-content">
                     ${message.content}
@@ -886,36 +886,35 @@ async function loadJoinedChannels(userId) {
                         }).catch(error => {
                             console.error('Error loading user data:', error);
                         });
-                    } else {
-                        setTimeout(waitForDbInLoadUserData, 100);
-                    }
+                } else {
+                    setTimeout(waitForDbInLoadUserData, 100);
                 }
+            }
 
-                waitForDbInLoadUserData();
+            waitForDbInLoadUserData();
+        }
+
+        // Wait for Firebase to be ready, then setup auth state listener
+        function setupAuthListener() {
+            if (typeof firebase !== 'undefined' && window.firebaseConfig && window.firebaseConfig.initialized) {
+                const auth = window.firebaseConfig.getAuth();
+                auth.onAuthStateChanged(user => {
+                    if (user) {
+                        const userId = user.uid;
+                        loadUserData(userId);
+                    }
+                });
+            } else {
+                setTimeout(setupAuthListener, 100);
             }
         }
 
-        // Call loadUserData when the user is authenticated
-        firebase.auth().onAuthStateChanged(user => {
-            if (user) {
-                const userId = user.uid;
-
-                // Wait for db to be ready before loading user data
-                function waitForDbForUserData() {
-                    if (typeof db !== 'undefined') {
-                        loadUserData(userId);
-                    } else {
-                        setTimeout(waitForDbForUserData, 100);
-                    }
-                }
-
-                waitForDbForUserData();
-            }
-        });
+        setupAuthListener();
 
         // Add event listener for updating status
         document.getElementById('update-status-btn').addEventListener('click', async () => {
-            const currentUser = firebase.auth().currentUser;
+            if (!window.firebaseConfig || !window.firebaseConfig.initialized) return;
+            const currentUser = window.firebaseConfig.getAuth().currentUser;
             if (!currentUser) return;
 
             const selectedStatus = document.getElementById('status-select').value;
