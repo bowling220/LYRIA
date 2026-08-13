@@ -232,8 +232,12 @@
     });
 
     // Close the welcome modal
-    document.getElementById('close-welcome-modal').addEventListener('click', () => {
-      document.getElementById('welcome-modal').style.display = 'none';
+    // (deferred to DOMContentLoaded because this <script> runs before the
+    // modal markup further down the page has been parsed)
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('close-welcome-modal').addEventListener('click', () => {
+        document.getElementById('welcome-modal').style.display = 'none';
+      });
     });
 
     // Auto-hide notification after 5 seconds
