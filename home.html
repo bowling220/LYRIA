@@ -115,7 +115,7 @@
                 <div class="channel-actions" aria-label="Channel actions">
                     <button class="add-channel-btn" id="add-channel"><span aria-hidden="true">+</span> New</button>
                     <button class="join-channel-btn" id="join-channel"><span aria-hidden="true">#</span> Join</button>
-                    <button class="leave-channel-btn" id="leave-channel">Leave conversation</button>
+                    <button class="leave-channel-btn" id="leave-channel" disabled>Personal channel</button>
                 </div>
             </div>
             <nav class="sidebar-nav" aria-label="Community links">
@@ -225,6 +225,24 @@
         <label for="gif-url-input" class="modal-label">GIF URL</label>
         <input id="gif-url-input" class="modal-input" type="url" inputmode="url" placeholder="https://example.com/reaction.gif">
         <button id="send-gif-url" class="action-btn primary-action" type="button">Share GIF</button>
+    </div>
+</div>
+
+<div id="channel-action-modal" class="modal" aria-hidden="true" inert role="dialog" aria-labelledby="channel-action-title">
+    <div class="modal-content compact-modal channel-action-sheet">
+        <button id="close-channel-action-modal" class="close-button" type="button" aria-label="Close channel dialog">&times;</button>
+        <p class="modal-eyebrow">Conversations</p>
+        <h2 id="channel-action-title">Start a conversation</h2>
+        <p id="channel-action-description">Give your new conversation a short, memorable name.</p>
+        <div id="channel-action-field" class="channel-action-field">
+            <label id="channel-action-label" for="channel-action-input" class="modal-label">Conversation name</label>
+            <input id="channel-action-input" class="modal-input" type="text" autocomplete="off" maxlength="48">
+        </div>
+        <p id="channel-action-feedback" class="channel-action-feedback" role="status" aria-live="polite"></p>
+        <div class="modal-actions">
+            <button id="cancel-channel-action" class="action-btn" type="button">Cancel</button>
+            <button id="submit-channel-action" class="action-btn primary-action" type="button">Create</button>
+        </div>
     </div>
 </div>
 <!-- Settings Modal -->

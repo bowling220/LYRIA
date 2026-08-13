@@ -149,6 +149,7 @@ function setupMobileMenu() {
 
     document.getElementById('open-friends-modal')?.addEventListener('click', () => setMobileMenuOpen(false));
     document.getElementById('open-suggestions-modal')?.addEventListener('click', () => setMobileMenuOpen(false));
+    document.getElementById('settings-btn')?.addEventListener('click', () => setMobileMenuOpen(false));
 
     document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape' && sidebar.classList.contains('open')) {
@@ -395,131 +396,143 @@ function setupUIEventListeners() {
         setTypingStatus(false);
     });
 
-    // Add channel
-    let isCreatingChannel = false; // Flag to prevent multiple submissions
+    // Use an in-page sheet for channel actions so every control works reliably on mobile.
+    const channelActionModal = document.getElementById('channel-action-modal');
+    const channelActionTitle = document.getElementById('channel-action-title');
+    const channelActionDescription = document.getElementById('channel-action-description');
+    const channelActionField = document.getElementById('channel-action-field');
+    const channelActionLabel = document.getElementById('channel-action-label');
+    const channelActionInput = document.getElementById('channel-action-input');
+    const channelActionFeedback = document.getElementById('channel-action-feedback');
+    const channelActionSubmit = document.getElementById('submit-channel-action');
+    let isSubmittingChannelAction = false;
 
-    document.getElementById('add-channel').addEventListener('click', () => {
-        if (isCreatingChannel) return; // Prevent further clicks if already creating a channel
+    const closeChannelActionModal = () => {
+        channelActionModal.style.display = 'none';
+        channelActionModal.setAttribute('aria-hidden', 'true');
+        channelActionModal.setAttribute('inert', '');
+        channelActionInput.value = '';
+        channelActionFeedback.textContent = '';
+    };
 
-        const channelName = prompt('Enter channel name:');
-        if (channelName) {
-            // Check if the channel already exists
-            db.collection('channels').where('name', '==', channelName).get()
-                .then(snapshot => {
-                    if (!snapshot.empty) {
-                        alert('A channel with this name already exists.');
-                        return; // Exit if a duplicate is found
-                    }
+    const openChannelActionModal = (mode) => {
+        const isLeave = mode === 'leave';
+        channelActionModal.dataset.mode = mode;
+        channelActionTitle.textContent = mode === 'create' ? 'Start a conversation' : mode === 'join' ? 'Join a conversation' : 'Leave this conversation?';
+        channelActionDescription.textContent = mode === 'create'
+            ? 'Give your new conversation a short, memorable name.'
+            : mode === 'join'
+                ? 'Enter the invite code shared by a LYRIA member.'
+                : 'You will need a new invite code to return later.';
+        channelActionField.hidden = isLeave;
+        channelActionLabel.textContent = mode === 'create' ? 'Conversation name' : 'Invite code';
+        channelActionInput.placeholder = mode === 'create' ? 'e.g. Design club' : 'Enter invite code';
+        channelActionInput.maxLength = mode === 'create' ? 48 : 12;
+        channelActionSubmit.textContent = mode === 'create' ? 'Create' : mode === 'join' ? 'Join' : 'Leave';
+        channelActionSubmit.classList.toggle('danger-action', isLeave);
+        channelActionFeedback.textContent = '';
+        channelActionModal.removeAttribute('inert');
+        channelActionModal.setAttribute('aria-hidden', 'false');
+        channelActionModal.style.display = 'flex';
+        setMobileMenuOpen(false);
+        (isLeave ? channelActionSubmit : channelActionInput).focus();
+    };
 
-                    const channelId = `${Date.now()}-${currentUser.uid}`;
-                    console.log('Creating channel with name:', channelName, 'and ID:', channelId); // Debugging log
-
-                    // Set the flag to true to indicate a channel creation is in progress
-                    isCreatingChannel = true;
-
-                    return db.collection('channels').doc(channelId).set({
-                        name: channelName,
-                        id: channelId,
-                        createdBy: currentUser.uid,
-                        joinCode: generateJoinCode(),
-                        members: [currentUser.uid], // Ensure the creator is added as a member
-                        isPublic: false, // Set to true if you want the channel to be public
-                        favorite: false // Default to not favorite
-                    }).then(() => userDocRefForCurrentUser().set({
-                        channels: firebase.firestore.FieldValue.arrayUnion(channelId)
-                    }, { merge: true })).then(() => {
-                        // Send a welcoming message to the new channel with more words
-                        return db.collection('channels').doc(channelId).collection('messages').add({
-                            message: `Welcome to ${channelName}, ${currentUser.displayName || 'User'}! This is a new channel created by ${currentUser.displayName || 'User'}. Let's start chatting!`,
-                            sender: 'System',
-                            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                        });
-                    });
-                }).then(() => {
-                    loadChannels(); // Reload channels after creation
-                }).catch(error => {
-                    console.error("Error creating channel:", error);
-                    alert('Failed to create channel.');
-                }).finally(() => {
-                    // Reset the flag and re-enable the button after the operation is complete
-                    isCreatingChannel = false;
-                });
-        }
+    document.getElementById('add-channel').addEventListener('click', () => openChannelActionModal('create'));
+    document.getElementById('join-channel').addEventListener('click', () => openChannelActionModal('join'));
+    document.getElementById('leave-channel').addEventListener('click', () => openChannelActionModal('leave'));
+    document.getElementById('close-channel-action-modal').addEventListener('click', closeChannelActionModal);
+    document.getElementById('cancel-channel-action').addEventListener('click', closeChannelActionModal);
+    channelActionModal.addEventListener('click', event => {
+        if (event.target === channelActionModal) closeChannelActionModal();
     });
-// Join channel
-document.getElementById('join-channel').addEventListener('click', () => {
-    console.log('Join channel button clicked'); // Log to confirm the button click
-    const joinCode = prompt('Enter channel join code:');
-    if (joinCode) {
-        db.collection('channels').where('joinCode', '==', joinCode).get()
-            .then(snapshot => {
-                console.log(`Join code entered: ${joinCode}`); // Log the join code
-                console.log(`Channels found: ${snapshot.size}`); // Log the number of channels found
-                if (!snapshot.empty) {
-                    const channelDoc = snapshot.docs[0];
-                    const channel = channelDoc.data();
+    channelActionModal.addEventListener('keydown', event => {
+        if (event.key === 'Escape') closeChannelActionModal();
+        if (event.key === 'Enter' && event.target === channelActionInput) channelActionSubmit.click();
+    });
 
-                    console.log(`Joining channel: ${channel.name}`); // Log channel name
-
-                    // Add user to channel members
-                    return db.collection('channels').doc(channel.id).update({
-                        members: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
-                    }).then(() => userDocRefForCurrentUser().set({
-                        channels: firebase.firestore.FieldValue.arrayUnion(channel.id)
-                    }, { merge: true })).then(() => {
-                        console.log(`User ${currentUser.displayName} added to channel ${channel.name}`); // Log user addition
-
-                        // Send a welcome message to the channel
-                        const welcomeMessage = `Welcome to ${channel.name}, **${currentUser.displayName || 'User'}**! We're glad to have you here.`;
-                        return db.collection('channels').doc(channel.id).collection('messages').add({
-                            message: welcomeMessage,
-                            sender: 'System',
-                            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                        });
-                    }).then(() => {
-                        console.log(`Welcome message sent to channel ${channel.name}`); // Log message sending
-                        switchChannel(channel.id);
-                        loadChannels();
-                    });
-                } else {
-                    alert('Invalid join code.');
-                }
-            }).catch(error => {
-                console.error("Error joining channel:", error); // Log any errors
-                alert('Failed to join channel.');
-            });
-    }
-});
-
-    // Leave the active channel and return to the user's permanent personal channel.
-    document.getElementById('leave-channel').addEventListener('click', async () => {
-        const personalChannelId = `personal-${currentUser.uid}`;
-        if (!currentChannel) return;
-        if (currentChannel === personalChannelId) {
-            alert('Your personal channel always stays with your account.');
+    channelActionSubmit.addEventListener('click', async () => {
+        if (isSubmittingChannelAction) return;
+        const mode = channelActionModal.dataset.mode;
+        const value = channelActionInput.value.trim();
+        if (mode !== 'leave' && !value) {
+            channelActionFeedback.textContent = mode === 'create' ? 'Enter a conversation name.' : 'Enter an invite code.';
+            channelActionInput.focus();
             return;
         }
 
+        isSubmittingChannelAction = true;
+        channelActionSubmit.disabled = true;
+        channelActionFeedback.textContent = mode === 'create' ? 'Creating…' : mode === 'join' ? 'Joining…' : 'Leaving…';
+
         try {
-            const channelRef = db.collection('channels').doc(currentChannel);
-            const channelDoc = await channelRef.get();
-            if (!channelDoc.exists) throw new Error('Channel does not exist');
-
-            await Promise.all([
-                channelRef.update({
-                    members: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)
-                }),
-                userDocRefForCurrentUser().set({
-                    channels: firebase.firestore.FieldValue.arrayRemove(currentChannel),
-                    favoriteChannels: firebase.firestore.FieldValue.arrayRemove(currentChannel)
-                }, { merge: true })
-            ]);
-
-            switchChannel(personalChannelId);
-            loadChannels();
+            if (mode === 'create') {
+                const existing = await db.collection('channels').where('name', '==', value).get();
+                if (!existing.empty) {
+                    channelActionFeedback.textContent = 'That conversation name is already in use.';
+                    return;
+                }
+                const channelId = `${Date.now()}-${currentUser.uid}`;
+                await db.collection('channels').doc(channelId).set({
+                    name: value,
+                    id: channelId,
+                    createdBy: currentUser.uid,
+                    joinCode: generateJoinCode(),
+                    members: [currentUser.uid],
+                    isPublic: false,
+                    favorite: false
+                });
+                await userDocRefForCurrentUser().set({
+                    channels: firebase.firestore.FieldValue.arrayUnion(channelId)
+                }, { merge: true });
+                await db.collection('channels').doc(channelId).collection('messages').add({
+                    message: `Welcome to ${value}, ${currentUser.displayName || 'User'}!`,
+                    sender: 'System',
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                switchChannel(channelId);
+                loadChannels();
+                closeChannelActionModal();
+            } else if (mode === 'join') {
+                const snapshot = await db.collection('channels').where('joinCode', '==', value.toUpperCase()).get();
+                if (snapshot.empty) {
+                    channelActionFeedback.textContent = 'That invite code was not found.';
+                    return;
+                }
+                const channelDoc = snapshot.docs[0];
+                const channel = channelDoc.data();
+                const channelId = channel.id || channelDoc.id;
+                await db.collection('channels').doc(channelId).update({
+                    members: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
+                });
+                await userDocRefForCurrentUser().set({
+                    channels: firebase.firestore.FieldValue.arrayUnion(channelId)
+                }, { merge: true });
+                switchChannel(channelId);
+                loadChannels();
+                closeChannelActionModal();
+            } else {
+                const personalChannelId = `personal-${currentUser.uid}`;
+                if (!currentChannel || currentChannel === personalChannelId) return;
+                const leavingChannelId = currentChannel;
+                const channelRef = db.collection('channels').doc(leavingChannelId);
+                await Promise.all([
+                    channelRef.update({ members: firebase.firestore.FieldValue.arrayRemove(currentUser.uid) }),
+                    userDocRefForCurrentUser().set({
+                        channels: firebase.firestore.FieldValue.arrayRemove(leavingChannelId),
+                        favoriteChannels: firebase.firestore.FieldValue.arrayRemove(leavingChannelId)
+                    }, { merge: true })
+                ]);
+                switchChannel(personalChannelId);
+                loadChannels();
+                closeChannelActionModal();
+            }
         } catch (error) {
-            console.error('Error leaving channel:', error);
-            alert('LYRIA could not leave that channel. Please refresh and try again.');
+            console.error(`Channel ${mode} failed:`, error);
+            channelActionFeedback.textContent = 'That action could not be completed. Please try again.';
+        } finally {
+            isSubmittingChannelAction = false;
+            channelActionSubmit.disabled = false;
         }
     });
 
@@ -890,6 +903,13 @@ function switchChannel(channelId) {
         window.leaveCurrentCall();
     }
     currentChannel = channelId; // Update currentChannel when switching channels
+    const leaveButton = document.getElementById('leave-channel');
+    if (leaveButton && currentUser) {
+        const isPersonalChannel = channelId === `personal-${currentUser.uid}`;
+        leaveButton.disabled = isPersonalChannel;
+        leaveButton.textContent = isPersonalChannel ? 'Personal channel' : 'Leave conversation';
+        leaveButton.title = isPersonalChannel ? 'Your personal channel always stays with your account.' : 'Leave this conversation';
+    }
     loadMessages(channelId);     // Load messages for the new channel
     listenForTypingStatus(channelId); // Listen for typing status changes
     if (typeof window.setupCallListeners === 'function') window.setupCallListeners();
