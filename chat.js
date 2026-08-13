@@ -126,9 +126,6 @@ function setMobileMenuOpen(isOpen) {
     sidebar.setAttribute('aria-hidden', (isMobile && !shouldOpen).toString());
     sidebar.toggleAttribute('inert', isMobile && !shouldOpen);
 
-    if (shouldOpen) {
-        document.getElementById('close-mobile-menu')?.focus();
-    }
 }
 
 function setupMobileMenu() {
@@ -140,13 +137,18 @@ function setupMobileMenu() {
     
     headerToggle.addEventListener('click', (event) => {
         event.stopPropagation();
-        setMobileMenuOpen(!sidebar.classList.contains('open'));
+        const willOpen = !sidebar.classList.contains('open');
+        setMobileMenuOpen(willOpen);
+        if (willOpen && event.detail === 0) closeButton?.focus();
     });
 
     closeButton?.addEventListener('click', () => {
         setMobileMenuOpen(false);
         headerToggle.focus();
     });
+
+    document.getElementById('open-friends-modal')?.addEventListener('click', () => setMobileMenuOpen(false));
+    document.getElementById('open-suggestions-modal')?.addEventListener('click', () => setMobileMenuOpen(false));
 
     document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape' && sidebar.classList.contains('open')) {

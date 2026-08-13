@@ -195,7 +195,7 @@ body:not(.landing-page) .top-header > span { font: 800 15px var(--font-display) 
 .channels h3 { color: #5d6e69 !important; font: 700 10px var(--font-display) !important; letter-spacing: .14em !important; text-align: left !important; padding: 0 8px; }
 .info-text { display: none !important; }
 .channel-btn, .add-channel-btn, .join-channel-btn, .leave-channel-btn, .action-btn, .suggestions-link { min-height: 39px; border-radius: 9px !important; font-weight: 600 !important; }
-.channel-btn { padding: 9px 11px !important; }.channel-btn:hover,.channel-btn.active { background: #1d302d !important; color: white !important; }
+.channel-btn { padding: 9px 11px !important; }.channel-btn::before { content: none !important; }.channel-btn:hover,.channel-btn.active { background: #1d302d !important; color: white !important; }
 .add-channel-btn,.join-channel-btn,.leave-channel-btn,.action-btn { background: transparent !important; border: 1px solid rgba(255,255,255,.09) !important; color: #a8b5b1 !important; margin: 3px 0 !important; }
 .add-channel-btn:hover,.join-channel-btn:hover,.action-btn:hover { color: var(--mint) !important; border-color: rgba(183,255,98,.35) !important; background: rgba(183,255,98,.06) !important; }
 .suggestions-section { margin: 10px 14px !important; border-radius: 14px !important; padding: 14px !important; background: linear-gradient(145deg, rgba(73,225,208,.08), rgba(183,255,98,.04)) !important; border: 1px solid rgba(73,225,208,.15) !important; }.suggestions-section h3 { font: 700 12px var(--font-display) !important; }.suggestions-section p { color: #6f817c !important; font-size: 10px !important; line-height: 1.5; }.suggestions-link { color: var(--aqua) !important; background: none !important; border: 0 !important; }
@@ -313,7 +313,7 @@ body.premium-page { min-height: 100vh !important; padding: 60px 20px !important;
   body.app-page .channels { padding: 18px 12px !important; }
   body.app-page .user-profile { margin-top: auto !important; margin-bottom: 0 !important; }
   body.app-page .chat-area { width: 100%; height: 100%; min-width: 0; }
-  body.app-page .chat-header { min-height: 102px; padding: 10px 12px !important; display: grid !important; grid-template-columns: 1fr repeat(4, auto); align-content: center; gap: 8px 6px; }
+  body.app-page .chat-header { min-height: 102px; padding: 10px 12px !important; display: grid !important; grid-template-columns: repeat(3, minmax(0, 1fr)); align-content: center; gap: 8px; }
   body.app-page .chat-header h2 { grid-column: 1 / -1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   body.app-page .voice-call-btn,
   body.app-page .copy-join-code-btn,
@@ -336,8 +336,7 @@ body.premium-page { min-height: 100vh !important; padding: 60px 20px !important;
 }
 
 @media (max-width: 390px) {
-  body.app-page .chat-header { grid-template-columns: 1fr repeat(3, auto); }
-  body.app-page #inbox-btn { grid-column: 1 / -1; justify-self: stretch; }
+  body.app-page .chat-header { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
 @media (max-width: 768px) {
@@ -354,7 +353,8 @@ body.premium-page { min-height: 100vh !important; padding: 60px 20px !important;
     width: min(88vw, 344px) !important;
     height: calc(100dvh - 64px - env(safe-area-inset-top)) !important;
     padding: 0 !important;
-    overflow: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
     transform: translateX(calc(-100% - 20px));
     transition: transform .24s cubic-bezier(.22,.8,.28,1) !important;
     border-right: 1px solid rgba(255,255,255,.09) !important;
@@ -370,12 +370,14 @@ body.premium-page { min-height: 100vh !important; padding: 60px 20px !important;
   body.app-page .sidebar-mobile-title strong { color: #edf5f2; font: 700 17px var(--font-display); letter-spacing: -.02em; }
   body.app-page .close-mobile-menu { width: 40px; height: 40px; display: grid; place-items: center; border: 1px solid rgba(255,255,255,.1); border-radius: 12px; background: rgba(255,255,255,.035); color: #9eada8; font: 300 27px/1 var(--font-body); cursor: pointer; }
   body.app-page .close-mobile-menu:hover { color: #fff; background: rgba(255,255,255,.08); }
-  body.app-page .channels { flex: 1 1 auto; min-height: 0; padding: 18px 14px 12px !important; overflow-y: auto; }
+  body.app-page .channels { flex: 0 0 auto; min-height: 0; max-height: 52dvh; padding: 18px 14px 12px !important; overflow-y: auto; }
   body.app-page .channels h3 { margin: 0 0 10px !important; padding: 0 3px !important; color: #61736e !important; font-size: 9px !important; }
   body.app-page .channels-list { display: grid; gap: 4px; margin: 0 0 15px; }
-  body.app-page .channel-container { gap: 5px; }
+  body.app-page .channel-container { width: 100%; display: grid; grid-template-columns: minmax(0, 1fr) 38px; align-items: center; gap: 5px; }
+  body.app-page .channel-btn::before { content: none; }
   body.app-page .channel-btn { min-height: 42px; padding: 10px 11px !important; border-radius: 11px !important; font-size: 13px !important; }
-  body.app-page .favorite-btn { width: 38px; min-width: 38px; height: 38px; margin: 2px 0; border-radius: 10px; }
+  body.app-page .favorite-btn { width: 38px; min-width: 38px; height: 38px; display: grid; place-items: center; margin: 2px 0; padding: 0; border: 1px solid rgba(255,255,255,.08); border-radius: 10px; background: transparent; color: #758681; font-size: 17px; line-height: 1; cursor: pointer; }
+  body.app-page .favorite-btn:hover { color: var(--mint); border-color: rgba(183,255,98,.28); background: rgba(183,255,98,.05); }
   body.app-page .channel-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; padding-top: 13px; border-top: 1px solid rgba(255,255,255,.06); }
   body.app-page .channel-actions button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 40px; margin: 0 !important; padding: 8px 10px !important; text-align: center; font-size: 11px !important; }
   body.app-page .channel-actions .leave-channel-btn { grid-column: 1 / -1; min-height: 36px; color: #8d7974 !important; border-color: rgba(255,127,100,.12) !important; }
