@@ -1,29 +1,3 @@
-function setupMessageListener() {
-    const channelTitle = document.getElementById('channel-title').textContent.replace('# ', '');
-    console.log('Setting up message listener for channel:', channelTitle);
-
-    // Clear existing messages first
-    const messagesContainer = document.getElementById('messages');
-    if (messagesContainer) {
-        messagesContainer.innerHTML = ''; // Clear previous messages
-    }
-
-    // Set up real-time listener for messages in the specific channel
-    return db.collection('channels').doc(channelTitle).collection('messages')
-        .orderBy('timestamp', 'asc')  // Ensure messages are in order
-        .onSnapshot((snapshot) => {
-            console.log('Received snapshot with changes');
-            snapshot.docChanges().forEach((change) => {
-                if (change.type === 'added') {
-                    const message = change.doc.data();
-                    console.log('Processing message:', message); // Log the message being processed
-                    displayMessage(message);
-                }
-            });
-        }, (error) => {
-            console.error('Error in message listener:', error);
-        });
-}
 // Use the configured Firebase instances from config.js
 let auth, db;
 
@@ -55,6 +29,7 @@ let darkMode = false;
 let notificationsEnabled = false;
 let lastMessageTimestamp = null;
 let unsubscribeFromMessages = null; // Unsubscribe function for message listener
+let uiListenersAttached = false;
 
 // Create notification sound
 const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
@@ -135,12 +110,6 @@ function displayBadges(userId) {
     });
 }
 
-const betaUserUIDs = [
-    "DWjEGCFvdKe50fMiXk9EsHH9j3F3", // Replace with actual user ID
-    "RshQJzHL4tUt34Jqgd96g0DktHk2", // Replace with actual user ID
-    // Add more user IDs as needed
-];
-
 const featureUserUIDs = ["miu0tI2oHJUiNx2gxtPwSpJ136w1", "dIc6q6xdqsTuiVC9JWGQT9XVH6T2"]; // Add the UID for the feature badge
 
 // Mobile menu toggle functionality
@@ -195,105 +164,96 @@ initializeFirebase().then(() => {
         return;
     }
 
-    // Authenticate the user and load settings
-    auth.onAuthStateChanged((user) => {
-    if (user) {
+    // Use one authentication path for user setup, channel setup and UI listeners.
+    auth.onAuthStateChanged(async (user) => {
+        if (!user) {
+            window.location.href = 'login.html';
+            return;
+        }
+
         currentUser = user;
+        const personalChannelId = `personal-${user.uid}`;
         const userDocRef = db.collection('users').doc(user.uid);
+        const channelDocRef = db.collection('channels').doc(personalChannelId);
 
-        userDocRef.get().then(doc => {
-            if (!doc.exists) {
-                const personalChannelId = `personal-${user.uid}`;
-                return Promise.all([
-                    userDocRef.set({
-                        displayName: user.displayName || 'User',
-                        email: user.email,
-                        photoURL: user.photoURL || 'assets/icon.png',
-                        role: 'user',
-                        channels: [`personal-${user.uid}`],
-                        darkMode: false,
-                        notificationsEnabled: false,
-                        bio: "No bio set." // Set the default bio
-                    }),
-                    db.collection('channels').doc(personalChannelId).set({
-                        name: 'My Personal Channel',
-                        id: personalChannelId,
-                        createdBy: user.uid,
-                        joinCode: generateJoinCode(),
-                        members: [user.uid]
-                    })
-                ]).then(() => userDocRef.get());
+        try {
+            const existingUser = await userDocRef.get();
+            if (!existingUser.exists) {
+                await userDocRef.set({
+                    displayName: user.displayName || (user.isAnonymous ? 'Guest' : 'User'),
+                    email: user.email || null,
+                    photoURL: user.photoURL || 'assets/icon.png',
+                    role: user.isAnonymous ? 'guest' : 'user',
+                    channels: [personalChannelId],
+                    friends: [],
+                    badges: [],
+                    darkMode: false,
+                    notificationsEnabled: false,
+                    bio: 'No bio set.'
+                });
+            } else {
+                await userDocRef.set({
+                    channels: firebase.firestore.FieldValue.arrayUnion(personalChannelId)
+                }, { merge: true });
             }
-            return doc;
-        }).then(doc => {
-            const userData = doc.exists ? doc.data() : {
-                displayName: user.displayName || 'User',
-                email: user.email,
-                photoURL: user.photoURL || 'assets/icon.png',
-                role: 'user',
-                channels: [`personal-${user.uid}`],
-                darkMode: false,
-                notificationsEnabled: false,
-                bio: "No bio set." // Set the default bio
-            };
 
-            // Display user information
+            const existingChannel = await channelDocRef.get();
+            if (!existingChannel.exists) {
+                await channelDocRef.set({
+                    name: 'My Personal Channel',
+                    id: personalChannelId,
+                    createdBy: user.uid,
+                    joinCode: generateJoinCode(),
+                    members: [user.uid],
+                    isPublic: false
+                });
+            } else {
+                await channelDocRef.update({
+                    members: firebase.firestore.FieldValue.arrayUnion(user.uid)
+                });
+            }
+
+            const refreshedUser = await userDocRef.get();
+            const userData = refreshedUser.data() || {};
             const nameEl = document.getElementById('user-name');
             const avatarEl = document.getElementById('user-avatar');
-            if (nameEl) nameEl.textContent = userData.displayName;
-            if (avatarEl) avatarEl.src = userData.photoURL;
-
-            // Check if the user's UID is in the badgeUserUIDs array
+            if (nameEl) nameEl.textContent = userData.displayName || 'User';
+            if (avatarEl) avatarEl.src = userData.photoURL || 'assets/icon.png';
+            const bioInput = document.getElementById('bio-input');
+            if (bioInput) bioInput.value = userData.bio || '';
+            showBadges = userData.showBadges !== false;
             if (badgeUserUIDs.includes(user.uid)) {
-                // Commenting out the badge display logic
-                /*
-                const badgesContainer = document.createElement('div');
-                badgesContainer.className = 'badges-container';
-                const badges = ['admin.png', 'DevBadge.png', 'Mod.png', 'EarlyAccess.png'];
-                badges.forEach(badgeSrc => {
-                    const badge = document.createElement('img');
-                    badge.src = `assets/${badgeSrc}`;
-                    badge.alt = badgeSrc.replace('.png', '') + ' Badge';
-                    badge.className = 'admin-badge';
-                    badgesContainer.appendChild(badge);
-                });
-                document.getElementById('user-name').after(badgesContainer);
-                */
+                const badgeSection = document.getElementById('badge-visibility-section');
+                const badgeToggle = document.getElementById('badge-visibility-toggle');
+                if (badgeSection) badgeSection.style.display = 'block';
+                if (badgeToggle) badgeToggle.checked = showBadges;
             }
+            applyBadgeVisibility();
 
-            // Check if the user's UID is in the featureUserUIDs array
-            if (featureUserUIDs.includes(user.uid)) {
-                const featureBadge = document.createElement('img');
-                featureBadge.src = 'assets/feature.png'; // Path to the feature badge
-                featureBadge.alt = 'Feature Badge';
-                featureBadge.className = 'admin-badge'; // Use the same class for styling as admin badges
-                document.getElementById('user-name').after(featureBadge); // Display the badge after the user name
-            }
-
-            darkMode = userData.darkMode;
-            notificationsEnabled = userData.notificationsEnabled;
-            document.getElementById('notifications-toggle').checked = notificationsEnabled;
+            darkMode = Boolean(userData.darkMode);
+            notificationsEnabled = Boolean(userData.notificationsEnabled);
+            const notificationsToggle = document.getElementById('notifications-toggle');
+            if (notificationsToggle) notificationsToggle.checked = notificationsEnabled;
             applyDarkMode();
 
-            document.getElementById('add-channel').removeAttribute('disabled');
-            document.getElementById('join-channel').removeAttribute('disabled');
+            document.getElementById('add-channel')?.removeAttribute('disabled');
+            document.getElementById('join-channel')?.removeAttribute('disabled');
 
+            currentChannel = personalChannelId;
             setupUIEventListeners();
-            currentChannel = `personal-${user.uid}`;
             loadChannels();
+            switchChannel(personalChannelId);
 
-            // Initialize PeerJS after currentUser is available
-            // Uncomment the line below if using voicecall.js and initializePeer() is defined
-            // initializePeer();
-        }).catch(error => {
-            console.error("Error handling user data:", error);
-        });
-    } else {
-        window.location.href = 'login.html';
-    }
-});
+            if (typeof initializePeer === 'function') initializePeer();
+        } catch (error) {
+            console.error('Error initializing the community:', error);
+            window.utils?.showError('LYRIA could not finish loading your community. Please refresh and try again.');
+        }
+    });
 
 function setupUIEventListeners() {
+    if (uiListenersAttached) return;
+    uiListenersAttached = true;
     // Event listeners for modal buttons
     document.getElementById('settings-btn').addEventListener('click', () => {
         document.getElementById('settings-modal').style.display = 'flex';
@@ -439,7 +399,9 @@ function setupUIEventListeners() {
                         members: [currentUser.uid], // Ensure the creator is added as a member
                         isPublic: false, // Set to true if you want the channel to be public
                         favorite: false // Default to not favorite
-                    }).then(() => {
+                    }).then(() => userDocRefForCurrentUser().set({
+                        channels: firebase.firestore.FieldValue.arrayUnion(channelId)
+                    }, { merge: true })).then(() => {
                         // Send a welcoming message to the new channel with more words
                         return db.collection('channels').doc(channelId).collection('messages').add({
                             message: `Welcome to ${channelName}, ${currentUser.displayName || 'User'}! This is a new channel created by ${currentUser.displayName || 'User'}. Let's start chatting!`,
@@ -476,7 +438,9 @@ document.getElementById('join-channel').addEventListener('click', () => {
                     // Add user to channel members
                     return db.collection('channels').doc(channel.id).update({
                         members: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
-                    }).then(() => {
+                    }).then(() => userDocRefForCurrentUser().set({
+                        channels: firebase.firestore.FieldValue.arrayUnion(channel.id)
+                    }, { merge: true })).then(() => {
                         console.log(`User ${currentUser.displayName} added to channel ${channel.name}`); // Log user addition
 
                         // Send a welcome message to the channel
@@ -499,18 +463,37 @@ document.getElementById('join-channel').addEventListener('click', () => {
                 alert('Failed to join channel.');
             });
     }
-});    // Leave channel
-    document.getElementById('leave-channel').addEventListener('click', () => {
-        if (currentChannel) {
-            db.collection('channels').doc(currentChannel).update({
-                members: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)
-            }).then(() => {
-                switchChannel(`personal-${currentUser.uid}`);
-                loadChannels();
-            }).catch(error => {
-                console.error("Error leaving channel:", error);
-                alert('Failed to leave channel.');
-            });
+});
+
+    // Leave the active channel and return to the user's permanent personal channel.
+    document.getElementById('leave-channel').addEventListener('click', async () => {
+        const personalChannelId = `personal-${currentUser.uid}`;
+        if (!currentChannel) return;
+        if (currentChannel === personalChannelId) {
+            alert('Your personal channel always stays with your account.');
+            return;
+        }
+
+        try {
+            const channelRef = db.collection('channels').doc(currentChannel);
+            const channelDoc = await channelRef.get();
+            if (!channelDoc.exists) throw new Error('Channel does not exist');
+
+            await Promise.all([
+                channelRef.update({
+                    members: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)
+                }),
+                userDocRefForCurrentUser().set({
+                    channels: firebase.firestore.FieldValue.arrayRemove(currentChannel),
+                    favoriteChannels: firebase.firestore.FieldValue.arrayRemove(currentChannel)
+                }, { merge: true })
+            ]);
+
+            switchChannel(personalChannelId);
+            loadChannels();
+        } catch (error) {
+            console.error('Error leaving channel:', error);
+            alert('LYRIA could not leave that channel. Please refresh and try again.');
         }
     });
 
@@ -535,6 +518,10 @@ document.getElementById('join-channel').addEventListener('click', () => {
             alert('Failed to copy join code.');
         }
     });
+}
+
+function userDocRefForCurrentUser() {
+    return db.collection('users').doc(currentUser.uid);
 }
 
 function sendMessage(messageText, isCode = false) {
@@ -566,6 +553,23 @@ function sendMessage(messageText, isCode = false) {
             });
     }
 }
+
+window.sendGifByUrl = async function sendGifByUrl(gifUrl) {
+    if (!currentUser || !currentChannel) throw new Error('No active channel');
+    const parsedUrl = new URL(gifUrl);
+    if (!['http:', 'https:'].includes(parsedUrl.protocol)) throw new Error('Invalid GIF URL');
+
+    await db.collection('channels').doc(currentChannel).collection('messages').add({
+        message: parsedUrl.href,
+        content: parsedUrl.href,
+        type: 'gif',
+        sender: currentUser.displayName || 'Guest',
+        displayName: currentUser.displayName || 'Guest',
+        senderId: currentUser.uid,
+        senderPhotoURL: currentUser.photoURL || 'assets/icon.png',
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+};
 function escapeHtml(unsafe) {
     return unsafe
         .replace(/&/g, "&amp;")
@@ -662,7 +666,9 @@ function loadChannels() {
                         button.classList.add('active-channel');
                         document.getElementById('message-input').placeholder = `Message #${channel.name}`;
                         if (window.innerWidth <= 768) {
-                            document.querySelector('.sidebar').classList.remove('active');
+                            document.querySelector('.sidebar').classList.remove('open');
+                            const menuToggle = document.getElementById('header-menu-toggle');
+                            if (menuToggle) menuToggle.setAttribute('aria-expanded', 'false');
                         }
                     };
 
@@ -729,24 +735,29 @@ function loadMessages(channelId) {
                 const senderAvatarElement = document.createElement('img');
                 senderAvatarElement.src = message.senderPhotoURL || 'assets/icon.png';
                 senderAvatarElement.className = 'sender-avatar';
-                senderAvatarElement.setAttribute('data-uid', message.senderId);
-                senderAvatarElement.addEventListener('click', () => {
-                    showUserProfileModal(message.senderId);
-                });
+                if (message.senderId) {
+                    senderAvatarElement.setAttribute('data-uid', message.senderId);
+                    senderAvatarElement.addEventListener('click', () => {
+                        showUserProfileModal(message.senderId);
+                    });
+                }
                 senderElement.appendChild(senderAvatarElement);
 
                 const senderNameElement = document.createElement('span');
                 senderNameElement.className = 'sender-name';
                 senderNameElement.textContent = message.sender;
-                senderNameElement.setAttribute('data-uid', message.senderId);
-                senderNameElement.addEventListener('click', () => {
-                    showUserProfileModal(message.senderId);
-                });
+                if (message.senderId) {
+                    senderNameElement.setAttribute('data-uid', message.senderId);
+                    senderNameElement.addEventListener('click', () => {
+                        showUserProfileModal(message.senderId);
+                    });
+                }
                 senderElement.appendChild(senderNameElement);
 
                 // Check if the sender has any badges
-                const userDocRef = db.collection('users').doc(message.senderId);
-                userDocRef.get().then(userDoc => {
+                const userDocRef = message.senderId ? db.collection('users').doc(message.senderId) : null;
+                const userLookup = userDocRef ? userDocRef.get() : Promise.resolve({ exists: false });
+                userLookup.then(userDoc => {
                     if (userDoc.exists) {
                         const userData = userDoc.data();
                         console.log(`User data for ${message.senderId}:`, userData); // Debugging log
@@ -808,7 +819,15 @@ function loadMessages(channelId) {
 
                 const messageContentElement = document.createElement('div');
                 messageContentElement.className = 'message-content';
-                messageContentElement.textContent = message.message;
+                if (message.type === 'gif' && (message.content || message.message)) {
+                    const gif = document.createElement('img');
+                    gif.src = message.content || message.message;
+                    gif.alt = 'Shared GIF';
+                    gif.loading = 'lazy';
+                    messageContentElement.appendChild(gif);
+                } else {
+                    messageContentElement.textContent = message.message || message.content || '';
+                }
 
                 messageElement.appendChild(senderElement);
                 messageElement.appendChild(messageContentElement);
@@ -843,11 +862,13 @@ function logout() {
 
 // Function to switch channels
 function switchChannel(channelId) {
+    if (currentChannel && currentChannel !== channelId && typeof window.leaveCurrentCall === 'function') {
+        window.leaveCurrentCall();
+    }
     currentChannel = channelId; // Update currentChannel when switching channels
     loadMessages(channelId);     // Load messages for the new channel
     listenForTypingStatus(channelId); // Listen for typing status changes
-    // Uncomment the line below if using voicecall.js and initializePeer() is defined
-    // loadChannelPeerId(channelId); // Load and set currentChannelPeerId (from voicecall.js)
+    if (typeof window.setupCallListeners === 'function') window.setupCallListeners();
 }
 
 // Function to open the modal
@@ -942,32 +963,6 @@ if (userAvatar) {
 
 
 let showBadges = true; // Default value for showing badges
-
-// Function to load settings, including badge visibility
-auth.onAuthStateChanged(user => {
-    if (user) {
-        currentUser = user;
-        const userDocRef = db.collection('users').doc(user.uid);
-
-        userDocRef.get().then(doc => {
-            if (doc.exists) {
-                const userData = doc.data();
-                showBadges = userData.showBadges !== false; // Default to true if not set
-
-                // Display badge visibility toggle if the user has the admin badge
-                if (badgeUserUIDs.includes(user.uid)) {
-                    document.getElementById('badge-visibility-section').style.display = 'block';
-                    document.getElementById('badge-visibility-toggle').checked = showBadges;
-                }
-
-                // Update badge visibility
-                applyBadgeVisibility();
-            }
-        }).catch(error => {
-            console.error("Error loading user data:", error);
-        });
-    }
-});
 
 // Event listener for badge visibility toggle
 document.getElementById('badge-visibility-toggle').addEventListener('change', (e) => {
@@ -1148,116 +1143,6 @@ function fetchUsers() {
 // Call fetchUsers when the app initializes
 fetchUsers();
 
-// Helper function to setup channel management
-function setupChannelManagement() {
-    // Add channel button functionality
-    const addChannelBtn = document.getElementById('add-channel');
-    if (addChannelBtn) {
-        addChannelBtn.addEventListener('click', () => {
-            const channelName = prompt('Enter channel name:');
-            if (channelName && window.utils) {
-                const sanitizedName = window.utils.sanitizeInput(channelName);
-                if (sanitizedName) {
-                    createChannel(sanitizedName);
-                }
-            }
-        });
-    }
-    
-    // Join channel button functionality
-    const joinChannelBtn = document.getElementById('join-channel');
-    if (joinChannelBtn) {
-        joinChannelBtn.addEventListener('click', () => {
-            const joinCode = prompt('Enter channel join code:');
-            if (joinCode && window.utils) {
-                const sanitizedCode = window.utils.sanitizeInput(joinCode);
-                if (sanitizedCode) {
-                    joinChannelByCode(sanitizedCode);
-                }
-            }
-        });
-    }
-}
-
-// Helper function to setup general chat functionality
-function setupChatFunctionality() {
-    // Message input handling
-    const messageInput = document.getElementById('message-input');
-    const sendButton = document.getElementById('send-button');
-    
-    if (messageInput && sendButton) {
-        // Enhanced message sending with validation
-        const sendMessage = () => {
-            const message = messageInput.value.trim();
-            if (message && window.utils) {
-                const sanitizedMessage = window.utils.sanitizeInput(message);
-                if (sanitizedMessage.length > 0 && sanitizedMessage.length <= 1000) {
-                    // Send message logic here
-                    messageInput.value = '';
-                } else {
-                    window.utils.showWarning('Message must be between 1 and 1000 characters');
-                }
-            }
-        };
-        
-        sendButton.addEventListener('click', sendMessage);
-        messageInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                sendMessage();
-            }
-        });
-    }
-    
-    // Setup other event listeners
-    setupModalEventListeners();
-}
-
-// Helper function to setup modal event listeners
-function setupModalEventListeners() {
-    // Settings modal
-    const settingsBtn = document.getElementById('settings-btn');
-    const settingsModal = document.getElementById('settings-modal');
-    
-    if (settingsBtn && settingsModal) {
-        settingsBtn.addEventListener('click', () => {
-            settingsModal.style.display = 'flex';
-        });
-    }
-    
-    // Close modals on outside click
-    document.addEventListener('click', (e) => {
-        if (e.target.classList.contains('modal')) {
-            e.target.style.display = 'none';
-        }
-    });
-    
-    // Close modals on Escape key
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            const openModal = document.querySelector('.modal[style*="flex"]');
-            if (openModal) {
-                openModal.style.display = 'none';
-            }
-        }
-    });
-}
-
-// Placeholder functions for channel operations
-function createChannel(name) {
-    if (window.utils) {
-        window.utils.showInfo(`Creating channel: ${name}`);
-        // Implement channel creation logic
-    }
-}
-
-function joinChannelByCode(code) {
-    if (window.utils) {
-        window.utils.showInfo(`Joining channel with code: ${code}`);
-        // Implement join channel logic
-    }
-}
-
 // Add event listener for input to handle tagging
 const tagMessageInput = document.getElementById('message-input');
 const suggestionsContainer = document.createElement('div');
@@ -1321,104 +1206,6 @@ window.addEventListener('load', () => {
     }
 });
 
-// Setup authentication state change handler
-auth.onAuthStateChanged(user => {
-    if (user) {
-        currentUser = user;
-        const userId = user.uid;
-
-        // Fetch and display user data
-        db.collection('users').doc(userId).get().then(doc => {
-            if (doc.exists) {
-                const userData = doc.data();
-                document.getElementById('user-name').textContent = userData.displayName;
-                document.getElementById('user-avatar').src = userData.photoURL || 'assets/icon.png';
-
-                // Set bio if available
-                if (userData.bio) {
-                    document.getElementById('bio-input').value = userData.bio;
-                }
-
-                // Check if the user has the premium badge
-                const profileBadges = document.getElementById('profile-modal-badges');
-                if (profileBadges) {
-                    profileBadges.innerHTML = ''; // Clear any existing badges
-
-                    if (userData.badges && userData.badges.includes('premium')) {
-                        const premiumBadge = document.createElement('img');
-                        premiumBadge.src = 'assets/premium.png';
-                        premiumBadge.alt = 'Premium Badge';
-                        premiumBadge.className = 'admin-badge';
-                        profileBadges.appendChild(premiumBadge);
-                    }
-                }
-            } else {
-                console.log("No user document found");
-            }
-        }).catch(error => {
-            console.error("Error getting user document:", error);
-        });
-
-        // Setup channel management and chat functionality
-        setupChannelManagement();
-        setupChatFunctionality();
-    } else {
-        // User is signed out, redirect to login
-        window.location.href = 'login.html';
-    }
-});
-
-function assignAllBadgesToUser(userId) {
-    const badges = ['admin', 'DevBadge', 'Mod', 'EarlyAccess']; // List of all badges you want to assign
-    const userDocRef = db.collection('users').doc(userId);
-    
-    userDocRef.update({
-        badges: firebase.firestore.FieldValue.arrayUnion(...badges) // Add all badges to the array
-    }).then(() => {
-        console.log(`All badges assigned to user ${userId}`);
-    }).catch(error => {
-        console.error("Error assigning badges:", error);
-    });
-} // Close the function properly
-assignAllBadgesToUser('qzf9fO2bBLU0PJhRDSQK9KnMZD32', 'xLT0XKgtF5ZnlfX2fLj9hXrTcW02');
-
-function assignBetaBadgeToUser(userId) {
-    const badge = 'Beta'; // Define the Beta badge
-    const userDocRef = db.collection('users').doc(userId);
-    
-    userDocRef.update({
-        badges: firebase.firestore.FieldValue.arrayUnion(badge) // Add the Beta badge to the array
-    }).then(() => {
-        console.log(`Beta badge assigned to user ${userId}`);
-    }).catch(error => {
-        console.error("Error assigning Beta badge:", error);
-    });
-}
-
-function showBadgeInfo(badgeName) {
-    db.collection('badges').doc(badgeName).get().then(doc => {
-        if (doc.exists) {
-            const badgeData = doc.data();
-            const badgeDetails = `
-                <h2>${badgeData.name}</h2>
-                <p>${badgeData.description}</p>
-                <p><strong>Rarity:</strong> ${badgeData.rarity}</p>
-                <p><strong>Holders:</strong> ${badgeData.awardedTo.length}</p>
-            `;
-            const badgeModalContent = document.getElementById('badge-modal-content');
-            badgeModalContent.innerHTML = badgeDetails; // Set the modal content
-            document.getElementById('badge-modal').style.display = 'block'; // Show the modal
-        } else {
-            console.error("Badge does not exist.");
-        }
-    }).catch(error => {
-        console.error("Error fetching badge details:", error);
-    });
-}
-betaUserUIDs.forEach(userId => {
-    assignBetaBadgeToUser(userId);
-});
-
 function toggleFavoriteChannel(channelId, isFavorite) {
     const userDocRef = db.collection('users').doc(currentUser.uid); // Reference to the current user's document
 
@@ -1469,25 +1256,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-function loadUsers() {
-    db.collection('users').get().then(snapshot => {
-        const usersList = document.getElementById('users-list'); // Assuming you have a list element
-        usersList.innerHTML = ''; // Clear previous content
-
-        snapshot.forEach(doc => {
-            const userData = doc.data();
-            const listItem = document.createElement('li');
-            listItem.innerHTML = `
-                <span>${userData.displayName}</span>
-                <span>${userData.bio}</span> <!-- Display the correct bio for each user -->
-            `;
-            usersList.appendChild(listItem);
-        });
-    }).catch(error => {
-        console.error("Error loading users:", error);
-    });
-}
-
 // Function to update the user's bio
 function updateUserBio(newBio) {
     if (currentUser) {
@@ -1512,182 +1280,6 @@ document.getElementById('update-bio-btn').addEventListener('click', () => {
         alert('Bio cannot be empty.');
     }
 });
-
-async function loadUserProfile(userId) {
-    const userDoc = await db.collection('users').doc(userId).get();
-    if (userDoc.exists) {
-        const userData = userDoc.data();
-        
-        // Update profile modal with user data
-        document.getElementById('profile-modal-name').textContent = userData.displayName || 'User Name';
-        document.getElementById('profile-modal-bio').textContent = userData.bio || 'COMING SOON';
-        
-        // Clear existing badges
-        const badgesContainer = document.getElementById('profile-modal-badges');
-        badgesContainer.innerHTML = ''; // Clear previous badges
-
-        // Loop through user's badges and create badge elements
-        userData.badges.forEach(badge => {
-            const badgeDiv = document.createElement('div');
-            badgeDiv.className = 'badge';
-            badgeDiv.setAttribute('data-badge-name', badge); // Set badge name for tooltip
-            badgeDiv.onclick = () => showBadgeInfo(badge); // Set click event
-
-            const badgeImage = document.createElement('img');
-            badgeImage.src = `assets/${badge}.png`; // Assuming badge images are stored in assets
-            badgeImage.alt = `${badge} Badge`;
-            badgeImage.className = 'badge-image';
-
-            const tooltip = document.createElement('span');
-            tooltip.className = 'tooltip';
-            tooltip.textContent = badge; // Set tooltip text
-
-            // Append elements to badgeDiv
-            badgeDiv.appendChild(badgeImage);
-            badgeDiv.appendChild(tooltip);
-            badgesContainer.appendChild(badgeDiv);
-        });
-    } else {
-        console.error("User document does not exist.");
-    }
-}
-
-const changeBackgroundButton = document.getElementById('change-background-btn');
-if (changeBackgroundButton) changeBackgroundButton.addEventListener('click', () => {
-    const colorPicker = document.getElementById('background-color-picker');
-    const imageInput = document.getElementById('background-image-input');
-
-    // Toggle visibility of color picker and image input
-    if (colorPicker.style.display === 'none') {
-        colorPicker.style.display = 'block';
-        imageInput.style.display = 'none';
-    } else {
-        colorPicker.style.display = 'none';
-        imageInput.style.display = 'block';
-    }
-});
-
-// Change background color
-const backgroundColorPicker = document.getElementById('background-color-picker');
-if (backgroundColorPicker) backgroundColorPicker.addEventListener('input', (event) => {
-    const chatArea = document.querySelector('.chat-area');
-    chatArea.style.backgroundColor = event.target.value;
-});
-
-// Change background image
-const backgroundImageInput = document.getElementById('background-image-input');
-if (backgroundImageInput) backgroundImageInput.addEventListener('change', (event) => {
-    const chatArea = document.querySelector('.chat-area');
-    const file = event.target.files[0];
-
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            chatArea.style.backgroundImage = `url(${e.target.result})`;
-            chatArea.style.backgroundSize = 'cover'; // Optional: Cover the entire area
-            chatArea.style.backgroundPosition = 'center'; // Optional: Center the image
-        };
-        reader.readAsDataURL(file);
-    }
-});
-
-
-// In your message listener/handler
-// Guarded top-level listener (prevent errors if elements are not yet ready)
-if (typeof db !== 'undefined' && typeof currentChannel !== 'undefined') {
-    db.collection('messages').where('channelId', '==', currentChannel)
-        .orderBy('timestamp')
-        .onSnapshot((snapshot) => {
-            const messagesContainer = document.getElementById('messages');
-            if (!messagesContainer) return;
-            snapshot.docChanges().forEach((change) => {
-                if (change.type === 'added') {
-                    const message = change.doc.data();
-                    const messageElement = document.createElement('div');
-                    // Use the renderMessage function to handle different message types
-                    messageElement.innerHTML = renderMessage(message);
-                    messagesContainer.appendChild(messageElement);
-                    if (typeof scrollToBottom === 'function') {
-                        scrollToBottom();
-                    }
-                }
-            });
-        });
-}
-
-    function displayMessage(message) {
-        const messagesContainer = document.getElementById('messages');
-        if (!messagesContainer) {
-            console.error('Messages container not found!');
-            return;
-        }
-    
-        console.log('Displaying message:', message); // Log the message being displayed
-    
-        const messageElement = document.createElement('div');
-        messageElement.className = 'message';
-    
-        if (message.type === 'gif') {
-            console.log('Rendering GIF message:', message.content);
-            messageElement.innerHTML = `
-                <div class="message-header">
-                    <strong>${message.displayName || 'Anonymous'}</strong>
-                    <span class="timestamp">${message.timestamp ? new Date(message.timestamp.toDate()).toLocaleString() : 'Just now'}</span>
-                </div>
-                <div class="message-content">
-                    <img src="${message.content}" alt="GIF" style="max-width: 300px; max-height: 300px; border-radius: 8px;">
-                </div>
-            `;
-        } else {
-            messageElement.innerHTML = `
-                <div class="message-header">
-                    <strong>${message.displayName || 'Anonymous'}</strong>
-                    <span class="timestamp">${message.timestamp ? new Date(message.timestamp.toDate()).toLocaleString() : 'Just now'}</span>
-                </div>
-                <div class="message-content">
-                    ${message.content}
-                </div>
-            `;
-        }
-    
-        messagesContainer.appendChild(messageElement);
-        messagesContainer.scrollTop = messagesContainer.scrollHeight; // Scroll to the bottom
-    }
-
-function handleNewMessage(message) {
-    const messagesContainer = document.getElementById('messages');
-    const messageElement = document.createElement('div');
-    messageElement.className = 'message';
-
-    if (message.type === 'gif') {
-        messageElement.innerHTML = `
-            <div class="message-header">
-                <strong>${message.displayName}</strong>
-                <span class="timestamp">${formatTimestamp(message.timestamp)}</span>
-            </div>
-            <div class="message-content">
-                <img src="${message.content}" alt="GIF" style="max-width: 300px; max-height: 300px; border-radius: 8px;">
-            </div>
-        `;
-    } else {
-        // Your existing message rendering code
-        messageElement.innerHTML = `
-            <div class="message-header">
-                <strong>${message.displayName}</strong>
-                <span class="timestamp">${formatTimestamp(message.timestamp)}</span>
-            </div>
-            <div class="message-content">
-                ${message.content}
-            </div>
-        `;
-    }
-
-    messagesContainer.appendChild(messageElement);
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-}
-
-// Update your message listener
-// Removed duplicate unguarded listener to avoid early usage before initialization
 
 });
 

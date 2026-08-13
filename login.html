@@ -165,41 +165,55 @@
 
     const db = getFirestore();
 
+    async function ensurePersonalWorkspace(user, role) {
+      const personalChannelId = `personal-${user.uid}`;
+      const userRef = db.collection('users').doc(user.uid);
+      const channelRef = db.collection('channels').doc(personalChannelId);
+      const userDoc = await userRef.get();
+
+      if (!userDoc.exists) {
+        await userRef.set({
+          displayName: user.displayName || (role === 'guest' ? 'Guest' : 'User'),
+          email: user.email || null,
+          photoURL: user.photoURL || 'assets/icon.png',
+          role,
+          channels: [personalChannelId],
+          friends: [],
+          badges: [],
+          darkMode: false,
+          notificationsEnabled: false,
+          bio: 'No bio set.'
+        });
+      } else {
+        await userRef.set({
+          channels: firebase.firestore.FieldValue.arrayUnion(personalChannelId)
+        }, { merge: true });
+      }
+
+      const channelDoc = await channelRef.get();
+      if (!channelDoc.exists) {
+        await channelRef.set({
+          name: 'My Personal Channel',
+          id: personalChannelId,
+          createdBy: user.uid,
+          joinCode: Math.random().toString(36).substring(2, 8).toUpperCase(),
+          members: [user.uid],
+          isPublic: false
+        });
+      } else {
+        await channelRef.update({
+          members: firebase.firestore.FieldValue.arrayUnion(user.uid)
+        });
+      }
+    }
+
     // Google Sign-In Button Event
     document.getElementById('google-signin').addEventListener('click', function() {
       const provider = new firebase.auth.GoogleAuthProvider();
       auth.signInWithPopup(provider)
-        .then(result => {
-          const user = result.user;
-          const currentDate = new Date();
-          const cutoffDate = new Date('2024-12-01'); // Set the cutoff date
-
-          // First check if user document already exists
-          db.collection('users').doc(user.uid).get().then(doc => {
-            if (!doc.exists) {
-              // Only create new document if it doesn't exist
-              const userData = {
-                email: user.email,
-                displayName: user.displayName,
-                photoURL: user.photoURL,
-                channels: ["general"],
-                role: "user",
-                badges: [], // Initialize badges array
-                friends: [] // Initialize friends array
-              };
-
-              // Check if the current date is before December 1st
-              if (currentDate < cutoffDate) {
-                userData.badges.push("Beta"); // Add Beta badge
-                // Show welcome message
-                document.getElementById('welcome-modal').style.display = 'block'; // Show the welcome modal
-              }
-
-              return db.collection('users').doc(user.uid).set(userData);
-            }
-          }).then(() => {
-            window.location.href = 'home.html';
-          });
+        .then(async result => {
+          await ensurePersonalWorkspace(result.user, 'user');
+          window.location.href = 'home.html';
         })
         .catch(error => {
           document.getElementById('error-message').textContent = error.message;
@@ -209,22 +223,9 @@
     // Guest Login Button Event
     document.getElementById('guest-login').addEventListener('click', function() {
       auth.signInAnonymously()
-        .then(() => {
-          const user = auth.currentUser;
-          // First check if user document already exists
-          db.collection('users').doc(user.uid).get().then(doc => {
-            if (!doc.exists) {
-              // Only create new document if it doesn't exist
-              return db.collection('users').doc(user.uid).set({
-                displayName: "Guest",
-                role: "guest",
-                channels: ["general"],
-                friends: [] // Initialize friends array
-              });
-            }
-          }).then(() => {
-            window.location.href = 'home.html';
-          });
+        .then(async result => {
+          await ensurePersonalWorkspace(result.user, 'guest');
+          window.location.href = 'home.html';
         })
         .catch(error => {
           document.getElementById('error-message').textContent = error.message;

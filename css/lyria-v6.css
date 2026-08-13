@@ -264,6 +264,11 @@ body.premium-page { min-height: 100vh !important; padding: 60px 20px !important;
 .voice-call-end { color: var(--coral); border-color: rgba(255,127,100,.3); background: rgba(255,127,100,.06); }
 .suggestions-fallback { min-height: 230px; display: grid; align-content: center; gap: 18px; text-align: center; color: #9caaa6; }
 .suggestions-fallback .action-btn { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
+.gif-btn { min-width: 48px; height: 46px; padding: 0 11px; border: 1px solid rgba(73,225,208,.28); border-radius: 12px; color: var(--aqua); background: rgba(73,225,208,.06); font: 800 11px var(--font-display); cursor: pointer; }
+.compact-modal { width: min(440px, calc(100% - 32px)) !important; min-height: 0 !important; gap: 16px; }
+.compact-modal > p { color: #94a39f; line-height: 1.6; margin: 0; }
+.modal-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.primary-action { color: var(--ink) !important; background: var(--mint) !important; border-color: var(--mint) !important; }
 
 @media (max-width: 720px) {
   .landing-page .site-header { width: calc(100% - 32px); }
@@ -312,11 +317,12 @@ body.premium-page { min-height: 100vh !important; padding: 60px 20px !important;
   body.app-page .message-content { overflow-wrap: anywhere; }
   body.app-page .message img { max-width: 100%; height: auto; }
   body.app-page .typing-status { flex: 0 0 auto; padding-inline: 12px; }
-  body.app-page .message-input { flex: 0 0 auto; display: grid !important; grid-template-columns: minmax(0,1fr) auto; gap: 8px; padding: 9px 10px calc(10px + env(safe-area-inset-bottom)) !important; background: #0d1a19 !important; border-top: 1px solid rgba(255,255,255,.07) !important; }
+  body.app-page .message-input { flex: 0 0 auto; display: grid !important; grid-template-columns: minmax(0,1fr) auto auto; gap: 8px; padding: 9px 10px calc(10px + env(safe-area-inset-bottom)) !important; background: #0d1a19 !important; border-top: 1px solid rgba(255,255,255,.07) !important; }
   body.app-page .message-input textarea { width: 100%; min-height: 46px !important; height: 46px !important; padding: 13px 14px !important; font-size: 16px !important; }
   body.app-page .message-input textarea { resize: none !important; overflow-y: auto; scrollbar-width: none; }
   body.app-page .message-input textarea::-webkit-scrollbar { display: none; }
   body.app-page .send-btn { width: 62px !important; min-width: 62px !important; height: 46px !important; padding: 0 !important; margin: 0 !important; }
+  body.app-page .gif-btn { width: 48px; min-width: 48px; }
   body.app-page #version-info { display: none; }
   body.app-page .modal { align-items: end !important; }
   body.app-page .modal-content { width: 100% !important; max-width: none !important; max-height: 90dvh !important; min-height: 0 !important; margin: auto 0 0 !important; padding: 24px 18px calc(24px + env(safe-area-inset-bottom)) !important; border-radius: 24px 24px 0 0 !important; overflow-y: auto !important; }

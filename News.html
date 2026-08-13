@@ -460,7 +460,7 @@
     <script type="module">
         // Importing Firebase app and Firestore modules
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js';
-        import { getFirestore, doc, updateDoc, increment, onSnapshot, setDoc, getDoc, collection, addDoc, query, orderBy, getDocs } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js';
+        import { getFirestore, doc, increment, onSnapshot, setDoc, getDoc, collection, addDoc, query, orderBy, getDocs } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js';
         import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js';
 
         // Load environment variables for security
@@ -488,6 +488,19 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
+        const newsAuthReady = new Promise(resolve => {
+            let unsubscribe = () => {};
+            unsubscribe = onAuthStateChanged(auth, user => {
+                unsubscribe();
+                resolve(user);
+            });
+        });
+
+        async function getNewsUser(showPrompt = false) {
+            const user = auth.currentUser || await newsAuthReady;
+            if (!user && showPrompt) alert('Sign in to like or comment on LYRIA News.');
+            return user;
+        }
 
         // Function to format like count
         function formatLikes(likes) {
@@ -516,8 +529,9 @@
 
         // Function to like or unlike a post
         window.toggleLike = async function(postId) {
-            const userId = "currentUserId"; // Replace with actual user ID
-            const userLikeRef = doc(db, 'userLikes', userId, 'likes', postId);
+            const user = await getNewsUser(true);
+            if (!user) return;
+            const userLikeRef = doc(db, 'userLikes', user.uid, 'likes', postId);
             const postRef = doc(db, 'posts', postId);
 
             const userLikeDoc = await getDoc(userLikeRef);
@@ -525,21 +539,19 @@
 
             if (userLikeDoc.exists() && userLikeDoc.data().liked) {
                 // User has already liked the post, so we remove the like
-                const currentLikes = postDoc.data().likes || 0;
+                const currentLikes = postDoc.exists() ? postDoc.data().likes || 0 : 0;
                 if (currentLikes > 0) {
-                    await updateDoc(postRef, {
-                        likes: increment(-1)
-                    });
+                    await setDoc(postRef, { likes: increment(-1) }, { merge: true });
                 }
                 await setDoc(userLikeRef, { liked: false });
-                document.getElementById(postId + '-like-button').innerText = '👍 Like';
+                const likeButton = document.getElementById(postId + '-like-button');
+                if (likeButton) likeButton.innerText = '👍 Like';
             } else {
                 // User has not liked the post, so we add the like
-                await updateDoc(postRef, {
-                    likes: increment(1)
-                });
+                await setDoc(postRef, { likes: increment(1) }, { merge: true });
                 await setDoc(userLikeRef, { liked: true });
-                document.getElementById(postId + '-like-button').innerText = '👎 Unlike';
+                const likeButton = document.getElementById(postId + '-like-button');
+                if (likeButton) likeButton.innerText = '👎 Unlike';
             }
 
             fetchLikes(postId);
@@ -551,21 +563,28 @@
             onSnapshot(postRef, (docSnapshot) => {
                 if (docSnapshot.exists()) {
                     const likes = docSnapshot.data().likes || 0;
-                    document.getElementById(postId + '-likes').innerText = formatLikes(likes) + ' Likes';
+                    const likesElement = document.getElementById(postId + '-likes');
+                    if (likesElement) likesElement.innerText = formatLikes(likes) + ' Likes';
                 }
             });
         }
 
         // Function to check if the user has liked the post
         async function checkUserLike(postId) {
-            const userId = "currentUserId"; // Replace with actual user ID
-            const userLikeRef = doc(db, 'userLikes', userId, 'likes', postId);
+            const likeButton = document.getElementById(postId + '-like-button');
+            if (!likeButton) return;
+            const user = await getNewsUser(false);
+            if (!user) {
+                likeButton.innerText = '👍 Like';
+                return;
+            }
+            const userLikeRef = doc(db, 'userLikes', user.uid, 'likes', postId);
             const userLikeDoc = await getDoc(userLikeRef);
 
             if (userLikeDoc.exists() && userLikeDoc.data().liked) {
-                document.getElementById(postId + '-like-button').innerText = '👎 Unlike';
+                likeButton.innerText = '👎 Unlike';
             } else {
-                document.getElementById(postId + '-like-button').innerText = '👍 Like';
+                likeButton.innerText = '👍 Like';
             }
         }
 
@@ -576,12 +595,14 @@
 
             if (commentText !== '') {
                 try {
+                    const user = await getNewsUser(true);
+                    if (!user) return;
                     const commentsRef = collection(db, 'articles', articleId, 'comments');
                     await addDoc(commentsRef, {
                         text: commentText,
                         timestamp: new Date().toISOString(),
-                        userId: "currentUserId", // Replace with actual user ID
-                        username: "Anonymous User" // Replace with actual username
+                        userId: user.uid,
+                        username: user.displayName || (user.isAnonymous ? 'Guest' : 'LYRIA member')
                     });
 
                     commentInput.value = '';
@@ -600,19 +621,24 @@
             // Set up real-time listener for comments
             onSnapshot(q, (snapshot) => {
                 const commentsList = document.getElementById(`comments-list-${articleId}`);
+                if (!commentsList) return;
                 commentsList.innerHTML = '';
 
                 snapshot.forEach((doc) => {
                     const comment = doc.data();
                     const commentElement = document.createElement('div');
                     commentElement.className = 'comment';
-                    commentElement.innerHTML = `
-                        <div class="comment-header">
-                            <span>${comment.username}</span>
-                            <span>${formatDate(comment.timestamp)}</span>
-                        </div>
-                        <div class="comment-content">${comment.text}</div>
-                    `;
+                    const header = document.createElement('div');
+                    header.className = 'comment-header';
+                    const username = document.createElement('span');
+                    username.textContent = comment.username || 'LYRIA member';
+                    const date = document.createElement('span');
+                    date.textContent = formatDate(comment.timestamp);
+                    const content = document.createElement('div');
+                    content.className = 'comment-content';
+                    content.textContent = comment.text || '';
+                    header.append(username, date);
+                    commentElement.append(header, content);
                     commentsList.appendChild(commentElement);
                 });
             });
@@ -620,23 +646,16 @@
 
         // Initialize likes and comments when page loads
         window.onload = function() {
-            const postIds = [
-                'voice-call-feature',
-                'news-articles-making',
-                'friend-request-launch',
-                'beta-tester-recognition',
-                'guest-access',
-                'ui-improvements',
-                'initial-release',
-                'browser-removal',
-                'browser-release',
-                'article1',
-                'create-news'
-            ];
+            const likePostIds = [...document.querySelectorAll('[id$="-like-button"]')]
+                .map(button => button.id.replace(/-like-button$/, ''));
+            const commentPostIds = [...document.querySelectorAll('[id^="comments-list-"]')]
+                .map(list => list.id.replace(/^comments-list-/, ''));
 
-            postIds.forEach(postId => {
+            likePostIds.forEach(postId => {
                 fetchLikes(postId);
                 checkUserLike(postId);
+            });
+            commentPostIds.forEach(postId => {
                 fetchComments(postId);
             });
 

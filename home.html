@@ -168,6 +168,7 @@
             <div id="typing-status" class="typing-status" style="display: none;"></div>
             <div class="message-input">
                 <textarea id="message-input" placeholder="Write a message..." style="height: 15px;"></textarea>
+                <button id="gif-button" class="gif-btn" type="button" aria-label="Share a GIF">GIF</button>
                 <button id="send-button" class="send-btn" style="background-color: rgba(255, 255, 255, 0.2); color: rgb(0, 0, 0); border: 1px solid rgba(255, 255, 255, 0.4); padding: 6px 12px; font-size: 14px; cursor: pointer; border-radius: 8px; backdrop-filter: blur(4px); margin-right: 100px;">
                     Send
                 </button>
@@ -187,6 +188,29 @@
     </div>
 <div id="version-info" style="position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); color: var(--text-color); font-size: 12px; font-weight: bold; text-shadow: 1px 1px 2px var(--background-color);">
     LYRIA 6.0 &copy; 2026
+</div>
+
+<div id="confirm-image-change-modal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="confirm-image-change-title">
+    <div class="modal-content compact-modal">
+        <button id="close-confirm-image-change-modal" class="close-button" aria-label="Close confirmation">&times;</button>
+        <h2 id="confirm-image-change-title">Use this profile image?</h2>
+        <p>Your selected image will become your LYRIA avatar.</p>
+        <div class="modal-actions">
+            <button id="cancel-image-change-btn" class="action-btn" type="button">Cancel</button>
+            <button id="confirm-image-change-btn" class="action-btn primary-action" type="button">Update image</button>
+        </div>
+    </div>
+</div>
+
+<div id="gif-modal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="gif-modal-title">
+    <div class="modal-content compact-modal">
+        <button id="close-gif-modal" class="close-button" aria-label="Close GIF dialog">&times;</button>
+        <h2 id="gif-modal-title">Share a GIF</h2>
+        <p>Paste a direct link to a GIF from a source you trust.</p>
+        <label for="gif-url-input" class="modal-label">GIF URL</label>
+        <input id="gif-url-input" class="modal-input" type="url" inputmode="url" placeholder="https://example.com/reaction.gif">
+        <button id="send-gif-url" class="action-btn primary-action" type="button">Share GIF</button>
+    </div>
 </div>
 <!-- Settings Modal -->
 <div id="settings-modal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="settings-modal-title">
@@ -307,22 +331,6 @@
             const mobileMessage = document.getElementById('mobile-message');
             if (isMobileDevice()) {
                 mobileMessage.style.display = 'block';
-            }
-
-            // Load last visited channel from localStorage
-            const lastChannel = localStorage.getItem('lastVisitedChannel');
-            if (lastChannel) {
-                // Update channel title and load messages for last visited channel
-                document.getElementById('channel-title').textContent = `# ${lastChannel}`;
-                // Defer loading messages until Firestore is available
-                const tryLoadLastChannel = () => {
-                    if (window.db) {
-                        loadChannelMessages(lastChannel);
-                    } else {
-                        setTimeout(tryLoadLastChannel, 100);
-                    }
-                };
-                tryLoadLastChannel();
             }
         });
 
@@ -538,7 +546,8 @@
                 // Show confirmation modal (guard: modal markup is not present on this page yet)
                 const confirmModal = document.getElementById('confirm-image-change-modal');
                 if (confirmModal) {
-                    confirmModal.style.display = 'block';
+                    confirmModal.style.display = 'flex';
+                    confirmModal.setAttribute('aria-hidden', 'false');
                 } else {
                     alert('Profile image update is temporarily unavailable. Please try again later.');
                 }
@@ -552,25 +561,6 @@
             // Redirect to a payment page or show a modal for payment options
             window.location.href = 'premium-upgrade.html'; // Replace with your actual upgrade page
         });
-
-        // Save current channel before leaving
-        window.addEventListener('beforeunload', () => {
-            const currentChannel = document.getElementById('channel-title').textContent.replace('# ', '');
-            localStorage.setItem('lastVisitedChannel', currentChannel);
-        });
-
-        let isDragging = false;
-        let startX;
-        let sidebar = document.querySelector('.sidebar');
-
-        const sidebarToggle = document.getElementById('sidebar-menu-toggle');
-        if (sidebarToggle) {
-            sidebarToggle.addEventListener('click', () => {
-                sidebar.classList.toggle('open');
-            });
-        }
-
-        // Remove all dragging logic
 
         function submitSuggestion(articleId) {
             const suggestionInput = document.getElementById(`suggestion-input-${articleId.split('-')[1]}`);
@@ -591,233 +581,34 @@
             }
         }
 
-        // Add this after your existing Firebase initialization
-        const GIPHY_API_KEY = 'hVCy8PF3vcOo65OlFeniKs2e4pvsjO3W'; // Replace with your Giphy API key
-        const GIF_COOLDOWN = 30000; // 30 seconds cooldown between GIFs
-        let lastGifTime = 0;
-
         document.addEventListener('DOMContentLoaded', () => {
             const gifButton = document.getElementById('gif-button');
             const gifModal = document.getElementById('gif-modal');
             const closeGifModal = document.getElementById('close-gif-modal');
-            const gifSearch = document.getElementById('gif-search');
-            const gifResults = document.getElementById('gif-results');
+            const gifUrlInput = document.getElementById('gif-url-input');
+            const sendGifButton = document.getElementById('send-gif-url');
 
-            if (gifButton && gifModal) {
-                gifButton.addEventListener('click', () => {
-                    gifModal.style.display = 'block';
-                    searchGifs('trending');
-                });
-            }
-
-            if (closeGifModal) {
-                closeGifModal.addEventListener('click', () => {
-                    gifModal.style.display = 'none';
-                });
-            }
-
-            if (gifSearch) {
-                gifSearch.addEventListener('input', debounce((e) => {
-                    const query = e.target.value.trim();
-                    if (query) {
-                        searchGifs(query);
-                    } else {
-                        searchGifs('trending');
-                    }
-                }, 500));
-            }
-        });
-
-        function debounce(func, wait) {
-            let timeout;
-            return function executedFunction(...args) {
-                const later = () => {
-                    clearTimeout(timeout);
-                    func(...args);
-                };
-                clearTimeout(timeout);
-                timeout = setTimeout(later, wait);
-            };
-        }
-
-        async function searchGifs(query) {
-            const gifResults = document.getElementById('gif-results');
-            if (!gifResults) return;
-
-            try {
-                const endpoint = query === 'trending' 
-                    ? `https://api.giphy.com/v1/gifs/trending?api_key=${GIPHY_API_KEY}&limit=20`
-                    : `https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_API_KEY}&q=${query}&limit=20`;
-                
-                const response = await fetch(endpoint);
-                const data = await response.json();
-                
-                gifResults.innerHTML = '';
-                data.data.forEach(gif => {
-                    const img = document.createElement('img');
-                    img.src = gif.images.fixed_height_small.url;
-                    img.style.cursor = 'pointer';
-                    img.style.width = '100%';
-                    img.style.height = 'auto';
-                    img.onclick = () => selectGif(gif.images.fixed_height.url);
-                    gifResults.appendChild(img);
-                });
-            } catch (error) {
-                console.error('Error fetching GIFs:', error);
-            }
-        }
-
-        async function selectGif(gifUrl) {
-            console.log('selectGif called with URL:', gifUrl); // Log the GIF URL
-
-            const gifModal = document.getElementById('gif-modal');
-            const now = Date.now();
-            
-            // Cooldown check
-            if (now - lastGifTime < GIF_COOLDOWN) {
-                const remainingTime = Math.ceil((GIF_COOLDOWN - (now - lastGifTime)) / 1000);
-                alert(`Please wait ${remainingTime} seconds before sending another GIF`);
-                return;
-            }
-
-            const currentUser = firebase.auth().currentUser;
-            if (!currentUser) {
-                console.error('No current user found');
-                alert('You must be logged in to send a GIF.');
-                return;
-            }
-
-            try {
-                // Get current channel name without the '#' symbol
-                const channelTitle = document.getElementById('channel-title').textContent.replace('# ', '');
-                console.log('Sending GIF to channel:', channelTitle);
-
-                // Create message data
-                const messageData = {
-                    userId: currentUser.uid,
-                    displayName: currentUser.displayName || 'Anonymous',
-                    content: gifUrl,
-                    type: 'gif',
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                };
-
-                console.log('Message data to be sent:', messageData); // Log the message data
-
-                // Save message in the correct path: channels/{channelId}/messages
-                await db.collection('channels').doc(channelTitle).collection('messages').add(messageData);
-                console.log('GIF message saved successfully');
-
-                lastGifTime = now;
-                if (gifModal) {
-                    gifModal.style.display = 'none';
-                }
-            } catch (error) {
-                console.error('Error sending GIF:', error);
-                alert('Failed to send GIF. Please try again.');
-            }
-        }
-
-        // Object to keep track of unread messages for each channel
-        let unreadMessages = {};
-
-// Function to load channels that the user has joined
-async function loadJoinedChannels(userId) {
-    const channelsList = document.getElementById('channels-list');
-    console.log('Loading channels for user:', userId); // Debug log
-
-    // Fetch user data to get the list of joined channels
-    const userDoc = await db.collection('users').doc(userId).get();
-    if (userDoc.exists) {
-        const userData = userDoc.data();
-        const joinedChannels = userData.channels || []; // Reference the channels array
-        console.log('Joined channels:', joinedChannels); // Debug log
-
-        // Check if the joinedChannels array is empty
-        if (joinedChannels.length === 0) {
-            channelsList.innerHTML = '<li>No channels joined.</li>'; // Inform the user
-            return; // Exit the function
-        }
-
-        // Set up a real-time listener for the channels
-        const channelsRef = db.collection('channels').where(firebase.firestore.FieldPath.documentId(), 'in', joinedChannels);
-        channelsRef.onSnapshot((channelsSnapshot) => {
-            // Clear the channels list before adding new ones
-            channelsList.innerHTML = '';
-
-            // Only add channels that are not already in the list
-            channelsSnapshot.forEach(doc => {
-                const channelId = doc.id;
-                const channelData = doc.data();
-                const channelName = channelData.name || channelId;
-                console.log('Channel loaded:', channelName); // Debug log
-
-                // Create a list item for the channel
-                const listItem = document.createElement('li');
-                listItem.id = `channel-${channelId}`; // Unique ID for the channel
-                listItem.innerHTML = `
-                    <span class="channel-name" onclick="joinChannel('${channelId}')">${channelName}</span>
-                    <span class="unread-count" id="unread-${channelId}" style="display: none; background: red; color: white; border-radius: 50%; padding: 2px 6px; font-size: 0.8rem; margin-left: 5px;"></span>
-                `;
-                channelsList.appendChild(listItem);
+            gifButton?.addEventListener('click', () => {
+                gifModal.style.display = 'flex';
+                gifModal.setAttribute('aria-hidden', 'false');
+                gifUrlInput.focus();
             });
-        }, (error) => {
-            console.error('Error fetching channels:', error);
-            alert('Failed to load channels. Please try again later.');
-        });
-    } else {
-        console.log('User document does not exist.'); // Debug log
-    }
-}
-        // Function to join a channel
-        function joinChannel(channelId) {
-            // Reset unread messages count when joining the channel
-            unreadMessages[channelId] = 0;
-            updateUnreadCount(channelId);
-
-            // Load messages for the selected channel
-            loadChannelMessages(channelId);
-        }
-
-        // Function to update unread message count display
-        function updateUnreadCount(channelId) {
-            const unreadCountElement = document.getElementById(`unread-${channelId}`);
-            if (unreadCountElement) { // Check if the element exists
-                if (unreadMessages[channelId] > 0) {
-                    unreadCountElement.textContent = unreadMessages[channelId];
-                    unreadCountElement.style.display = 'inline';
-                } else {
-                    unreadCountElement.style.display = 'none';
+            closeGifModal?.addEventListener('click', () => {
+                gifModal.style.display = 'none';
+                gifModal.setAttribute('aria-hidden', 'true');
+            });
+            sendGifButton?.addEventListener('click', async () => {
+                try {
+                    await window.sendGifByUrl(gifUrlInput.value.trim());
+                    gifUrlInput.value = '';
+                    gifModal.style.display = 'none';
+                    gifModal.setAttribute('aria-hidden', 'true');
+                } catch (error) {
+                    console.error('Error sharing GIF:', error);
+                    alert('Paste a valid direct GIF URL and try again.');
                 }
-            }
-        }
-
-        // Modify the message listener to track unread messages
-        function setupMessageListener() {
-            const channelTitle = document.getElementById('channel-title').textContent.replace('# ', '');
-            console.log('Setting up message listener for channel:', channelTitle);
-
-            // Set up real-time listener for messages in the specific channel
-            return db.collection('channels').doc(channelTitle).collection('messages')
-                .orderBy('timestamp', 'asc')  // Ensure messages are in order
-                .onSnapshot((snapshot) => {
-                    snapshot.docChanges().forEach((change) => {
-                        if (change.type === 'added') {
-                            const message = change.doc.data();
-                            console.log('Processing message:', message);
-                            displayMessage(message);
-
-                            // Check if the current channel is not the one receiving the message
-                            if (channelTitle !== message.channelId) {
-                                // Increment unread message count for the channel
-                                unreadMessages[message.channelId] = (unreadMessages[message.channelId] || 0) + 1;
-                                updateUnreadCount(message.channelId);
-                            }
-                        }
-                    });
-                }, (error) => {
-                    console.error('Error in message listener:', error);
-                });
-        }
+            });
+        });
 
         // Function to display a single message
         function displayMessage(message) {
@@ -845,26 +636,6 @@ async function loadJoinedChannels(userId) {
             messagesContainer.appendChild(messageElement);
             messagesContainer.scrollTop = messagesContainer.scrollHeight; // Scroll to the bottom
         }
-
-        // Call loadJoinedChannels when the page loads (wait for Firestore)
-        window.addEventListener('load', () => {
-            const boot = () => {
-                if (!window.db) {
-                    setTimeout(boot, 100);
-                    return;
-                }
-                const currentUser = firebase.auth().currentUser;
-                if (!currentUser) {
-                    setTimeout(boot, 100);
-                    return;
-                }
-                const userId = currentUser.uid;
-                loadJoinedChannels(userId);
-                // Set up the message listener for the currently selected channel
-                setupMessageListener();
-            };
-            boot();
-        });
 
         // Function to update the user's bio
         document.getElementById('update-bio-btn').addEventListener('click', async () => {
@@ -1054,7 +825,9 @@ async function loadJoinedChannels(userId) {
 
                         alert('Profile image updated successfully!');
                         // Close the confirmation modal
-                        document.getElementById('confirm-image-change-modal').style.display = 'none';
+                        const confirmModal = document.getElementById('confirm-image-change-modal');
+                        confirmModal.style.display = 'none';
+                        confirmModal.setAttribute('aria-hidden', 'true');
                     };
                     reader.readAsDataURL(file);
                 } catch (error) {
@@ -1067,13 +840,17 @@ async function loadJoinedChannels(userId) {
         // Handle cancellation of image change (guard element exists)
         const cancelImageBtn = document.getElementById('cancel-image-change-btn');
         if (cancelImageBtn) cancelImageBtn.addEventListener('click', () => {
-            document.getElementById('confirm-image-change-modal').style.display = 'none'; // Close the modal
+            const confirmModal = document.getElementById('confirm-image-change-modal');
+            confirmModal.style.display = 'none';
+            confirmModal.setAttribute('aria-hidden', 'true');
         });
 
         // Close the confirmation modal when the close button is clicked (guard element exists)
         const closeConfirmImageModalBtn = document.getElementById('close-confirm-image-change-modal');
         if (closeConfirmImageModalBtn) closeConfirmImageModalBtn.addEventListener('click', () => {
-            document.getElementById('confirm-image-change-modal').style.display = 'none'; // Close the modal
+            const confirmModal = document.getElementById('confirm-image-change-modal');
+            confirmModal.style.display = 'none';
+            confirmModal.setAttribute('aria-hidden', 'true');
         });
    
     </script>
