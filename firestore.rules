@@ -1,0 +1,104 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isSelf(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    function channelMember(channelId) {
+      return signedIn()
+        && request.auth.uid in get(/databases/$(database)/documents/channels/$(channelId)).data.members;
+    }
+
+    match /users/{uid} {
+      allow read: if signedIn();
+      allow create, delete: if isSelf(uid);
+      allow update: if isSelf(uid)
+        || (signedIn()
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['friends', 'updatedAt']));
+    }
+
+    match /channels/{channelId} {
+      // Invite-code lookup requires signed-in users to read channel metadata.
+      allow read: if signedIn();
+      allow create: if signedIn()
+        && request.resource.data.createdBy == request.auth.uid
+        && request.auth.uid in request.resource.data.members;
+      allow update: if signedIn()
+        && (request.auth.uid in resource.data.members
+          || request.auth.uid in request.resource.data.members);
+      allow delete: if signedIn() && resource.data.createdBy == request.auth.uid;
+
+      match /messages/{messageId} {
+        allow read: if channelMember(channelId);
+        allow create: if channelMember(channelId)
+          && (request.resource.data.get('senderId', '') == request.auth.uid
+            || request.resource.data.get('type', '') == 'system');
+        allow update, delete: if channelMember(channelId)
+          && (resource.data.get('senderId', '') == request.auth.uid
+            || resource.data.get('type', '') == 'system'
+            || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions']));
+      }
+
+      match /typingStatus/{uid} {
+        allow read: if channelMember(channelId);
+        allow write: if channelMember(channelId) && isSelf(uid);
+      }
+    }
+
+    match /friendRequests/{requestId} {
+      allow create: if signedIn()
+        && request.resource.data.from == request.auth.uid
+        && request.resource.data.to is string
+        && request.resource.data.status == 'pending';
+      allow read: if signedIn()
+        && (resource.data.from == request.auth.uid
+          || resource.data.to == request.auth.uid
+          || resource.data.to == 'accepted_' + request.auth.uid);
+      allow update, delete: if signedIn()
+        && resource.data.to == request.auth.uid;
+    }
+
+    match /inbox/{messageId} {
+      allow create: if signedIn() && request.resource.data.senderId == request.auth.uid;
+      allow read, update, delete: if signedIn()
+        && resource.data.recipientId == request.auth.uid;
+    }
+
+    match /notifications/{notificationId} {
+      allow create: if signedIn() && request.resource.data.userId is string;
+      allow read, update, delete: if signedIn()
+        && resource.data.userId == request.auth.uid;
+    }
+
+    match /posts/{postId} {
+      allow read: if true;
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['likes']);
+      allow update: if signedIn()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes']);
+      allow delete: if false;
+    }
+
+    match /userLikes/{uid}/likes/{postId} {
+      allow read, write: if isSelf(uid);
+    }
+
+    match /articles/{articleId}/comments/{commentId} {
+      allow read: if true;
+      allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if signedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    match /userArticles/{articleId} {
+      allow read: if true;
+      allow create: if signedIn();
+      allow update, delete: if false;
+    }
+  }
+}

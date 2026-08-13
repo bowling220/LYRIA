@@ -22,13 +22,13 @@ class FirebaseConfig {
 
         // Firebase configuration - using secure values
         const config = {
-            apiKey: "AIzaSyAVmCYgkVfYeX7yNFPoOWpMy1Jra3mMZIs",
-            authDomain: "lyria-c2cae.firebaseapp.com",
-            projectId: "lyria-c2cae",
-            storageBucket: "lyria-c2cae.firebasestorage.app",
-            messagingSenderId: "1077016298588",
-            appId: "1:1077016298588:web:bb0dfcd532632ca5bd5299",
-            measurementId: "G-4QXTS7DWPZ"
+            apiKey: "AIzaSyDWpApnJ-mfHQJZhkbNDdsJ7l8-8rVHHTc",
+            authDomain: "lyria-49a54.firebaseapp.com",
+            projectId: "lyria-49a54",
+            storageBucket: "lyria-49a54.firebasestorage.app",
+            messagingSenderId: "704449928785",
+            appId: "1:704449928785:web:5b3c58c8f82d31d3f1a270",
+            measurementId: "G-KV5FRFN63T"
         };
 
         try {
