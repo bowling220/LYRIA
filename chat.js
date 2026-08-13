@@ -1552,7 +1552,8 @@ async function loadUserProfile(userId) {
     }
 }
 
-document.getElementById('change-background-btn').addEventListener('click', () => {
+const changeBackgroundButton = document.getElementById('change-background-btn');
+if (changeBackgroundButton) changeBackgroundButton.addEventListener('click', () => {
     const colorPicker = document.getElementById('background-color-picker');
     const imageInput = document.getElementById('background-image-input');
 
@@ -1567,13 +1568,15 @@ document.getElementById('change-background-btn').addEventListener('click', () =>
 });
 
 // Change background color
-document.getElementById('background-color-picker').addEventListener('input', (event) => {
+const backgroundColorPicker = document.getElementById('background-color-picker');
+if (backgroundColorPicker) backgroundColorPicker.addEventListener('input', (event) => {
     const chatArea = document.querySelector('.chat-area');
     chatArea.style.backgroundColor = event.target.value;
 });
 
 // Change background image
-document.getElementById('background-image-input').addEventListener('change', (event) => {
+const backgroundImageInput = document.getElementById('background-image-input');
+if (backgroundImageInput) backgroundImageInput.addEventListener('change', (event) => {
     const chatArea = document.querySelector('.chat-area');
     const file = event.target.files[0];
 
@@ -1685,4 +1688,6 @@ function handleNewMessage(message) {
 
 // Update your message listener
 // Removed duplicate unguarded listener to avoid early usage before initialization
+
+});
 

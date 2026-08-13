@@ -156,6 +156,8 @@
         <main class="chat-area">
             <header class="chat-header">
                 <h2 id="channel-title"># general</h2>
+                <button id="make-voice-call" class="voice-call-btn" type="button">Join voice</button>
+                <button id="end-call" class="voice-call-btn voice-call-end" type="button" style="display: none;">Leave voice</button>
                 <button id="copy-join-code" class="copy-join-code-btn">Invite</button>
                 <button id="inbox-btn" onclick="window.location.href='inbox.html'" style="background: none; border: none; color: var(--text-color); cursor: pointer; padding: 8px; font-size: 1.2rem;">
                     📬 Inbox <span id="friend-request-count" style="background: red; color: white; padding: 2px 6px; border-radius: 50%; font-size: 0.8rem; display: none;">1</span>
@@ -533,8 +535,13 @@
             const file = fileInput.files[0];
 
             if (file) {
-                // Show confirmation modal
-                document.getElementById('confirm-image-change-modal').style.display = 'block';
+                // Show confirmation modal (guard: modal markup is not present on this page yet)
+                const confirmModal = document.getElementById('confirm-image-change-modal');
+                if (confirmModal) {
+                    confirmModal.style.display = 'block';
+                } else {
+                    alert('Profile image update is temporarily unavailable. Please try again later.');
+                }
             } else {
                 alert('Please select an image file first.');
             }
@@ -1057,13 +1064,15 @@ async function loadJoinedChannels(userId) {
             }
         });
 
-        // Handle cancellation of image change
-        document.getElementById('cancel-image-change-btn').addEventListener('click', () => {
+        // Handle cancellation of image change (guard element exists)
+        const cancelImageBtn = document.getElementById('cancel-image-change-btn');
+        if (cancelImageBtn) cancelImageBtn.addEventListener('click', () => {
             document.getElementById('confirm-image-change-modal').style.display = 'none'; // Close the modal
         });
 
-        // Close the confirmation modal when the close button is clicked
-        document.getElementById('close-confirm-image-change-modal').addEventListener('click', () => {
+        // Close the confirmation modal when the close button is clicked (guard element exists)
+        const closeConfirmImageModalBtn = document.getElementById('close-confirm-image-change-modal');
+        if (closeConfirmImageModalBtn) closeConfirmImageModalBtn.addEventListener('click', () => {
             document.getElementById('confirm-image-change-modal').style.display = 'none'; // Close the modal
         });
    
@@ -1074,7 +1083,10 @@ async function loadJoinedChannels(userId) {
         <div class="modal-content">
             <button id="close-suggestions-modal" class="close-button" aria-label="Close Suggestions Modal">&times;</button>
             <h2 id="suggestions-modal-title">Submit Your Suggestions</h2>
-            <iframe src="https://docs.google.com/forms/d/13N4gBgbZOyxgNzUuc8OHCVXlJ6j81BaS7wG-ZRQKbj0/viewform?embedded=true" width="100%" height="500" frameborder="0" marginheight="0" marginwidth="0">Loading…</iframe>
+            <div class="suggestions-fallback">
+                <p>The old suggestion form has retired. The next feedback space is being prepared now.</p>
+                <a class="action-btn" href="News.html">See what the LYRIA team is building</a>
+            </div>
         </div>
     </div>
 

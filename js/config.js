@@ -39,7 +39,8 @@ class FirebaseConfig {
             
             // Configure Firestore settings for better performance
             this.db.settings({
-                cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED
+                cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED,
+                merge: true
             });
             
             // Enable offline persistence
