@@ -32,6 +32,13 @@ function initializePeer() {
         }
     });
     peer.on('error', (error) => {
+        if (error.type === 'unavailable-id') {
+            console.warn('Voice is already connected in another LYRIA tab.');
+            peer.destroy();
+            peer = null;
+            alert('Voice is already open in another LYRIA tab. Close it there, then try again.');
+            return;
+        }
         console.error('Voice connection error:', error);
         alert('Voice could not connect. Please try again.');
     });

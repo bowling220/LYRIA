@@ -273,7 +273,6 @@ initializeFirebase().then(() => {
             loadChannels();
             switchChannel(personalChannelId);
 
-            if (typeof initializePeer === 'function') initializePeer();
         } catch (error) {
             console.error('Error initializing the community:', error);
             window.utils?.showError('LYRIA could not finish loading your community. Please refresh and try again.');
