@@ -467,13 +467,10 @@ function setupUIEventListeners() {
 
         try {
             if (mode === 'create') {
-                const existing = await db.collection('channels').where('name', '==', value).get();
-                if (!existing.empty) {
-                    channelActionFeedback.textContent = 'That conversation name is already in use.';
-                    return;
-                }
                 const channelId = `${Date.now()}-${currentUser.uid}`;
-                await db.collection('channels').doc(channelId).set({
+                const channelRef = db.collection('channels').doc(channelId);
+                const batch = db.batch();
+                batch.set(channelRef, {
                     name: value,
                     id: channelId,
                     createdBy: currentUser.uid,
@@ -482,17 +479,22 @@ function setupUIEventListeners() {
                     isPublic: false,
                     favorite: false
                 });
-                await userDocRefForCurrentUser().set({
+                batch.set(userDocRefForCurrentUser(), {
                     channels: firebase.firestore.FieldValue.arrayUnion(channelId)
                 }, { merge: true });
-                await db.collection('channels').doc(channelId).collection('messages').add({
-                    message: `Welcome to ${value}, ${currentUser.displayName || 'User'}!`,
-                    sender: 'System',
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                });
+                await batch.commit();
+
                 switchChannel(channelId);
                 loadChannels();
                 closeChannelActionModal();
+
+                // A welcome message is helpful but should never make channel creation appear to fail.
+                channelRef.collection('messages').add({
+                    message: `Welcome to ${value}, ${currentUser.displayName || 'User'}!`,
+                    sender: 'System',
+                    type: 'system',
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                }).catch(error => console.warn('Welcome message could not be posted:', error));
             } else if (mode === 'join') {
                 const snapshot = await db.collection('channels').where('joinCode', '==', value.toUpperCase()).get();
                 if (snapshot.empty) {
@@ -529,7 +531,9 @@ function setupUIEventListeners() {
             }
         } catch (error) {
             console.error(`Channel ${mode} failed:`, error);
-            channelActionFeedback.textContent = 'That action could not be completed. Please try again.';
+            channelActionFeedback.textContent = error.code === 'permission-denied'
+                ? 'LYRIA could not save that change. Please sign out, sign back in, and try once more.'
+                : 'That action could not be completed. Please try again.';
         } finally {
             isSubmittingChannelAction = false;
             channelActionSubmit.disabled = false;
@@ -771,7 +775,10 @@ function loadMessages(channelId) {
 
                 const senderAvatarElement = document.createElement('img');
                 senderAvatarElement.src = message.senderPhotoURL || 'assets/icon.png';
-                senderAvatarElement.className = 'sender-avatar';
+                senderAvatarElement.className = message.senderId ? 'sender-avatar' : 'sender-avatar system-avatar';
+                senderAvatarElement.width = 34;
+                senderAvatarElement.height = 34;
+                senderAvatarElement.alt = message.senderId ? `${message.sender || 'User'} avatar` : 'LYRIA';
                 if (message.senderId) {
                     senderAvatarElement.setAttribute('data-uid', message.senderId);
                     senderAvatarElement.addEventListener('click', () => {
