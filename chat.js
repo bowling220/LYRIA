@@ -193,6 +193,10 @@ initializeFirebase().then(() => {
         return;
     }
 
+    // Make every control responsive immediately; data-dependent actions already
+    // guard currentUser/currentChannel until authentication finishes.
+    setupUIEventListeners();
+
     // Use one authentication path for user setup, channel setup and UI listeners.
     auth.onAuthStateChanged(async (user) => {
         if (!user) {
