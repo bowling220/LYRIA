@@ -771,13 +771,17 @@
             // 'flex' (not 'block'): every other modal opens this way, and the mobile
             // bottom-sheet layout (align-items: end on .modal) only takes effect on
             // a flex container.
-            document.getElementById('friends-modal').style.display = 'flex';
+            const friendsModal = document.getElementById('friends-modal');
+            friendsModal.style.display = 'flex';
+            friendsModal.setAttribute('aria-hidden', 'false');
             loadFriends(firebase.auth().currentUser.uid); // Load friends when modal opens
         });
 
         // Close Friends Modal
         document.getElementById('close-friends-modal').addEventListener('click', () => {
-            document.getElementById('friends-modal').style.display = 'none';
+            const friendsModal = document.getElementById('friends-modal');
+            friendsModal.style.display = 'none';
+            friendsModal.setAttribute('aria-hidden', 'true');
         });
 
         async function pinMessage(messageId) {
