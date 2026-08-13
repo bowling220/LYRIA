@@ -64,6 +64,12 @@ Thumbs.db
 dist/
 build/
 
+# Local hosting metadata
+.openai/
+
+# Local AI workspace metadata
+.claude/
+
 # Temporary files
 *.tmp
 *.temp

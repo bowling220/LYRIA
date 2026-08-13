@@ -25,8 +25,12 @@ await writeFile(
   'utf8'
 );
 
-await mkdir(join(dist, '.openai'), { recursive: true });
-const hosting = await readFile(join(root, '.openai', 'hosting.json'), 'utf8');
-await writeFile(join(dist, '.openai', 'hosting.json'), hosting, 'utf8');
+try {
+  const hosting = await readFile(join(root, '.openai', 'hosting.json'), 'utf8');
+  await mkdir(join(dist, '.openai'), { recursive: true });
+  await writeFile(join(dist, '.openai', 'hosting.json'), hosting, 'utf8');
+} catch (error) {
+  if (error.code !== 'ENOENT') throw error;
+}
 
 console.log('LYRIA production build created.');
