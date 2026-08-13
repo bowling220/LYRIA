@@ -37,12 +37,6 @@ class FirebaseConfig {
             this.auth = firebase.auth();
             this.db = firebase.firestore();
             
-            // Configure Firestore settings for better performance
-            this.db.settings({
-                cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED,
-                merge: true
-            });
-            
             // Enable offline persistence
             this.db.enablePersistence({
                 synchronizeTabs: true

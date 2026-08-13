@@ -205,6 +205,15 @@ body:not(.landing-page) .top-header > span { font: 800 15px var(--font-display) 
 .message-input { padding: 12px clamp(16px,4vw,54px) 22px !important; background: var(--background-color) !important; border: 0 !important; align-items: center !important; }.message-input textarea { min-height: 52px !important; height: 52px !important; padding: 15px 17px !important; border-radius: 14px !important; background: #182b28 !important; border: 1px solid rgba(255,255,255,.09) !important; }.message-input textarea:focus { border-color: rgba(183,255,98,.45) !important; box-shadow: 0 0 0 3px rgba(183,255,98,.06); }.send-btn { margin: 0 !important; min-width: 86px !important; height: 46px !important; background: var(--mint) !important; color: var(--ink) !important; border: 0 !important; border-radius: 12px !important; }
 .message .sender-avatar { width: 34px !important; min-width: 34px !important; max-width: 34px !important; height: 34px !important; max-height: 34px !important; margin: 0 10px 0 0 !important; border-radius: 50% !important; object-fit: cover; flex: 0 0 34px; }
 .message .system-avatar { padding: 3px; background: #122421; border: 1px solid rgba(183,255,98,.2); }
+.message .admin-badge { width: 18px !important; min-width: 18px !important; max-width: 18px !important; height: 18px !important; max-height: 18px !important; margin: 0 2px !important; object-fit: contain; flex: 0 0 18px; }
+.message-content img { display: block; width: auto; height: auto; max-width: min(320px, 100%); max-height: 320px; border-radius: 12px; object-fit: contain; }
+#profile-modal-image { display: block; width: 88px !important; min-width: 88px !important; max-width: 88px !important; height: 88px !important; max-height: 88px !important; margin: 0 auto 4px; border-radius: 50%; object-fit: cover; }
+#profile-modal-badges { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; min-height: 28px; }
+#profile-modal-badges .badge { width: 32px; height: 32px; display: grid; place-items: center; position: relative; }
+#profile-modal-badges .badge-image,
+#profile-modal-badges .admin-badge { width: 28px !important; min-width: 28px !important; max-width: 28px !important; height: 28px !important; max-height: 28px !important; margin: 0 !important; object-fit: contain; }
+.friends-list .friend-avatar { width: 36px !important; min-width: 36px !important; max-width: 36px !important; height: 36px !important; max-height: 36px !important; margin-right: 10px; border-radius: 50%; object-fit: cover; }
+.user-profile .avatar { width: 40px !important; min-width: 40px !important; max-width: 40px !important; height: 40px !important; max-height: 40px !important; object-fit: cover; }
 .modal { background: rgba(3,10,9,.62) !important; backdrop-filter: blur(12px) !important; }.modal-content { background-color: #132421 !important; background-image: none !important; border: 1px solid rgba(255,255,255,.1) !important; border-radius: 22px !important; box-shadow: 0 30px 90px rgba(0,0,0,.5) !important; text-align: left !important; align-items: stretch !important; }.modal-content h2 { font: 700 24px var(--font-display) !important; }.modal-input,#status-select { background: #0d1b19 !important; border: 1px solid rgba(255,255,255,.1) !important; color: white !important; border-radius: 10px !important; min-height: 44px; }
 
 /* Login */
@@ -331,7 +340,7 @@ body.premium-page { min-height: 100vh !important; padding: 60px 20px !important;
   body.app-page .message { width: 100%; max-width: 100% !important; padding: 11px 9px !important; }
   body.app-page .message-header { flex-wrap: wrap; gap: 5px 8px; }
   body.app-page .message-content { overflow-wrap: anywhere; }
-  body.app-page .message img { max-width: 100%; height: auto; }
+  body.app-page .message-content img { max-width: min(280px, 100%); max-height: 280px; }
   body.app-page .typing-status { flex: 0 0 auto; padding-inline: 12px; }
   body.app-page .message-input { flex: 0 0 auto; display: grid !important; grid-template-columns: minmax(0,1fr) auto auto; gap: 8px; padding: 9px 10px calc(10px + env(safe-area-inset-bottom)) !important; background: #0d1a19 !important; border-top: 1px solid rgba(255,255,255,.07) !important; }
   body.app-page .message-input textarea { width: 100%; min-height: 46px !important; height: 46px !important; padding: 13px 14px !important; font-size: 16px !important; }

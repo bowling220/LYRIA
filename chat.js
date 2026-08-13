@@ -73,6 +73,8 @@ function displayBadges(userId) {
                     badgeImage.src = `assets/${badge}.png`; // Assuming badge images are stored in assets
                     badgeImage.alt = `${badge} Badge`;
                     badgeImage.className = 'badge-image';
+                    badgeImage.width = 28;
+                    badgeImage.height = 28;
 
                     // Add a tooltip for badge details
                     const tooltip = document.createElement('div');
@@ -813,6 +815,8 @@ function loadMessages(channelId) {
                                 badgeElement.src = `assets/${badge}.png`; // Ensure this path is correct
                                 badgeElement.alt = `${badge} Badge`;
                                 badgeElement.className = 'admin-badge'; // Use the same class for styling
+                                badgeElement.width = 18;
+                                badgeElement.height = 18;
                                 senderElement.appendChild(badgeElement); // Append badge to the sender element
                             });
                         }
@@ -823,6 +827,8 @@ function loadMessages(channelId) {
                             featureBadge.src = 'assets/feature.png'; // Path to the feature badge
                             featureBadge.alt = 'Feature Badge';
                             featureBadge.className = 'admin-badge'; // Use the same class for styling
+                            featureBadge.width = 18;
+                            featureBadge.height = 18;
                             senderElement.appendChild(featureBadge); // Append feature badge to the sender element
                         }
                     } else {
@@ -1077,6 +1083,8 @@ function showUserProfileModal(uid) {
                     badgeImage.src = `assets/${badge}.png`; // Assuming badge images are stored in assets
                     badgeImage.alt = `${badge} Badge`;
                     badgeImage.className = 'badge-image';
+                    badgeImage.width = 28;
+                    badgeImage.height = 28;
 
                     const tooltip = document.createElement('span');
                     tooltip.className = 'tooltip';
@@ -1094,6 +1102,8 @@ function showUserProfileModal(uid) {
                 featureBadge.src = 'assets/feature.png'; // Path to the feature badge
                 featureBadge.alt = 'Feature Badge';
                 featureBadge.className = 'admin-badge'; // Use the same class for styling
+                featureBadge.width = 28;
+                featureBadge.height = 28;
                 profileBadges.appendChild(featureBadge); // Append feature badge to the profile badges
             }
 
