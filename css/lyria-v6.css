@@ -269,6 +269,13 @@ body.premium-page { min-height: 100vh !important; padding: 60px 20px !important;
 .compact-modal > p { color: #94a39f; line-height: 1.6; margin: 0; }
 .modal-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .primary-action { color: var(--ink) !important; background: var(--mint) !important; border-color: var(--mint) !important; }
+.sidebar-mobile-header { display: none; }
+.channel-actions { display: flex; flex-direction: column; }
+.sidebar-nav { display: grid; gap: 6px; padding: 0 14px; }
+.sidebar-nav-item { width: 100%; min-height: 42px; display: flex; align-items: center; gap: 10px; padding: 9px 11px; border: 1px solid rgba(255,255,255,.08); border-radius: 10px; background: transparent; color: #a8b5b1; font: 600 12px var(--font-display); text-align: left; cursor: pointer; }
+.sidebar-nav-item:hover { color: var(--mint); border-color: rgba(183,255,98,.3); background: rgba(183,255,98,.05); }
+.sidebar-nav-icon { color: #677a75; font-size: 13px; }
+.new-pill { margin-left: auto; padding: 3px 7px; border-radius: 999px; background: rgba(255,127,100,.13); color: var(--coral); font-size: 8px; letter-spacing: .08em; text-transform: uppercase; }
 
 @media (max-width: 720px) {
   .landing-page .site-header { width: calc(100% - 32px); }
@@ -331,4 +338,55 @@ body.premium-page { min-height: 100vh !important; padding: 60px 20px !important;
 @media (max-width: 390px) {
   body.app-page .chat-header { grid-template-columns: 1fr repeat(3, auto); }
   body.app-page #inbox-btn { grid-column: 1 / -1; justify-self: stretch; }
+}
+
+@media (max-width: 768px) {
+  body.app-page { width: 100%; height: 100dvh; min-height: 100dvh; overflow: hidden; }
+  body.app-page .top-header { height: 64px !important; padding: env(safe-area-inset-top) 12px 0 !important; }
+  body.app-page .top-header h1 { font-size: 12px !important; letter-spacing: .09em !important; }
+  body.app-page .menu-toggle { display: grid !important; place-items: center; position: static !important; width: 42px; height: 42px; padding: 0 !important; border: 1px solid rgba(255,255,255,.1) !important; border-radius: 11px; color: var(--mint) !important; }
+  body.app-page .app-container { width: 100% !important; height: calc(100dvh - 64px - env(safe-area-inset-top)) !important; margin: calc(64px + env(safe-area-inset-top)) 0 0 !important; overflow: hidden !important; }
+  body.app-page .sidebar {
+    display: flex !important;
+    position: fixed !important;
+    left: 0 !important;
+    top: calc(64px + env(safe-area-inset-top)) !important;
+    width: min(88vw, 344px) !important;
+    height: calc(100dvh - 64px - env(safe-area-inset-top)) !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    transform: translateX(calc(-100% - 20px));
+    transition: transform .24s cubic-bezier(.22,.8,.28,1) !important;
+    border-right: 1px solid rgba(255,255,255,.09) !important;
+    border-radius: 0 20px 0 0;
+    box-shadow: 22px 0 70px rgba(0,0,0,.54) !important;
+    z-index: 500 !important;
+  }
+  body.app-page .sidebar.open { transform: translateX(0); }
+  body.app-page:has(.sidebar.open)::after { content: ''; position: fixed; inset: calc(64px + env(safe-area-inset-top)) 0 0; background: rgba(2,8,7,.64); backdrop-filter: blur(3px); z-index: 450; }
+  body.app-page .sidebar-mobile-header { flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; min-height: 72px; padding: 15px 14px 13px 18px; border-bottom: 1px solid rgba(255,255,255,.07); background: linear-gradient(135deg, rgba(183,255,98,.07), rgba(73,225,208,.025)); }
+  body.app-page .sidebar-mobile-title { display: grid; gap: 2px; }
+  body.app-page .sidebar-mobile-title span { color: var(--mint); font: 800 9px var(--font-display); letter-spacing: .18em; }
+  body.app-page .sidebar-mobile-title strong { color: #edf5f2; font: 700 17px var(--font-display); letter-spacing: -.02em; }
+  body.app-page .close-mobile-menu { width: 40px; height: 40px; display: grid; place-items: center; border: 1px solid rgba(255,255,255,.1); border-radius: 12px; background: rgba(255,255,255,.035); color: #9eada8; font: 300 27px/1 var(--font-body); cursor: pointer; }
+  body.app-page .close-mobile-menu:hover { color: #fff; background: rgba(255,255,255,.08); }
+  body.app-page .channels { flex: 1 1 auto; min-height: 0; padding: 18px 14px 12px !important; overflow-y: auto; }
+  body.app-page .channels h3 { margin: 0 0 10px !important; padding: 0 3px !important; color: #61736e !important; font-size: 9px !important; }
+  body.app-page .channels-list { display: grid; gap: 4px; margin: 0 0 15px; }
+  body.app-page .channel-container { gap: 5px; }
+  body.app-page .channel-btn { min-height: 42px; padding: 10px 11px !important; border-radius: 11px !important; font-size: 13px !important; }
+  body.app-page .favorite-btn { width: 38px; min-width: 38px; height: 38px; margin: 2px 0; border-radius: 10px; }
+  body.app-page .channel-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; padding-top: 13px; border-top: 1px solid rgba(255,255,255,.06); }
+  body.app-page .channel-actions button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 40px; margin: 0 !important; padding: 8px 10px !important; text-align: center; font-size: 11px !important; }
+  body.app-page .channel-actions .leave-channel-btn { grid-column: 1 / -1; min-height: 36px; color: #8d7974 !important; border-color: rgba(255,127,100,.12) !important; }
+  body.app-page .sidebar-nav { flex: 0 0 auto; grid-template-columns: 1fr 1fr; gap: 8px; padding: 10px 14px; border-top: 1px solid rgba(255,255,255,.06); }
+  body.app-page .sidebar-nav-item { min-height: 44px; margin: 0 !important; padding: 9px 10px; }
+  body.app-page .sidebar-suggestion { flex: 0 0 auto; margin: 0 14px 10px !important; padding: 12px 13px !important; display: grid; grid-template-columns: 1fr auto; align-items: center; column-gap: 8px; }
+  body.app-page .sidebar-suggestion h3 { margin: 0 !important; font-size: 11px !important; }
+  body.app-page .sidebar-suggestion p { display: none; }
+  body.app-page .sidebar-suggestion .suggestions-link { min-height: 34px; margin: 0 !important; padding: 5px !important; white-space: nowrap; font-size: 10px !important; }
+  body.app-page .user-profile { flex: 0 0 auto; min-height: 68px; margin: 0 !important; padding: 11px 14px calc(11px + env(safe-area-inset-bottom)) !important; border-top: 1px solid rgba(255,255,255,.07) !important; background: #0d1c1a !important; }
+  body.app-page .user-profile .avatar { width: 38px; height: 38px; }
+  body.app-page .user-profile .username { font-size: 13px; }
+  body.app-page .user-profile .settings-btn { min-height: 36px; padding: 7px 9px !important; border: 1px solid rgba(255,255,255,.08); border-radius: 9px; }
 }

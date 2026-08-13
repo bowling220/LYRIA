@@ -113,25 +113,50 @@ function displayBadges(userId) {
 const featureUserUIDs = ["miu0tI2oHJUiNx2gxtPwSpJ136w1", "dIc6q6xdqsTuiVC9JWGQT9XVH6T2"]; // Add the UID for the feature badge
 
 // Mobile menu toggle functionality
+function setMobileMenuOpen(isOpen) {
+    const headerToggle = document.querySelector('#header-menu-toggle');
+    const sidebar = document.querySelector('.sidebar');
+    if (!headerToggle || !sidebar) return;
+
+    const isMobile = window.matchMedia('(max-width: 768px)').matches;
+    const shouldOpen = isMobile && isOpen;
+    sidebar.classList.toggle('open', shouldOpen);
+    headerToggle.setAttribute('aria-expanded', shouldOpen.toString());
+    headerToggle.setAttribute('aria-label', shouldOpen ? 'Close community menu' : 'Open community menu');
+    sidebar.setAttribute('aria-hidden', (isMobile && !shouldOpen).toString());
+    sidebar.toggleAttribute('inert', isMobile && !shouldOpen);
+
+    if (shouldOpen) {
+        document.getElementById('close-mobile-menu')?.focus();
+    }
+}
+
 function setupMobileMenu() {
     const headerToggle = document.querySelector('#header-menu-toggle');
     const sidebar = document.querySelector('.sidebar');
+    const closeButton = document.getElementById('close-mobile-menu');
     
     if (!headerToggle || !sidebar) return;
     
     headerToggle.addEventListener('click', (event) => {
         event.stopPropagation();
-        const isOpen = sidebar.classList.toggle('open');
-        headerToggle.setAttribute('aria-expanded', isOpen.toString());
-        
-        // Focus management for accessibility
-        if (isOpen) {
-            const firstFocusable = sidebar.querySelector('button, input, [tabindex]:not([tabindex="-1"])');
-            if (firstFocusable) {
-                firstFocusable.focus();
-            }
+        setMobileMenuOpen(!sidebar.classList.contains('open'));
+    });
+
+    closeButton?.addEventListener('click', () => {
+        setMobileMenuOpen(false);
+        headerToggle.focus();
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && sidebar.classList.contains('open')) {
+            setMobileMenuOpen(false);
+            headerToggle.focus();
         }
     });
+
+    window.addEventListener('resize', () => setMobileMenuOpen(false));
+    setMobileMenuOpen(false);
 }
 
 // Call setup after DOM loads
@@ -152,8 +177,7 @@ document.addEventListener('click', (e) => {
         !sidebar.contains(e.target) && 
         !headerToggle.contains(e.target) &&
         sidebar.classList.contains('open')) {
-        sidebar.classList.remove('open');
-        headerToggle.setAttribute('aria-expanded', 'false');
+        setMobileMenuOpen(false);
     }
 });
 
@@ -666,9 +690,7 @@ function loadChannels() {
                         button.classList.add('active-channel');
                         document.getElementById('message-input').placeholder = `Message #${channel.name}`;
                         if (window.innerWidth <= 768) {
-                            document.querySelector('.sidebar').classList.remove('open');
-                            const menuToggle = document.getElementById('header-menu-toggle');
-                            if (menuToggle) menuToggle.setAttribute('aria-expanded', 'false');
+                            setMobileMenuOpen(false);
                         }
                     };
 

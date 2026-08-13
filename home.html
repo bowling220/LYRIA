@@ -97,26 +97,38 @@
     </div>
 
     <header class="top-header">
-        <button class="menu-toggle" id="header-menu-toggle" aria-label="Toggle navigation menu" aria-expanded="false">☰</button>
+        <button class="menu-toggle" id="header-menu-toggle" aria-label="Open community menu" aria-expanded="false" aria-controls="community-sidebar">☰</button>
         <h1 style="flex: 1; text-align: center; margin: 0; font-size: 1.2rem;">LYRIA / COMMUNITY</h1>
     </header>
     <div class="app-container">
-        <div class="sidebar">
+        <aside class="sidebar" id="community-sidebar" aria-label="Community navigation">
+            <div class="sidebar-mobile-header">
+                <div class="sidebar-mobile-title">
+                    <span>LYRIA</span>
+                    <strong>Your community</strong>
+                </div>
+                <button id="close-mobile-menu" class="close-mobile-menu" type="button" aria-label="Close community menu">&times;</button>
+            </div>
             <div class="channels">
                 <h3 class="centered-heading">Conversations<span class="info-text">Refresh once if a new channel does not appear.</span></h3>
                 <ul class="channels-list" id="channels-list"></ul>
-                <button class="add-channel-btn" id="add-channel">Add Channel</button>
-                <button class="join-channel-btn" id="join-channel">Join Channel</button>
-                <button class="leave-channel-btn" id="leave-channel">Leave Channel</button>
-
-
-
+                <div class="channel-actions" aria-label="Channel actions">
+                    <button class="add-channel-btn" id="add-channel"><span aria-hidden="true">+</span> New</button>
+                    <button class="join-channel-btn" id="join-channel"><span aria-hidden="true">#</span> Join</button>
+                    <button class="leave-channel-btn" id="leave-channel">Leave conversation</button>
+                </div>
             </div>
-            <button class="join-channel-btn" id="news-feed-button" onclick="window.location.href='News.html'">News Feed <span style="background: #ff4444; color: white; padding: 2px 6px; border-radius: 10px; font-size: 0.8rem;">NEW</span></button>
-
-
-            <!-- Button to open Friends Modal -->
-            <button id="open-friends-modal" class="action-btn">Friends</button>
+            <nav class="sidebar-nav" aria-label="Community links">
+                <button class="sidebar-nav-item" id="news-feed-button" onclick="window.location.href='News.html'">
+                    <span class="sidebar-nav-icon" aria-hidden="true">&#9670;</span>
+                    <span>News</span>
+                    <span class="new-pill">New</span>
+                </button>
+                <button id="open-friends-modal" class="sidebar-nav-item">
+                    <span class="sidebar-nav-icon" aria-hidden="true">&#9675;</span>
+                    <span>Friends</span>
+                </button>
+            </nav>
 
             <!-- Friends Modal -->
             <div id="friends-modal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="friends-modal-title">
@@ -140,7 +152,7 @@
             </div>
 
             <!-- Suggestions Section -->
-            <div class="suggestions-section">
+            <div class="suggestions-section sidebar-suggestion">
                 <h3>Help shape LYRIA</h3>
                 <p>Have an idea that would make the community better?</p>
                 <button id="open-suggestions-modal" class="suggestions-link">Share an idea &rarr;</button>
@@ -152,7 +164,7 @@
                 <button class="settings-btn" id="settings-btn">Settings</button>
             </div>
 
-        </div>
+        </aside>
         <main class="chat-area">
             <header class="chat-header">
                 <h2 id="channel-title"># general</h2>
