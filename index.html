@@ -1,66 +1,178 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="LYRIA - A secure real-time messaging platform for communities and friends">
-    <meta name="keywords" content="chat, messaging, real-time, community, friends">
-    <meta name="author" content="LYRIA Team">
-    <title>LYRIA Chat - Connect in Real Time</title>
-    <link rel="stylesheet" href="css/main.css">
-    <link rel="icon" type="image/png" href="assets/icon.png">
-    <link rel="preload" href="assets/logo.png" as="image">
-    <link rel="preconnect" href="https://www.gstatic.com">
-    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
-    <meta name="theme-color" content="#5865f2">
-    <meta name="robots" content="index, follow">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="LYRIA is a focused, real-time home for communities, conversations, and the people who make them matter.">
+  <meta name="theme-color" content="#071312">
+  <meta name="robots" content="index, follow">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="LYRIA — Your people are here">
+  <meta property="og:description" content="A calmer real-time place for community, conversation, and the people who matter.">
+  <meta property="og:image" content="assets/og.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="LYRIA — Your people are here">
+  <meta name="twitter:description" content="A calmer real-time place for community, conversation, and the people who matter.">
+  <meta name="twitter:image" content="assets/og.png">
+  <title>LYRIA — Find your people. Keep the conversation.</title>
+  <link rel="icon" type="image/png" href="assets/icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/lyria-v6.css">
 </head>
-<body>
-    <div class="container">
-        <header>
-            <div class="logo">
-                <img src="assets/logo.png" alt="LYRIA Logo">
-                <h1>LYRIA</h1>
-            </div>
-            <nav>
-                <a href="login.html" class="btn">Login</a>
-                <a href="home.html" class="btn primary">Enter Chat</a>
-            </nav>
-        </header>
-
-        <main>
-            <section class="hero" aria-labelledby="hero-title">
-                <h2 id="hero-title">Welcome to LYRIA Chat</h2>
-                <p class="hero-subtitle">Connect with friends, join channels, and chat in real-time.</p>
-                
-                <div class="features" role="list" aria-label="Platform features">
-                    <article class="feature" role="listitem">
-                        <img src="assets/feature.png" alt="" role="presentation">
-                        <h3>Real-time Messaging</h3>
-                        <p>Instant communication with friends and communities.</p>
-                    </article>
-                    <article class="feature" role="listitem">
-                        <img src="assets/status-feature.png" alt="" role="presentation">
-                        <h3>Status Updates</h3>
-                        <p>Share your current status and see what others are up to.</p>
-                    </article>
-                    <article class="feature" role="listitem">
-                        <img src="assets/premium.png" alt="" role="presentation">
-                        <h3>Premium Features</h3>
-                        <p>Unlock exclusive features with our premium subscription.</p>
-                    </article>
-                </div>
-                
-                <div class="cta-buttons" role="group" aria-label="Action buttons">
-                    <a href="login.html" class="btn primary" aria-describedby="hero-subtitle">Get Started</a>
-                    <a href="premium-upgrade.html" class="btn secondary">Upgrade to Premium</a>
-                </div>
-            </section>
-        </main>
-
-        <footer>
-            &copy; 2024 LYRIA. All rights reserved. Trademarked by LYRIA.
-        </footer>
+<body class="landing-page">
+  <header class="site-header">
+    <a class="brand" href="index.html" aria-label="LYRIA home">
+      <span class="brand-mark" aria-hidden="true"><i></i><b></b><em></em></span>
+      <span>LYRIA</span>
+    </a>
+    <nav class="site-nav" aria-label="Primary navigation">
+      <a href="#why-lyria">Why LYRIA</a>
+      <a href="#features">Features</a>
+      <a href="News.html">What's new</a>
+    </nav>
+    <div class="site-actions">
+      <a class="text-link" href="login.html">Sign in</a>
+      <a class="button button-small button-primary" href="login.html">Open LYRIA <span aria-hidden="true">&rarr;</span></a>
     </div>
+  </header>
+
+  <main>
+    <section class="hero-section">
+      <div class="hero-glow" aria-hidden="true"></div>
+      <div class="hero-copy reveal">
+        <div class="eyebrow"><span class="live-dot"></span> Conversations, in real time</div>
+        <h1>Your people are here.<br><span>Say something.</span></h1>
+        <p>LYRIA gives communities a calmer place to talk, share, and stay close—without the noise getting in the way.</p>
+        <div class="hero-actions">
+          <a class="button button-primary" href="login.html">Start a conversation <span aria-hidden="true">&rarr;</span></a>
+          <a class="button button-quiet" href="home.html"><span class="play-icon" aria-hidden="true">&#9654;</span> Enter the community</a>
+        </div>
+        <div class="trust-line">
+          <div class="mini-avatars" aria-hidden="true"><span>J</span><span>M</span><span>A</span><span>+</span></div>
+          <p><strong>Built for real connection</strong><br>Channels, friends, news, and voice in one place.</p>
+        </div>
+      </div>
+
+      <div class="product-stage reveal" aria-label="Preview of the LYRIA chat experience">
+        <div class="stage-orbit orbit-one"></div>
+        <div class="stage-orbit orbit-two"></div>
+        <div class="app-preview">
+          <div class="preview-topbar">
+            <div class="preview-dots"><i></i><i></i><i></i></div>
+            <span class="preview-channel"># after-hours</span>
+            <div class="preview-online"><span></span> 24 online</div>
+          </div>
+          <div class="preview-body">
+            <aside class="preview-sidebar">
+              <div class="preview-logo brand-mark"><i></i><b></b><em></em></div>
+              <span class="preview-server active">L</span>
+              <span class="preview-server">C</span>
+              <span class="preview-server plus">+</span>
+            </aside>
+            <div class="preview-channels">
+              <div class="preview-workspace">LYRIA house <span>&or;</span></div>
+              <small>CONVERSATIONS</small>
+              <p># general</p>
+              <p class="selected"># after-hours <b>3</b></p>
+              <p># show-and-tell</p>
+              <small>VOICE ROOMS</small>
+              <p><i class="voice-pulse"></i> Open studio</p>
+              <div class="preview-user"><span class="avatar-teal">B</span><div><b>Blaine</b><small>Available</small></div><i></i></div>
+            </div>
+            <div class="preview-chat">
+              <div class="preview-chat-heading">
+                <div><b># after-hours</b><span>The good kind of internet.</span></div>
+                <span class="round-action">+</span>
+              </div>
+              <div class="day-rule"><span>Today</span></div>
+              <article class="chat-row">
+                <span class="avatar coral">M</span>
+                <div><div class="chat-meta"><b>Maya</b><time>8:42 PM</time></div><p>Okay, who is still awake and wants to see what I made?</p></div>
+              </article>
+              <article class="chat-row">
+                <span class="avatar blue">J</span>
+                <div><div class="chat-meta"><b>Jonah</b><time>8:43 PM</time></div><p>Always. Drop it in show-and-tell.</p><div class="reaction">&#10024; 4</div></div>
+              </article>
+              <article class="chat-row latest">
+                <span class="avatar lime">A</span>
+                <div><div class="chat-meta"><b>Amara</b><time>8:44 PM</time></div><p>Already there. This community never sleeps.</p></div>
+              </article>
+              <div class="typing"><span></span><span></span><span></span> Maya is typing</div>
+              <div class="preview-composer"><span>+</span><p>Message #after-hours</p><b>&uarr;</b></div>
+            </div>
+          </div>
+        </div>
+        <div class="floating-card voice-card">
+          <span class="sound-bars"><i></i><i></i><i></i><i></i></span>
+          <div><b>Open studio</b><small>6 people talking</small></div>
+          <span class="join-pill">Join</span>
+        </div>
+        <div class="floating-card reaction-card"><span>&#10024;</span> Good energy only</div>
+      </div>
+    </section>
+
+    <section class="signal-strip" aria-label="LYRIA benefits">
+      <p>One place to</p><span>Talk freely</span><i></i><span>Build together</span><i></i><span>Stay in the loop</span><i></i><span>Feel at home</span>
+    </section>
+
+    <section class="story-section" id="why-lyria">
+      <div class="section-kicker">A better social space</div>
+      <div class="story-heading">
+        <h2>Less feed.<br>More <span>feeling.</span></h2>
+        <p>The best online spaces feel like walking into a room where everybody knows your name. LYRIA is designed around that feeling.</p>
+      </div>
+      <div class="story-grid" id="features">
+        <article class="story-card card-conversation">
+          <div class="card-number">01</div>
+          <div class="conversation-art" aria-hidden="true">
+            <span class="bubble b1">You had to be there.</span>
+            <span class="bubble b2">Now I wish I was.</span>
+            <span class="bubble b3">Next time?</span>
+          </div>
+          <div><h3>Conversation that flows</h3><p>Fast messaging, focused channels, and expressive reactions keep every thread moving naturally.</p></div>
+        </article>
+        <article class="story-card card-community">
+          <div class="card-number">02</div>
+          <div class="community-art" aria-hidden="true">
+            <span class="portrait p1">A</span><span class="portrait p2">M</span><span class="portrait p3">J</span><span class="portrait p4">R</span><i></i>
+          </div>
+          <div><h3>Your circle, your way</h3><p>Create channels, find friends, and shape a space around the people and topics you care about.</p></div>
+        </article>
+        <article class="story-card card-voice">
+          <div class="card-number">03</div>
+          <div class="wave-art" aria-hidden="true">
+            <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+          </div>
+          <div><h3>Close enough to hear</h3><p>Move from messages to voice when the moment calls for more than text.</p></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="closing-cta">
+      <div class="closing-inner">
+        <div class="eyebrow light"><span class="live-dot"></span> Your next conversation starts here</div>
+        <h2>Come as you are.<br><span>Stay for the people.</span></h2>
+        <p>A better corner of the internet is one click away.</p>
+        <a class="button button-light" href="login.html">Join LYRIA <span aria-hidden="true">&rarr;</span></a>
+      </div>
+      <div class="closing-rings" aria-hidden="true"><i></i><i></i><i></i></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true"><i></i><b></b><em></em></span><span>LYRIA</span></a>
+    <p>A place for the conversations that matter.</p>
+    <div><a href="News.html">News</a><a href="premium-upgrade.html">Premium</a><a href="login.html">Sign in</a></div>
+    <small>&copy; 2026 LYRIA. Made for real connection.</small>
+  </footer>
+
+  <script>
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => entry.isIntersecting && entry.target.classList.add('is-visible'));
+    }, { threshold: 0.12 });
+    document.querySelectorAll('.reveal, .story-card').forEach((element) => observer.observe(element));
+  </script>
 </body>
 </html>

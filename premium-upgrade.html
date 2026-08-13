@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upgrade to Premium - LYRIA Chat</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Premium — LYRIA</title>
+    <meta name="description" content="Upgrade your LYRIA experience with more personalization and premium community features.">
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -138,23 +138,24 @@
             background-color: rgba(255,204,0,0.1);
         }
     </style>
+    <link rel="stylesheet" href="css/lyria-v6.css">
 </head>
-<body>
+<body class="premium-page">
     <div class="container">
         <img src="assets/premium.png" alt="Premium Upgrade" class="premium-image">
-        <h1>Upgrade to Premium</h1>
-        <p>Unlock exclusive features and enhance your experience with LYRIA Chat!</p>
+        <h1>Make LYRIA yours.</h1>
+        <p>More ways to express yourself, support the community, and stand out in every conversation.</p>
         
-        <h2>Premium Features:</h2>
+        <h2>Everything included</h2>
         <ul class="feature-list">
             <li>Change your profile picture</li>
             <li>Access to premium channels</li>
             <li>Priority customer support</li>
             <li>Exclusive badges</li>
-            <li>And Much More!</li>
+            <li>New benefits as they launch</li>
         </ul>
 
-        <h2>Choose Your Premium Tier:</h2>
+        <h2>Choose your plan</h2>
         <div class="tier-selection">
             <label>
                 <input type="radio" name="premium-tier" value="basic" checked> Basic Tier - $1.67/month
@@ -169,11 +170,11 @@
             <p id="selected-yearly-price">Yearly Subscription: $20.00 (Save 16.67%)</p>
         </div>
 
-        <button class="upgrade-btn" id="confirm-upgrade">Upgrade Now</button>
+        <button class="upgrade-btn" id="confirm-upgrade">Choose Premium</button>
         <button class="cancel-btn" id="cancel-upgrade" style="display: none;">Cancel Subscription</button>
         <p id="payment-message" style="color: #ffcc00; margin-top: 10px;"></p>
 
-        <button class="back-btn" onclick="window.history.back()">Back Home</button>
+        <button class="back-btn" onclick="window.history.back()">Back to LYRIA</button>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>

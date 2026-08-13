@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>LYRIA Chat - Home</title>
+        <title>Community — LYRIA</title>
         
         <!-- Meta Tags for Educational Purpose -->
         <meta name="description" content="LYRIA Chat is an educational platform designed to facilitate communication and collaboration among students and educators.">
@@ -83,13 +83,14 @@
 }
 
         </style>
+        <link rel="stylesheet" href="css/lyria-v6.css">
     </head>
-<body>
+<body class="app-page">
 
 
     <!-- Mobile Experience Message -->
     <div id="mobile-message" style="display: none; background-color: #ffcccb; padding: 10px; text-align: center; position: sticky; top: 0; z-index: 1000;">
-        For a better experience, please use a computer.
+        You're viewing LYRIA's compact mobile layout.
         <button id="close-mobile-message" style="margin-left: 10px; background-color: #f44336; color: white; border: none; cursor: pointer;">
             Close
         </button>
@@ -97,12 +98,12 @@
 
     <header class="top-header">
         <button class="menu-toggle" id="header-menu-toggle" aria-label="Toggle navigation menu" aria-expanded="false">☰</button>
-        <h1 style="flex: 1; text-align: center; margin: 0; font-size: 1.2rem;">LYRIA Chat</h1>
+        <h1 style="flex: 1; text-align: center; margin: 0; font-size: 1.2rem;">LYRIA / COMMUNITY</h1>
     </header>
     <div class="app-container">
         <div class="sidebar">
             <div class="channels">
-                <h3 class="centered-heading">Channels<span class="info-text">You Might Need To Refresh Once, If More Please Let Me Know!</span></h3>
+                <h3 class="centered-heading">Conversations<span class="info-text">Refresh once if a new channel does not appear.</span></h3>
                 <ul class="channels-list" id="channels-list"></ul>
                 <button class="add-channel-btn" id="add-channel">Add Channel</button>
                 <button class="join-channel-btn" id="join-channel">Join Channel</button>
@@ -115,7 +116,7 @@
 
 
             <!-- Button to open Friends Modal -->
-            <button id="open-friends-modal" class="action-btn">Open Friends</button>
+            <button id="open-friends-modal" class="action-btn">Friends</button>
 
             <!-- Friends Modal -->
             <div id="friends-modal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="friends-modal-title">
@@ -140,9 +141,9 @@
 
             <!-- Suggestions Section -->
             <div class="suggestions-section">
-                <h3>Suggestions</h3>
-                <p>We value your feedback! Please share your suggestions for new features or improvements.</p>
-                <button id="open-suggestions-modal" class="suggestions-link">Submit Your Suggestions</button>
+                <h3>Help shape LYRIA</h3>
+                <p>Have an idea that would make the community better?</p>
+                <button id="open-suggestions-modal" class="suggestions-link">Share an idea &rarr;</button>
             </div>
 
             <div class="user-profile">
@@ -155,7 +156,7 @@
         <main class="chat-area">
             <header class="chat-header">
                 <h2 id="channel-title"># general</h2>
-                <button id="copy-join-code" class="copy-join-code-btn">Invite Others</button>
+                <button id="copy-join-code" class="copy-join-code-btn">Invite</button>
                 <button id="inbox-btn" onclick="window.location.href='inbox.html'" style="background: none; border: none; color: var(--text-color); cursor: pointer; padding: 8px; font-size: 1.2rem;">
                     📬 Inbox <span id="friend-request-count" style="background: red; color: white; padding: 2px 6px; border-radius: 50%; font-size: 0.8rem; display: none;">1</span>
                 </button>
@@ -164,7 +165,7 @@
             <!-- Typing Status Indicator -->
             <div id="typing-status" class="typing-status" style="display: none;"></div>
             <div class="message-input">
-                <textarea id="message-input" placeholder="Message #" style="height: 15px;"></textarea>
+                <textarea id="message-input" placeholder="Write a message..." style="height: 15px;"></textarea>
                 <button id="send-button" class="send-btn" style="background-color: rgba(255, 255, 255, 0.2); color: rgb(0, 0, 0); border: 1px solid rgba(255, 255, 255, 0.4); padding: 6px 12px; font-size: 14px; cursor: pointer; border-radius: 8px; backdrop-filter: blur(4px); margin-right: 100px;">
                     Send
                 </button>
@@ -183,7 +184,7 @@
         </div>
     </div>
 <div id="version-info" style="position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); color: var(--text-color); font-size: 12px; font-weight: bold; text-shadow: 1px 1px 2px var(--background-color);">
-    Version: 5.0.1 &copy; 2024 LYRIA. All rights reserved. Trademarked by LYRIA.
+    LYRIA 6.0 &copy; 2026
 </div>
 <!-- Settings Modal -->
 <div id="settings-modal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="settings-modal-title">

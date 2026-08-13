@@ -1,4 +1,9 @@
 {
+  "name": "lyria-community",
+  "private": true,
+  "scripts": {
+    "build": "node build.mjs"
+  },
   "dependencies": {
     "agora-rtc-sdk-ng": "^4.22.2"
   }

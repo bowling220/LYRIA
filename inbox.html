@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LYRIA Chat - Inbox</title>
+    <title>Inbox — LYRIA</title>
+    <meta name="description" content="Review and respond to your LYRIA friend requests.">
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
@@ -172,11 +173,12 @@
             background: #18191c;
         }
     </style>
+    <link rel="stylesheet" href="css/lyria-v6.css">
 </head>
-<body>
+<body class="inbox-page">
     <header class="top-header">
         <button class="back-btn" onclick="window.history.back()">←</button>
-        <span>LYRIA Inbox</span>
+        <span>LYRIA / INBOX</span>
         <div style="width: 30px"></div>
     </header>
     <main class="inbox-area" id="inbox-messages">
