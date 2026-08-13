@@ -130,27 +130,6 @@
                 </button>
             </nav>
 
-            <!-- Friends Modal -->
-            <div id="friends-modal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="friends-modal-title">
-                <div class="modal-content">
-                    <button id="close-friends-modal" class="close-button" aria-label="Close Friends Modal">&times;</button>
-                    <h2 id="friends-modal-title">Friends</h2>
-                    <ul class="friends-list" id="friends-list">
-                        Add Some Friends!
-                    </ul>
-                    <div class="set-status">
-                        <h4>Set Your Status</h4>
-                        <select id="status-select">
-                            <option value="">Select Status</option>
-                            <option value="available">Available</option>
-                            <option value="busy">Busy</option>
-                            <option value="away">Away</option>
-                        </select>
-                        <button id="update-status-btn" class="action-btn">Update Status</button>
-                    </div>
-                </div>
-            </div>
-
             <!-- Suggestions Section -->
             <div class="suggestions-section sidebar-suggestion">
                 <h3>Help shape LYRIA</h3>
@@ -187,6 +166,30 @@
             </div>
         </main>
     </div>
+
+    <!-- Friends Modal (kept outside <aside class="sidebar"> deliberately: the sidebar is
+         translateX()'d off-screen on mobile, and CSS transforms create a new containing
+         block for position:fixed descendants, which trapped this modal off-screen too) -->
+    <div id="friends-modal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="friends-modal-title">
+        <div class="modal-content">
+            <button id="close-friends-modal" class="close-button" aria-label="Close Friends Modal">&times;</button>
+            <h2 id="friends-modal-title">Friends</h2>
+            <ul class="friends-list" id="friends-list">
+                Add Some Friends!
+            </ul>
+            <div class="set-status">
+                <h4>Set Your Status</h4>
+                <select id="status-select">
+                    <option value="">Select Status</option>
+                    <option value="available">Available</option>
+                    <option value="busy">Busy</option>
+                    <option value="away">Away</option>
+                </select>
+                <button id="update-status-btn" class="action-btn">Update Status</button>
+            </div>
+        </div>
+    </div>
+
     <div id="profile-modal" class="modal">
         <div class="modal-backdrop"></div>
         <div class="modal-content" style="background-image: url('assets/default-background.jpg'); background-size: cover; background-position: center;">
@@ -749,7 +752,10 @@
 
         // Open Friends Modal
         document.getElementById('open-friends-modal').addEventListener('click', () => {
-            document.getElementById('friends-modal').style.display = 'block';
+            // 'flex' (not 'block'): every other modal opens this way, and the mobile
+            // bottom-sheet layout (align-items: end on .modal) only takes effect on
+            // a flex container.
+            document.getElementById('friends-modal').style.display = 'flex';
             loadFriends(firebase.auth().currentUser.uid); // Load friends when modal opens
         });
 

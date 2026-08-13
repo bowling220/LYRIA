@@ -700,7 +700,12 @@ footer {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  /* flex-start, not center: a centered flex column that overflows its own
+     max-height traps the top of the content above the scrollable area (you
+     can scroll down to the bottom but never back up far enough to reach the
+     start) — this is what made modals like Settings unreachable on mobile,
+     where content routinely exceeds 80vh. */
+  justify-content: flex-start;
   text-align: center;
 }
 
