@@ -136,8 +136,10 @@
             </div>
 
             <div class="user-profile">
-                <img class="avatar" id="user-avatar" src="assets/icon.png" alt="User avatar" width="40" height="40">
-                <span class="username" id="user-name">User</span>
+                <button class="user-profile-trigger" id="user-profile-trigger" type="button" aria-label="Open your profile">
+                    <img class="avatar" id="user-avatar" src="assets/icon.png" alt="User avatar" width="40" height="40">
+                    <span class="username" id="user-name">User</span>
+                </button>
                 <button class="settings-btn" id="settings-btn">Settings</button>
             </div>
 
@@ -188,15 +190,34 @@
         </div>
     </div>
 
-    <div id="profile-modal" class="modal">
-        <div class="modal-backdrop"></div>
-        <div class="modal-content" style="background-image: url('assets/default-background.jpg'); background-size: cover; background-position: center;">
-            <img id="profile-modal-image" src="assets/icon.png" alt="User Avatar" width="88" height="88">
-            <h2 id="profile-modal-name">User Name</h2>
-            <div id="profile-modal-badges" class="badges-container"></div>
-            <p id="profile-modal-bio" style="color: #1E90FF;">COMING SOON</p>
-            <button id="send-friend-request" class="action-btn">Send Friend Request</button>
-            <button id="close-profile-modal" class="close-button">×</button>
+    <div id="profile-modal" class="modal profile-modal" inert aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="profile-modal-name">
+        <div class="modal-content profile-card">
+            <div class="profile-cover" aria-hidden="true">
+                <span>LYRIA MEMBER</span>
+                <i></i>
+            </div>
+            <div class="profile-card-body">
+                <div class="profile-avatar-shell">
+                    <img id="profile-modal-image" src="assets/icon.png" alt="User avatar" width="96" height="96">
+                    <span class="profile-presence" aria-hidden="true"></span>
+                </div>
+                <div class="profile-identity">
+                    <p class="profile-kicker">Community profile</p>
+                    <h2 id="profile-modal-name">User Name</h2>
+                    <p id="profile-modal-status" class="profile-status">LYRIA member</p>
+                </div>
+                <section class="profile-section" aria-labelledby="profile-about-label">
+                    <h3 id="profile-about-label">About</h3>
+                    <p id="profile-modal-bio">No bio added yet.</p>
+                </section>
+                <section class="profile-section profile-badge-section" aria-labelledby="profile-badges-label">
+                    <h3 id="profile-badges-label">Badges</h3>
+                    <div id="profile-modal-badges" class="badges-container"></div>
+                    <p id="profile-badges-empty" class="profile-empty">No badges yet</p>
+                </section>
+                <button id="send-friend-request" class="action-btn profile-friend-action" type="button">Send friend request</button>
+            </div>
+            <button id="close-profile-modal" class="close-button profile-close" type="button" aria-label="Close profile">&times;</button>
         </div>
     </div>
 <div id="version-info" style="position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); color: var(--text-color); font-size: 12px; font-weight: bold; text-shadow: 1px 1px 2px var(--background-color);">
@@ -388,8 +409,8 @@
 
                         // Set initial values for settings
                         document.getElementById('notifications-toggle').checked = userData.notificationsEnabled || false;
-                        document.getElementById('bio-input').value = 'COMING SOON';
-                        document.getElementById('profile-modal-bio').textContent = 'COMING SOON';
+                        document.getElementById('bio-input').value = userData.bio || '';
+                        document.getElementById('profile-modal-bio').textContent = userData.bio || 'No bio added yet.';
 
                         // Set dark mode based on user preference
                         if (userData.darkMode) {
@@ -688,7 +709,7 @@
                 // Optionally update the displayed bio in the UI
                 const bioProfile = document.getElementById('profile-modal-bio');
                 if (bioProfile) {
-                    bioProfile.innerHTML = `<span style="color: #1E90FF;">${newBio}</span>`; // Update the displayed bio
+                    bioProfile.textContent = newBio;
                 }
 
                 alert('Bio updated successfully!'); // Alert on success
@@ -710,7 +731,7 @@
                                 document.getElementById('user-name').textContent = userData.displayName;
                                 document.getElementById('user-avatar').src = userData.photoURL || 'assets/icon.png';
                                 document.getElementById('bio-input').value = userData.bio || 'No Bio'; // Set initial bio value
-                                document.getElementById('profile-modal-bio').innerHTML = userData.bio ? `<span style="color: #1E90FF;">${userData.bio}</span>` : 'No bio available'; // Display bio in profile modal
+                                document.getElementById('profile-modal-bio').textContent = userData.bio || 'No bio added yet.';
                             }
                         }).catch(error => {
                             console.error('Error loading user data:', error);

@@ -295,14 +295,25 @@ function setupUIEventListeners() {
         document.getElementById('settings-modal').style.display = 'none';
     });
 
-    // Close Profile Modal
-    document.getElementById('close-profile-modal').addEventListener('click', () => {
-        document.getElementById('profile-modal').style.display = 'none';
-    });
+    const profileModal = document.getElementById('profile-modal');
+    const profileCloseButton = document.getElementById('close-profile-modal');
+    profileCloseButton.classList.add('profile-close');
+    profileCloseButton.type = 'button';
+    profileCloseButton.setAttribute('aria-label', 'Close profile');
+    profileCloseButton.textContent = '\u00d7';
 
-    // Close Profile Modal when clicking backdrop
-    document.querySelector('.modal-backdrop').addEventListener('click', () => {
-        document.getElementById('profile-modal').style.display = 'none';
+    const closeProfileModal = () => {
+        profileModal.style.display = 'none';
+        profileModal.setAttribute('aria-hidden', 'true');
+        profileModal.setAttribute('inert', '');
+    };
+
+    profileCloseButton.addEventListener('click', closeProfileModal);
+    profileModal.addEventListener('click', event => {
+        if (event.target === profileModal) closeProfileModal();
+    });
+    profileModal.addEventListener('keydown', event => {
+        if (event.key === 'Escape') closeProfileModal();
     });
 
     // Toggle Dark Mode
@@ -1006,13 +1017,13 @@ window.addEventListener('keydown', (event) => {
     }
 });
 
-const userAvatar = document.getElementById('user-avatar');
-if (userAvatar) {
-    userAvatar.addEventListener('click', () => {
+const userProfileTrigger = document.getElementById('user-profile-trigger');
+if (userProfileTrigger) {
+    userProfileTrigger.addEventListener('click', () => {
         showUserProfileModal(currentUser ? currentUser.uid : null);
     });
 } else {
-    console.error("User avatar element not found.");
+    console.error("User profile trigger not found.");
 }
 
 
@@ -1056,23 +1067,34 @@ let profileUserId = null;
 
 // Modify showUserProfileModal to respect the badge visibility setting
 function showUserProfileModal(uid) {
+    if (!uid || !db) return;
     profileUserId = uid; // Set the profileUserId to the ID of the user being viewed
 
     db.collection('users').doc(uid).get().then(doc => {
         if (doc.exists) {
             const userData = doc.data();
-            document.getElementById('profile-modal-image').src = userData.photoURL || 'assets/icon.png';
-            document.getElementById('profile-modal-name').textContent = userData.displayName || 'User';
+            const profileName = userData.displayName || 'User';
+            const profileImage = document.getElementById('profile-modal-image');
+            profileImage.src = userData.photoURL || 'assets/icon.png';
+            profileImage.alt = `${profileName} avatar`;
+            document.getElementById('profile-modal-name').textContent = profileName;
+            document.getElementById('profile-modal-status').textContent = userData.status
+                ? userData.status.charAt(0).toUpperCase() + userData.status.slice(1)
+                : 'LYRIA member';
+            document.getElementById('profile-modal-bio').textContent = userData.bio || 'No bio added yet.';
 
             const profileBadges = document.getElementById('profile-modal-badges');
             profileBadges.innerHTML = ''; // Clear previous badges
+            let renderedBadges = 0;
 
             // Check if the user has any badges
             if (userData.badges && Array.isArray(userData.badges)) {
                 userData.badges.forEach(badge => {
-                    const badgeDiv = document.createElement('div');
+                    const badgeDiv = document.createElement('button');
+                    badgeDiv.type = 'button';
                     badgeDiv.className = 'badge';
                     badgeDiv.setAttribute('data-badge-name', badge);
+                    badgeDiv.setAttribute('aria-label', `View ${badge} badge details`);
                     
                     // Set the click event to show badge details
                     badgeDiv.onclick = () => {
@@ -1089,26 +1111,36 @@ function showUserProfileModal(uid) {
                     badgeImage.width = 28;
                     badgeImage.height = 28;
 
-                    const tooltip = document.createElement('span');
-                    tooltip.className = 'tooltip';
-                    tooltip.textContent = badge; // Show badge name in tooltip
+                    const badgeLabel = document.createElement('span');
+                    badgeLabel.className = 'profile-badge-label';
+                    badgeLabel.textContent = badge;
 
                     badgeDiv.appendChild(badgeImage);
-                    badgeDiv.appendChild(tooltip);
+                    badgeDiv.appendChild(badgeLabel);
                     profileBadges.appendChild(badgeDiv);
+                    renderedBadges += 1;
                 });
             }
 
             // Check if the user has the feature badge
             if (featureUserUIDs.includes(uid)) {
+                const featureBadgeWrap = document.createElement('div');
+                featureBadgeWrap.className = 'badge';
                 const featureBadge = document.createElement('img');
                 featureBadge.src = 'assets/feature.png'; // Path to the feature badge
                 featureBadge.alt = 'Feature Badge';
                 featureBadge.className = 'admin-badge'; // Use the same class for styling
                 featureBadge.width = 28;
                 featureBadge.height = 28;
-                profileBadges.appendChild(featureBadge); // Append feature badge to the profile badges
+                const featureLabel = document.createElement('span');
+                featureLabel.className = 'profile-badge-label';
+                featureLabel.textContent = 'Featured';
+                featureBadgeWrap.append(featureBadge, featureLabel);
+                profileBadges.appendChild(featureBadgeWrap);
+                renderedBadges += 1;
             }
+
+            document.getElementById('profile-badges-empty').hidden = renderedBadges > 0;
 
             // Show the friend request button if the user is not the current user
             const currentUser = firebase.auth().currentUser;
@@ -1120,7 +1152,12 @@ function showUserProfileModal(uid) {
                 sendFriendRequestBtn.style.display = 'none'; // Hide the button if it's the same user
             }
 
-            document.getElementById('profile-modal').style.display = 'block';
+            const profileModal = document.getElementById('profile-modal');
+            setMobileMenuOpen(false);
+            profileModal.removeAttribute('inert');
+            profileModal.setAttribute('aria-hidden', 'false');
+            profileModal.style.display = 'flex';
+            document.getElementById('close-profile-modal').focus();
         }
     }).catch(error => {
         console.error("Error fetching user data:", error);
