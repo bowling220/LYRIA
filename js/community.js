@@ -45,7 +45,6 @@
   $('open-friends-modal').addEventListener('click',()=>{open('friends-modal');loadFriends()});
   $('close-friends-modal').addEventListener('click',()=>close('friends-modal'));
   $('call-profile-user').addEventListener('click',()=>{const modal=$('profile-modal');const uid=modal.dataset.userId;if(uid){close('profile-modal');window.LyriaCalls.callFriend(uid,$('profile-modal-name').textContent)}});
-  $('upgrade-to-premium').addEventListener('click',()=>location.href='premium-upgrade.html');
   function refreshRequests(){
     unsubscribeRequests?.();if(!current())return;
     window.LyriaConnection.pending('requests');

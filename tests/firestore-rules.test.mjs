@@ -205,3 +205,19 @@ test('members react atomically to messages without replacing other reactions or 
  await setDoc(doc(alice,'channels/private/messages/react'),{senderId:'alice',message:'Private'});
  await assertFails(updateDoc(doc(bob,'channels/private/messages/react'),{'reactions.heart':arrayUnion('bob')}));
 });
+
+test('profile HTTPS edits preserve ignored legacy membership fields and unrelated data',async()=>{
+ const {runInNewContext}=await import('node:vm');
+ const window={firebaseConfig:{getApp:()=>({options:{projectId:'demo-lyria'}})}};
+ runInNewContext(await readFile(new URL('../js/account-api.js',import.meta.url),'utf8'),{window,AbortController,URLSearchParams,setTimeout,clearTimeout,fetch:(url,options)=>fetch(url.replace('https://firestore.googleapis.com','http://127.0.0.1:8085'),options)});
+ for(const [index,value]of [false,true,{unexpected:true}].entries()){
+  const uid='legacy-'+index,ref=doc(member(uid),'users/'+uid);
+  await setDoc(ref,{displayName:'Member',isPremium:value,premiumTier:'retired',subscriptionStatus:'old',badges:['premium','Beta'],friends:['friend'],unrelated:{keep:true}});
+  const now=Math.floor(Date.now()/1000),token=Buffer.from(JSON.stringify({alg:'none',typ:'JWT'})).toString('base64url')+'.'+Buffer.from(JSON.stringify({aud:'demo-lyria',iss:'https://securetoken.google.com/demo-lyria',sub:uid,user_id:uid,iat:now,exp:now+3600,auth_time:now,firebase:{sign_in_provider:'google.com'}})).toString('base64url')+'.';
+  const user={uid,getIdToken:async()=>token};
+  await window.LyriaAccountAPI.save(user,{bio:'Saved normally',photoURL:'assets/avatar.svg',bannerURL:'',appearance:{mode:'dark',hue:225,accent:'#acb5ff'}});
+  const saved=(await getDoc(ref)).data();
+  assert.deepEqual(saved.isPremium,value);assert.equal(saved.premiumTier,'retired');assert.equal(saved.subscriptionStatus,'old');
+  assert.deepEqual(saved.badges,['premium','Beta']);assert.deepEqual(saved.friends,['friend']);assert.deepEqual(saved.unrelated,{keep:true});assert.equal(saved.bio,'Saved normally');
+ }
+});

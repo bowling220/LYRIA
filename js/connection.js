@@ -29,7 +29,7 @@
   }
   window.addEventListener('error',event=>{
     const target=event.target;
-    if(target?.tagName==='SCRIPT' && target.src && !/adsbygoogle|googlesyndication/.test(target.src))fail('assets','Part of LYRIA couldn’t load. Reload to try again.');
+    if(target?.tagName==='SCRIPT' && target.src)fail('assets','Part of LYRIA couldn’t load. Reload to try again.');
   },true);
   window.addEventListener('offline',render);
   window.addEventListener('online',()=>{render();retry(true)});

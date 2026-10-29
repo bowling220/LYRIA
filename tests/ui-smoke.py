@@ -6,7 +6,7 @@ from html.parser import HTMLParser
 import json, mimetypes, subprocess, re
 from playwright.sync_api import sync_playwright
 ROOT = Path(__file__).resolve().parents[1]
-PAGES = ['index.html','home.html','login.html','News.html','inbox.html','premium-upgrade.html']
+PAGES = ['index.html','home.html','login.html','News.html','inbox.html']
 SIZES = [(320,568),(390,844),(768,1024),(667,375),(1024,768),(1440,1000)]
 OUTPUT=ROOT/'test-artifacts'
 OUTPUT.mkdir(exist_ok=True)
@@ -161,8 +161,5 @@ with sync_playwright() as p:
     page.wait_for_function("document.getElementById('channel-title').textContent==='My personal channel'")
     assert page.locator('[data-channel-id="community"]').count()==1
     page.close()
-    page=make_page();page.goto('http://localhost:8124/premium-upgrade.html',wait_until='load')
-    page.locator('input[value=premium]').check();assert '$36.00' in page.locator('#selected-yearly-price').inner_text()
-    assert page.locator('#confirm-upgrade').is_disabled()
-    page.close();browser.close()
-print(f'PASS: {count} responsive page checks; structure, dialogs, channels, messaging success/failure, keyboard viewport, friends, icons, account save/reload/error/pending states, shared-room fallback, likes and pricing preview.')
+    browser.close()
+print(f'PASS: {count} responsive page checks; structure, dialogs, channels, messaging success/failure, keyboard viewport, friends, icons, account save/reload/error/pending states, shared-room fallback, likes and comments.')

@@ -31,7 +31,7 @@ with sync_playwright() as p:
         assert page.evaluate("[...__testData.values()].filter(v=>v.type==='gif')[0].gif.provider")=='giphy'
         page.locator('.gif-motion-toggle').click();assert '200w_s.gif' in image.get_attribute('src')
         page.locator('.gif-motion-toggle').click();assert '/giphy.gif' in image.get_attribute('src')
-        # Profile media is available without the legacy Premium flag.
+        # Profile media is available to a normal account.
         if width<=768:page.locator('#header-menu-toggle').click()
         page.locator('#settings-btn').click();ready(page)
         assert page.locator('#profile-image-input').is_enabled()
