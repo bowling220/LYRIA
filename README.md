@@ -56,19 +56,11 @@ refresh in the same tab, scoped to the signed-in account. A failed or disconnect
 success. Display names are saved to LYRIA first; updating Firebase Auth's optional
 profile copy cannot prevent an account save.
 
-**Activation:** deploy the web assets and publish `firestore.rules` to the existing
-`lyria-49a54` project. The shared room requires the new rules; changing GitHub files
-does not publish Firebase rules. After signing in with an authorized Firebase CLI:
-
-```sh
-npm ci --prefix tests
-tests/node_modules/.bin/firebase deploy --only firestore:rules --project lyria-49a54
-```
-
-Until those rules are published, the first denied shared-room load falls back to
-the user's personal conversation. See [tests/README.md](tests/README.md) for local
-emulator and browser regression checks. Live account access still requires testing
-against the deployed project's rules.
+Production activation is owner-operated only. Contributors use the local emulators
+and must not deploy rules or test against live accounts. The current rules have
+known authorization gaps documented in [release readiness](docs/OPEN_SOURCE_READINESS.md);
+the new security-boundary tests deliberately fail until those are fixed safely.
+See [deployment approval setup](docs/DEPLOYMENT.md) before accepting this change.
 
 ## Shared web interface
 
@@ -82,81 +74,55 @@ Escape/backdrop dismissal. Historical styles have been retired; normal web pages
 `npm run build` creates the production assets. See [tests/README.md](tests/README.md)
 for reproducible browser checks and the remaining live-service checks.
 
-## 🛠️ Installation & Setup
+## Have an idea for LYRIA? Build it.
 
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd LYRIA
-   ```
+LYRIA is preparing to welcome community contributions. Fork the project, create a
+focused branch, implement and test a feature or fix, then submit a PR for review.
+Discuss larger changes first. CI informs review; it never approves or deploys a PR.
+Only @bowling220 may approve community changes for protected main, after which an
+accepted change may be deployed to the live site. Not every PR will be accepted.
 
-2. **Configure Firebase**
-   - Create a Firebase project at https://console.firebase.google.com
-   - Enable Authentication (Google and Anonymous providers)
-   - Enable Firestore Database
-   - Replace Firebase config in `js/config.js` with your project credentials
+Read [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md), and the
+[production approval checklist](docs/DEPLOYMENT.md). A root license has not yet been
+chosen: the mobile package's 0BSD field is not a repository-wide license. Do not
+assume redistribution rights until the owner resolves this.
 
-3. **Set up environment variables** (Optional but recommended)
-   Create a `.env` file or configure your hosting environment with:
-   ```
-   VITE_FIREBASE_API_KEY=your_api_key
-   VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
-   VITE_FIREBASE_PROJECT_ID=your_project_id
-   VITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
-   VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
-   VITE_FIREBASE_APP_ID=your_app_id
-   VITE_FIREBASE_MEASUREMENT_ID=your_measurement_id
-   ```
+## Local development
 
-4. **Serve the application**
-   ```bash
-   # Using Python 3
-   python -m http.server 8000
-   
-   # Using Node.js
-   npx http-server
-   
-   # Or use any static file server
-   ```
+Use Node 24, Python 3.12+, and Java 21. No production secrets are required.
 
-5. **Access the application**
-   Open your browser to `http://localhost:8000`
-
-## 🔧 Configuration
-
-### Firebase Security Rules
-
-Update your Firestore security rules:
-
-```javascript
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    // Users can read/write their own data
-    match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-      allow read: if request.auth != null; // Allow reading other users for friends
-    }
-    
-    // Channel access
-    match /channels/{channelId} {
-      allow read, write: if request.auth != null 
-        && request.auth.uid in resource.data.members;
-    }
-    
-    // Messages within channels
-    match /channels/{channelId}/messages/{messageId} {
-      allow read, write: if request.auth != null;
-    }
-    
-    // Friend requests
-    match /friendRequests/{requestId} {
-      allow read, write: if request.auth != null 
-        && (request.auth.uid == resource.data.from || request.auth.uid == resource.data.to);
-    }
-  }
-}
+```sh
+npm ci
+npm ci --prefix tests
+python3 -m pip install -r tests/requirements.txt
+python3 -m playwright install --with-deps chromium
+cp .env.example .env
+npm run emulators
+# In another terminal:
+npm run dev
 ```
+
+Open http://localhost:8000 . Development uses demo-lyria and local Auth/Firestore
+emulators. Configure hosted previews with a separate Firebase project, never live
+LYRIA. `npm run build` generates public runtime configuration into dist/client;
+production requires explicit owner-supplied public config and site origin. Serve
+only dist/client, not the repository root. See .env.example for public versus
+private settings and CONTRIBUTING.md for mobile setup and the complete test commands.
+
+## Validation and current release blockers
+
+`npm run check`, `npm test`, `npm run test:browser`, `npm run test:rules`, and npm
+audits match the new **LYRIA CI** workflow. It uses pinned actions, read-only tokens,
+GitHub-hosted runners, no production secrets, and no deploy job. Fork workflow
+approval, required Code Owner review, protected main, and Render main-only deployment
+must still be enabled by the owner; files alone cannot enforce account settings.
+
+Some gates remain intentionally red for pre-existing high dependency advisories,
+a historical GIPHY credential, and the Firestore authorization gaps. They have not
+been hidden or bypassed. See [OPEN_SOURCE_READINESS.md](docs/OPEN_SOURCE_READINESS.md)
+for exact results and blockers. This preparation was not pushed to production and
+does not make the repository public. The owner must choose a license and complete
+all release blockers before public release.
 
 ## 🎨 Customization
 

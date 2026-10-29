@@ -1,5 +1,5 @@
 // Firebase Configuration Module
-// This file handles Firebase initialization securely
+// Public client configuration is not an authorization boundary. Firestore rules enforce access.
 
 class FirebaseConfig {
     constructor() {
@@ -20,16 +20,10 @@ class FirebaseConfig {
             throw new Error('Firebase SDK not loaded');
         }
 
-        // Firebase configuration - using secure values
-        const config = {
-            apiKey: "AIzaSyDWpApnJ-mfHQJZhkbNDdsJ7l8-8rVHHTc",
-            authDomain: "lyria-49a54.firebaseapp.com",
-            projectId: "lyria-49a54",
-            storageBucket: "lyria-49a54.firebasestorage.app",
-            messagingSenderId: "704449928785",
-            appId: "1:704449928785:web:5b3c58c8f82d31d3f1a270",
-            measurementId: "G-KV5FRFN63T"
-        };
+        const runtime=window.LYRIA_RUNTIME;
+        if(!runtime?.firebase) return Promise.reject(new Error('Client configuration is missing. Build LYRIA first.'));
+        if(runtime.origin && location.origin!==runtime.origin) return Promise.reject(new Error('This build is configured for a different site origin.'));
+        const config=runtime.firebase;
 
         try {
             // Initialize Firebase
@@ -39,6 +33,10 @@ class FirebaseConfig {
             // Regular long-poll requests tolerate mobile network switches and buffering proxies.
             // Configure transport before persistence or any Firestore read/write starts.
             this.db.settings({experimentalForceLongPolling: true, useFetchStreams: false});
+            if(runtime.emulators){
+                this.auth.useEmulator?.('http://'+runtime.emulators.host+':'+runtime.emulators.authPort,{disableWarnings:true});
+                this.db.useEmulator?.(runtime.emulators.host,runtime.emulators.firestorePort);
+            }
             
             // Enable offline persistence
             this.db.enablePersistence({

@@ -1,3 +1,4 @@
+from browser_executable import CHROMIUM
 """Real two-browser WebRTC checks using a local PeerJS server and a room-presence fixture.
 No production Firebase, microphone, signaling service, or TURN credentials are used.
 """
@@ -100,7 +101,7 @@ try:
   except OSError:time.sleep(.1)
  else:raise RuntimeError('Local PeerJS server did not start: '+peer.stderr.read().decode())
  with sync_playwright() as p:
-  browser=p.chromium.launch(executable_path='/usr/bin/chromium',headless=True,args=['--no-sandbox','--use-fake-device-for-media-stream','--use-fake-ui-for-media-stream'])
+  browser=p.chromium.launch(executable_path=CHROMIUM,headless=True,args=['--no-sandbox','--use-fake-device-for-media-stream','--use-fake-ui-for-media-stream'])
   a=browser.new_context(permissions=['microphone']);b=browser.new_context(permissions=['microphone'])
   alice=a.new_page();bob=b.new_page();errors=[]
   for page in [alice,bob]:page.on('pageerror',lambda error:errors.append(str(error)))

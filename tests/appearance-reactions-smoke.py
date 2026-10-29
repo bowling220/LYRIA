@@ -1,9 +1,10 @@
+from browser_executable import CHROMIUM
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 from browser_fixture import make_page
 ROOT=Path(__file__).resolve().parents[1]
 with sync_playwright() as p:
- browser=p.chromium.launch(executable_path='/usr/bin/chromium',args=['--no-sandbox'])
+ browser=p.chromium.launch(executable_path=CHROMIUM,args=['--no-sandbox'])
  for width in [320,390,1440]:
   page=make_page(browser,ROOT,width,900);errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
   page.goto('http://localhost:8124/home.html');page.wait_for_selector('.message-reactions');page.wait_for_selector('[data-channel-id=studio]',state='attached');page.evaluate("document.querySelector('[data-channel-id=studio]').click()")

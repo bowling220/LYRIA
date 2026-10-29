@@ -1,0 +1,30 @@
+# Exact findings reviewed as public Firebase initializeApp client configuration.
+# No real credential, GIPHY key, broad path, or future finding is ignored.
+01dda2f2d7a567426c34fb31c949222a345eee45:js/config.js:gcp-api-key:25
+1126c89ccb509e070bcf297c1026e097d9334c29:home.html:gcp-api-key:47
+2a1f7e032efce1df80fb84a98909ddaabcfc1920:home.html:gcp-api-key:94
+317d423ff941eaedc12974748dd6c01ab267c9ad:premium-upgrade.html:gcp-api-key:93
+44199990d93c9acb6a3515c0567f1b8861d4a21f:chat.js:gcp-api-key:2
+61028e7667b6890f580700bc91b46e1e6a53be20:LYRIA/firebaseConfig.js:gcp-api-key:7
+61028e7667b6890f580700bc91b46e1e6a53be20:News.html:gcp-api-key:467
+61028e7667b6890f580700bc91b46e1e6a53be20:chat.js:gcp-api-key:29
+61028e7667b6890f580700bc91b46e1e6a53be20:inbox.html:gcp-api-key:191
+61028e7667b6890f580700bc91b46e1e6a53be20:inbox.js:gcp-api-key:4
+61028e7667b6890f580700bc91b46e1e6a53be20:login.html:gcp-api-key:115
+61028e7667b6890f580700bc91b46e1e6a53be20:premium-upgrade.html:gcp-api-key:185
+6ae86520b1b3cddbfb843244eadff3477dfe321b:js/config.js:gcp-api-key:25
+6b17ef7dc6f56a953bf8e8ad52941e5e9e7df3c1:inbox.html:gcp-api-key:347
+6b501ef5af584c1024c107d676bc7b635457601a:LYRIA/firebaseConfig.js:gcp-api-key:7
+6b501ef5af584c1024c107d676bc7b635457601a:News.html:gcp-api-key:468
+6b501ef5af584c1024c107d676bc7b635457601a:inbox.html:gcp-api-key:193
+6b501ef5af584c1024c107d676bc7b635457601a:js/config.js:gcp-api-key:25
+6b501ef5af584c1024c107d676bc7b635457601a:login.html:gcp-api-key:121
+6b501ef5af584c1024c107d676bc7b635457601a:premium-upgrade.html:gcp-api-key:186
+7f7abd5f157e8f3d4e3a452cf0de37e4ef1c99b0:chat.js:gcp-api-key:3
+80c531895678b508c69a0e9a57f4b9095e2e478a:inbox.html:gcp-api-key:347
+93f8deb1685e7dbdfae0fe6730669623b861ab80:inbox.js:gcp-api-key:3
+9533e37b95d4d8eea8e904ab5cb8dc055c2f5396:News.html:gcp-api-key:125
+a20da8171e1e7a5129641c422f0d97a0abdcf294:login.html:gcp-api-key:117
+c7fb51d3a9c946e9195689fc023b540548ccaea5:chat.js:gcp-api-key:5
+cc0ed8e64dd8ac6756ef7170138bf92e6aa46e0b:inbox.html:gcp-api-key:151
+e8a33f148ade1ae18156894b6dead0ff9ff64744:LYRIA/firebaseConfig.js:gcp-api-key:6

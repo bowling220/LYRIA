@@ -3,11 +3,12 @@
 The smoke test intercepts every network request. Firebase is replaced by
 `firebase-fixture.js`, so these checks cannot read or write production data.
 
-Requirements: Node.js (for syntax checks), Python 3, Python's `playwright` package,
-and Chromium at `/usr/bin/chromium`. Run from the repository root:
+Requirements: Node.js (for syntax checks), Python 3, the pinned Python packages in `tests/requirements.txt`,
+and system Chromium or Playwright's pinned Chromium. Run from the repository root:
 
 ```sh
-python3 -m pip install playwright
+python3 -m pip install -r tests/requirements.txt
+python3 -m playwright install --with-deps chromium
 python3 tests/ui-smoke.py
 npm run build
 ```
@@ -27,7 +28,10 @@ and iPhone/cellular voice calls still need staging or manual verification.
 
 Install the isolated test dependencies with `npm ci --prefix tests`, then run
 `npm run test:rules`. Java 21 is required for the local emulator. The tests use
-`demo-lyria`, so they cannot access production. They verify shared messages
+`demo-lyria`, so they cannot access production. The suite also includes negative authorization boundaries for private-channel self-enrollment
+and unauthorized friendship edits. Those two tests currently fail on the pre-existing rules;
+see `docs/OPEN_SOURCE_READINESS.md`. Do not skip them to make CI green.
+They verify shared messages
 between two accounts, signed-in guest access, sender ownership, private-chat
 access, and saving a missing profile under the same account UID.
 

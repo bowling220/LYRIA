@@ -1,3 +1,4 @@
+from browser_executable import CHROMIUM
 """GIF selection, display, animated appearance, persistence, and failure recovery."""
 from pathlib import Path
 from playwright.sync_api import sync_playwright
@@ -12,7 +13,7 @@ def saved(page,id):
     except Exception as error:raise AssertionError(id+': '+page.locator('#'+id).inner_text()) from error
 def ready(page):page.wait_for_function("document.getElementById('account-load-status').dataset.state==='ready'")
 with sync_playwright() as p:
-    browser=p.chromium.launch(executable_path='/usr/bin/chromium',headless=True,args=['--no-sandbox'])
+    browser=p.chromium.launch(executable_path=CHROMIUM,headless=True,args=['--no-sandbox'])
     for width,height in [(320,568),(390,844),(768,640),(1440,1000)]:
         options={};page=make_page(browser,ROOT,width,height,width<=768,options);errors=[];page.on('pageerror',lambda error:errors.append(str(error)))
         page.goto('http://localhost:8124/home.html',wait_until='load');ready(page)

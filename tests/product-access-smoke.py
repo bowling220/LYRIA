@@ -1,3 +1,4 @@
+from browser_executable import CHROMIUM
 """Universal profile access and safe ignored historical data, with no production writes."""
 from pathlib import Path
 import json,mimetypes
@@ -6,7 +7,7 @@ from browser_fixture import make_page
 ROOT=Path(__file__).resolve().parents[1]
 variants=[{}, {'isPremium':False,'premiumTier':'basic','subscriptionStatus':'expired'}, {'isPremium':True,'premiumTier':'premium','subscriptionStatus':'active'}, {'isPremium':{'unexpected':True},'premiumTier':['unknown'],'subscriptionStatus':None}]
 with sync_playwright() as p:
- browser=p.chromium.launch(executable_path='/usr/bin/chromium',args=['--no-sandbox'])
+ browser=p.chromium.launch(executable_path=CHROMIUM,args=['--no-sandbox'])
  for width in [390,1440]:
   for index,legacy in enumerate(variants):
    page=make_page(browser,ROOT,width,900);errors=[];requests=[]

@@ -1,3 +1,4 @@
+from browser_executable import CHROMIUM
 """Reload and connection recovery without production accounts or writes."""
 from pathlib import Path
 import hashlib,re
@@ -10,7 +11,7 @@ for html in ROOT.glob('*.html'):
   if path.startswith('http'):continue
   assert hashlib.sha256((ROOT/path).read_bytes()).hexdigest().startswith(version),(html.name,path)
 with sync_playwright() as p:
- browser=p.chromium.launch(executable_path='/usr/bin/chromium',headless=True,args=['--no-sandbox'])
+ browser=p.chromium.launch(executable_path=CHROMIUM,headless=True,args=['--no-sandbox'])
  page=make_page(browser,ROOT);errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
  page.add_init_script("window.__stallChannels=!sessionStorage.getItem('reload-recovered');window.__stallMessages=window.__stallChannels;window.__stallRestQueries=window.__stallChannels;")
  page.goto('http://localhost:8124/home.html');page.wait_for_function('window.LyriaConnection && window.LyriaAccount.getProfile().displayName')

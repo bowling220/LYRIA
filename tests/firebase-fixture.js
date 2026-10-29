@@ -45,7 +45,7 @@
  const authFn=()=>auth;authFn.GoogleAuthProvider=class{};
  window.firebase={apps:[],initializeApp:options=>{const app={options};window.firebase.apps.push(app);return app},app:()=>window.firebase.apps[0],auth:authFn,firestore};
  const toModuleSnapshot=s=>({...s,exists:()=>s.exists});
- window.__firebaseModule={initializeApp:()=>({}),getFirestore:()=>db,initializeFirestore:(app,settings)=>{db.settings(settings);return db},getAuth:()=>auth,onAuthStateChanged:(a,fn)=>a.onAuthStateChanged(fn),doc:(db,...path)=>new Ref(path.join('/'),true),collection:(db,...path)=>new Ref(path.join('/')),query:ref=>ref,orderBy:()=>{},increment:value=>({op:'increment',value}),getDoc:async ref=>toModuleSnapshot(await ref.get()),setDoc:(ref,val)=>ref.set(val),addDoc:(ref,val)=>ref.add(val),getDocs:ref=>ref.get(),onSnapshot:(ref,fn)=>ref.onSnapshot(s=>fn(ref.document?toModuleSnapshot(s):s))};
+ window.__firebaseModule={connectAuthEmulator:()=>{},connectFirestoreEmulator:()=>{},initializeApp:()=>({}),getFirestore:()=>db,initializeFirestore:(app,settings)=>{db.settings(settings);return db},getAuth:()=>auth,onAuthStateChanged:(a,fn)=>a.onAuthStateChanged(fn),doc:(db,...path)=>new Ref(path.join('/'),true),collection:(db,...path)=>new Ref(path.join('/')),query:ref=>ref,orderBy:()=>{},increment:value=>({op:'increment',value}),getDoc:async ref=>toModuleSnapshot(await ref.get()),setDoc:(ref,val)=>ref.set(val),addDoc:(ref,val)=>ref.add(val),getDocs:ref=>ref.get(),onSnapshot:(ref,fn)=>ref.onSnapshot(s=>fn(ref.document?toModuleSnapshot(s):s))};
 
  // Exercise the real profile HTTPS adapter without touching a production account.
  const originalFetch=window.fetch.bind(window);

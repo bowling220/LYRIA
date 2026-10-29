@@ -2,8 +2,16 @@
   "name": "lyria-community",
   "private": true,
   "scripts": {
-    "build": "node build.mjs",
+    "build": "node --env-file-if-exists=.env build.mjs",
     "version:assets": "node scripts/version-assets.mjs",
-    "test:rules": "node tests/run-rules.mjs"
+    "test:rules": "node tests/run-rules.mjs",
+    "dev": "npm run build && python3 -m http.server 8000 --bind 127.0.0.1 --directory dist/client",
+    "test": "node --test tests/badges.test.mjs tests/product-access.test.mjs tests/voice-config.test.mjs tests/runtime-config.test.mjs tests/contributor-safety.test.mjs",
+    "test:browser": "python3 tests/run-browser-tests.py",
+    "check": "node scripts/check-source.mjs",
+    "emulators": "tests/node_modules/.bin/firebase emulators:start --config firebase.emulator.json --project demo-lyria --only auth,firestore"
+  },
+  "engines": {
+    "node": ">=22.13.0"
   }
 }

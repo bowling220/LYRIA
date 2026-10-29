@@ -12,7 +12,8 @@
   <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore-compat.js"></script>
 
   <!-- Utility Scripts -->
-  <script src="js/config.js?v=e56e9769a74861d4"></script>
+  <script src="js/runtime-config.js?v=5b8691d7e40e3c9c"></script>
+        <script src="js/config.js?v=691e0fa4d3c5aa3d"></script>
   <script src="js/utils.js?v=35ef4bfc11346489"></script>
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
   <link rel="stylesheet" href="css/theme.css?v=6ff9e8f4a9e81439">
@@ -29,18 +30,6 @@
   </div></main>
 
   <script>
-    // Load environment variables for security
-    // In production, these should be loaded from a secure source
-    window.env = window.env || {
-      VITE_FIREBASE_API_KEY: "AIzaSyDWpApnJ-mfHQJZhkbNDdsJ7l8-8rVHHTc",
-      VITE_FIREBASE_AUTH_DOMAIN: "lyria-49a54.firebaseapp.com",
-      VITE_FIREBASE_PROJECT_ID: "lyria-49a54",
-      VITE_FIREBASE_STORAGE_BUCKET: "lyria-49a54.firebasestorage.app",
-      VITE_FIREBASE_MESSAGING_SENDER_ID: "704449928785",
-      VITE_FIREBASE_APP_ID: "1:704449928785:web:5b3c58c8f82d31d3f1a270",
-      VITE_FIREBASE_MEASUREMENT_ID: "G-KV5FRFN63T"
-    };
-
     // Initialize Firebase for login page
     function initializeLoginFirebase() {
         if (window.firebaseConfig && window.firebaseConfig.initialized) {
@@ -54,15 +43,7 @@
         }
 
         // Fallback: initialize directly if config.js wasn't loaded
-        const fallbackConfig = {
-            apiKey: window.env.VITE_FIREBASE_API_KEY,
-            authDomain: window.env.VITE_FIREBASE_AUTH_DOMAIN,
-            projectId: window.env.VITE_FIREBASE_PROJECT_ID,
-            storageBucket: window.env.VITE_FIREBASE_STORAGE_BUCKET,
-            messagingSenderId: window.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-            appId: window.env.VITE_FIREBASE_APP_ID,
-            measurementId: window.env.VITE_FIREBASE_MEASUREMENT_ID
-        };
+        const fallbackConfig = window.LYRIA_RUNTIME.firebase;
         firebase.initializeApp(fallbackConfig);
         return firebase.auth();
     }

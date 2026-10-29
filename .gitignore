@@ -76,3 +76,36 @@ build/
 
 # Browser validation artifacts
 test-artifacts/
+
+# Local credentials and native signing material (examples are explicitly allowed)
+.env*
+!.env.example
+**/.env*
+!**/.env.example
+*.pem
+*.key
+*.p12
+*.p8
+*.pfx
+*.jks
+*.keystore
+*.mobileprovision
+*service-account*.json
+*serviceAccount*.json
+firebase-adminsdk-*.json
+credentials.json
+.config/gcloud/
+.npmrc
+.expo/
+__pycache__/
+*.pyc
+.ci-tools/
+security-reports/
+
+/LYRIA/dist-native/
+/LYRIA/dist-web/
+# Local audit output and archived signing/export files
+*.ipa
+*.apk
+*.aab
+*.dSYM/

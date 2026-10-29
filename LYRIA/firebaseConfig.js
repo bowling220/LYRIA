@@ -1,23 +1,22 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { getAuth, connectAuthEmulator } from 'firebase/auth';
+import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
 
-// Firebase configuration - credentials loaded from environment variables
-const firebaseConfig = {
-    apiKey: import.meta.env?.VITE_FIREBASE_API_KEY || "AIzaSyDWpApnJ-mfHQJZhkbNDdsJ7l8-8rVHHTc",
-    authDomain: import.meta.env?.VITE_FIREBASE_AUTH_DOMAIN || "lyria-49a54.firebaseapp.com",
-    projectId: import.meta.env?.VITE_FIREBASE_PROJECT_ID || "lyria-49a54",
-    storageBucket: import.meta.env?.VITE_FIREBASE_STORAGE_BUCKET || "lyria-49a54.firebasestorage.app",
-    messagingSenderId: import.meta.env?.VITE_FIREBASE_MESSAGING_SENDER_ID || "704449928785",
-    appId: import.meta.env?.VITE_FIREBASE_APP_ID || "1:704449928785:web:5b3c58c8f82d31d3f1a270",
-    measurementId: import.meta.env?.VITE_FIREBASE_MEASUREMENT_ID || "G-KV5FRFN63T"
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-
-// Initialize Firebase Authentication and Firestore
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-export { auth, db };
+// Every EXPO_PUBLIC_* value is readable in the app bundle. Never use server secrets.
+const projectId=process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID || 'demo-lyria';
+const useEmulators=process.env.EXPO_PUBLIC_USE_EMULATORS !== 'false';
+if(useEmulators && !projectId.startsWith('demo-'))throw new Error('Emulator development must use a demo-* project.');
+const app=initializeApp({
+ apiKey:process.env.EXPO_PUBLIC_FIREBASE_API_KEY || 'demo-api-key',
+ authDomain:process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN || 'demo-lyria.firebaseapp.com',
+ projectId,
+ storageBucket:process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET || 'demo-lyria.appspot.com',
+ messagingSenderId:process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || '1234567890',
+ appId:process.env.EXPO_PUBLIC_FIREBASE_APP_ID || '1:1234567890:web:demo'
+});
+const auth=getAuth(app),db=getFirestore(app);
+if(useEmulators){
+ const host=process.env.EXPO_PUBLIC_EMULATOR_HOST || '127.0.0.1';
+ connectAuthEmulator(auth,'http://'+host+':9099',{disableWarnings:true});connectFirestoreEmulator(db,host,8085);
+}
+export {auth,db};

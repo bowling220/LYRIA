@@ -31,7 +31,7 @@ In the static site's **Settings**, use:
 - **Build Command:** `npm run build`
 - **Publish Directory:** `dist/client`
 
-Save the settings and deploy the latest commit. The build generates the relay
+Follow docs/DEPLOYMENT.md first: only the owner may deploy an approved, passing main commit. Set LYRIA_ENV=production and the required PUBLIC_FIREBASE_* values and LYRIA_SITE_ORIGIN in that service before deployment. The build generates the relay
 configuration into the published files; the key is not committed to GitHub.
 The browser credentials-read key is present in the deployed app, following
 Metered’s documented client API. It is not an account-management secret.

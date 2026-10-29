@@ -28,12 +28,9 @@ const HomeScreen = ({ navigation }) => {
 
         setLoading(true);
 
-        // Log the email and password for debugging
-        console.log('Attempting to log in with:', { email, password });
-
         try {
             // Attempt to sign in the user
-            const userCredential = await signInWithEmailAndPassword(auth, email.trim(), password.trim());
+            const userCredential = await signInWithEmailAndPassword(auth, email.trim(), password);
             const user = userCredential.user;
 
             // Handle user authentication and Firestore document creation
@@ -50,7 +47,7 @@ const HomeScreen = ({ navigation }) => {
                 console.log('User not found, attempting to create a new account...'); // Log for debugging
                 try {
                     // Create a new user account
-                    const userCredential = await createUserWithEmailAndPassword(auth, email.trim(), password.trim());
+                    const userCredential = await createUserWithEmailAndPassword(auth, email.trim(), password);
                     const user = userCredential.user;
 
                     // Create a new user document in Firestore

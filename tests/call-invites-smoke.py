@@ -1,3 +1,4 @@
+from browser_executable import CHROMIUM
 """Two-account call invitation UI, ring audio and microphone cleanup; no production writes.
 Voice transport is covered separately by voice-smoke.py; this test substitutes only
 joining/presence and uses the production invitation controller and Web Audio cues.
@@ -43,7 +44,7 @@ window.LyriaVoice={...actual,prepare,getSession:()=>active,join:(channel,room,la
 },leave:()=>{if(!active)return;const old=active;active=null;old.stream?.getTracks().forEach(t=>t.stop());LyriaDataAPI.commit([{delete:'channels/'+old.room+'/typingStatus/'+uid}]);window.dispatchEvent(new CustomEvent('lyria:voice-state',{detail:null}))}};
 '''
 with sync_playwright() as p:
- browser=p.chromium.launch(executable_path='/usr/bin/chromium',headless=True,args=['--no-sandbox','--use-fake-device-for-media-stream','--use-fake-ui-for-media-stream'])
+ browser=p.chromium.launch(executable_path=CHROMIUM,headless=True,args=['--no-sandbox','--use-fake-device-for-media-stream','--use-fake-ui-for-media-stream'])
  def make(uid,width):
   context=browser.new_context(viewport={'width':width,'height':844},permissions=['microphone']);page=context.new_page();page.expose_function('__backend',backend)
   def route(r):

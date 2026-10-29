@@ -1,3 +1,4 @@
+from browser_executable import CHROMIUM
 """Run with python3 tests/ui-smoke.py after installing Python Playwright and Chromium.
 All backend SDKs are replaced by an in-memory fixture. Production is never touched.
 """
@@ -27,7 +28,7 @@ for name in PAGES:
         assert checked.returncode==0,(name,checked.stderr)
 
 with sync_playwright() as p:
-    browser=p.chromium.launch(executable_path='/usr/bin/chromium',headless=True,args=['--no-sandbox'])
+    browser=p.chromium.launch(executable_path=CHROMIUM,headless=True,args=['--no-sandbox'])
     def make_page(width=390,height=844,touch=True):
         page=browser.new_page(viewport={'width':width,'height':height},has_touch=touch)
         page.add_init_script(path=str(ROOT/'tests/firebase-fixture.js'))
@@ -38,7 +39,7 @@ with sync_playwright() as p:
                 if file.is_file():r.fulfill(body=file.read_bytes(),content_type=mimetypes.guess_type(str(file))[0] or 'text/plain')
                 else:r.fulfill(status=404,body='')
             elif 'www.gstatic.com/firebasejs/' in url and not '-compat' in url:
-                names={'firebase-app.js':['initializeApp'],'firebase-auth.js':['getAuth','onAuthStateChanged'],'firebase-firestore.js':['initializeFirestore','getFirestore','doc','increment','onSnapshot','setDoc','getDoc','collection','addDoc','query','orderBy','getDocs']}.get(url.split('/')[-1],[])
+                names={'firebase-app.js':['initializeApp'],'firebase-auth.js':['getAuth','connectAuthEmulator','onAuthStateChanged'],'firebase-firestore.js':['connectFirestoreEmulator','initializeFirestore','getFirestore','doc','increment','onSnapshot','setDoc','getDoc','collection','addDoc','query','orderBy','getDocs']}.get(url.split('/')[-1],[])
                 r.fulfill(body='\n'.join('export const '+name+'=window.__firebaseModule.'+name+';' for name in names),content_type='text/javascript')
             elif ('www.gstatic.com/firebasejs/' in url and '-compat.js' in url) or 'cdnjs.cloudflare.com/ajax/libs/peerjs/' in url:r.fulfill(body='/* SDK supplied by fixture. */',content_type='text/javascript')
             else:r.abort()
