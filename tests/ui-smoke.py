@@ -39,7 +39,7 @@ with sync_playwright() as p:
                 if file.is_file():r.fulfill(body=file.read_bytes(),content_type=mimetypes.guess_type(str(file))[0] or 'text/plain')
                 else:r.fulfill(status=404,body='')
             elif 'www.gstatic.com/firebasejs/' in url and not '-compat' in url:
-                names={'firebase-app.js':['initializeApp'],'firebase-auth.js':['getAuth','onAuthStateChanged'],'firebase-firestore.js':['initializeFirestore','getFirestore','doc','increment','onSnapshot','setDoc','getDoc','collection','addDoc','query','orderBy','getDocs']}.get(url.split('/')[-1],[])
+                names={'firebase-app.js':['initializeApp'],'firebase-auth.js':['getAuth','onAuthStateChanged'],'firebase-firestore.js':['initializeFirestore','getFirestore','doc','increment','onSnapshot','setDoc','getDoc','collection','addDoc','query','orderBy','getDocs','limit','startAfter','runTransaction']}.get(url.split('/')[-1],[])
                 r.fulfill(body='\n'.join('export const '+name+'=window.__firebaseModule.'+name+';' for name in names),content_type='text/javascript')
             elif ('www.gstatic.com/firebasejs/' in url and '-compat.js' in url) or 'cdnjs.cloudflare.com/ajax/libs/peerjs/' in url:r.fulfill(body='/* SDK supplied by fixture. */',content_type='text/javascript')
             else:r.abort()
@@ -54,7 +54,7 @@ with sync_playwright() as p:
             assert not errors,(name,width,errors)
             assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1'),(name,width,'horizontal overflow')
             clipped=page.evaluate('''() => [...document.querySelectorAll('button,input,textarea,.wrapper,.container')].filter(el=>{
-                const r=el.getBoundingClientRect();return r.width&&r.height&&!el.closest('.sidebar,.modal,.product-stage')&&(r.left<-1||r.right>innerWidth+1)
+                const r=el.getBoundingClientRect();return r.width&&r.height&&!el.closest('.sidebar,.modal,.product-stage,.journal-filters')&&(r.left<-1||r.right>innerWidth+1)
             }).map(el=>el.id||el.className)''')
             assert not clipped,(name,width,'clipped controls',clipped)
             if name=='home.html':
@@ -126,17 +126,17 @@ with sync_playwright() as p:
     page.wait_for_function("document.getElementById('bio-save-status').dataset.state==='saved'")
     assert page.evaluate("window.__testData.get('users/test-member').bio")=='Restored missing profile'
     page.close()
-    page=make_page();page.goto('http://localhost:8124/News.html',wait_until='load');page.wait_for_timeout(100)
+    page=make_page();page.goto('http://localhost:8124/News.html?story=archive-status-feature',wait_until='load');page.wait_for_timeout(100)
     like=page.locator('[id$="-like-button"]').first;like.click();page.wait_for_timeout(100);assert like.get_attribute('aria-pressed')=='true'
     assert like.locator('svg').count()==1
     like.click();page.wait_for_timeout(80);assert like.get_attribute('aria-pressed')=='false'
     page.locator('#comment-input-status-feature').fill('A new chapter for the community.')
-    page.locator('button[onclick="submitComment(\'status-feature\')"]').click();page.wait_for_timeout(100)
+    page.locator('.journal-comment-form button').click();page.wait_for_timeout(100)
     assert 'A new chapter for the community.' in page.locator('#comments-list-status-feature').inner_text()
     page.evaluate("window.__testData.set('userArticles/test',{title:'<img src=x onerror=alert(1)>',body:'A story',authorName:'<b>Author</b>',tags:['<script>'],timestamp:new Date().toISOString()});window.__emitFixture()")
-    page.wait_for_timeout(80);assert page.locator('.user-submitted').count()==1
-    assert page.locator('.user-submitted h3').inner_text()=='<img src=x onerror=alert(1)>'
-    assert page.locator('.user-submitted h3 img').count()==0
+    page.locator('.journal-back').click();page.wait_for_timeout(80);assert page.locator('.user-submitted').count()==1
+    assert page.locator('.user-submitted :is(h2,h3)').inner_text()=='<img src=x onerror=alert(1)>'
+    assert page.locator('.user-submitted :is(h2,h3) img').count()==0
     page.evaluate('window.__emitFixture()');page.wait_for_timeout(80);assert page.locator('.user-submitted').count()==1
     page.close()
     for button in ['#guest-login','#google-signin']:
