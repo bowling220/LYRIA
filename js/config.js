@@ -12,7 +12,7 @@ class FirebaseConfig {
     // Initialize Firebase with environment variables or defaults
     initialize() {
         if (this.initialized) {
-            return Promise.resolve();
+            return this.authReady || Promise.resolve();
         }
 
         // Check if Firebase is loaded
@@ -47,9 +47,14 @@ class FirebaseConfig {
                 console.warn('Firestore persistence failed:', err.code);
             });
 
+            this.authReady = typeof this.auth.setPersistence === 'function'
+                ? this.auth.setPersistence('local').catch(() => this.auth.setPersistence('session')).catch(() => {
+                    this.loginStorageUnavailable = true;
+                    console.warn('Login storage unavailable; this session may not survive closing the browser.');
+                }) : Promise.resolve();
             this.initialized = true;
             console.log('Firebase initialized successfully');
-            return Promise.resolve();
+            return this.authReady;
         } catch (error) {
             console.error('Firebase initialization failed:', error);
             throw error;

@@ -21,11 +21,11 @@ with sync_playwright() as p:
   page.goto('http://localhost:8124/News.html');page.reload();assert page.url.endswith('News.html')
   page.goto('http://localhost:8124/inbox.html');page.reload();assert page.url.endswith('inbox.html')
   page.goto('http://localhost:8124/home.html?channel=missing-room')
-  page.wait_for_function("document.getElementById('channel-title').dataset.selectedChannelId==='community'")
+  page.wait_for_function("document.querySelector('.chat-area').dataset.view==='hub'")
   # An existing private room without membership cannot be selected by URL or storage.
   page.add_init_script("__testData.set('channels/closed',{name:'Closed',members:['someone-else']});")
   page.goto('http://localhost:8124/home.html?channel=closed')
-  page.wait_for_function("document.getElementById('channel-title').dataset.selectedChannelId==='community'")
+  page.wait_for_function("document.querySelector('.chat-area').dataset.view==='hub'")
   assert not errors,errors
   page.close()
  browser.close()

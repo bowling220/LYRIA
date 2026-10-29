@@ -9,7 +9,7 @@ with sync_playwright() as p:
   page=make_page(browser,ROOT,width,height);errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
   page.add_init_script('window.__stallMessages=true;window.__stallRequests=true;window.__stallChannels=true;window.__stallProfileRead=true;')
   for _ in range(2):
-   page.goto('http://localhost:8124/home.html')
+   page.goto('http://localhost:8124/home.html?channel=community')
    page.wait_for_function("document.querySelectorAll('.message').length===3 && document.querySelector('[data-channel-id=studio]')")
    page.wait_for_function("document.getElementById('friend-request-count').textContent==='1'")
    assert page.locator('#connection-notice').is_hidden()

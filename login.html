@@ -12,10 +12,10 @@
   <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore-compat.js"></script>
 
   <!-- Utility Scripts -->
-  <script src="js/config.js?v=e56e9769a74861d4"></script>
+  <script src="js/config.js?v=e668e661704b7783"></script>
   <script src="js/utils.js?v=35ef4bfc11346489"></script>
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
-  <link rel="stylesheet" href="css/theme.css?v=a466fb4e19b27d6d">
+  <link rel="stylesheet" href="css/theme.css?v=0e23241683f2a432">
   <script src="js/ui.js?v=c32d1a2c0cc58c63"></script>
   <script src="js/appearance.js?v=f2b3fb9699b59da3"></script>
 </head>
@@ -43,7 +43,7 @@
     };
 
     const invitation=window.LyriaInvites.parse(new URLSearchParams(location.search).get('invite'));
-    const loginDestination=invitation ? window.LyriaInvites.url(invitation) : 'home.html';
+    const loginDestination=invitation ? window.LyriaInvites.url(invitation) : 'home.html?view=hub';
     // Initialize Firebase for login page
     function initializeLoginFirebase() {
         if (window.firebaseConfig && window.firebaseConfig.initialized) {
@@ -71,6 +71,17 @@
     }
 
     const auth = initializeLoginFirebase();
+    let navigating = false;
+    function openApp() { if (!navigating) { navigating = true; window.location.replace(loginDestination); } }
+    const loginButtons = ['google-signin','guest-login'].map(id => document.getElementById(id));
+    loginButtons.forEach(button => button.disabled = true);
+    Promise.resolve(window.firebaseConfig?.initialize()).then(() => {
+      if (window.firebaseConfig?.loginStorageUnavailable) document.getElementById('error-message').textContent = 'This browser is blocking login storage. You may need to sign in again after closing it.';
+      auth.onAuthStateChanged(user => {
+        if (user) openApp();
+        else loginButtons.forEach(button => button.disabled = false);
+      });
+    }).catch(error => { document.getElementById('error-message').textContent = error.message; });
 
     // Initialize Firestore
     function getFirestore() {
@@ -87,7 +98,7 @@
       const provider = new firebase.auth.GoogleAuthProvider();
       auth.signInWithPopup(provider)
         .then(async result => {
-          window.location.href = loginDestination;
+          openApp();
         })
         .catch(error => {
           document.getElementById('error-message').textContent = error.message;
@@ -98,7 +109,7 @@
     document.getElementById('guest-login').addEventListener('click', function() {
       auth.signInAnonymously()
         .then(async result => {
-          window.location.href = loginDestination;
+          openApp();
         })
         .catch(error => {
           document.getElementById('error-message').textContent = error.message;

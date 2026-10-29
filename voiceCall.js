@@ -144,14 +144,14 @@
       button.setAttribute('aria-pressed',String(Boolean(active)));button.innerHTML=UI.icon('mic');
       const name=document.createElement('span');name.textContent=channel.name;button.append(name);
       const count=document.createElement('small');count.textContent=people.length+'/6';button.append(count);
-      button.disabled=Boolean(active);button.title=active?'Connected here':'Join '+channel.name;
+      button.disabled=!roomId || Boolean(active);button.title=active?'Connected here':'Join '+channel.name;
       button.addEventListener('click',()=>{unlockSound();if(session)leave();join(channel.id)});item.append(button);
       const members=document.createElement('ul');members.className='voice-channel-members';members.setAttribute('aria-label',channel.name+' participants');
       for(const person of people){const row=document.createElement('li');row.textContent=(person.displayName || 'Member')+(person.muted?' · muted':'');members.append(row)}
       if(people.length)item.append(members);list.append(item);
     }
     if(focused)list.querySelector('[data-voice-channel="'+focused+'"]')?.focus();
-    const label=$('voice-directory-label');if(label)label.textContent=roomId==='community'?'Everyone’s voice channels':'This conversation’s voice channels';
+    const label=$('voice-directory-label');if(label)label.textContent=!roomId?'Open a conversation to see its voice channels':roomId==='community'?'Everyone’s voice channels':'This conversation’s voice channels';
   }
   function watchDirectory(){
     directoryOff?.();directoryOff=null;directoryMembers={};const version=++directoryVersion;renderDirectory();
@@ -177,7 +177,7 @@
   function render(){
     const s=session, active=s && !s.closed;
     renderDirectory();
-    if($('make-voice-call')){$('make-voice-call').disabled=Boolean(active);$('make-voice-call').style.display=active?'none':'inline-flex';}
+    if($('make-voice-call')){$('make-voice-call').disabled=!roomId || Boolean(active);$('make-voice-call').style.display=active?'none':'inline-flex';}
     if($('end-call')){$('end-call').style.display=active?'inline-flex':'none';$('end-call').setAttribute('aria-label',s?.joining?'Cancel joining voice':'Leave voice call');$('end-call').innerHTML=UI.icon('phoneOff')+'<span class="button-label">'+(s?.joining?'Cancel':'Leave voice')+'</span>';}
     if($('voice-panel'))$('voice-panel').hidden=!active;
     if(!active){emitState();return;}

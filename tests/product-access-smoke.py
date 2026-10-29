@@ -12,7 +12,7 @@ with sync_playwright() as p:
    page=make_page(browser,ROOT,width,900);errors=[];requests=[]
    page.on('pageerror',lambda error:errors.append(str(error)));page.on('request',lambda request:requests.append(request.url))
    page.add_init_script("Object.assign(__testData.get('users/test-member'),"+json.dumps({**legacy,'badges':['premium','Premium','supporter','subscriber','VIP','Beta','EarlyAccess'],'unrelated':{'keep':'yes'}})+");firebase.auth().currentUser.isAnonymous="+str(index==1).lower()+";")
-   page.goto('http://localhost:8124/home.html');page.wait_for_function("document.getElementById('account-load-status').dataset.state==='ready'")
+   page.goto('http://localhost:8124/home.html?channel=community');page.wait_for_function("document.getElementById('account-load-status').dataset.state==='ready'")
    if width<768:page.locator('#header-menu-toggle').click()
    page.locator('#settings-btn').click()
    assert page.locator('#profile-image-input').is_enabled()
@@ -52,12 +52,12 @@ with sync_playwright() as p:
    page.close()
  # Channel joining/leaving retain membership and other account data.
  page=make_page(browser,ROOT,1440,1000);page.add_init_script("__testData.set('channels/join-test',{id:'join-test',name:'Community workshop',createdBy:'maya',joinCode:'OPEN42',members:['maya']})")
- page.goto('http://localhost:8124/home.html');page.wait_for_function("document.getElementById('account-load-status').dataset.state==='ready'")
+ page.goto('http://localhost:8124/home.html?channel=community');page.wait_for_function("document.getElementById('account-load-status').dataset.state==='ready'")
  page.locator('#join-channel').click();page.locator('#channel-action-input').fill('open42');page.locator('#submit-channel-action').click()
  page.wait_for_function("document.getElementById('channel-title').textContent==='Community workshop'")
  assert page.evaluate("__testData.get('channels/join-test').members.includes('test-member')")
  page.locator('#leave-channel').click();page.locator('#submit-channel-action').click()
- page.wait_for_function("document.getElementById('channel-title').textContent==='My personal channel'")
+ page.wait_for_function("document.querySelector('.chat-area').dataset.view==='hub'")
  assert not page.evaluate("__testData.get('channels/join-test').members.includes('test-member')")
  assert not page.evaluate("__testData.get('users/test-member').channels.includes('join-test')")
  assert page.evaluate("__testData.get('users/test-member').friends")==['maya']

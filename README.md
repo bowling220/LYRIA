@@ -543,3 +543,7 @@ Reload keeps the current page and selected room. Open settings, profiles, friend
 conversation dialogs, and GIF-library views reopen in the same browser tab for the
 same account. Panels fetch fresh data, and closed panels stay closed. Restoring a
 view never submits a form, sends a GIF, places a call, or grants room membership.
+
+### Conversation home and saved login
+
+Opening `home.html` shows the conversation hub without selecting a chat. Explicit `?channel=` links and reloads preserve an opened room; the Conversations button returns to the hub. App navigation keeps Firebase authentication intact. Firebase Auth uses local persistence, falling back to session storage where browser restrictions require it. Clearing browser data, private browsing restrictions, or signing out can still require a new login. No passwords or authentication tokens are stored manually.

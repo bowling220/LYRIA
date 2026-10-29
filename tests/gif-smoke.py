@@ -15,7 +15,7 @@ with sync_playwright() as p:
     browser=p.chromium.launch(executable_path='/usr/bin/chromium',headless=True,args=['--no-sandbox'])
     for width,height in [(320,568),(390,844),(768,640),(1440,1000)]:
         options={};page=make_page(browser,ROOT,width,height,width<=768,options);errors=[];page.on('pageerror',lambda error:errors.append(str(error)))
-        page.goto('http://localhost:8124/home.html',wait_until='load');ready(page)
+        page.goto('http://localhost:8124/home.html?channel=community',wait_until='load');ready(page)
         assert page.locator('#gif-url-input').count()==0
         assert page.evaluate('typeof window.sendGifByUrl')=='undefined'
         assert page.evaluate("async()=>{try{await sendLibraryGif('https://example.com/pasted.gif');return false}catch{return true}}")
@@ -55,7 +55,7 @@ with sync_playwright() as p:
         page.close()
     # Failed GIF loads show a retry, rather than the default user avatar.
     options={'fail_original':True};page=make_page(browser,ROOT,390,844,True,options)
-    page.goto('http://localhost:8124/home.html',wait_until='load');ready(page)
+    page.goto('http://localhost:8124/home.html?channel=community',wait_until='load');ready(page)
     page.locator('#gif-button').click();page.locator('[data-gif-id="wave"]').click();page.wait_for_function("!document.getElementById('gif-picker-action').disabled");page.locator('#gif-picker-action').click()
     page.wait_for_function("document.querySelector('.gif-load-error') && !document.querySelector('.gif-load-error').hidden")
     assert 'avatar.svg' not in page.locator('.chat-gif img').get_attribute('src')
@@ -77,7 +77,7 @@ with sync_playwright() as p:
     assert '350 KB' in page.locator('#banner-save-status').inner_text()
     page.close()
     # The library remains usable when the phone keyboard reduces the visible area.
-    page=make_page(browser,ROOT);page.goto('http://localhost:8124/home.html',wait_until='load');ready(page)
+    page=make_page(browser,ROOT);page.goto('http://localhost:8124/home.html?channel=community',wait_until='load');ready(page)
     page.locator('#gif-button').click();page.evaluate("Object.defineProperty(visualViewport,'height',{configurable:true,value:360});visualViewport.dispatchEvent(new Event('resize'))")
     page.wait_for_timeout(100);page.locator('#gif-search').fill('thanks');page.locator('.gif-library-tile').first.click();page.wait_for_function("!document.getElementById('gif-picker-action').disabled");page.locator('#gif-picker-action').click()
     page.wait_for_function("document.querySelectorAll('.chat-gif').length===1")

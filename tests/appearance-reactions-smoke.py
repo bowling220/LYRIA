@@ -6,7 +6,7 @@ with sync_playwright() as p:
  browser=p.chromium.launch(executable_path='/usr/bin/chromium',args=['--no-sandbox'])
  for width in [320,390,1440]:
   page=make_page(browser,ROOT,width,900);errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
-  page.goto('http://localhost:8124/home.html');page.wait_for_selector('.message-reactions');page.wait_for_selector('[data-channel-id=studio]',state='attached');page.evaluate("document.querySelector('[data-channel-id=studio]').click()")
+  page.goto('http://localhost:8124/home.html?channel=community');page.wait_for_selector('.message-reactions');page.wait_for_selector('[data-channel-id=studio]',state='attached');page.evaluate("document.querySelector('[data-channel-id=studio]').click()")
   page.evaluate("__testData.set('channels/studio/messages/react',{senderId:'maya',sender:'Maya',message:'React here',timestamp:{toDate:()=>new Date()}});document.querySelector('[data-channel-id=community]').click();document.querySelector('[data-channel-id=studio]').click()")
   page.wait_for_selector('.message-reactions')
   message=page.locator('.message').first
