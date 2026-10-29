@@ -134,3 +134,12 @@ active row, private message reads/writes, and the actual voice-session target an
 label, then repeatedly switches between shared, personal, and private rooms on
 phone/tablet layouts. It cancels the inspected voice session before connecting
 to a signaling service and never accesses production accounts.
+
+## Call stage
+
+`python3 tests/call-view-smoke.py` checks two/six-person layouts on five screen
+sizes, timer and status, speaking/mute badges, sound controls, collapse/reopen,
+leaving, and retaining animated avatar sources across ordinary state updates.
+The real `voice-smoke.py` also loads the stage controller: it checks speaking
+highlights from received WebRTC audio, stage microphone/sound controls, and
+switching between chat and call without changing the live session.

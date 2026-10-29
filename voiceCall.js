@@ -86,7 +86,8 @@
     s.meterTimer=setInterval(()=>{
       if(!live(s))return;
       const state=micHealth(s);if(state!==s.lastMicHealth){s.lastMicHealth=state;render()}
-      const meter=$('voice-mic-level');if(meter){let level=0;if(s.analyser && !s.muted && state==='ready'){const data=new Uint8Array(s.analyser.fftSize);s.analyser.getByteTimeDomainData(data);level=Math.min(1,Math.sqrt(data.reduce((sum,n)=>sum+((n-128)/128)**2,0)/data.length)*5)}meter.value=level}
+      const level=s.analyser && !s.muted && state==='ready'?rms(s.analyser):0;
+      const meter=$('voice-mic-level');if(meter)meter.value=level;activity(s,s.id,level,s.muted || state!=='ready');
     },250);
   }
   async function repairMic(){
@@ -105,7 +106,31 @@
     }catch(error){if(live(s))UI.notify(failure(error),'error')}
     finally{stopStream(old);s.repairPrevious=null;if(live(s)){s.repairing=false;render()}}
   }
-  function getSession(){return session && !session.closed?{id:session.id,room:session.room,channel:session.channel,joining:session.joining,connectedUserIds:participants(session).filter(([id])=>session.calls.get(id)?.connected).map(([,p])=>p.userId)}:null}
+  function getSession(){
+    const s=session;if(!s || s.closed)return null;
+    const current=window.firebaseConfig?.getAuth()?.currentUser;
+    const rows=[{id:s.id,userId:s.userId,name:window.LyriaAccount?.getProfile?.()?.displayName || current?.displayName || 'You',self:true,muted:!!s.muted,connected:!s.joining}];
+    for(const [id,p] of participants(s))if(id!==s.id && p.userId!==s.userId)rows.push({id,userId:p.userId,name:p.displayName || 'Member',self:false,muted:!!p.muted,connected:!!s.calls.get(id)?.connected});
+    return {id:s.id,room:s.room,channel:s.channel,label:s.label+' · '+channelName(s.channel),joining:s.joining,muted:!!s.muted,audioMuted:!!s.audioMuted,startedAt:s.startedAt || null,microphoneState:s.stream?micHealth(s):'starting',repairing:!!s.repairing,status:$('voice-status')?.textContent || '',needsSound:[...s.calls.values()].some(e=>e.blocked && e.connected) && !s.audioMuted,needsRetry:[...s.retries.values()].some(r=>r.attempts>3) || s.signalAttempts>=5,participants:rows,connectedUserIds:participants(s).filter(([id])=>s.calls.get(id)?.connected).map(([,p])=>p.userId)};
+  }
+  function emitState(){window.dispatchEvent(new CustomEvent('lyria:voice-state',{detail:getSession()}))}
+  function activity(s,id,level,muted=false){
+    if(!live(s))return;s.spokeAt ||= new Map();
+    if(level>.065 && !muted)s.spokeAt.set(id,now());
+    window.dispatchEvent(new CustomEvent('lyria:voice-speaking',{detail:{sessionId:s.id,participantId:id,speaking:!muted && now()-(s.spokeAt.get(id) || 0)<450,level:muted?0:level}}));
+  }
+  function rms(analyser){const values=new Uint8Array(analyser.fftSize);analyser.getByteTimeDomainData(values);return Math.min(1,Math.sqrt(values.reduce((sum,n)=>sum+((n-128)/128)**2,0)/values.length)*5)}
+  function watchRemoteActivity(s,entry,stream){
+    clearInterval(entry.levelTimer);entry.levelSource?.disconnect();entry.levelAnalyser?.disconnect();
+    try{
+      if(!audioContext)return;entry.levelSource=audioContext.createMediaStreamSource(stream);entry.levelAnalyser=audioContext.createAnalyser();entry.levelAnalyser.fftSize=256;entry.levelSource.connect(entry.levelAnalyser);
+      entry.levelTimer=setInterval(()=>{if(live(s) && s.calls.get(entry.id)===entry)activity(s,entry.id,rms(entry.levelAnalyser),!!s.members[entry.id]?.muted || !entry.connected)},200);
+    }catch(error){console.info('Participant speaking indicator unavailable',error)}
+  }
+  function toggleAudio(){
+    const s=session;if(!live(s))return;s.audioMuted=!s.audioMuted;unlockSound();
+    for(const entry of s.calls.values())if(entry.audio){entry.audio.muted=s.audioMuted;if(!s.audioMuted)play(entry)}render();
+  }
   function renderDirectory(){
     const list=$('voice-channels');if(!list)return;
     const current=Object.values(directoryMembers).filter(p=>stamp(p.updatedAt)>now()-PRESENCE_MS);
@@ -152,11 +177,10 @@
   function render(){
     const s=session, active=s && !s.closed;
     renderDirectory();
-    window.dispatchEvent(new CustomEvent('lyria:voice-state',{detail:getSession()}));
     if($('make-voice-call')){$('make-voice-call').disabled=Boolean(active);$('make-voice-call').style.display=active?'none':'inline-flex';}
     if($('end-call')){$('end-call').style.display=active?'inline-flex':'none';$('end-call').setAttribute('aria-label',s?.joining?'Cancel joining voice':'Leave voice call');$('end-call').innerHTML=UI.icon('phoneOff')+'<span class="button-label">'+(s?.joining?'Cancel':'Leave voice')+'</span>';}
     if($('voice-panel'))$('voice-panel').hidden=!active;
-    if(!active)return;
+    if(!active){emitState();return;}
     const roomLabel=$('voice-room-name');if(roomLabel)roomLabel.textContent=s.label+' · '+channelName(s.channel);
     const memberList=$('voice-participants');if(memberList){memberList.replaceChildren();for(const [id,person] of participants(s)){const item=document.createElement('li');item.textContent=(id===s.id?'You':person.displayName || 'Member')+((id===s.id?s.muted:person.muted)?' · muted':'');memberList.append(item)}}
     const health=s.stream?micHealth(s):'starting';
@@ -168,12 +192,12 @@
     const failed=peers.some(entry=>entry.failed) || retries.some(r=>r.attempts>3);
     const retrying=retries.some(r=>r.attempts<=3);
     const connected=peers.filter(entry=>entry.connected).length;
-    const blocked=peers.some(entry=>entry.blocked && entry.connected);
+    const blocked=!s.audioMuted && peers.some(entry=>entry.blocked && entry.connected);
     if($('voice-enable-sound'))$('voice-enable-sound').hidden=!blocked;
     if($('voice-enable-effects'))$('voice-enable-effects').hidden=soundEnabled && audioContext?.state==='running';
     if($('voice-retry'))$('voice-retry').hidden=!(failed || s.signalAttempts>=5);
     if($('voice-mute')){$('voice-mute').disabled=!s.stream;$('voice-mute').setAttribute('aria-pressed',String(Boolean(s.muted)));$('voice-mute').textContent=s.muted?'Unmute':'Mute';}
-    if(s.joining)return;
+    if(s.joining){emitState();return;}
     if(health==='stopped' || health==='interrupted')status('Your microphone was interrupted. Reconnect the microphone to speak.','error');
     else if(failed)status(s.relay?'Audio could not reconnect. Try Rejoin voice.':'Audio could not connect on this network. A working voice relay is needed.','error');
     else if(s.signalLost)status(connected?'Call audio is connected. Reconnecting the call service…':'Reconnecting the call service…');
@@ -183,11 +207,12 @@
     else if(!navigator.onLine)status('Your network disconnected. Voice is reconnecting…');
     else if(count===1)status('You’re in voice. Waiting for someone else to join.');
     else if(connected<count-1)status(`Connecting audio · ${count} people in voice…`);
-    else status(`Connected · ${count} people${s.muted?' · microphone muted':''}`,'connected');
+    else status(`Connected · ${count} people${s.muted?' · microphone muted':''}${s.audioMuted?' · sound off':''}`,'connected');
+    emitState();
   }
   function removeCall(s,key){
     const entry=s.calls.get(key);if(!entry)return;
-    s.calls.delete(key);clearTimeout(entry.timer);clearTimeout(entry.disconnectTimer);
+    s.calls.delete(key);clearTimeout(entry.timer);clearTimeout(entry.disconnectTimer);clearInterval(entry.levelTimer);entry.levelSource?.disconnect();entry.levelAnalyser?.disconnect();
     if(entry.audio){entry.audio.pause();entry.audio.srcObject=null;entry.audio.remove();}
     entry.call.close();if(live(s))render();
   }
@@ -212,7 +237,7 @@
     return error?.message || 'Voice could not connect. Please try again.';
   }
   async function play(entry){
-    try{entry.audio.muted=false;await entry.audio.play();entry.blocked=false}catch(error){if(error.name!=='AbortError'){entry.blocked=true;console.info('A tap is needed to enable remote sound.')}}
+    try{entry.audio.muted=!!session?.audioMuted;await entry.audio.play();entry.blocked=false}catch(error){if(error.name!=='AbortError'){entry.blocked=true;console.info('A tap is needed to enable remote sound.')}}
     render();
   }
   function retryCall(s,entry){
@@ -254,7 +279,7 @@
         const audio=document.createElement('audio');audio.autoplay=true;audio.setAttribute('playsinline','');audio.setAttribute('aria-hidden','true');audio.className='voice-remote-audio';
         audio.addEventListener('playing',render);audio.addEventListener('pause',render);document.body.append(audio);entry.audio=audio;
       }
-      entry.audio.srcObject=stream;watchConnection(s,entry);play(entry);render();
+      entry.audio.srcObject=stream;watchRemoteActivity(s,entry,stream);watchConnection(s,entry);play(entry);render();
     });
     call.on('close',()=>{if(s.calls.get(otherId)===entry)retryCall(s,entry)});
     call.on('error',error=>{console.warn('Peer audio connection failed',error);retryCall(s,entry)});
@@ -353,7 +378,7 @@
       registration.then(()=>{if(!live(s))clearPresence(s)}).catch(()=>{});
       await timeout(registration,15000,'The voice room could not confirm your connection. Please rejoin.');
       if(!live(s)||version!==generation)return;
-      s.joining=false;sound('join');s.known=new Set(participants(s).map(([id])=>id));
+      s.joining=false;s.startedAt=Date.now();sound('join');s.known=new Set(participants(s).map(([id])=>id));
       watchSession(s);
       s.heartbeat=setInterval(()=>{
         if(live(s) && !s.heartbeatBusy){s.heartbeatBusy=true;Presence.heartbeat(s).then(ok=>{if(!live(s))clearPresence(s);else if(!ok){leave();UI.notify('Voice was opened in another session.')}}).catch(error=>{if(live(s)){s.presenceLost=true;render()}console.warn('Voice presence update failed',error)}).finally(()=>s.heartbeatBusy=false)}
@@ -375,7 +400,7 @@
     const s=session;if(!s?.stream)return;s.muted=!s.muted;s.stream.getAudioTracks().forEach(track=>{track.enabled=!s.muted});unlockSound();sound(s.muted?'mute':'unmute');Presence.mute(s,s.muted).catch(error=>console.warn('Mute indicator update failed',error));render();
   });
   $('voice-repair-mic')?.addEventListener('click',repairMic);
-  $('voice-enable-sound')?.addEventListener('click',()=>{if(session)for(const entry of session.calls.values())if(entry.audio)play(entry)});
+  $('voice-enable-sound')?.addEventListener('click',()=>{unlockSound();if(session)for(const entry of session.calls.values())if(entry.audio)play(entry)});
   $('voice-retry')?.addEventListener('click',()=>{const channel=session?.channel || 'lounge',room=session?.room,label=session?.label;leave();join(channel,room,label)});
   function refreshConnection(){const s=session;watchDirectory();if(live(s)){watchSession(s);s.retries.clear();reconnectSignaling(s);sync(s);render()}}
   window.addEventListener('online',refreshConnection);
@@ -387,5 +412,5 @@
   $('voice-enable-effects')?.addEventListener('click',async()=>{await enableSounds();sound('join');render()});
   $('voice-test-sound')?.addEventListener('click',async()=>{await enableSounds();sound('join')});
   setInterval(renderDirectory,5000);
-  window.LyriaVoice={join,leave,setRoom,prepare,repairMic,getSession,startRinging,stopRinging,enableSounds,soundReady:()=>soundEnabled && audioContext?.state==='running',refreshDirectory:watchDirectory,refreshConnection,leaveRoom:room=>{if(session?.room===room)leave()}};
+  window.LyriaVoice={join,leave,setRoom,prepare,repairMic,toggleAudio,getSession,startRinging,stopRinging,enableSounds,soundReady:()=>soundEnabled && audioContext?.state==='running',refreshDirectory:watchDirectory,refreshConnection,leaveRoom:room=>{if(session?.room===room)leave()}};
 })();

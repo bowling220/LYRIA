@@ -771,6 +771,7 @@ function logout() {
 
 // Function to switch channels
 function switchChannel(channelId,name) {
+    if(currentChannel && currentChannel!==channelId)window.LyriaVoiceView?.showChat();
     if (currentChannel && currentChannel !== channelId) setTypingStatus(false);
     currentChannel = channelId;
     rememberChannelName(channelId,name);

@@ -30,8 +30,8 @@
         <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9049091067762501" crossorigin="anonymous"></script>
         <script src="js/mobile.js?v=630bcfe83bf75bf8" defer></script>
       <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
-  <link rel="stylesheet" href="css/theme.css?v=78fde75c047f8ad0">
-  <script src="js/ui.js?v=13a7e873f81a3144"></script>
+  <link rel="stylesheet" href="css/theme.css?v=b325a1d8b2cd2ee1">
+  <script src="js/ui.js?v=0c605d3c7a098ab1"></script>
   <script src="js/gif-library.js?v=0f7b242343ed6889"></script>
   <script src="js/media.js?v=c276e9cafb68d69b"></script>
 </head>
@@ -104,7 +104,22 @@
             <div id="connection-notice" class="connection-notice" role="status" hidden><span id="connection-message"></span><button id="retry-connection" type="button">Reconnect</button></div>
             <section id="voice-panel" class="voice-panel" aria-label="Voice call" hidden>
                 <div class="voice-call-info"><strong id="voice-room-name"></strong><p id="voice-status" role="status" aria-live="polite"></p><ul id="voice-participants" aria-label="People in your call"></ul></div>
-                <div class="voice-microphone"><meter id="voice-mic-level" min="0" max="1" value="0" aria-label="Microphone input level"></meter><span id="voice-mic-status" role="status">Checking microphone…</span></div><div class="voice-controls"><button id="voice-repair-mic" type="button" hidden>Reconnect microphone</button><button id="voice-mute" type="button" aria-pressed="false">Mute</button><button id="voice-enable-effects" type="button" hidden>Enable call sounds</button><button id="voice-enable-sound" type="button" hidden>Enable sound</button><button id="voice-retry" type="button" hidden>Rejoin voice</button></div>
+                <div class="voice-microphone"><meter id="voice-mic-level" min="0" max="1" value="0" aria-label="Microphone input level"></meter><span id="voice-mic-status" role="status">Checking microphone…</span></div><div class="voice-controls"><button id="voice-open-view" type="button"><span data-icon="expand" aria-hidden="true"></span> View call</button><button id="voice-repair-mic" type="button" hidden>Reconnect microphone</button><button id="voice-mute" type="button" aria-pressed="false">Mute</button><button id="voice-enable-effects" type="button" hidden>Enable call sounds</button><button id="voice-enable-sound" type="button" hidden>Enable sound</button><button id="voice-retry" type="button" hidden>Rejoin voice</button></div>
+            </section>
+            <section id="call-stage" class="call-stage" aria-labelledby="call-stage-title" tabindex="-1" hidden>
+                <header class="call-stage-header">
+                    <div><span class="call-stage-kicker"><span class="call-live-dot" aria-hidden="true"></span> VOICE TOGETHER</span><h2 id="call-stage-title">Your call</h2><p id="call-stage-status" role="status"></p></div>
+                    <button id="call-stage-collapse" class="call-stage-collapse" type="button" aria-label="Return to chat"><span data-icon="collapse" aria-hidden="true"></span></button>
+                </header>
+                <div class="call-stage-meta"><span id="call-stage-count">1 person</span><span aria-hidden="true">·</span><span id="call-stage-duration" aria-label="Call duration">00:00</span><span id="call-stage-mic-note"></span></div>
+                <div id="call-participant-grid" class="call-participant-grid" aria-label="People in this call"></div>
+                <div class="call-stage-recovery"><button id="call-stage-enable-audio" type="button" hidden>Enable sound</button><button id="call-stage-repair" type="button" hidden>Reconnect microphone</button><button id="call-stage-retry" type="button" hidden>Rejoin voice</button></div>
+                <footer class="call-dock" aria-label="Call controls">
+                    <button id="call-stage-mute" type="button" aria-label="Mute microphone" aria-pressed="false"><span class="call-control-icon"></span><span class="call-control-label">Mute</span></button>
+                    <button id="call-stage-sound" type="button" aria-label="Mute call audio" aria-pressed="false"><span class="call-control-icon"></span><span class="call-control-label">Sound</span></button>
+                    <button id="call-stage-chat" type="button" aria-label="Show conversation"><span class="call-control-icon" data-icon="chat" aria-hidden="true"></span><span class="call-control-label">Chat</span></button>
+                    <button id="call-stage-leave" class="call-control-leave" type="button" aria-label="Leave voice call"><span class="call-control-icon" data-icon="phoneOff" aria-hidden="true"></span><span class="call-control-label">Leave</span></button>
+                </footer>
             </section>
             <p id="community-notice" class="chat-room-notice" hidden>Everyone signed in can read this room · Latest 100 messages</p>
             <div class="messages" id="messages" role="log" aria-label="Conversation messages" aria-live="polite"><div class="empty-state"><span class="empty-icon"><span data-icon="chat" aria-hidden="true"></span></span><h2>Getting your space ready.</h2><p>Your conversations will appear here in a moment.</p></div></div>
@@ -299,8 +314,9 @@
     <script src="js/voice-config.js?v=119a5da781b271fd"></script>
     <script src="js/voice-transport.js?v=0a2391e8a4477901"></script>
     <script src="js/voice-presence.js?v=3bab77acb0644b2b"></script>
-    <script src="voiceCall.js?v=64f7c99d0f950b42"></script>
-    <script src="chat.js?v=d6d308dd163ad5d9"></script>
+    <script src="voiceCall.js?v=7d03f3b9589e2d4b"></script>
+    <script src="js/voice-view.js?v=62cb1fc8d3c3c407"></script>
+    <script src="chat.js?v=a6c66d8a5f3a0176"></script>
     <script src="js/call-invites.js?v=bf9ab596f6bb87c8"></script>
     <script src="js/community.js?v=f75698180b371fe3"></script>
     <script src="js/gif-picker.js?v=3dd6ed427b26c9d0"></script>

@@ -19,6 +19,9 @@ HTML='''<!doctype html><meta charset="utf-8"><meta name="viewport" content="widt
 <button id="make-voice-call">Join voice</button><button id="end-call">Leave voice</button>
 <section id="voice-panel" hidden><strong id="voice-room-name"></strong><p id="voice-status"></p><ul id="voice-participants"></ul><meter id="voice-mic-level" min="0" max="1"></meter><span id="voice-mic-status"></span><button id="voice-repair-mic" hidden>Reconnect microphone</button><button id="voice-mute">Mute</button><button id="voice-enable-sound" hidden>Enable sound</button><button id="voice-retry" hidden>Rejoin voice</button></section>
 <script src="/fixture.js"></script><script src="/peer.js"></script><script>window.__peerObjects=[];const NativePeer=Peer;window.Peer=class extends NativePeer{constructor(...args){super(...args);__peerObjects.push(this)}};</script><script src="/js/data-api.js"></script><script src="/js/voice-presence.js"></script><script src="/js/voice-transport.js"></script><script src="/voiceCall.js"></script><script>LyriaVoice.setRoom('community');</script>'''
+HOME=(ROOT/'home.html').read_text()
+CALL_STAGE=HOME[HOME.index('            <section id="call-stage"'):HOME.index('            <p id="community-notice"')]
+HTML=HTML.replace('<body>','<body><main class="chat-area">').replace('<button id="voice-mute">','<button id="voice-open-view">View call</button><button id="voice-mute">').replace('<script src="/fixture.js">',CALL_STAGE+'</main><script src="/fixture.js">').replace('<script>LyriaVoice.setRoom', '<script src="/js/voice-view.js"></script><script>LyriaVoice.setRoom')
 FIXTURE=r'''
 const uid=new URL(location.href).searchParams.get('user');window.__notices=[];window.__rtc=[];
 const NativeRTC=window.RTCPeerConnection;window.RTCPeerConnection=class extends NativeRTC{constructor(...args){super(...args);window.__rtc.push(this)}};
@@ -117,6 +120,21 @@ try:
   assert bob.evaluate("document.querySelector('audio').srcObject.getAudioTracks()[0].readyState")=='live'
   for page in [alice,bob]:page.wait_for_function("async()=>{for(const pc of __rtc){const stats=await pc.getStats();if([...stats.values()].some(s=>s.type==='inbound-rtp'&&s.kind==='audio'&&s.bytesReceived>0))return true}return false}",timeout=10000)
   assert alice.locator('audio').count()==1 and bob.locator('audio').count()==1,'Duplicate offers created duplicate audio'
+  for page in [alice,bob]:
+   page.wait_for_function("document.querySelectorAll('.call-person').length===2")
+   assert page.locator('#call-stage').is_visible()
+   page.wait_for_function("document.querySelector('.call-person[data-self=false]').classList.contains('is-speaking')",timeout=12000)
+  session_before=alice.evaluate('LyriaVoice.getSession().id')
+  alice.locator('#call-stage-sound').click();assert alice.evaluate("document.querySelector('audio').muted")
+  assert alice.evaluate('__localStream.getAudioTracks()[0].enabled')
+  alice.locator('#call-stage-sound').click();assert not alice.evaluate("document.querySelector('audio').muted")
+  alice.locator('#call-stage-chat').click();assert alice.locator('#call-stage').is_hidden()
+  assert alice.evaluate('LyriaVoice.getSession().id')==session_before
+  alice.locator('#voice-open-view').click();assert alice.locator('#call-stage').is_visible()
+  alice.locator('#call-stage-mute').click();assert not alice.evaluate('__localStream.getAudioTracks()[0].enabled')
+  assert alice.locator('.call-person[data-self=true]').get_attribute('data-muted')=='true'
+  assert not alice.locator('.call-person[data-self=true]').evaluate("el=>el.classList.contains('is-speaking')")
+  alice.locator('#call-stage-mute').click()
   with LOCK:alice_peer=STATE['community']['alice']['voice']['peerId']
   bob.evaluate("""target=>new Promise(resolve=>{
     const rogue=new Peer('rogue-'+crypto.randomUUID(),{host:'127.0.0.1',port:SIGNAL_PORT,path:'/voice',secure:false,config:{iceServers:[]}});

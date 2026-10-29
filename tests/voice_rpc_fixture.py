@@ -21,6 +21,7 @@ def document(room,uid,data):return {'name':BASE+'/channels/'+room+'/typingStatus
 def serve(path,body,state,now):
  suffix=path.split('/documents',1)[1]
  if body is None:
+  if suffix.startswith('/users/'):return 404,{'error':{'message':'No test profile'}}
   parts=suffix.strip('/').split('/');room,uid=parts[1],parts[3];value=state.get(room,{}).get(uid)
   return (200,document(room,uid,value)) if value is not None else (404,{'error':{'message':'Not found'}})
  if suffix.endswith(':runQuery'):

@@ -461,3 +461,16 @@ metadata used by the sidebar. Voice receives that room ID and label explicitly.
 A separate SDK metadata lookup can no longer leave Everyone in the heading while
 a private conversation is selected; unknown names use a bounded HTTPS lookup
 with a stale-response guard.
+
+## Call view
+
+Joining voice opens a dedicated forest-and-mint call stage with participant
+avatars (including saved animated profile images), local speaking highlights,
+mute/connection indicators, participant count, elapsed time, and a bottom dock.
+Mute, call audio, Chat, and Leave operate on the existing voice session. Chat
+collapses the stage into a compact call ribbon; View call opens it again.
+Selecting another text conversation collapses the stage without moving the call.
+Contextual playback/microphone/rejoin controls remain available in the stage.
+Speaking activity is computed locally from received audio and is never written
+to Firestore. Layouts support two people on a phone and scrollable groups of six
+while keeping the dock visible. Reduced-motion preferences disable transitions.
