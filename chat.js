@@ -1,5 +1,6 @@
 // Use the configured Firebase instances from config.js
 let auth, db;
+const COMMUNITY_CHANNEL_ID = 'community';
 
 // Wait for Firebase to be initialized
 const initializeFirebase = async () => {
@@ -25,12 +26,13 @@ const initializeFirebase = async () => {
 
 let currentUser;
 let currentChannel;
-let darkMode = false;
-let notificationsEnabled = false;
 let lastMessageTimestamp = null;
 let unsubscribeFromMessages = null;
 let unsubscribeTyping = null; // Unsubscribe function for message listener
 let uiListenersAttached = false;
+let channelLoadVersion = 0;
+let communityAccessDenied = false;
+let usedCommunityFallback = false;
 
 // Create notification sound
 const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
@@ -207,81 +209,24 @@ initializeFirebase().then(() => {
         }
 
         currentUser = user;
-        const personalChannelId = `personal-${user.uid}`;
-        const userDocRef = db.collection('users').doc(user.uid);
-        const channelDocRef = db.collection('channels').doc(personalChannelId);
-
+        // Everyone is a shared room, not a growing per-user membership list.
+        switchChannel(COMMUNITY_CHANNEL_ID);
+        loadChannels();
         try {
-            const existingUser = await userDocRef.get();
-            if (!existingUser.exists) {
-                await userDocRef.set({
-                    displayName: user.displayName || (user.isAnonymous ? 'Guest' : 'User'),
-                    email: user.email || null,
-                    photoURL: user.photoURL || 'assets/icon.png',
-                    role: user.isAnonymous ? 'guest' : 'user',
-                    channels: [personalChannelId],
-                    friends: [],
-                    badges: [],
-                    darkMode: false,
-                    notificationsEnabled: false,
-                    bio: 'No bio set.'
-                });
-            } else {
-                await userDocRef.set({
-                    channels: firebase.firestore.FieldValue.arrayUnion(personalChannelId)
-                }, { merge: true });
+            await window.LyriaAccount.ensureUser(user);
+            const personalChannelId = `personal-${user.uid}`;
+            const ref = db.collection('channels').doc(personalChannelId);
+            const doc = await ref.get();
+            if (!doc.exists) {
+                await ref.set({name:'My personal channel',id:personalChannelId,createdBy:user.uid,joinCode:generateJoinCode(),members:[user.uid],isPublic:false});
+            } else if (!(doc.data().members || []).includes(user.uid)) {
+                await ref.update({members:firebase.firestore.FieldValue.arrayUnion(user.uid)});
             }
-
-            const existingChannel = await channelDocRef.get();
-            if (!existingChannel.exists) {
-                await channelDocRef.set({
-                    name: 'My Personal Channel',
-                    id: personalChannelId,
-                    createdBy: user.uid,
-                    joinCode: generateJoinCode(),
-                    members: [user.uid],
-                    isPublic: false
-                });
-            } else {
-                await channelDocRef.update({
-                    members: firebase.firestore.FieldValue.arrayUnion(user.uid)
-                });
-            }
-
-            const refreshedUser = await userDocRef.get();
-            const userData = refreshedUser.data() || {};
-            const nameEl = document.getElementById('user-name');
-            const avatarEl = document.getElementById('user-avatar');
-            if (nameEl) nameEl.textContent = userData.displayName || 'User';
-            if (avatarEl) avatarEl.src = userData.photoURL || 'assets/icon.png';
-            const bioInput = document.getElementById('bio-input');
-            if (bioInput) bioInput.value = userData.bio || '';
-            showBadges = userData.showBadges !== false;
-            if (badgeUserUIDs.includes(user.uid)) {
-                const badgeSection = document.getElementById('badge-visibility-section');
-                const badgeToggle = document.getElementById('badge-visibility-toggle');
-                if (badgeSection) badgeSection.style.display = 'block';
-                if (badgeToggle) badgeToggle.checked = showBadges;
-            }
-            applyBadgeVisibility();
-
-            darkMode = Boolean(userData.darkMode);
-            notificationsEnabled = Boolean(userData.notificationsEnabled);
-            const notificationsToggle = document.getElementById('notifications-toggle');
-            if (notificationsToggle) notificationsToggle.checked = notificationsEnabled;
-            applyDarkMode();
-
-            document.getElementById('add-channel')?.removeAttribute('disabled');
-            document.getElementById('join-channel')?.removeAttribute('disabled');
-
-            currentChannel = personalChannelId;
-            setupUIEventListeners();
             loadChannels();
-            switchChannel(personalChannelId);
-
+            if (communityAccessDenied && currentChannel === COMMUNITY_CHANNEL_ID) switchChannel(personalChannelId);
         } catch (error) {
-            console.error('Error initializing the community:', error);
-            window.utils?.showError('LYRIA could not finish loading your community. Please refresh and try again.');
+            console.error('Account or personal workspace could not initialize:', error);
+            window.LyriaUI.notify('Your personal workspace could not load. '+window.LyriaAccount.errorMessage(error),'error');
         }
     });
 
@@ -307,70 +252,6 @@ function setupUIEventListeners() {
     });
     profileModal.addEventListener('keydown', event => {
         if (event.key === 'Escape') closeProfileModal();
-    });
-
-    // Toggle Dark Mode
-    document.getElementById('toggle-dark-mode').addEventListener('click', () => {
-        if (!currentUser) return;
-        darkMode = !darkMode;
-        applyDarkMode();
-        db.collection('users').doc(currentUser.uid).update({
-            darkMode: darkMode
-        }).catch(error => {
-            console.error("Error updating dark mode:", error);
-        });
-    });
-
-    // Update Display Name
-    document.getElementById('update-display-name').addEventListener('click', () => {
-        if (!currentUser) return;
-        const newName = document.getElementById('display-name-input').value.trim();
-        if(newName) {
-            // Update display name in Firebase Authentication
-            currentUser.updateProfile({
-                displayName: newName
-            }).then(() => {
-                // Update display name in Firestore
-                return db.collection('users').doc(currentUser.uid).update({
-                    displayName: newName
-                });
-            }).then(() => {
-                // Update the display name in the UI
-                document.getElementById('user-name').textContent = newName;
-                currentUser.displayName = newName; // Update the currentUser object
-                document.getElementById('display-name-input').value = '';
-                window.LyriaUI.notify('Display name updated successfully!');
-            }).catch(error => {
-                console.error("Error updating display name:", error);
-                window.LyriaUI.notify('Failed to update display name');
-            });
-        }
-    });
-
-    // Toggle Notifications
-    document.getElementById('notifications-toggle').addEventListener('change', (e) => {
-        if (!currentUser) return;
-        if (!('Notification' in window)) { e.target.checked = false; window.LyriaUI.notify('Notifications are not supported in this browser.'); return; }
-        notificationsEnabled = e.target.checked;
-        if(notificationsEnabled) {
-            Notification.requestPermission().then(permission => {
-                if(permission !== 'granted') {
-                    window.LyriaUI.notify('Notifications permission denied.');
-                    document.getElementById('notifications-toggle').checked = false;
-                    notificationsEnabled = false;
-                    db.collection('users').doc(currentUser.uid).update({
-                        notificationsEnabled: notificationsEnabled
-                    }).catch(error => {
-                        console.error("Error updating notifications:", error);
-                    });
-                }
-            });
-        }
-        db.collection('users').doc(currentUser.uid).update({
-            notificationsEnabled: notificationsEnabled
-        }).catch(error => {
-            console.error("Error updating notifications:", error);
-        });
     });
 
     // Logout button event listener
@@ -532,7 +413,7 @@ function setupUIEventListeners() {
                 closeChannelActionModal();
             } else {
                 const personalChannelId = `personal-${currentUser.uid}`;
-                if (!currentChannel || currentChannel === personalChannelId) return;
+                if (!currentChannel || currentChannel === personalChannelId || currentChannel === COMMUNITY_CHANNEL_ID) return;
                 const leavingChannelId = currentChannel;
                 const channelRef = db.collection('channels').doc(leavingChannelId);
                 await Promise.all([
@@ -560,6 +441,7 @@ function setupUIEventListeners() {
     // Clipboard failures still leave the invite code available to the user.
     document.getElementById('copy-join-code').addEventListener('click', async () => {
         if (!currentChannel || !db) return;
+        if (currentChannel === COMMUNITY_CHANNEL_ID) {window.LyriaUI.notify('Everyone opens automatically for anyone who signs in to LYRIA. Send your friends the sign-in link.');return;}
         try {
             const doc = await db.collection('channels').doc(currentChannel).get();
             const code = doc.data()?.joinCode;
@@ -616,10 +498,10 @@ window.sendGifByUrl = async function sendGifByUrl(gifUrl) {
         message: parsedUrl.href,
         content: parsedUrl.href,
         type: 'gif',
-        sender: currentUser.displayName || 'Guest',
-        displayName: currentUser.displayName || 'Guest',
+        sender: window.LyriaAccount.getProfile().displayName || currentUser.displayName || 'Guest',
+        displayName: window.LyriaAccount.getProfile().displayName || currentUser.displayName || 'Guest',
         senderId: currentUser.uid,
-        senderPhotoURL: currentUser.photoURL || 'assets/icon.png',
+        senderPhotoURL: window.LyriaAccount.getProfile().photoURL || currentUser.photoURL || 'assets/avatar.svg',
         timestamp: firebase.firestore.FieldValue.serverTimestamp()
     });
 };
@@ -639,7 +521,7 @@ function setTypingStatus(isTyping) {
 
         if (isTyping) {
             typingRef.set({
-                displayName: currentUser.displayName || 'User',
+                displayName: document.getElementById('user-name').textContent || 'LYRIA member',
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             }).catch(error => {
                 console.error("Error setting typing status:", error);
@@ -685,8 +567,13 @@ function listenForTypingStatus(channelId) {
 }
 
 function loadChannels() {
+    const version = ++channelLoadVersion;
     const channelsList = document.getElementById('channels-list');
-    channelsList.innerHTML = '';
+    channelsList.innerHTML = '<li class="community-channel"><button type="button" class="channel-btn" data-channel-id="community">'+window.LyriaUI.icon('users')+'<span class="channel-name">Everyone</span><span class="room-label">SHARED</span></button><p class="community-note">One room for the whole community.</p></li>';
+    const everyone = channelsList.querySelector('[data-channel-id="community"]');
+    everyone.classList.toggle('active-channel', currentChannel === COMMUNITY_CHANNEL_ID);
+    everyone.setAttribute('aria-current', String(currentChannel === COMMUNITY_CHANNEL_ID));
+    everyone.addEventListener('click',()=>{switchChannel(COMMUNITY_CHANNEL_ID);setMobileMenuOpen(false)});
 
     // Get channels where user is a member
     db.collection('channels')
@@ -695,12 +582,13 @@ function loadChannels() {
         .then(snapshot => {
             const userDocRef = db.collection('users').doc(currentUser.uid);
             return userDocRef.get().then(userDoc => {
-                const userData = userDoc.data();
+                if (version !== channelLoadVersion) return;
+                const userData = userDoc.data() || {};
                 const favoriteChannels = userData.favoriteChannels || []; // Get user's favorite channels
 
-                const channels = snapshot.docs.map(doc => ({
-                    id: doc.id,
+                const channels = snapshot.docs.filter(doc=>doc.id !== COMMUNITY_CHANNEL_ID).map(doc => ({
                     ...doc.data(),
+                    id: doc.id,
                     favorite: favoriteChannels.includes(doc.id) // Set favorite based on user's favorites
                 }));
 
@@ -760,14 +648,21 @@ function loadMessages(channelId) {
     const container = document.getElementById('messages');
     container.innerHTML = '<div class="empty-state"><span class="empty-icon">'+window.LyriaUI.icon('chat')+'</span><p>Loading your conversation…</p></div>';
     let firstSnapshot = true;
-    db.collection('channels').doc(channelId).get().then(doc => {
+    const subtitle=document.querySelector('.chat-subtitle');
+    const notice=document.getElementById('community-notice');
+    if(notice)notice.hidden=channelId !== COMMUNITY_CHANNEL_ID;
+    if(subtitle)subtitle.textContent=channelId === COMMUNITY_CHANNEL_ID?'Everyone signed in to LYRIA can read this room.':'A little space to stay connected.';
+    if (channelId === COMMUNITY_CHANNEL_ID) {
+        document.getElementById('channel-title').textContent='Everyone';
+        document.getElementById('message-input').placeholder='Message everyone…';
+    } else db.collection('channels').doc(channelId).get().then(doc => {
         if (doc.exists && currentChannel === channelId) {
             const name = doc.data().name || 'Conversation';
             document.getElementById('channel-title').textContent = name;
             document.getElementById('message-input').placeholder = 'Message ' + name + '…';
         }
     }).catch(error => console.error('Channel details unavailable', error));
-    unsubscribeFromMessages = db.collection('channels').doc(channelId).collection('messages').orderBy('timestamp').onSnapshot(snapshot => {
+    unsubscribeFromMessages = db.collection('channels').doc(channelId).collection('messages').orderBy('timestamp').limitToLast(100).onSnapshot(snapshot => {
         if (currentChannel !== channelId) return;
         const nearBottom = firstSnapshot || container.scrollHeight - container.scrollTop - container.clientHeight < 100;
         const previousTop = container.scrollTop;
@@ -808,17 +703,23 @@ function loadMessages(channelId) {
         firstSnapshot=false;
     },error=>{
         console.error(error);
-        container.innerHTML='<div class="empty-state"><span class="empty-icon">'+window.LyriaUI.icon('info')+'</span><h2>This conversation couldn’t load.</h2><p>Check your connection and try again.</p><button type="button">Try again</button></div>';
+        if (error.code === 'permission-denied' && channelId === COMMUNITY_CHANNEL_ID) {
+            communityAccessDenied = true;
+            if (!usedCommunityFallback) {
+                usedCommunityFallback = true;
+                window.LyriaUI.notify('Everyone is not available yet. Your personal conversations are still available.');
+                const personalId = `personal-${currentUser.uid}`;
+                db.collection('channels').doc(personalId).get().then(doc=>{
+                    if(doc.exists && currentChannel === COMMUNITY_CHANNEL_ID)switchChannel(personalId);
+                }).catch(error=>console.warn('Personal conversation fallback unavailable',error));
+            }
+        }
+        const detail=error.code === 'permission-denied' ? (channelId === COMMUNITY_CHANNEL_ID ? 'Everyone is not available yet. You can still use your personal conversations.' : 'Your account no longer has access to this conversation.') : 'Check your connection and try again.';
+        container.innerHTML='<div class="empty-state"><span class="empty-icon">'+window.LyriaUI.icon('info')+'</span><h2>This conversation couldn’t load.</h2><p>'+detail+'</p><button type="button">Try again</button></div>';
         container.querySelector('button').addEventListener('click',()=>loadMessages(channelId));
     });
 }
 
-function applyDarkMode() {
-    document.body.classList.toggle('contrast-mode', darkMode);
-    const toggle = document.getElementById('toggle-dark-mode');
-    toggle?.setAttribute('aria-pressed', String(darkMode));
-    if (toggle) toggle.innerHTML = window.LyriaUI.icon('contrast') + (darkMode ? 'Use standard contrast' : 'Increase contrast');
-}
 
 function logout() {
     auth.signOut().then(() => {
@@ -839,9 +740,10 @@ function switchChannel(channelId) {
     const leaveButton = document.getElementById('leave-channel');
     if (leaveButton && currentUser) {
         const isPersonalChannel = channelId === `personal-${currentUser.uid}`;
-        leaveButton.disabled = isPersonalChannel;
-        leaveButton.textContent = isPersonalChannel ? 'Personal channel' : 'Leave conversation';
-        leaveButton.title = isPersonalChannel ? 'Your personal channel always stays with your account.' : 'Leave this conversation';
+        const isCommunity = channelId === COMMUNITY_CHANNEL_ID;
+        leaveButton.disabled = isPersonalChannel || isCommunity;
+        leaveButton.textContent = isCommunity ? 'Everyone is always here' : isPersonalChannel ? 'Personal channel' : 'Leave conversation';
+        leaveButton.title = isCommunity ? 'This shared room is open to every signed-in member.' : isPersonalChannel ? 'Your personal channel always stays with your account.' : 'Leave this conversation';
     }
     document.querySelectorAll('.channel-btn').forEach(button => {
         const active = button.dataset.channelId === channelId;
@@ -849,7 +751,10 @@ function switchChannel(channelId) {
     });
     loadMessages(channelId);     // Load messages for the new channel
     listenForTypingStatus(channelId); // Listen for typing status changes
-    if (typeof window.setupCallListeners === 'function') window.setupCallListeners();
+    const shared = channelId === COMMUNITY_CHANNEL_ID;
+    const voiceButton = document.getElementById('make-voice-call');
+    voiceButton.disabled = shared; voiceButton.style.display = shared ? 'none' : 'inline-flex'; voiceButton.title = shared ? 'Voice is available in your private conversations.' : 'Join voice';
+    if (!shared && typeof window.setupCallListeners === 'function') window.setupCallListeners();
 }
 
 // Function to open the modal
@@ -876,23 +781,9 @@ if (userProfileTrigger) {
 
 let showBadges = true; // Default value for showing badges
 
-// Event listener for badge visibility toggle
-document.getElementById('badge-visibility-toggle').addEventListener('change', (e) => {
-    showBadges = e.target.checked;
-    applyBadgeVisibility();
-
-    // Save the setting to Firestore
-    if (currentUser) {
-        db.collection('users').doc(currentUser.uid).update({
-            showBadges: showBadges
-        }).catch(error => {
-            console.error("Error saving badge visibility setting:", error);
-        });
-    }
-});
-
 // Function to apply badge visibility in the profile modal and chat
 function applyBadgeVisibility() {
+    showBadges = window.LyriaAccount.getProfile().showBadges !== false;
     const profileBadges = document.getElementById('profile-modal-badges');
     if (profileBadges) {
         profileBadges.style.display = showBadges ? 'flex' : 'none';
@@ -1185,32 +1076,5 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// Function to update the user's bio
-function updateUserBio(newBio) {
-    if (currentUser) {
-        db.collection('users').doc(currentUser.uid).update({
-            bio: newBio
-        }).then(() => {
-            console.log("Bio updated successfully.");
-            document.getElementById('bio-input').value = newBio;
-            window.LyriaUI.notify('Bio updated.', 'success');
-        }).catch(error => {
-            console.error("Error updating bio:", error);
-            window.LyriaUI.notify('Failed to update bio.');
-        });
-    }
-}
-
-// Event listener for the bio update button
-document.getElementById('update-bio-btn').addEventListener('click', () => {
-    const newBio = document.getElementById('bio-input').value.trim();
-    if (newBio) {
-        updateUserBio(newBio);
-    } else {
-        window.LyriaUI.notify('Bio cannot be empty.');
-    }
-});
 
 });
-
-

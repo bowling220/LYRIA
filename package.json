@@ -2,6 +2,7 @@
   "name": "lyria-community",
   "private": true,
   "scripts": {
-    "build": "node build.mjs"
+    "build": "node build.mjs",
+    "test:rules": "node tests/run-rules.mjs"
   }
 }

@@ -37,6 +37,33 @@ LYRIA/
 └── premium-upgrade.html # Planned Premium pricing; checkout disabled
 ```
 
+## Shared chat and account saves
+
+Every signed-in user (including guests) starts in **Everyone**. It uses the fixed
+`channels/community/messages` path, with no growing membership document. Messages
+show the latest 100 entries. Personal and invite-only conversations stay separate;
+voice calls remain available in those private conversations.
+
+`js/account.js` is the single profile-save controller. It merges changes into
+`users/{auth.uid}`, verifies the result with a server read, and shows unsaved,
+saving, saved, or failed states. A failed or disconnected save never reports
+success. Display names are saved to LYRIA first; updating Firebase Auth's optional
+profile copy cannot prevent an account save.
+
+**Activation:** deploy the web assets and publish `firestore.rules` to the existing
+`lyria-49a54` project. The shared room requires the new rules; changing GitHub files
+does not publish Firebase rules. After signing in with an authorized Firebase CLI:
+
+```sh
+npm ci --prefix tests
+tests/node_modules/.bin/firebase deploy --only firestore:rules --project lyria-49a54
+```
+
+Until those rules are published, the first denied shared-room load falls back to
+the user's personal conversation. See [tests/README.md](tests/README.md) for local
+emulator and browser regression checks. Live account access still requires testing
+against the deployed project's rules.
+
 ## Shared web interface
 
 All six web pages load `css/theme.css` and `js/ui.js`. Edit the theme's root

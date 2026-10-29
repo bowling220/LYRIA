@@ -87,9 +87,41 @@ with sync_playwright() as p:
     page.locator('#channel-action-input').fill('Design notes');page.locator('#submit-channel-action').click();page.wait_for_timeout(150)
     assert page.locator('#channel-title').inner_text()=='Design notes'
     assert page.locator('.channel-btn.active-channel').inner_text()=='Design notes'
-    page.locator('#settings-btn').click();page.wait_for_timeout(50);page.locator('#toggle-dark-mode').click();assert page.locator('body').evaluate("el=>el.classList.contains('contrast-mode')")
+    page.locator('#settings-btn').click();page.wait_for_timeout(50);page.locator('#toggle-dark-mode').click();page.wait_for_function("document.body.classList.contains('contrast-mode')");assert page.locator('#contrast-save-status').inner_text()=='Saved to your account.'
     page.keyboard.press('Escape');page.wait_for_timeout(50)
     page.locator('#open-friends-modal').click();page.wait_for_timeout(100);assert 'Maya Chen' in page.locator('#friends-list').inner_text()
+    page.close()
+    # Account data is authoritative in Firestore, and save feedback must reflect confirmation.
+    page=make_page(1440,1000,False);page.goto('http://localhost:8124/home.html',wait_until='load');page.wait_for_timeout(100)
+    assert page.locator('#channel-title').inner_text()=='Everyone'
+    assert page.locator('[data-channel-id="community"]').count()==1
+    assert page.locator('#leave-channel').is_disabled()
+    page.locator('#settings-btn').click();page.wait_for_timeout(50)
+    page.evaluate('window.__failAuthProfile=true')
+    page.locator('#display-name-input').fill('Saved Name');page.locator('#update-display-name').click()
+    page.wait_for_function("document.getElementById('display-name-save-status').dataset.state==='saved'")
+    assert page.locator('#user-name').inner_text()=='Saved Name'
+    page.evaluate('window.__failNextProfileSave=true');page.locator('#bio-input').fill('Keep my unsaved bio');page.locator('#update-bio-btn').click()
+    page.wait_for_function("document.getElementById('bio-save-status').dataset.state==='error'")
+    assert 'Not saved.' in page.locator('#bio-save-status').inner_text()
+    assert page.locator('#bio-input').input_value()=='Keep my unsaved bio'
+    assert page.evaluate("window.__testData.get('users/test-member').bio")!='Keep my unsaved bio'
+    page.evaluate('window.__delayProfileSave=true');page.locator('#update-bio-btn').click();page.wait_for_timeout(50)
+    assert page.locator('#bio-save-status').get_attribute('data-state')=='saving'
+    assert page.locator('#update-bio-btn').is_disabled()
+    page.locator('#bio-input').fill('A newer unsaved edit')
+    page.evaluate('window.__delayProfileSave=false;window.__finishProfileSave()')
+    page.wait_for_function("document.getElementById('bio-save-status').dataset.state==='dirty'")
+    assert page.locator('#bio-input').input_value()=='A newer unsaved edit'
+    page.locator('#update-bio-btn').click();page.wait_for_function("document.getElementById('bio-save-status').dataset.state==='saved'")
+    page.reload(wait_until='load');page.wait_for_timeout(100)
+    assert page.locator('#user-name').inner_text()=='Saved Name'
+    page.locator('#settings-btn').click();page.wait_for_timeout(50)
+    assert page.locator('#bio-input').input_value()=='A newer unsaved edit'
+    page.evaluate("window.__testData.delete('users/test-member')")
+    page.locator('#bio-input').fill('Restored missing profile');page.locator('#update-bio-btn').click()
+    page.wait_for_function("document.getElementById('bio-save-status').dataset.state==='saved'")
+    assert page.evaluate("window.__testData.get('users/test-member').bio")=='Restored missing profile'
     page.close()
     page=make_page();page.goto('http://localhost:8124/News.html',wait_until='load');page.wait_for_timeout(100)
     like=page.locator('[id$="-like-button"]').first;like.click();page.wait_for_timeout(100);assert like.get_attribute('aria-pressed')=='true'
@@ -106,8 +138,12 @@ with sync_playwright() as p:
     page.close()
     for button in ['#guest-login','#google-signin']:
         page=make_page();page.goto('http://localhost:8124/login.html',wait_until='load');page.locator(button).click();page.wait_for_url('**/home.html');page.close()
+    page=make_page();page.add_init_script('window.__denyCommunity=true');page.goto('http://localhost:8124/home.html',wait_until='load')
+    page.wait_for_function("document.getElementById('channel-title').textContent==='My personal channel'")
+    assert page.locator('[data-channel-id="community"]').count()==1
+    page.close()
     page=make_page();page.goto('http://localhost:8124/premium-upgrade.html',wait_until='load')
     page.locator('input[value=premium]').check();assert '$36.00' in page.locator('#selected-yearly-price').inner_text()
     assert page.locator('#confirm-upgrade').is_disabled()
     page.close();browser.close()
-print(f'PASS: {count} responsive page checks; structure, dialogs, channels, messaging success/failure, keyboard viewport, friends, icons, contrast, likes and pricing preview.')
+print(f'PASS: {count} responsive page checks; structure, dialogs, channels, messaging success/failure, keyboard viewport, friends, icons, account save/reload/error/pending states, shared-room fallback, likes and pricing preview.')

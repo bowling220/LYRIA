@@ -1,7 +1,7 @@
 // In-memory Firebase substitute for browser checks. No requests or production writes.
 (() => {
  const stamp={toDate:()=>new Date('2026-10-29T10:30:00Z')};
- const user={uid:'test-member',displayName:'Alex Morgan',photoURL:'assets/avatar.svg',email:'alex@example.test',isAnonymous:false,updateProfile:async data=>Object.assign(user,data)};
+ const user={uid:'test-member',displayName:'Alex Morgan',photoURL:'assets/avatar.svg',email:'alex@example.test',isAnonymous:false,updateProfile:async data=>{if(window.__failAuthProfile)throw new Error('Simulated Auth profile failure');Object.assign(user,data)}};
  const data=new Map([
   ['users/test-member',{displayName:'Alex Morgan',photoURL:'assets/avatar.svg',channels:['personal-test-member','studio'],friends:['maya'],badges:[],bio:'Making room for good conversations.',status:'available'}],
   ['users/maya',{displayName:'Maya Chen',photoURL:'assets/avatar.svg',badges:[],bio:'Design, music, and the occasional very good idea.',friends:[],status:'available'}],
@@ -12,8 +12,10 @@
   ['channels/personal-test-member/messages/three',{sender:'Maya Chen',senderId:'maya',message:'A new playlist and a few ideas for the weekend. Come say hello in the studio!',timestamp:stamp}],
   ['friendRequests/invite',{from:'maya',to:'test-member',fromName:'Maya Chen',status:'pending'}],
  ]);
+ const persisted=sessionStorage.getItem('lyria-test-profile');if(persisted)data.set('users/test-member',JSON.parse(persisted));
+ const shared=[...data].filter(([path])=>path.includes('/personal-test-member/messages/'));shared.forEach(([path,value])=>data.set(path.replace('/personal-test-member/','/community/'),value));
  const watchers=new Set();let index=0;
- const docSnapshot=path=>({id:path.split('/').at(-1),exists:data.has(path),data:()=>data.get(path)});
+ const docSnapshot=path=>({id:path.split('/').at(-1),exists:data.has(path),metadata:{hasPendingWrites:false,fromCache:false},data:()=>data.get(path)});
  const querySnapshot=ref=>{const docs=[...data.keys()].filter(p=>p.startsWith(ref.path+'/') && p.split('/').length===ref.path.split('/').length+1).filter(p=>ref.filters.every(([field,op,val])=>{const v=data.get(p)[field];return op==='array-contains'?v?.includes(val):op==='in'?val.includes(v):v===val})).map(docSnapshot);return{docs,empty:!docs.length,size:docs.length,forEach:fn=>docs.forEach(fn)}};
  const emit=()=>watchers.forEach(w=>w.fn(w.ref.document?docSnapshot(w.ref.path):querySnapshot(w.ref)));
  const mutate=(path,values)=>{const target={...(data.get(path)||{})};for(const [key,val]of Object.entries(values)){if(val?.op==='union')target[key]=[...new Set([...(target[key]||[]),...val.values])];else if(val?.op==='remove')target[key]=(target[key]||[]).filter(x=>!val.values.includes(x));else if(val?.op==='increment')target[key]=(target[key]||0)+val.value;else target[key]=val}data.set(path,target);emit()};
@@ -24,12 +26,18 @@
   where(...filter){return new Ref(this.path,false,[...this.filters,filter])}
   orderBy(){return this}
   limit(){return this}
+  limitToLast(){return this}
   async get(){return this.document?docSnapshot(this.path):querySnapshot(this)}
-  async set(value){mutate(this.path,value)}
+  async set(value){
+   if(window.__failNextProfileSave && this.path==='users/test-member'){window.__failNextProfileSave=false;throw Object.assign(new Error('Simulated permission denied'),{code:'permission-denied'})}
+   if(window.__delayProfileSave && this.path==='users/test-member')await new Promise(resolve=>{window.__finishProfileSave=resolve});
+   mutate(this.path,value);
+   if(this.path==='users/test-member')sessionStorage.setItem('lyria-test-profile',JSON.stringify(data.get(this.path)));
+  }
   async update(value){mutate(this.path,value)}
   async delete(){data.delete(this.path);emit()}
   async add(value){if(window.__failNextMessage && this.path.endsWith('/messages')){window.__failNextMessage=false;throw new Error('Simulated send failure')}const ref=this.doc();await ref.set(value);return ref}
-  onSnapshot(fn){const w={ref:this,fn};watchers.add(w);queueMicrotask(()=>fn(this.document?docSnapshot(this.path):querySnapshot(this)));return()=>watchers.delete(w)}
+  onSnapshot(fn,onError){if(window.__denyCommunity && this.path==='channels/community/messages'){queueMicrotask(()=>onError?.({code:'permission-denied'}));return()=>{}}const w={ref:this,fn};watchers.add(w);queueMicrotask(()=>fn(this.document?docSnapshot(this.path):querySnapshot(this)));return()=>watchers.delete(w)}
  }
  const db={collection:name=>new Ref(name),enablePersistence:async()=>{},batch:()=>{const ops=[];return{set:(ref,val)=>ops.push(()=>ref.set(val)),update:(ref,val)=>ops.push(()=>ref.update(val)),commit:async()=>Promise.all(ops.map(fn=>fn()))}}};
  const auth={currentUser:user,onAuthStateChanged:fn=>{queueMicrotask(()=>fn(user));return()=>{}},signOut:async()=>{},signInWithPopup:async()=>({user}),signInAnonymously:async()=>({user})};

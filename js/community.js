@@ -51,14 +51,6 @@
     catch(error){report('Could not share that GIF. Check the URL and try again.',error)}
     finally{button.disabled=false}
   });
-  $('update-status-btn').addEventListener('click',async()=>{
-    if(!current())return;
-    const status=$('status-select').value;
-    if(!status){UI.notify('Choose a status first.');return}
-    const button=$('update-status-btn');button.disabled=true;
-    try{await db.collection('users').doc(current().uid).update({status});UI.notify('Status updated.','success')}
-    catch(error){report('Could not update your status.',error)}finally{button.disabled=false}
-  });
   $('profile-image-input').addEventListener('change',()=>{pendingImage=null});
   $('update-profile-image').addEventListener('click',async()=>{
     const file=$('profile-image-input').files[0];
@@ -73,12 +65,9 @@
   $('cancel-image-change-btn').addEventListener('click',()=>close('confirm-image-change-modal'));
   $('confirm-image-change-btn').addEventListener('click',async()=>{
     if(!pendingImage || !current())return;
-    const button=$('confirm-image-change-btn');button.disabled=true;
-    try{
-      await db.collection('users').doc(current().uid).update({photoURL:pendingImage});
-      $('user-avatar').src=pendingImage;$('profile-modal-image').src=pendingImage;
-      close('confirm-image-change-modal');UI.notify('Profile image updated.','success');pendingImage=null;
-    }catch(error){report('Could not update your profile image.',error)}finally{button.disabled=false}
+    const saved=await window.LyriaAccount.save({photoURL:pendingImage},{button:$('confirm-image-change-btn'),statusId:'image-confirm-save-status'});
+    if(saved){$('profile-modal-image').src=pendingImage;$('image-save-status').textContent='Saved to your account.';$('image-save-status').dataset.state='saved';close('confirm-image-change-modal');pendingImage=null;}
+
   });
   async function init(){
     try{
@@ -87,9 +76,6 @@
       auth.onAuthStateChanged(async user=>{
         unsubscribeRequests?.();if(!user)return;
         try{
-          const doc=await db.collection('users').doc(user.uid).get();const data=doc.data() || {};
-          $('status-select').value=data.status || '';
-          $('profile-image-input').disabled=!data.isPremium;$('update-profile-image').disabled=!data.isPremium;
           unsubscribeRequests=db.collection('friendRequests').where('to','==',user.uid).onSnapshot(snapshot=>{
             const count=snapshot.docs.filter(doc=>!doc.data().status || doc.data().status==='pending').length;
             const badge=$('friend-request-count');badge.textContent=count;badge.style.display=count?'inline-block':'none';

@@ -78,54 +78,11 @@
 
     const db = getFirestore();
 
-    async function ensurePersonalWorkspace(user, role) {
-      const personalChannelId = `personal-${user.uid}`;
-      const userRef = db.collection('users').doc(user.uid);
-      const channelRef = db.collection('channels').doc(personalChannelId);
-      const userDoc = await userRef.get();
-
-      if (!userDoc.exists) {
-        await userRef.set({
-          displayName: user.displayName || (role === 'guest' ? 'Guest' : 'User'),
-          email: user.email || null,
-          photoURL: user.photoURL || 'assets/icon.png',
-          role,
-          channels: [personalChannelId],
-          friends: [],
-          badges: [],
-          darkMode: false,
-          notificationsEnabled: false,
-          bio: 'No bio set.'
-        });
-      } else {
-        await userRef.set({
-          channels: firebase.firestore.FieldValue.arrayUnion(personalChannelId)
-        }, { merge: true });
-      }
-
-      const channelDoc = await channelRef.get();
-      if (!channelDoc.exists) {
-        await channelRef.set({
-          name: 'My Personal Channel',
-          id: personalChannelId,
-          createdBy: user.uid,
-          joinCode: Math.random().toString(36).substring(2, 8).toUpperCase(),
-          members: [user.uid],
-          isPublic: false
-        });
-      } else {
-        await channelRef.update({
-          members: firebase.firestore.FieldValue.arrayUnion(user.uid)
-        });
-      }
-    }
-
     // Google Sign-In Button Event
     document.getElementById('google-signin').addEventListener('click', function() {
       const provider = new firebase.auth.GoogleAuthProvider();
       auth.signInWithPopup(provider)
         .then(async result => {
-          await ensurePersonalWorkspace(result.user, 'user');
           window.location.href = 'home.html';
         })
         .catch(error => {
@@ -137,7 +94,6 @@
     document.getElementById('guest-login').addEventListener('click', function() {
       auth.signInAnonymously()
         .then(async result => {
-          await ensurePersonalWorkspace(result.user, 'guest');
           window.location.href = 'home.html';
         })
         .catch(error => {
