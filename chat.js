@@ -733,7 +733,9 @@ function loadMessages(channelId) {
             if(data.type==='gif'){
                 window.LyriaMedia.renderGif(content,data,{onLoad:()=>{if(nearBottom && container.scrollHeight-container.scrollTop-container.clientHeight<140)container.scrollTop=container.scrollHeight}});
             }else{content.textContent=data.message || data.content || ''}
-            message.append(sender,content);container.append(message);
+            message.append(sender,content);
+            window.LyriaReactions?.mount(message,data,channelId,doc.id,()=>unsubscribeFromMessages?.refresh?.());
+            container.append(message);
         });
         container.scrollTop=nearBottom?container.scrollHeight:previousTop;
         firstSnapshot=false;

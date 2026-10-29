@@ -2,7 +2,7 @@ import { before, after, beforeEach, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { initializeTestEnvironment, assertFails, assertSucceeds } from '@firebase/rules-unit-testing';
-import { doc, collection, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, collection, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, serverTimestamp, arrayUnion, arrayRemove } from 'firebase/firestore';
 
 let env;
 before(async () => {
@@ -188,4 +188,20 @@ test('HTTPS voice presence preserves typing and prevents old cleanup from deleti
  const stale=await API.read(path);await updateDoc(doc(member(uid),path),{isTyping:false});
  await assert.rejects(API.commit([{update:{name:API.name(path),fields:{}},updateMask:{fieldPaths:['voice']},currentDocument:{updateTime:stale.updateTime}}]),error=>error.code==='aborted');
  assert.equal(await Presence.clear(replacement),true);const final=await API.read(path);assert.equal(final.data().isTyping,false);assert.equal(final.data().voice,undefined);
+});
+
+test('members react atomically to messages without replacing other reactions or changing text',async()=>{
+ const alice=member('alice'),bob=member('bob');
+ const ref=doc(alice,'channels/community/messages/react');
+ await setDoc(ref,{senderId:'alice',message:'Hello'});
+ const other=doc(bob,ref.path);
+ await Promise.all([updateDoc(ref,{'reactions.heart':arrayUnion('alice')}),assertSucceeds(updateDoc(other,{'reactions.heart':arrayUnion('bob')}))]);
+ await updateDoc(other,{'reactions.heart':arrayUnion('bob')});
+ assert.deepEqual(new Set((await getDoc(ref)).data().reactions.heart),new Set(['alice','bob']));
+ await updateDoc(other,{'reactions.heart':arrayRemove('bob')});
+ assert.deepEqual((await getDoc(ref)).data().reactions.heart,['alice']);
+ await assertFails(updateDoc(other,{message:'tampered','reactions.fire':['bob']}));
+ await setDoc(doc(alice,'channels/private'),{createdBy:'alice',members:['alice']});
+ await setDoc(doc(alice,'channels/private/messages/react'),{senderId:'alice',message:'Private'});
+ await assertFails(updateDoc(doc(bob,'channels/private/messages/react'),{'reactions.heart':arrayUnion('bob')}));
 });

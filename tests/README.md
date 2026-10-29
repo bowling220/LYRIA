@@ -143,3 +143,5 @@ leaving, and retaining animated avatar sources across ordinary state updates.
 The real `voice-smoke.py` also loads the stage controller: it checks speaking
 highlights from received WebRTC audio, stage microphone/sound controls, and
 switching between chat and call without changing the live session.
+
+`python3 tests/appearance-reactions-smoke.py` checks mobile/desktop theme previews, account save/reload, cross-page colors, reaction add/remove, and failed reaction writes. The rules suite also verifies concurrent reactions, duplicate prevention, removal, and private-room denial.

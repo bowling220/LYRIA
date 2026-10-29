@@ -474,3 +474,7 @@ Contextual playback/microphone/rejoin controls remain available in the stage.
 Speaking activity is computed locally from received audio and is never written
 to Firestore. Layouts support two people on a phone and scrollable groups of six
 while keeping the dock visible. Reduced-motion preferences disable transitions.
+
+Personal appearance is available under Your account → Make LYRIA yours: six presets, light/dark mode, custom accent and background hue, corners, and chat spacing. Previews stay on this browser; Save appearance to account confirms cloud persistence. Shared appearance loads before page content on all six pages. Custom accent colors are adjusted for readable foreground contrast.
+
+Messages have a React control with eight emoji choices. Counts toggle your own reaction using atomic Firestore array transforms, preserving concurrent members’ reactions. Existing channel membership rules apply; no rule deployment is required.

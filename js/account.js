@@ -44,6 +44,7 @@
   }
   function render(data) {
     profile = data;
+    if(data.appearance)window.LyriaAppearance?.apply(data.appearance);
     if ($('user-name')) $('user-name').textContent = data.displayName || auth.currentUser?.displayName || 'LYRIA member';
     if ($('user-avatar')) $('user-avatar').src = window.LyriaMedia.profileSource(data);
     for (const [id,key] of [['display-name-input','displayName'],['bio-input','bio']]) {
