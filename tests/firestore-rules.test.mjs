@@ -2,7 +2,7 @@ import { before, after, beforeEach, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { initializeTestEnvironment, assertFails, assertSucceeds } from '@firebase/rules-unit-testing';
-import { doc, collection, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, serverTimestamp, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { doc, collection, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, serverTimestamp, arrayUnion, arrayRemove, runTransaction } from 'firebase/firestore';
 
 let env;
 before(async () => {
@@ -222,4 +222,22 @@ test('profile HTTPS edits preserve ignored legacy membership fields and unrelate
   assert.deepEqual(saved.badges,['premium','Beta']);assert.deepEqual(saved.friends,['friend']);assert.deepEqual(saved.unrelated,{keep:true});assert.equal(saved.bio,'Saved normally');
   const published=(await getDoc(doc(member(uid),'profiles/'+uid))).data();for(const field of ['email','friends','unrelated','isPremium','premiumTier','subscriptionStatus'])assert.equal(field in published,false);assert.equal(saved.email,'keep@example.test');
  }
+});
+
+test('journal metadata remains compatible with public reading and authenticated publishing',async()=>{
+ const alice=member('alice'),visitor=env.unauthenticatedContext().firestore();
+ const payload={title:'A community journal story',body:'The complete article.',authorName:'Alice',authorId:'alice',authorPhotoURL:'',category:'guides',excerpt:'An introduction.',imageURL:'https://example.test/cover.png',readingMinutes:1,tags:['community'],timestamp:'2026-10-29T10:00:00Z'};
+ const story=await assertSucceeds(addDoc(collection(alice,'userArticles'),payload));
+ assert.equal((await assertSucceeds(getDoc(doc(visitor,story.path)))).data().category,'guides');
+ await assertFails(addDoc(collection(visitor,'userArticles'),payload));
+ await assertFails(updateDoc(story,{title:'Existing articles remain immutable'}));
+});
+
+test('journal atomic reactions and original archive comment IDs obey existing rules',async()=>{
+ const alice=member('alice'),bob=member('bob'),visitor=env.unauthenticatedContext().firestore();
+ async function react(db,uid){return runTransaction(db,async tx=>{const post=doc(db,'posts/voice-call-feature'),mine=doc(db,'userLikes/'+uid+'/likes/voice-call-feature');const [total,liked]=await Promise.all([tx.get(post),tx.get(mine)]);const wasLiked=Boolean(liked.data()?.liked);tx.set(post,{likes:Math.max(0,(total.data()?.likes || 0)+(wasLiked?-1:1))},{merge:true});tx.set(mine,{liked:!wasLiked})})}
+ await assertSucceeds(react(alice,'alice'));await assertSucceeds(react(bob,'bob'));assert.equal((await getDoc(doc(alice,'posts/voice-call-feature'))).data().likes,2);
+ await assertSucceeds(react(alice,'alice'));assert.equal((await getDoc(doc(bob,'posts/voice-call-feature'))).data().likes,1);
+ const comment=await assertSucceeds(addDoc(collection(alice,'articles/voice-call/comments'),{text:'The original thread still works.',userId:'alice',username:'Alice',timestamp:'2026-10-29T10:00:00Z'}));
+ await assertSucceeds(getDoc(doc(visitor,comment.path)));await assertFails(addDoc(collection(visitor,'articles/voice-call/comments'),{text:'Signed out',userId:'alice'}));await assertFails(deleteDoc(doc(bob,comment.path)));await assertSucceeds(deleteDoc(comment));
 });

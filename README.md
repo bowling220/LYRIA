@@ -584,3 +584,13 @@ Opening `home.html` shows the conversation hub without selecting a chat. Explici
 ### Sidebar and feedback
 
 The sidebar keeps profile/settings controls fixed while conversations and voice channels scroll independently. **Ideas & feedback** accepts account-backed ideas and bug reports, retains failed drafts, and shows confirmed submissions. See [feedback review and storage](docs/FEEDBACK.md) for maintainer instructions and privacy limitations.
+
+### The Community Journal
+
+`News.html` is an editorial homepage with a featured story, category filters, and explicit More stories pagination. A `?story=` link opens the dedicated reading view; browser back/forward and direct links work without another framework. `js/news-archive.js` preserves the 13 original release posts and their exact old reaction/comment IDs. Archive stories are labelled with their original publication dates. `js/news.js` continues using the existing Firebase Auth, `userArticles`, `posts`, `userLikes`, and article comment collections. No rule or index deployment is required.
+
+New member articles add optional `category`, `excerpt`, `imageURL`, `authorId`, `authorPhotoURL`, and `readingMinutes` fields alongside existing title/body/byline/tags/timestamp data. Old documents remain readable with derived excerpts/read time and a Community category. No migration or record deletion occurs. Cover images use safe HTTPS URLs or packaged artwork; a branded illustration replaces unavailable imagery. User content is rendered as text, with simple headings/lists/quotes/code blocks; arbitrary HTML is not executed.
+
+Member documents are loaded in bounded pages of 24; six cards are displayed at a time, with explicit pagination rather than an infinite feed. The current single-document article schema still includes the body in each fetched page. Comments subscribe only in the open reader and show the latest 100, with listener cleanup on navigation. Counts use actual saved likes; no synthetic popularity or weekly rankings are shown. Publishing checks authentication and keeps the existing blocked-author behavior; Firestore remains the permission boundary.
+
+Run `npm test` and `python tests/news-smoke.py` for model/legacy-compatibility and browser coverage. Browser snapshots are generated under `test-artifacts/journal/` using isolated demonstration data, never live account writes.
