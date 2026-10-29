@@ -170,13 +170,13 @@
       offerReconnect();
     }
   }
-  async function reconnect(){
+  async function reconnect({restartLive=true}={}){
     if(reconnecting || !auth?.currentUser)return reconnecting;
     const button=$('reconnect-account');if(button){button.disabled=true;button.textContent='Reconnecting…'}
     const user=auth.currentUser;
     reconnecting=(async()=>{
       // Restart live chat independently; a stalled stream cannot block the profile HTTPS check.
-      db.disableNetwork().then(()=>db.enableNetwork()).catch(error=>console.warn('Live connection restart failed',error));
+      if(restartLive)db.disableNetwork().then(()=>db.enableNetwork()).catch(error=>console.warn('Live connection restart failed',error));
       await loadAccount(user);
     })();
     try{await reconnecting}finally{reconnecting=null;if(button){button.disabled=false;button.textContent='Reconnect account'}}

@@ -3,6 +3,7 @@
   "private": true,
   "scripts": {
     "build": "node build.mjs",
+    "version:assets": "node scripts/version-assets.mjs",
     "test:rules": "node tests/run-rules.mjs"
   }
 }

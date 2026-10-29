@@ -31,6 +31,7 @@ let unsubscribeFromMessages = null;
 let unsubscribeTyping = null; // Unsubscribe function for message listener
 let uiListenersAttached = false;
 let channelLoadVersion = 0;
+let messageLoadVersion = 0;
 let communityAccessDenied = false;
 let usedCommunityFallback = false;
 
@@ -193,6 +194,7 @@ document.addEventListener('click', (e) => {
 // Initialize Firebase and setup authentication
 initializeFirebase().then(() => {
     if (!auth) {
+        window.LyriaConnection?.fail('startup','LYRIA couldn’t start. Reload to try again.');
         console.error('Auth not initialized');
         return;
     }
@@ -200,6 +202,15 @@ initializeFirebase().then(() => {
     // Make every control responsive immediately; data-dependent actions already
     // guard currentUser/currentChannel until authentication finishes.
     setupUIEventListeners();
+    window.LyriaConnection?.setRetry(async()=>{
+        if(!currentUser){location.reload();return;}
+        window.LyriaConnection.ready('recovery');
+        await db.disableNetwork();await db.enableNetwork();
+        loadMessages(currentChannel || COMMUNITY_CHANNEL_ID);loadChannels();
+        listenForTypingStatus(currentChannel || COMMUNITY_CHANNEL_ID);
+        window.LyriaVoice?.refreshDirectory?.();
+        window.LyriaAccount?.reconnect({restartLive:false});
+    });
 
     // Use one authentication path for user setup, channel setup and UI listeners.
     auth.onAuthStateChanged(async (user) => {
@@ -209,6 +220,7 @@ initializeFirebase().then(() => {
         }
 
         currentUser = user;
+        window.LyriaConnection?.ready('startup');
         // Everyone is a shared room, not a growing per-user membership list.
         switchChannel(COMMUNITY_CHANNEL_ID);
         loadChannels();
@@ -572,6 +584,7 @@ function listenForTypingStatus(channelId) {
 }
 
 function loadChannels() {
+    window.LyriaConnection?.pending('channels');
     const version = ++channelLoadVersion;
     const channelsList = document.getElementById('channels-list');
     channelsList.innerHTML = '<li class="community-channel"><button type="button" class="channel-btn" data-channel-id="community">'+window.LyriaUI.icon('users')+'<span class="channel-name">Everyone</span><span class="room-label">SHARED</span></button><p class="community-note">One room for the whole community.</p></li>';
@@ -584,11 +597,16 @@ function loadChannels() {
     db.collection('channels')
         .where('members', 'array-contains', currentUser.uid)
         .get()
-        .then(snapshot => {
-            const userDocRef = db.collection('users').doc(currentUser.uid);
-            return userDocRef.get().then(userDoc => {
+        .then(async snapshot => {
+            // Preferences are optional: a stalled profile stream must not hide conversations.
+            let timer;
+            const userDoc=await Promise.race([
+                db.collection('users').doc(currentUser.uid).get().catch(()=>null),
+                new Promise(resolve=>{timer=setTimeout(()=>resolve(null),3000)})
+            ]).finally(()=>clearTimeout(timer));
                 if (version !== channelLoadVersion) return;
-                const userData = userDoc.data() || {};
+                window.LyriaConnection?.ready('channels');
+                const userData = userDoc?.data() || window.LyriaAccount?.getProfile() || {};
                 const favoriteChannels = userData.favoriteChannels || []; // Get user's favorite channels
 
                 const channels = snapshot.docs.filter(doc=>doc.id !== COMMUNITY_CHANNEL_ID).map(doc => ({
@@ -637,9 +655,10 @@ function loadChannels() {
                     channelElement.appendChild(channelContainer);
                     channelsList.appendChild(channelElement);
                 });
-            });
         })
         .catch(error => {
+            if(version!==channelLoadVersion)return;
+            window.LyriaConnection?.fail('channels','Your conversations couldn’t load. Try reconnecting.');
             console.error("Error loading channels:", error);
         });
 }
@@ -649,6 +668,8 @@ function generateJoinCode() {
 }
 
 function loadMessages(channelId) {
+    const version=++messageLoadVersion;
+    window.LyriaConnection?.pending('messages');
     unsubscribeFromMessages?.();
     const container = document.getElementById('messages');
     container.innerHTML = '<div class="empty-state"><span class="empty-icon">'+window.LyriaUI.icon('chat')+'</span><p>Loading your conversation…</p></div>';
@@ -668,7 +689,8 @@ function loadMessages(channelId) {
         }
     }).catch(error => console.error('Channel details unavailable', error));
     unsubscribeFromMessages = db.collection('channels').doc(channelId).collection('messages').orderBy('timestamp').limitToLast(100).onSnapshot(snapshot => {
-        if (currentChannel !== channelId) return;
+        if (currentChannel !== channelId || version!==messageLoadVersion) return;
+        if(snapshot.metadata?.fromCache){window.LyriaConnection?.pending('messages')}else window.LyriaConnection?.ready('messages');
         const nearBottom = firstSnapshot || container.scrollHeight - container.scrollTop - container.clientHeight < 100;
         const previousTop = container.scrollTop;
         const users = new Map();
@@ -709,6 +731,8 @@ function loadMessages(channelId) {
         container.scrollTop=nearBottom?container.scrollHeight:previousTop;
         firstSnapshot=false;
     },error=>{
+        if(currentChannel!==channelId || version!==messageLoadVersion)return;
+        window.LyriaConnection?.fail('messages','Your conversation disconnected. Try reconnecting.');
         console.error(error);
         if (error.code === 'permission-denied' && channelId === COMMUNITY_CHANNEL_ID) {
             communityAccessDenied = true;
@@ -1083,4 +1107,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
+}).catch(error=>{
+    console.error('Chat startup failed',error);
+    window.LyriaConnection?.fail('startup','LYRIA couldn’t finish loading. Reload to try again.');
 });

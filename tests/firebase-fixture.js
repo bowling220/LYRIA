@@ -27,7 +27,7 @@
   orderBy(){return this}
   limit(){return this}
   limitToLast(){return this}
-  async get(){return this.document?docSnapshot(this.path):querySnapshot(this)}
+  async get(){if(window.__stallProfileRead && this.path.startsWith('users/'))return new Promise(()=>{});if(window.__stallChannels && this.path==='channels' && !this.document)return new Promise(()=>{});return this.document?docSnapshot(this.path):querySnapshot(this)}
   async set(value){
    if(window.__failNextProfileSave && this.path==='users/test-member'){window.__failNextProfileSave=false;throw Object.assign(new Error('Simulated permission denied'),{code:'permission-denied'})}
    if(window.__delayProfileSave && this.path==='users/test-member')await new Promise(resolve=>{window.__finishProfileSave=resolve});
@@ -37,7 +37,7 @@
   async update(value){mutate(this.path,value)}
   async delete(){data.delete(this.path);emit()}
   async add(value){if(window.__failNextMessage && this.path.endsWith('/messages')){window.__failNextMessage=false;throw new Error('Simulated send failure')}const ref=this.doc();await ref.set(value);return ref}
-  onSnapshot(fn,onError){if(window.__denyCommunity && this.path==='channels/community/messages'){queueMicrotask(()=>onError?.({code:'permission-denied'}));return()=>{}}const w={ref:this,fn};watchers.add(w);queueMicrotask(()=>fn(this.document?docSnapshot(this.path):querySnapshot(this)));return()=>watchers.delete(w)}
+  onSnapshot(fn,onError){if(window.__stallMessages && this.path.endsWith('/messages'))return()=>{};if(window.__failMessages && this.path.endsWith('/messages')){queueMicrotask(()=>onError?.({code:'unavailable'}));return()=>{}}if(window.__denyCommunity && this.path==='channels/community/messages'){queueMicrotask(()=>onError?.({code:'permission-denied'}));return()=>{}}const w={ref:this,fn};watchers.add(w);queueMicrotask(()=>fn(this.document?docSnapshot(this.path):querySnapshot(this)));return()=>watchers.delete(w)}
  }
  const db={settings:options=>{window.__firestoreTransport=options},disableNetwork:async()=>{window.__networkRestarts=(window.__networkRestarts||0)+1},enableNetwork:async()=>{},collection:name=>new Ref(name),enablePersistence:async()=>{},batch:()=>{const ops=[];return{set:(ref,val)=>ops.push(()=>ref.set(val)),update:(ref,val)=>ops.push(()=>ref.update(val)),commit:async()=>Promise.all(ops.map(fn=>fn()))}}};
  const auth={currentUser:user,onAuthStateChanged:fn=>{queueMicrotask(()=>fn(user));return()=>{}},signOut:async()=>{},signInWithPopup:async()=>({user}),signInAnonymously:async()=>({user})};

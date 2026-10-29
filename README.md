@@ -374,3 +374,24 @@ these account fields; no new rules need publishing.
 Run `python3 tests/gif-smoke.py` for library-only selection, search, rendering,
 retry, GIF upload byte preservation, free avatar/banner customization, reload
 persistence, and mobile keyboard/viewport checks.
+
+## Reload and connection recovery
+
+First-party scripts and styles use content-versioned URLs so browser caches do
+not reuse a previous release’s files. Run `npm run version:assets` before
+publishing the source directory; `npm run build` also versions the generated
+HTML in `dist/client`. The versioning command is deterministic and idempotent.
+
+Community startup, channel loading, and the first server message snapshot are
+monitored. Stalled or disconnected loads show a Reconnect control. Recovery
+restarts Firestore networking and attaches fresh message, typing, channel, and
+voice-directory listeners without clearing the composer or reopening the mic.
+Returning online and restoring a page from browser history trigger recovery;
+nearby recovery events are combined rather than dropped. Missing required
+scripts offer Reload LYRIA. Optional profile preferences have a bounded wait so
+they cannot indefinitely hide conversations. Account recovery shares the chat
+network restart instead of restarting it twice.
+
+A full page reload still ends voice: explicitly join a voice channel again.
+Connection feedback and retries do not establish what failed on a particular
+user’s device; browser/network-specific failures still need their symptoms.

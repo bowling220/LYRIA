@@ -16,6 +16,8 @@ def make_page(browser,root,width=390,height=844,touch=True,gif_options=None):
         elif 'www.gstatic.com/firebasejs/' in url and not '-compat' in url:
             names={'firebase-app.js':['initializeApp'],'firebase-auth.js':['getAuth','onAuthStateChanged'],'firebase-firestore.js':['initializeFirestore','getFirestore','doc','increment','onSnapshot','setDoc','getDoc','collection','addDoc','query','orderBy','getDocs']}.get(url.split('/')[-1],[])
             r.fulfill(body='\n'.join('export const '+name+'=window.__firebaseModule.'+name+';' for name in names),content_type='text/javascript')
+        elif ('www.gstatic.com/firebasejs/' in url and '-compat.js' in url) or 'cdnjs.cloudflare.com/ajax/libs/peerjs/' in url:
+            r.fulfill(body='/* SDK supplied by the local fixture. */',content_type='text/javascript')
         elif url.startswith('https://media.giphy.com/media/'):
             if options.get('fail_original') and '/giphy.gif' in url:r.fulfill(status=503,body='Temporarily unavailable')
             elif options.get('real_images'):

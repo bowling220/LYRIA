@@ -173,3 +173,7 @@ body.app-page { height:100dvh; overflow:hidden; display:flex;flex-direction:colu
 .voice-effects-setting input { width: 18px; height: 18px; accent-color: #c7f376; }
 .voice-call-info { flex: 1; min-width: 0; } .voice-call-info strong { font-size: .8rem; overflow-wrap: anywhere; }
 #voice-participants { display: flex; flex-wrap: wrap; gap: 6px 12px; font-size: .75rem; opacity: .8; }
+
+.connection-notice[hidden] { display: none; }
+.connection-notice { display: flex; align-items: center; gap: 12px; padding: 10px 16px; background: #3a3320; border-bottom: 1px solid #73633a; color: #f1e5bd; flex-shrink: 0; font-size: 12px; }
+.connection-notice span { flex: 1; min-width: 0; } .connection-notice button { min-height: 44px; padding: 8px 12px; font-size: 12px; flex-shrink: 0; }

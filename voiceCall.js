@@ -278,5 +278,5 @@
   window.setupCallListeners=setRoom;
   const effects=$('voice-sound-effects');if(effects){effects.checked=soundEnabled;effects.addEventListener('change',()=>{soundEnabled=effects.checked;unlockSound();try{localStorage.setItem('lyria-voice-sounds',soundEnabled?'on':'off')}catch{}})}
   setInterval(renderDirectory,5000);
-  window.LyriaVoice={join,leave,setRoom,leaveRoom:room=>{if(session?.room===room)leave()}};
+  window.LyriaVoice={join,leave,setRoom,refreshDirectory:watchDirectory,leaveRoom:room=>{if(session?.room===room)leave()}};
 })();

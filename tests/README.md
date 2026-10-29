@@ -78,3 +78,12 @@ a particular user's network still needs a real-device check.
 `python3 tests/voice-ui-smoke.py` checks the voice directory at four screen sizes,
 live channel counts and mute indicators, conversation scoping, touch targets, and
 the persisted sound-effects preference using the local browser fixture.
+
+## Reload recovery
+
+`python3 tests/reload-smoke.py` checks versioned source assets, stalled channel
+and message loading, a stalled optional profile read, stream failure, history
+restoration, offline/online recovery, preservation of the current composer
+draft during reconnect, repeated reload controls, and missing-script feedback.
+All accounts and streams are local fixtures. Required SDK script requests are
+fulfilled by those fixtures, while actual missing-script errors remain visible.
