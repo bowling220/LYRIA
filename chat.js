@@ -724,6 +724,7 @@ function loadMessages(channelId) {
 
 
 function logout() {
+    window.leaveCurrentCall?.();
     auth.signOut().then(() => {
         window.location.href = 'login.html';
     }).catch(error => {

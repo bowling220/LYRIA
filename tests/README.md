@@ -41,9 +41,13 @@ Safari network is working; that still needs checking on the device.
 
 ## Voice integration
 
-After `npm ci --prefix tests`, run `python3 tests/voice-smoke.py`. It starts a local
-PeerServer and presence fixture, uses the pinned PeerJS browser client, and joins
-two actual Chromium WebRTC sessions with fake microphones. It covers Everyone,
+Install coturn (`turnserver`) and run `npm ci --prefix tests`, then
+`python3 tests/voice-smoke.py`. Set `LYRIA_TEST_TURN_BINARY` if coturn is outside
+PATH. It starts a local PeerServer, TCP TURN relay, and presence fixture, uses the
+pinned PeerJS browser client, and joins
+two actual Chromium WebRTC sessions with fake microphones. It verifies received
+audio bytes in both directions and a selected relay candidate, without relaxing
+browser policies that block direct UDP. It covers Everyone,
 private rooms, one media connection per pair, blocked playback recovery, mute,
 room changes, immediate track cleanup while offline, denied/delayed microphone
 permissions, and rejecting a call with another room ID. It does not access real

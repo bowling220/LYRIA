@@ -79,26 +79,34 @@
     entry.timer=setTimeout(()=>{if(live(s)&&s.calls.get(otherId)===entry&&!entry.connected){entry.failed=true;render()}},18000);
     call.on('stream',stream=>{
       if(!live(s)||s.calls.get(otherId)!==entry)return;
-      clearTimeout(entry.timer);entry.connected=true;entry.failed=false;
+      entry.connected=call.peerConnection?.connectionState==='connected';
+      if(entry.connected){clearTimeout(entry.timer);entry.failed=false;}
       if(!entry.audio){
         const audio=document.createElement('audio');audio.autoplay=true;audio.setAttribute('playsinline','');audio.setAttribute('aria-hidden','true');audio.className='voice-remote-audio';
         audio.addEventListener('playing',render);audio.addEventListener('pause',render);document.body.append(audio);entry.audio=audio;
       }
-      entry.audio.srcObject=stream;play(entry);render();
+      entry.audio.srcObject=stream;watchConnection(s,entry);play(entry);render();
     });
     call.on('close',()=>{if(s.calls.get(otherId)===entry)removeCall(s,otherId)});
     call.on('error',error=>{console.warn('Peer audio connection failed',error);entry.failed=true;render()});
+    watchConnection(s,entry);
+  }
+  function watchConnection(s,entry){
+    const call=entry.call;
+    if(entry.watching || !call.peerConnection)return;
+    entry.watching=true;
     call.peerConnection?.addEventListener('connectionstatechange',()=>{
       if(!live(s))return;
       const connection=call.peerConnection.connectionState;
       if(connection==='failed'){entry.failed=true;entry.connected=false;render()}
-      else if(connection==='connected'){clearTimeout(entry.disconnectTimer);entry.connected=Boolean(entry.audio);entry.failed=false;render()}
+      else if(connection==='connected'){clearTimeout(entry.timer);clearTimeout(entry.disconnectTimer);entry.connected=Boolean(entry.audio);entry.failed=false;render()}
       else if(connection==='disconnected'){
         entry.connected=false;render();
         clearTimeout(entry.disconnectTimer);entry.disconnectTimer=setTimeout(()=>{if(live(s)){entry.failed=true;render()}},10000);
       }
     });
   }
+
   function sync(s){
     if(!live(s)||s.joining)return;
     const active=new Map(participants(s));
@@ -146,6 +154,15 @@
       // Supplying a STUN-only configuration would break calls on restrictive mobile networks.
       const peerOptions={secure:true,...(config.signaling || {})};
       if(config.iceServers)peerOptions.config={iceServers:config.iceServers};
+      else if(window.peerjs?.util?.defaultConfig){
+        const defaults=window.peerjs.util.defaultConfig;
+        // Keep the SDK's public relay pool and add TCP alternatives when UDP is blocked.
+        peerOptions.config={...defaults,iceServers:defaults.iceServers.map(server=>{
+          const urls=Array.isArray(server.urls)?server.urls:[server.urls];
+          const tcp=urls.filter(url=>url.startsWith('turn:')&&!url.includes('?')).map(url=>url+'?transport=tcp');
+          return {...server,urls:[...urls,...tcp]};
+        })};
+      }
       s.peer=new Peer('lyria-'+id,peerOptions);
       const ready=timeout(new Promise((resolve,reject)=>{
         s.peer.once('open',resolve);s.peer.once('error',reject);

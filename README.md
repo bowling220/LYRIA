@@ -314,7 +314,7 @@ connection. Leaving or switching rooms stops local microphone tracks immediately
 
 PeerJS 1.5.5 is pinned in `home.html`. The default SDK STUN/TURN configuration is
 preserved, including its public relay pool, rather than replacing it with STUN
-only. Signaling/relay availability and Wi-Fi-to-cellular behavior still require
+only. TCP alternatives are added for the relay URLs when UDP is blocked. Signaling/relay availability and Wi-Fi-to-cellular behavior still require
 real-device testing. A managed production relay can be supplied through
 `window.LYRIA_VOICE_CONFIG.iceServers`, using short-lived credentials obtained from
 an authenticated backend; do not place private long-lived relay credentials in
@@ -329,5 +329,9 @@ so an old tab cannot remove a newer session; stale presence expires from the
 active list after 65 seconds. Each peer pair has exactly one offerer, and incoming
 calls are accepted only after opting in and checking room and participant IDs.
 
-Run `npm ci --prefix tests` and `python3 tests/voice-smoke.py` for real two-browser
-WebRTC tests with fake microphones, a local PeerServer, and isolated room data.
+Install coturn (the `turnserver` executable), then run `npm ci --prefix tests` and
+`python3 tests/voice-smoke.py` for real two-browser WebRTC tests. The tests use fake
+microphones, a local PeerServer and TCP TURN relay, and isolated room data. Both
+received audio packets and the selected relay candidate are checked; a media
+stream event alone does not prove that audio is flowing. Set
+`LYRIA_TEST_TURN_BINARY` if coturn is outside PATH.

@@ -4,20 +4,24 @@ No production Firebase, microphone, signaling service, or TURN credentials are u
 from pathlib import Path
 from http.server import ThreadingHTTPServer,BaseHTTPRequestHandler
 from threading import Thread,Lock
-import json, subprocess, socket, time, urllib.request
+import json, subprocess, socket, time, urllib.request, os, shutil
 from playwright.sync_api import sync_playwright
 ROOT=Path(__file__).resolve().parents[1]
 STATE={};LOCK=Lock()
 PEER=urllib.request.urlopen('https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.5/peerjs.min.js',timeout=20).read()
 with socket.socket() as sock:sock.bind(('127.0.0.1',0));SIGNAL_PORT=sock.getsockname()[1]
-HTML='''<!doctype html><meta name="viewport" content="width=device-width, initial-scale=1"><body>
+with socket.socket() as sock:sock.bind(('127.0.0.1',0));TURN_PORT=sock.getsockname()[1]
+TURN_BINARY=os.environ.get('LYRIA_TEST_TURN_BINARY') or shutil.which('turnserver')
+if not TURN_BINARY:raise RuntimeError('Install coturn or set LYRIA_TEST_TURN_BINARY to its turnserver executable.')
+HTML='''<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><body>
 <button id="make-voice-call">Join voice</button><button id="end-call">Leave voice</button>
 <section id="voice-panel" hidden><p id="voice-status"></p><button id="voice-mute">Mute</button><button id="voice-enable-sound" hidden>Enable sound</button><button id="voice-retry" hidden>Rejoin voice</button></section>
 <script src="/fixture.js"></script><script src="/peer.js"></script><script src="/voiceCall.js"></script><script>LyriaVoice.setRoom('community');</script>'''
 FIXTURE=r'''
-const uid=new URL(location.href).searchParams.get('user');window.__notices=[];
+const uid=new URL(location.href).searchParams.get('user');window.__notices=[];window.__rtc=[];
+const NativeRTC=window.RTCPeerConnection;window.RTCPeerConnection=class extends NativeRTC{constructor(...args){super(...args);window.__rtc.push(this)}};
 window.LyriaUI={icon:()=>'',notify:(message)=>__notices.push(message)};
-window.LYRIA_VOICE_CONFIG={signaling:{host:'127.0.0.1',port:SIGNAL_PORT,path:'/voice',secure:false},iceServers:[]};
+window.LYRIA_VOICE_CONFIG={signaling:{host:'127.0.0.1',port:SIGNAL_PORT,path:'/voice',secure:false},iceServers:[{urls:'turn:127.0.0.1:TURN_PORT?transport=tcp',username:'fixture',credential:'local-only'}]};
 const mic=navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
 navigator.mediaDevices.getUserMedia=async options=>{if(window.__denyMic)throw new DOMException('Denied','NotAllowedError');const stream=await mic(options);window.__localStream=stream;return stream};
 const nativePlay=HTMLMediaElement.prototype.play,nativePaused=Object.getOwnPropertyDescriptor(HTMLMediaElement.prototype,'paused').get;
@@ -40,7 +44,7 @@ const db={collection:()=>({doc:room=>new Ref(room)}),runTransaction:async work=>
 }};
 const fs=()=>db;fs.FieldValue={serverTimestamp:()=>({serverTime:true}),delete:()=>({deleteField:true})};
 window.firebase={firestore:fs};window.firebaseConfig={getAuth:()=>({currentUser:{uid}}),getFirestore:()=>db};
-'''.replace('SIGNAL_PORT',str(SIGNAL_PORT))
+'''.replace('SIGNAL_PORT',str(SIGNAL_PORT)).replace('TURN_PORT',str(TURN_PORT))
 class Handler(BaseHTTPRequestHandler):
  def log_message(self,*args):pass
  def do_GET(self):
@@ -68,6 +72,8 @@ class Handler(BaseHTTPRequestHandler):
   self.send_response(200);self.send_header('Content-Type','application/json');self.end_headers();self.wfile.write(b'{}')
 server=ThreadingHTTPServer(('127.0.0.1',0),Handler);Thread(target=server.serve_forever,daemon=True).start()
 origin=f'http://127.0.0.1:{server.server_port}'
+turn_log=open(f'/tmp/lyria-test-turn-{TURN_PORT}.log','w+')
+turn=subprocess.Popen([TURN_BINARY,'--listening-ip=127.0.0.1','--relay-ip=127.0.0.1',f'--listening-port={TURN_PORT}','--no-tls','--no-dtls','--no-cli','--allow-loopback-peers','--realm=lyria.test','--user=fixture:local-only','--lt-cred-mech','--fingerprint','--relay-threads=1',f'--pidfile=/tmp/lyria-test-turn-{TURN_PORT}.pid','--log-file=stdout'],stdout=turn_log,stderr=turn_log)
 peer=subprocess.Popen(['node',str(ROOT/'tests/voice-server.cjs'),str(SIGNAL_PORT)],stdout=subprocess.DEVNULL,stderr=subprocess.PIPE)
 try:
  for _ in range(60):
@@ -81,14 +87,20 @@ try:
   alice=a.new_page();bob=b.new_page();errors=[]
   for page in [alice,bob]:page.on('pageerror',lambda error:errors.append(str(error)))
   alice.goto(origin+'/?user=alice');bob.goto(origin+'/?user=bob');bob.evaluate('window.__blockSound=true')
+  for page in [alice,bob]:page.evaluate("""port=>{delete LYRIA_VOICE_CONFIG.iceServers;peerjs.util.defaultConfig={iceServers:[{urls:'turn:127.0.0.1:'+port,username:'fixture',credential:'local-only'}]};}""",TURN_PORT)
+
   alice.locator('#make-voice-call').click();bob.locator('#make-voice-call').click()
   for page in [alice,bob]:page.wait_for_function("document.querySelectorAll('.voice-remote-audio').length===1",timeout=25000)
-  alice.wait_for_function("document.getElementById('voice-status').textContent.includes('Connected')",timeout=15000)
+  try:alice.wait_for_function("document.getElementById('voice-status').textContent.includes('Connected')",timeout=12000)
+  except Exception:
+   for page in [alice,bob]:print(page.evaluate("async()=>({status:document.getElementById('voice-status').textContent,pcs:await Promise.all(__rtc.map(async pc=>({connection:pc.connectionState,ice:pc.iceConnectionState,stats:[...(await pc.getStats()).values()].filter(s=>['candidate-pair','local-candidate','remote-candidate','inbound-rtp'].includes(s.type))})))})"))
+   raise
   bob.wait_for_function("!document.getElementById('voice-enable-sound').hidden")
   bob.evaluate('window.__allowSoundOnTap=true');bob.locator('#voice-enable-sound').click()
   bob.wait_for_function("document.getElementById('voice-status').textContent.includes('Connected')")
   assert alice.evaluate("document.querySelector('audio').srcObject.getAudioTracks()[0].readyState")=='live'
   assert bob.evaluate("document.querySelector('audio').srcObject.getAudioTracks()[0].readyState")=='live'
+  for page in [alice,bob]:page.wait_for_function("async()=>{for(const pc of __rtc){const stats=await pc.getStats();if([...stats.values()].some(s=>s.type==='inbound-rtp'&&s.kind==='audio'&&s.bytesReceived>0))return true}return false}",timeout=10000)
   assert alice.locator('audio').count()==1 and bob.locator('audio').count()==1,'Duplicate offers created duplicate audio'
   with LOCK:alice_peer=STATE['community']['alice']['voice']['peerId']
   bob.evaluate("""target=>new Promise(resolve=>{
@@ -98,6 +110,7 @@ try:
   alice.wait_for_timeout(300)
   assert alice.locator('audio').count()==1,'A call from another room was accepted'
   bob.evaluate('window.__roguePeer.destroy()')
+  for page in [alice,bob]:assert page.evaluate("async()=>{for(const pc of __rtc){const stats=await pc.getStats();for(const pair of stats.values()){if(pair.type==='candidate-pair'&&pair.state==='succeeded'&&stats.get(pair.localCandidateId)?.candidateType==='relay')return true}}return false}"),'No relayed audio connection was verified'
   alice.locator('#voice-mute').click();assert not alice.evaluate('__localStream.getAudioTracks()[0].enabled')
   alice.locator('#voice-mute').click();assert alice.evaluate('__localStream.getAudioTracks()[0].enabled')
   alice.evaluate("LyriaVoice.setRoom('private-studio')")
@@ -108,6 +121,7 @@ try:
   bob.evaluate("LyriaVoice.setRoom('private-studio')")
   alice.locator('#make-voice-call').click();bob.locator('#make-voice-call').click()
   for page in [alice,bob]:page.wait_for_function("document.querySelectorAll('.voice-remote-audio').length===1",timeout=25000)
+  for page in [alice,bob]:page.wait_for_function("async()=>{for(const pc of __rtc.filter(pc=>pc.connectionState==='connected')){const stats=await pc.getStats();if([...stats.values()].some(s=>s.type==='inbound-rtp'&&s.kind==='audio'&&s.bytesReceived>0))return true}return false}",timeout=10000)
   alice.evaluate('window.__blockCleanup=true');alice.locator('#end-call').click();assert alice.evaluate('__localStream.getAudioTracks()[0].readyState')=='ended';bob.locator('#end-call').click()
   alice.evaluate('window.__denyMic=true');alice.locator('#make-voice-call').click();alice.wait_for_function("__notices.some(text=>text.includes('Microphone access is blocked'))")
   assert alice.locator('#make-voice-call').is_enabled()
@@ -121,6 +135,6 @@ try:
   assert alice.locator('#make-voice-call').is_enabled()
   assert not errors,errors
   browser.close()
- print('PASS: real two-browser WebRTC audio in Everyone and private rooms; one connection per pair; sound unlock; mute; immediate microphone cleanup; microphone denial, wrong-room rejection, delayed permission cancellation, and cleanup while offline.')
+ print('PASS: real two-browser relayed WebRTC audio with verified received packets in Everyone and private rooms; one connection per pair; sound unlock; mute; immediate microphone cleanup; microphone denial, wrong-room rejection, delayed permission cancellation, and cleanup while offline.')
 finally:
- peer.terminate();peer.wait(timeout=5);server.shutdown();server.server_close()
+ peer.terminate();peer.wait(timeout=5);turn.terminate();turn.wait(timeout=5);turn_log.close();server.shutdown();server.server_close()
