@@ -159,6 +159,13 @@ initializeFirebase().then(() => {
         // Everyone is a shared room, not a growing per-user membership list.
         switchChannel(COMMUNITY_CHANNEL_ID);
         loadChannels();
+        // An invitation opens its accepted room; URL parameters alone never grant membership.
+        const requested=new URLSearchParams(location.search).get('channel');
+        if(requested && requested!==COMMUNITY_CHANNEL_ID && /^[A-Za-z0-9_-]{1,180}$/.test(requested)){
+            window.LyriaInvites.bounded(db.collection('channels').doc(requested).get({source:'server'})).then(doc=>{
+                if(currentUser?.uid===user.uid && currentChannel===COMMUNITY_CHANNEL_ID && doc.exists && doc.data().members?.includes(user.uid))switchChannel(doc.id,doc.data().name);
+            }).catch(()=>window.LyriaUI.notify('The invited conversation could not open. Try its invite link again.','error'));
+        }
         try {
             await window.LyriaAccount.ensureUser(user);
             const personalChannelId = `personal-${user.uid}`;
@@ -267,12 +274,12 @@ function setupUIEventListeners() {
         channelActionDescription.textContent = mode === 'create'
             ? 'Give your new conversation a short, memorable name.'
             : mode === 'join'
-                ? 'Enter the invite code shared by a LYRIA member.'
+                ? 'Paste the invite link or code shared by a LYRIA member.'
                 : 'You will need a new invite code to return later.';
         channelActionField.hidden = isLeave;
-        channelActionLabel.textContent = mode === 'create' ? 'Conversation name' : 'Invite code';
-        channelActionInput.placeholder = mode === 'create' ? 'e.g. Design club' : 'Enter invite code';
-        channelActionInput.maxLength = mode === 'create' ? 48 : 12;
+        channelActionLabel.textContent = mode === 'create' ? 'Conversation name' : 'Invite link or code';
+        channelActionInput.placeholder = mode === 'create' ? 'e.g. Design club' : 'Paste invite link or code';
+        channelActionInput.maxLength = mode === 'create' ? 48 : 2048;
         channelActionSubmit.textContent = mode === 'create' ? 'Create' : mode === 'join' ? 'Join' : 'Leave';
         channelActionSubmit.classList.toggle('danger-action', isLeave);
         channelActionFeedback.textContent = '';
@@ -341,20 +348,8 @@ function setupUIEventListeners() {
                     timestamp: firebase.firestore.FieldValue.serverTimestamp()
                 }).catch(error => console.warn('Welcome message could not be posted:', error));
             } else if (mode === 'join') {
-                const snapshot = await db.collection('channels').where('joinCode', '==', value.toUpperCase()).get();
-                if (snapshot.empty) {
-                    channelActionFeedback.textContent = 'That invite code was not found.';
-                    return;
-                }
-                const channelDoc = snapshot.docs[0];
-                const channel = channelDoc.data();
-                const channelId = channel.id || channelDoc.id;
-                await db.collection('channels').doc(channelId).update({
-                    members: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
-                });
-                await userDocRefForCurrentUser().set({
-                    channels: firebase.firestore.FieldValue.arrayUnion(channelId)
-                }, { merge: true });
+                const channel = await window.LyriaInvites.join(db,currentUser,value);
+                const channelId = channel.id;
                 switchChannel(channelId,channel.name);
                 loadChannels();
                 closeChannelActionModal();
@@ -386,22 +381,23 @@ function setupUIEventListeners() {
         }
     });
 
-    // Clipboard failures still leave the invite code available to the user.
     document.getElementById('copy-join-code').addEventListener('click', async () => {
         if (!currentChannel || !db) return;
-        if (currentChannel === COMMUNITY_CHANNEL_ID) {window.LyriaUI.notify('Everyone opens automatically for anyone who signs in to LYRIA. Send your friends the sign-in link.');return;}
         try {
-            const doc = await db.collection('channels').doc(currentChannel).get();
-            const code = doc.data()?.joinCode;
-            if (!code) { window.LyriaUI.notify('This conversation does not have an invite code yet.'); return; }
+            const selected=currentChannel;
+            const code=selected===COMMUNITY_CHANNEL_ID?'EVERYONE':(await window.LyriaInvites.bounded(db.collection('channels').doc(selected).get({source:'server'}))).data()?.joinCode;
+            if (!code) { window.LyriaUI.notify('This conversation does not have an invitation yet.'); return; }
+            const link=window.LyriaInvites.url(code);
             try {
-                await navigator.clipboard.writeText(code);
-                window.LyriaUI.notify('Invite code copied: ' + code, 'success');
+                await navigator.clipboard.writeText(link);
+                window.LyriaUI.notify('Invite link copied. Share it with your people.', 'success');
             } catch {
-                window.LyriaUI.notify('Invite code: ' + code + '. Share this code with your friends.');
+                const input=document.getElementById('share-invite-link');input.value=link;
+                window.LyriaUI.openModal(document.getElementById('share-invite-modal'));
+                requestAnimationFrame(()=>requestAnimationFrame(()=>{input.focus();input.select()}));
             }
         } catch (error) {
-            console.error(error); window.LyriaUI.notify('Could not load the invite code. Please try again.', 'error');
+            console.error(error); window.LyriaUI.notify('Could not load the invitation. Please try again.', 'error');
         }
     });
 }

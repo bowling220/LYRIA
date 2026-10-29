@@ -76,3 +76,7 @@ build/
 
 # Browser validation artifacts
 test-artifacts/
+
+# Python test cache
+__pycache__/
+*.pyc

@@ -185,3 +185,11 @@ four responsive layouts, 20px inline art, profile descriptions by focus/tap,
 Escape/outside dismissal, high contrast, bounds, per-profile badge visibility,
 profile saving/reload without badge-array migration, and missing-image fallback.
 See [the badge guide](../docs/BADGES.md) for the visual rules and alias table.
+
+## Shareable invite links
+
+Run `python3 tests/invites-smoke.py` (also included in `python3 tests/run-browser-tests.py`).
+The isolated suite checks full-link copying, clipboard-denied fallback, invite cards
+at four widths, explicit acceptance, failed-join feedback/retry, room selection,
+pasted links in the Join dialog, invalid links, Everyone, and returning from both
+Google and guest sign-in. It never connects to production Firebase.
