@@ -29,10 +29,11 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.5/peerjs.min.js"></script>
         <script src="js/mobile.js?v=630bcfe83bf75bf8" defer></script>
       <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
-  <link rel="stylesheet" href="css/theme.css?v=b23b0462b917a3bd">
+  <link rel="stylesheet" href="css/theme.css?v=6ff9e8f4a9e81439">
   <script src="js/ui.js?v=be836fd63bec8fd8"></script>
   <script src="js/gif-library.js?v=0f7b242343ed6889"></script>
-  <script src="js/media.js?v=ca6f0b29181dabb8"></script>
+  <script src="js/badges.js?v=40763ed5718c4e15"></script>
+  <script src="js/media.js?v=ae4494917a6c242a"></script>
   <script src="js/appearance.js?v=f2b3fb9699b59da3"></script>
 </head>
 <body class="app-page">
@@ -159,6 +160,7 @@
 
     <div id="profile-modal" class="modal profile-modal" inert aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="profile-modal-name">
         <div class="modal-content profile-card">
+            <button id="close-profile-modal" class="close-button profile-close" type="button" aria-label="Close profile"><span data-icon="close" aria-hidden="true"></span></button>
             <div class="profile-cover" aria-hidden="true">
                 <img id="profile-banner-image" class="profile-banner-image" alt="" hidden>
                 <span>LYRIA MEMBER</span>
@@ -186,7 +188,6 @@
                 <button id="call-profile-user" class="action-btn" type="button">Call</button>
                 <button id="send-friend-request" class="action-btn profile-friend-action" type="button">Send friend request</button>
             </div>
-            <button id="close-profile-modal" class="close-button profile-close" type="button" aria-label="Close profile"><span data-icon="close" aria-hidden="true"></span></button>
         </div>
     </div>
 <div id="gif-modal" class="modal" aria-hidden="true" inert role="dialog" aria-labelledby="gif-modal-title">
@@ -285,7 +286,7 @@
             <p id="notifications-save-status" class="save-status" role="status" aria-live="polite"></p>
         </div>
 
-        <!-- Toggle Badge Visibility (only visible if user has the admin badge) -->
+        <!-- Personal badge visibility; available to every account. -->
         <div class="modal-section" id="badge-visibility-section">
             <label class="toggle-switch">
                 <input type="checkbox" id="badge-visibility-toggle">
@@ -304,7 +305,7 @@
 
     <!-- Include voiceCall.js before chat.js -->
     <script src="js/account-api.js?v=cddf4de2ed3d25fe"></script>
-    <script src="js/account.js?v=985aadeda1f8884a"></script>
+    <script src="js/account.js?v=2531b08fc04eb7e8"></script>
     <script src="js/data-api.js?v=9cecfda8659c38e0"></script>
     <script src="js/friend-requests.js?v=165990bf120b126d"></script>
     <script src="js/voice-config.js?v=119a5da781b271fd"></script>
@@ -313,7 +314,7 @@
     <script src="voiceCall.js?v=7d03f3b9589e2d4b"></script>
     <script src="js/voice-view.js?v=62cb1fc8d3c3c407"></script>
     <script src="js/reactions.js?v=2ed845847fa3f200"></script>
-    <script src="chat.js?v=1a6c7e78a85134d0"></script>
+    <script src="chat.js?v=9d1a9e5faec41802"></script>
     <script src="js/call-invites.js?v=bf9ab596f6bb87c8"></script>
     <script src="js/community.js?v=80c68e740f096209"></script>
     <script src="js/gif-picker.js?v=3dd6ed427b26c9d0"></script>

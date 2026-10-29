@@ -51,18 +51,6 @@ let usedCommunityFallback = false;
 // Create notification sound
 const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
 
-// Badges recognize roles and community contributions; they never gate features.
-const badgeDetails = {
-    Beta: {description: 'Recognizes beta testing and feedback.'},
-    admin: {description: 'Community administrator.'},
-    Mod: {description: 'Community moderator.'},
-    DevBadge: {description: 'Contributes to building LYRIA.'},
-    EarlyAccess: {description: 'An early member of the community.'},
-    feature: {description: 'Featured community member.'}
-};
-
-const featureUserUIDs = ["miu0tI2oHJUiNx2gxtPwSpJ136w1", "dIc6q6xdqsTuiVC9JWGQT9XVH6T2"]; // Add the UID for the feature badge
-
 // Mobile menu toggle functionality
 function setMobileMenuOpen(isOpen) {
     const headerToggle = document.querySelector('#header-menu-toggle');
@@ -652,13 +640,15 @@ function loadMessages(channelId) {
             if(date){time.dateTime=date.toISOString();time.textContent=date.toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});time.title=date.toLocaleString()}else{time.textContent='Sending…'}
             sender.append(time);
             if(data.senderId){
-                if(!users.has(data.senderId))users.set(data.senderId,db.collection('users').doc(data.senderId).get());
+                const inlineBadges=document.createElement('span');inlineBadges.className='message-badges';inlineBadges.dataset.userId=data.senderId;sender.append(inlineBadges);
+                if(!users.has(data.senderId))users.set(data.senderId,window.LyriaDataAPI.read('users/'+data.senderId));
                 users.get(data.senderId).then(user=>{
                     if(!message.isConnected || !user.exists)return;
                     avatar.src=window.LyriaMedia.profileSource(user.data());
                     name.textContent=user.data().displayName || name.textContent;
-                    const badges = window.LyriaMedia.profileBadges(user.data());
-                    badges.forEach(badge=>{if(!/^[a-zA-Z0-9_-]+$/.test(badge))return;const img=document.createElement('img');img.src='assets/'+badge+'.png';img.alt=badge+' badge';img.className='admin-badge';img.width=18;img.height=18;sender.append(img)});
+                    const ownProfile=window.LyriaAccount.getProfile();
+                    const badgeProfile=data.senderId===firebase.auth().currentUser?.uid && Object.keys(ownProfile).length?ownProfile:user.data();
+                    window.LyriaBadges.render(inlineBadges,badgeProfile,data.senderId,{inline:true});
                 }).catch(error=>console.warn('Badges unavailable',error));
             }
             const content=document.createElement('div');content.className='message-content';
@@ -750,30 +740,26 @@ if (userProfileTrigger) {
 
 
 
-let showBadges = true; // Default value for showing badges
-
-// Function to apply badge visibility in the profile modal and chat
-function applyBadgeVisibility() {
-    showBadges = window.LyriaAccount.getProfile().showBadges !== false;
-    const profileBadges = document.getElementById('profile-modal-badges');
-    if (profileBadges) {
-        profileBadges.style.display = showBadges ? 'flex' : 'none';
-    }
-
-    document.querySelectorAll('.admin-badge').forEach(badge => {
-        badge.style.display = showBadges ? 'inline-block' : 'none';
-    });
-}
-
 // Global variable to store the profile user ID
 let profileUserId = null;
 
-// Modify showUserProfileModal to respect the badge visibility setting
+function renderProfileBadges(profile,uid){
+    const count=window.LyriaBadges.render(document.getElementById('profile-modal-badges'),profile,uid);
+    const empty=document.getElementById('profile-badges-empty');empty.hidden=count>0;empty.textContent=profile.showBadges===false?'Badges hidden':'No badges yet';
+}
+window.addEventListener('lyria:profile-updated',event=>{
+    const {uid,profile}=event.detail;
+    document.querySelectorAll('.message-badges').forEach(container=>{if(container.dataset.userId===uid)window.LyriaBadges.render(container,profile,uid,{inline:true})});
+    if(document.getElementById('profile-modal')?.dataset.userId===uid)renderProfileBadges(profile,uid);
+});
+
+// One registry supplies profile and inline badge artwork and descriptions.
 function showUserProfileModal(uid) {
     if (!uid || !db) return;
     profileUserId = uid; // Set the profileUserId to the ID of the user being viewed
 
     window.LyriaDataAPI.read('users/'+uid).then(doc => {
+        if(profileUserId!==uid)return;
         if (doc.exists) {
             const userData = doc.data();
             const profileName = userData.displayName || 'User';
@@ -788,64 +774,7 @@ function showUserProfileModal(uid) {
                 : 'LYRIA member';
             document.getElementById('profile-modal-bio').textContent = userData.bio || 'No bio added yet.';
 
-            const profileBadges = document.getElementById('profile-modal-badges');
-            profileBadges.innerHTML = ''; // Clear previous badges
-            let renderedBadges = 0;
-
-            // Check if the user has any badges
-            if (window.LyriaMedia.profileBadges(userData).length) {
-                window.LyriaMedia.profileBadges(userData).forEach(badge => {
-                    const badgeDiv = document.createElement('button');
-                    badgeDiv.type = 'button';
-                    badgeDiv.className = 'badge';
-                    badgeDiv.setAttribute('data-badge-name', badge);
-                    badgeDiv.setAttribute('aria-label', `View ${badge} badge details`);
-
-                    // Set the click event to show badge details
-                    badgeDiv.onclick = () => {
-                        const details = badgeDetails[badge];
-                        if (details) {
-                            window.LyriaUI.notify(badge + ': ' + details.description);
-                        }
-                    };
-
-                    const badgeImage = document.createElement('img');
-                    badgeImage.src = `assets/${badge}.png`; // Assuming badge images are stored in assets
-                    badgeImage.alt = `${badge} Badge`;
-                    badgeImage.className = 'badge-image';
-                    badgeImage.width = 28;
-                    badgeImage.height = 28;
-
-                    const badgeLabel = document.createElement('span');
-                    badgeLabel.className = 'profile-badge-label';
-                    badgeLabel.textContent = badge;
-
-                    badgeDiv.appendChild(badgeImage);
-                    badgeDiv.appendChild(badgeLabel);
-                    profileBadges.appendChild(badgeDiv);
-                    renderedBadges += 1;
-                });
-            }
-
-            // Check if the user has the feature badge
-            if (userData.showBadges !== false && featureUserUIDs.includes(uid) && !window.LyriaMedia.profileBadges(userData).includes('feature')) {
-                const featureBadgeWrap = document.createElement('div');
-                featureBadgeWrap.className = 'badge';
-                const featureBadge = document.createElement('img');
-                featureBadge.src = 'assets/feature.png'; // Path to the feature badge
-                featureBadge.alt = 'Feature Badge';
-                featureBadge.className = 'admin-badge'; // Use the same class for styling
-                featureBadge.width = 28;
-                featureBadge.height = 28;
-                const featureLabel = document.createElement('span');
-                featureLabel.className = 'profile-badge-label';
-                featureLabel.textContent = 'Featured';
-                featureBadgeWrap.append(featureBadge, featureLabel);
-                profileBadges.appendChild(featureBadgeWrap);
-                renderedBadges += 1;
-            }
-
-            document.getElementById('profile-badges-empty').hidden = renderedBadges > 0;
+            renderProfileBadges(userData,uid);
 
             // Show the friend request button if the user is not the current user
             const currentUser = firebase.auth().currentUser;

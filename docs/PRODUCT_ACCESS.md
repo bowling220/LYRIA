@@ -19,7 +19,7 @@ web architecture, shared UI, authenticated profile PATCH saves, and connection r
   old addresses contain only a retirement comment; normal pages use the shared theme.
   The payment badge artwork is replaced by a transparent compatibility pixel.
 - Badge rendering previously accepted arbitrary stored IDs, including payment badges.
-  Chat and profile cards now share a supported community/role badge list. Staff,
+  Chat and profile cards now share a centralized community/role badge registry with legacy-name normalization. Staff,
   moderators, developers, beta testers, early users, and featured members remain.
   Badges are presentational, never entitlement checks. No stored badge arrays change.
 - Existing avatar/banner uploads, GIF media, appearance, and voice were already

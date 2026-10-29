@@ -174,3 +174,14 @@ python3 tests/voice-smoke.py
 The final command needs coturn and the isolated Node test dependencies as described
 above. The call-invitation test waits for a visible Answer control, including its
 parent panel, so previous hidden invitation UI cannot satisfy a new-call wait.
+
+## Unified profile badges
+
+`node --test tests/badges.test.mjs` verifies all historical aliases, canonical IDs,
+case/whitespace handling, deduplication, unknown/retired identifiers, supported SVG
+assets, metadata immutability, and the existing manual Featured awards.
+`python3 tests/badges-smoke.py` checks all six artwork pieces at 128/64/32/24px and
+four responsive layouts, 20px inline art, profile descriptions by focus/tap,
+Escape/outside dismissal, high contrast, bounds, per-profile badge visibility,
+profile saving/reload without badge-array migration, and missing-image fallback.
+See [the badge guide](../docs/BADGES.md) for the visual rules and alias table.

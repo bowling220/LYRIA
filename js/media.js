@@ -49,6 +49,6 @@
     if(url)show();else{img.hidden=true;error.hidden=false;retry.hidden=true;toggle.hidden=true;}
     return card;
   }
-  const profileBadges=profile=>profile?.showBadges===false?[]:[...new Set((Array.isArray(profile?.badges)?profile.badges:[]).filter(badge=>['Beta','DevBadge','EarlyAccess','Mod','admin','feature'].includes(badge)))];
+  const profileBadges=(profile,uid)=>(window.LyriaBadges?.forProfile(profile,uid) || []).map(badge=>badge.id);
   window.LyriaMedia={profileBadges,safeUrl,profileSource,profileBanner,image,renderGif,reduced};
 })();

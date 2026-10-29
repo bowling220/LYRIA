@@ -42,7 +42,7 @@ with sync_playwright() as p:
    assert page.locator('#profile-modal-bio').inner_text()=='The full experience belongs to everyone'
    assert page.locator('#profile-modal-status').inner_text().lower()=='busy'
    assert page.locator('#profile-modal-badges [data-badge-name]').count()==2
-   assert page.locator('#profile-modal-badges [data-badge-name="Beta"]').count()==1
+   assert page.locator('#profile-modal-badges [data-badge-name="beta"]').count()==1
    assert 'giphy.gif' in page.locator('#profile-modal-image').get_attribute('src')
    assert 'giphy.gif' in page.locator('#profile-banner-image').get_attribute('src')
    page.keyboard.press('Escape');page.locator('#message-input').fill('Still chatting without a tier')

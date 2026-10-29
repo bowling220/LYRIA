@@ -490,9 +490,11 @@ membership service exists. On static hosts that retain deleted objects, minimal
 compatibility responses redirect the old page address to the landing page and
 replace retired styles/images with harmless empty content. These contain none of the original
 page, badge artwork, or style rules and are never linked by normal navigation. There are no feature gates based on account payment
-state. Non-payment role and community badges remain; supported badge IDs are
-`Beta`, `DevBadge`, `EarlyAccess`, `Mod`, `admin`, and `feature`. Add genuine future
-community badge IDs to the shared media helper and supply their assets.
+state. Non-payment role and community badges remain; canonical badge IDs are
+`admin`, `moderator`, `developer`, `beta`, `early-access`, and `featured`.
+`js/badges.js` owns metadata, legacy aliases, visibility, and rendering. All old
+badge arrays resolve automatically without database edits. See [the badge design
+guide](docs/BADGES.md) before adding community awards.
 
 No destructive Firestore migration is performed. Old `isPremium` values and any
 obsolete tier/subscription fields are ignored. Unknown fields and old badge arrays
@@ -510,3 +512,15 @@ or provider quotas, and the product makes no unlimited-capacity promise.
 See [the product-access audit](docs/PRODUCT_ACCESS.md) for removal scope, regression
 coverage, and remaining repository search matches. [Voice setup](docs/VOICE_SETUP.md)
 still applies to reliable calling across different networks.
+
+
+## Badge system
+
+Profile badges use one six-piece SVG family under `assets/badges/`, with 32px profile
+art and 20px inline chat art. Every badge has a keyboard/touch-accessible description,
+a category, a safe missing-image fallback, and an immutable registry entry. Legacy
+identifiers normalize and deduplicate at read time; unknown identifiers are ignored.
+The existing two manually assigned Featured awards are retained centrally. Visibility
+belongs to each profile; hiding your badges does not hide someone else's awards.
+No badge grants permissions or unlocks features, and profile saves preserve badge
+arrays verbatim. [docs/BADGES.md](docs/BADGES.md) documents the visual system and aliases.

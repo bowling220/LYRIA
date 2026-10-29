@@ -58,7 +58,7 @@
     }
     if ($('notifications-toggle') && !$('notifications-toggle').disabled) $('notifications-toggle').checked=Boolean(data.notificationsEnabled);
     if ($('badge-visibility-toggle') && !$('badge-visibility-toggle').disabled) $('badge-visibility-toggle').checked=data.showBadges !== false;
-    document.querySelectorAll('.admin-badge').forEach(el=>el.style.display=data.showBadges===false?'none':'inline-block');
+    window.dispatchEvent(new CustomEvent('lyria:profile-updated',{detail:{uid:auth.currentUser?.uid,profile:data}}));
     window.LyriaProfileMedia?.render(data);
     if(document.getElementById('profile-modal')?.dataset.userId===auth.currentUser?.uid){
       window.LyriaMedia.image(document.getElementById('profile-modal-image'),window.LyriaMedia.profileSource(data),'assets/avatar.svg');
