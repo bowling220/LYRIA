@@ -188,3 +188,9 @@ body.app-page { height:100dvh; overflow:hidden; display:flex;flex-direction:colu
 .call-invite-actions button { min-height: 44px; padding: 10px 14px; }
 #answer-call { background: var(--accent); color: var(--bg); } #decline-call { color: var(--danger); }
 @media(max-width:480px) { .friends-list li { flex-wrap: wrap; } .friends-list .friend-name { flex-basis: calc(100% - 50px); } .call-invite-panel { bottom: calc(12px + env(safe-area-inset-bottom)); padding: 16px; } }
+
+.voice-microphone { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 11px; color: var(--muted); }
+.voice-microphone meter { width: 66px; height: 12px; accent-color: var(--accent); flex-shrink: 0; }
+@media(max-width:768px) { .voice-microphone { width: 100%; } }
+
+@media(max-width:768px) { .voice-panel { max-height: min(220px, calc(var(--visible-height, 100dvh) * .34)); overflow-y: auto; } }

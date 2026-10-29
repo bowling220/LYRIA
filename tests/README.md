@@ -109,3 +109,21 @@ Voice joining is substituted in this invitation test; `voice-smoke.py` separatel
 verifies real two-browser relayed media and call cues. The emulator suite checks
 invitation/reply/cancel writes under the unchanged inbox rules, rejects spoofed
 senders, and denies unrelated users access to the private voice conversation.
+
+## Expanded voice reliability audit
+
+`voice-smoke.py` now runs the production HTTPS presence adapter against
+`voice_rpc_fixture.py` while the SDK presence listeners are stalled. Real media
+is relayed through the local TCP TURN server. Added checks cover capture reuse,
+muted-track handoff, ended/interrupted capture replacement without a new session,
+input levels, signaling recovery, a recreated media leg, basic audio-constraint
+fallback, and a microphone-start deadline with late-grant cleanup.
+
+Run `node --test tests/voice-config.test.mjs` for build-time Metered configuration
+and `python3 tests/voice-transport-smoke.py` for credentials caching, concurrency,
+expiration, timeouts, retry, and rejecting a STUN-only credentials response.
+These tests use fake provider responses; they do not validate a real account key.
+The emulator suite checks version-guarded presence cleanup and preservation of
+typing fields. `voice-ui-smoke.py` also checks active recovery controls and the
+composer on five screen sizes. Physical iPhone and Wi-Fi/cellular verification
+remain necessary after the owner configures Metered.

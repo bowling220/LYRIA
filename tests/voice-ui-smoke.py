@@ -5,7 +5,7 @@ from browser_fixture import make_page
 ROOT=Path(__file__).resolve().parents[1]
 with sync_playwright() as p:
  browser=p.chromium.launch(executable_path='/usr/bin/chromium',headless=True,args=['--no-sandbox'])
- for width,height in [(320,568),(390,844),(768,1024),(1440,1000)]:
+ for width,height in [(320,568),(390,844),(667,375),(768,1024),(1440,1000)]:
   page=make_page(browser,ROOT,width,height)
   errors=[];page.on('pageerror',lambda error:errors.append(str(error)))
   page.goto('http://localhost:8124/home.html')
@@ -31,7 +31,16 @@ with sync_playwright() as p:
   assert 'This conversation' in page.locator('#voice-directory-label').inner_text()
   page.reload();page.wait_for_function("document.querySelectorAll('#voice-channels button').length===3")
   assert not page.locator('#voice-sound-effects').is_checked()
+  page.evaluate("""()=>{
+   document.getElementById('voice-panel').hidden=false;document.getElementById('voice-room-name').textContent='Everyone · Lounge';document.getElementById('voice-status').textContent='Your microphone was interrupted. Reconnect the microphone to speak.';
+   document.getElementById('voice-mic-status').textContent='Your device paused the microphone.';
+   document.getElementById('voice-participants').innerHTML='<li>You</li><li>Maya Chen</li><li>Kai</li><li>Alex</li><li>Sam</li><li>Jordan</li>';
+   for(const id of ['voice-repair-mic','voice-retry','voice-enable-effects','voice-enable-sound'])document.getElementById(id).hidden=false;
+  }""")
+  box=page.locator('.message-input').bounding_box();assert box['y']+box['height']<=height+1,(width,height,box)
+  assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
+  page.screenshot(path=str(ROOT/f'test-artifacts/voice-active-{width}.png'))
   assert not errors,errors
   page.close()
  browser.close()
-print('PASS: voice directory on four screen sizes, channel counts, named/muted participants, conversation scoping, touch targets, and persisted sound preference.')
+print('PASS: voice directory and active microphone-recovery controls on five screen sizes, channel counts, named/muted participants, conversation scoping, touch targets, and persisted sound preference.')

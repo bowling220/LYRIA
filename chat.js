@@ -208,7 +208,7 @@ initializeFirebase().then(() => {
         await db.disableNetwork();await db.enableNetwork();
         loadMessages(currentChannel || COMMUNITY_CHANNEL_ID);loadChannels();
         listenForTypingStatus(currentChannel || COMMUNITY_CHANNEL_ID);
-        window.LyriaVoice?.refreshDirectory?.();
+        window.LyriaVoice?.refreshConnection?.();
         window.LyriaCommunity?.refreshRequests();
         window.LyriaCalls?.refresh();
         window.LyriaAccount?.reconnect({restartLive:false});

@@ -30,7 +30,7 @@
         <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9049091067762501" crossorigin="anonymous"></script>
         <script src="js/mobile.js?v=630bcfe83bf75bf8" defer></script>
       <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
-  <link rel="stylesheet" href="css/theme.css?v=92902f791c2f1f05">
+  <link rel="stylesheet" href="css/theme.css?v=78fde75c047f8ad0">
   <script src="js/ui.js?v=13a7e873f81a3144"></script>
   <script src="js/gif-library.js?v=0f7b242343ed6889"></script>
   <script src="js/media.js?v=c276e9cafb68d69b"></script>
@@ -104,7 +104,7 @@
             <div id="connection-notice" class="connection-notice" role="status" hidden><span id="connection-message"></span><button id="retry-connection" type="button">Reconnect</button></div>
             <section id="voice-panel" class="voice-panel" aria-label="Voice call" hidden>
                 <div class="voice-call-info"><strong id="voice-room-name"></strong><p id="voice-status" role="status" aria-live="polite"></p><ul id="voice-participants" aria-label="People in your call"></ul></div>
-                <div class="voice-controls"><button id="voice-mute" type="button" aria-pressed="false">Mute</button><button id="voice-enable-effects" type="button" hidden>Enable call sounds</button><button id="voice-enable-sound" type="button" hidden>Enable sound</button><button id="voice-retry" type="button" hidden>Rejoin voice</button></div>
+                <div class="voice-microphone"><meter id="voice-mic-level" min="0" max="1" value="0" aria-label="Microphone input level"></meter><span id="voice-mic-status" role="status">Checking microphone…</span></div><div class="voice-controls"><button id="voice-repair-mic" type="button" hidden>Reconnect microphone</button><button id="voice-mute" type="button" aria-pressed="false">Mute</button><button id="voice-enable-effects" type="button" hidden>Enable call sounds</button><button id="voice-enable-sound" type="button" hidden>Enable sound</button><button id="voice-retry" type="button" hidden>Rejoin voice</button></div>
             </section>
             <p id="community-notice" class="chat-room-notice" hidden>Everyone signed in can read this room · Latest 100 messages</p>
             <div class="messages" id="messages" role="log" aria-label="Conversation messages" aria-live="polite"><div class="empty-state"><span class="empty-icon"><span data-icon="chat" aria-hidden="true"></span></span><h2>Getting your space ready.</h2><p>Your conversations will appear here in a moment.</p></div></div>
@@ -294,10 +294,13 @@
     <!-- Include voiceCall.js before chat.js -->
     <script src="js/account-api.js?v=cddf4de2ed3d25fe"></script>
     <script src="js/account.js?v=cde25f3103ef5197"></script>
-    <script src="js/data-api.js?v=ead1f930c51a6d70"></script>
+    <script src="js/data-api.js?v=9cecfda8659c38e0"></script>
     <script src="js/friend-requests.js?v=165990bf120b126d"></script>
-    <script src="voiceCall.js?v=9cf88d3e8de25d69"></script>
-    <script src="chat.js?v=09cebeaa8c62d58d"></script>
+    <script src="js/voice-config.js?v=119a5da781b271fd"></script>
+    <script src="js/voice-transport.js?v=0a2391e8a4477901"></script>
+    <script src="js/voice-presence.js?v=3bab77acb0644b2b"></script>
+    <script src="voiceCall.js?v=3490fb32a92ec89f"></script>
+    <script src="chat.js?v=5e5edf96fef614c2"></script>
     <script src="js/call-invites.js?v=bf9ab596f6bb87c8"></script>
     <script src="js/community.js?v=f75698180b371fe3"></script>
     <script src="js/gif-picker.js?v=3dd6ed427b26c9d0"></script>

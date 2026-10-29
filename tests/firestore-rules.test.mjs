@@ -169,3 +169,23 @@ test('call invitations, replies, and cancellations use existing inbox permission
   uid='bob';const received=await API.query('inbox',{where:API.equal('recipientId','bob')});
   assert.equal(received.docs.length,2);assert.equal(received.docs.find(d=>d.id==='invite').data().status,'accepted');
 });
+
+test('HTTPS voice presence preserves typing and prevents old cleanup from deleting a replacement session',async()=>{
+ const {runInNewContext}=await import('node:vm');const uid='voice-alice',now=Math.floor(Date.now()/1000);
+ const token=Buffer.from(JSON.stringify({alg:'none',typ:'JWT'})).toString('base64url')+'.'+Buffer.from(JSON.stringify({aud:'demo-lyria',iss:'https://securetoken.google.com/demo-lyria',sub:uid,user_id:uid,iat:now,exp:now+3600,auth_time:now,firebase:{sign_in_provider:'google.com'}})).toString('base64url')+'.';
+ const window={firebaseConfig:{getApp:()=>({options:{projectId:'demo-lyria'}}),getAuth:()=>({currentUser:{uid,displayName:'Alice',getIdToken:async()=>token}})}};
+ const context={window,AbortController,setTimeout,clearTimeout,fetch:(url,options)=>fetch(url.replace('https://firestore.googleapis.com','http://127.0.0.1:8085'),options)};
+ for(const file of ['../js/data-api.js','../js/voice-presence.js'])runInNewContext(await readFile(new URL(file,import.meta.url),'utf8'),context);
+ const API=window.LyriaDataAPI,Presence=window.LyriaVoicePresence,path='channels/community/typingStatus/'+uid;
+ await setDoc(doc(member(uid),path),{isTyping:true,displayName:'Alice'});
+ const first={room:'community',userId:uid,id:'v'+'a'.repeat(32),peerId:'lyria-v'+'a'.repeat(32),channel:'gaming'};
+ await Presence.register(first);assert.equal((await API.read(path)).data().isTyping,true);
+ assert.equal(await Presence.mute(first,true),true);assert.equal((await API.read(path)).data().voice.muted,true);
+ assert.equal(await Presence.heartbeat(first),true);assert.equal((await API.read(path)).data().voice.sessionId,first.id);
+ const replacement={...first,id:'v'+'b'.repeat(32),peerId:'lyria-v'+'b'.repeat(32)};
+ await Presence.register(replacement);assert.equal(await Presence.clear(first),false);assert.equal(await Presence.mute(first,false),false);
+ assert.equal((await API.read(path)).data().voice.sessionId,replacement.id);
+ const stale=await API.read(path);await updateDoc(doc(member(uid),path),{isTyping:false});
+ await assert.rejects(API.commit([{update:{name:API.name(path),fields:{}},updateMask:{fieldPaths:['voice']},currentDocument:{updateTime:stale.updateTime}}]),error=>error.code==='aborted');
+ assert.equal(await Presence.clear(replacement),true);const final=await API.read(path);assert.equal(final.data().isTyping,false);assert.equal(final.data().voice,undefined);
+});

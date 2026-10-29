@@ -1,6 +1,7 @@
 import { cp, mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { extname, join } from 'node:path';
 import { versionAssets } from './scripts/version-assets.mjs';
+import { configureVoice } from './scripts/configure-voice.mjs';
 
 const root = process.cwd();
 const dist = join(root, 'dist');
@@ -19,6 +20,7 @@ for (const directory of ['assets', 'css', 'js']) {
   await cp(join(root, directory), join(client, directory), { recursive: true });
 }
 
+await configureVoice(client);
 await versionAssets(client);
 
 await mkdir(join(dist, 'server'), { recursive: true });

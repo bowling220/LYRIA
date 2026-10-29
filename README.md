@@ -318,20 +318,26 @@ stops the microphone immediately. Join/leave and mute/unmute cues are generated
 locally with Web Audio after a user gesture. The sidebar’s Voice sound effects
 toggle persists on that browser and only affects these cues, never call audio.
 
-PeerJS 1.5.5 is pinned in `home.html`. The default SDK STUN/TURN configuration is
-preserved, including its public relay pool, rather than replacing it with STUN
-only. TCP alternatives are added for the relay URLs when UDP is blocked. Signaling/relay availability and Wi-Fi-to-cellular behavior still require
-real-device testing. A managed production relay can be supplied through
-`window.LYRIA_VOICE_CONFIG.iceServers`, using short-lived credentials obtained from
-an authenticated backend; do not place private long-lived relay credentials in
-this repository. `signaling` can override the PeerServer host for a deployment.
+PeerJS 1.5.5 remains pinned for signaling and media connections. Its bundled
+shared TURN hosts no longer returned public address records during the October
+29, 2026 audit, so LYRIA uses deployment-provided relays instead. Follow
+[the Metered free-tier setup](docs/VOICE_SETUP.md) to finish the cross-network
+configuration. The build reads `METERED_APP_NAME` and `METERED_TURN_API_KEY` from
+Render and configures only the generated app in `dist/client`. Use Metered’s
+browser TURN credentials key, never its management `secretKey`.
+
+`js/voice-transport.js` validates and caches credential responses, with a request
+deadline. `js/voice-presence.js` uses bounded HTTPS reads/writes and live snapshots
+with a polling fallback. Heartbeat, mute, and cleanup writes compare both the
+session ID and the server document version, so old cleanup cannot delete a new
+session. Typing fields remain intact.
 
 Per-account voice presence shares the existing per-room activity documents at
 `channels/{room}/typingStatus/{uid}`. The `voice` field is independent of `isTyping`
 and includes a random session/peer ID, voice channel, display name, mute state,
 and heartbeat timestamp. Existing rules
 already restrict writes to that account and reads to room members, including
-Everyone. No rule changes are required. Cleanup transactions compare session IDs
+Everyone. No rule changes are required. Cleanup writes compare session IDs
 so an old tab cannot remove a newer session; stale presence expires from the
 active list after 65 seconds. Each peer pair has exactly one offerer, and incoming
 calls are accepted only after opting in and checking conversation, voice channel, and participant IDs.
@@ -432,3 +438,20 @@ explicitly enabling sound turns it on. Browsers can suspend a background tab,
 and this feature does not provide closed-app push or native phone integration.
 The existing inbox/channel rules are sufficient; no Firebase console changes
 are needed.
+
+## Microphone recovery audit
+
+Microphone startup has a deadline and releases late captures after cancellation
+or timeout. Unsupported audio constraints retry with basic audio. Healthy capture
+tracks are cloned for handoff to another call instead of opening competing device
+streams. Ended/interrupted tracks produce a visible recovery control and local
+input-level meter. Recovery replaces outbound audio tracks while retaining the
+voice-room session and mute setting. Playback permission is tracked separately
+from microphone permission. Media legs and signaling reconnect with bounded
+retries, and a verified newer offer can replace a stale media leg.
+
+Local tests verify actual received audio through TCP TURN, capture handoff,
+interrupted/ended microphone repair, signaling/media recovery, stalled SDK
+presence streams, and late permission cleanup. They do not prove iPhone hardware
+behavior or the user's Metered configuration. Cross-network readiness still
+requires completing [VOICE_SETUP.md](docs/VOICE_SETUP.md) and checking two devices.
