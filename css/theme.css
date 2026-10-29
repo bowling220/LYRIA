@@ -177,3 +177,14 @@ body.app-page { height:100dvh; overflow:hidden; display:flex;flex-direction:colu
 .connection-notice[hidden] { display: none; }
 .connection-notice { display: flex; align-items: center; gap: 12px; padding: 10px 16px; background: #3a3320; border-bottom: 1px solid #73633a; color: #f1e5bd; flex-shrink: 0; font-size: 12px; }
 .connection-notice span { flex: 1; min-width: 0; } .connection-notice button { min-height: 44px; padding: 8px 12px; font-size: 12px; flex-shrink: 0; }
+
+.voice-sound-test { min-height: 44px; width: 100%; font-size: 12px; }
+.friend-call-btn { min-height: 44px; padding: 8px 12px; }
+.call-invite-panel[hidden], .call-invite-actions button[hidden] { display: none; }
+.call-invite-panel { position: fixed; z-index: 1000; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom)); transform: translateX(-50%); width: min(420px, calc(100vw - 24px)); padding: 20px; border: 1px solid var(--accent); border-radius: 18px; background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
+.call-invite-panel strong { display: block; font-size: 17px; overflow-wrap: anywhere; }
+.call-invite-panel p { margin: 8px 0 14px; font-size: 13px; color: var(--muted); }
+.call-invite-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.call-invite-actions button { min-height: 44px; padding: 10px 14px; }
+#answer-call { background: var(--accent); color: var(--bg); } #decline-call { color: var(--danger); }
+@media(max-width:480px) { .friends-list li { flex-wrap: wrap; } .friends-list .friend-name { flex-basis: calc(100% - 50px); } .call-invite-panel { bottom: calc(12px + env(safe-area-inset-bottom)); padding: 16px; } }

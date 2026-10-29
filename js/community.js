@@ -37,12 +37,14 @@
             await batch.commit();await loadFriends();UI.notify('Friend removed.');
           }catch(error){report('Could not remove this friend. Please try again.',error);remove.disabled=false}
         });
-        li.append(avatar,name,status,remove);list.append(li);
+        const call=document.createElement('button');call.type='button';call.className='friend-call-btn';call.textContent='Call';call.setAttribute('aria-label','Call '+name.textContent);call.addEventListener('click',()=>{close('friends-modal');window.LyriaCalls.callFriend(ids[index],name.textContent)});
+        li.append(avatar,name,status,call,remove);list.append(li);
       });
     }catch(error){list.innerHTML='<li>Friends couldn’t load. Close this panel and try again.</li>';console.error(error)}
   }
   $('open-friends-modal').addEventListener('click',()=>{open('friends-modal');loadFriends()});
   $('close-friends-modal').addEventListener('click',()=>close('friends-modal'));
+  $('call-profile-user').addEventListener('click',()=>{const modal=$('profile-modal');const uid=modal.dataset.userId;if(uid){close('profile-modal');window.LyriaCalls.callFriend(uid,$('profile-modal-name').textContent)}});
   $('upgrade-to-premium').addEventListener('click',()=>location.href='premium-upgrade.html');
   function refreshRequests(){
     unsubscribeRequests?.();if(!current())return;

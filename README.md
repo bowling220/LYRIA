@@ -414,3 +414,21 @@ lookups. Acceptance commits both friend arrays and the request status together;
 a missing profile or denied write fails the whole operation. Request actions
 release their controls on failure and offer a refresh. The old inline inbox
 implementation has been removed; no Firebase rules/index deployment is required.
+
+## Direct friend calls and ringing
+
+The Friends panel and friends’ profiles have a Call action. Calls use a private
+conversation containing those two members, explicit microphone permission, and
+45-second inbox invitations. The caller hears a ringback tone; the recipient
+gets Answer/Decline controls and an incoming ring while LYRIA is open. Answer
+joins the same voice channel. Cancel, decline, or no answer stops ringing and
+releases the caller’s microphone. Answered/declined invitation status persists
+so a reload does not replay a handled call. Reconnect restarts invitation reads.
+
+Join/leave cues are louder and longer. Test call sound and Enable call sounds
+unlock browser audio explicitly. Incoming prompts show Enable ringing if audio
+has not been unlocked. These cues respect the sound-effects setting; testing or
+explicitly enabling sound turns it on. Browsers can suspend a background tab,
+and this feature does not provide closed-app push or native phone integration.
+The existing inbox/channel rules are sufficient; no Firebase console changes
+are needed.

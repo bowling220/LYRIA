@@ -97,3 +97,15 @@ from a failed response on mobile and desktop. The Firestore emulator suite also
 runs the real HTTPS adapter against the existing rules: message commits and
 queries, channel membership queries, sending/accepting/declining requests,
 private-room denial, and atomic failure if a sender’s profile is missing.
+
+## Call invitations
+
+`python3 tests/call-invites-smoke.py` uses two browser accounts, actual Web Audio
+oscillators, fake microphones, and an isolated inbox backend. It verifies both
+ring patterns, explicit audio unlock, waiting for Answer before requesting the
+recipient microphone, joining one private room, persisted reply status,
+cancel/decline/timeout cleanup, and reconnect during an optional profile lookup.
+Voice joining is substituted in this invitation test; `voice-smoke.py` separately
+verifies real two-browser relayed media and call cues. The emulator suite checks
+invitation/reply/cancel writes under the unchanged inbox rules, rejects spoofed
+senders, and denies unrelated users access to the private voice conversation.

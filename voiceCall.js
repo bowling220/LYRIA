@@ -7,22 +7,48 @@
   const CHANNELS=[{id:'lounge',name:'Lounge'},{id:'gaming',name:'Gaming'},{id:'quiet',name:'Quiet Corner'}];
   const channelOf=p=>CHANNELS.some(c=>c.id===p?.channel)?p.channel:'lounge';
   const channelName=id=>CHANNELS.find(c=>c.id===id)?.name || 'Lounge';
-  let soundEnabled=true, audioContext;
+  let soundEnabled=true, audioContext, ringKind=null, ringTimer;const ringNodes=new Set();
   try{soundEnabled=localStorage.getItem('lyria-voice-sounds')!=='off'}catch{}
   function unlockSound(){
-    try{const Audio=window.AudioContext || window.webkitAudioContext;if(!Audio)return;audioContext ||= new Audio();audioContext.resume()?.catch(()=>{});}catch{}
+    try{
+      const Audio=window.AudioContext || window.webkitAudioContext;if(!Audio)return Promise.resolve(false);
+      audioContext ||= new Audio();
+      return audioContext.resume().then(()=>audioContext.state==='running').catch(()=>false);
+    }catch{return Promise.resolve(false)}
+  }
+  function note(frequency,start,duration,volume=.12,ring=false){
+    const oscillator=audioContext.createOscillator(),gain=audioContext.createGain();
+    oscillator.type='sine';oscillator.frequency.value=frequency;
+    gain.gain.setValueAtTime(0,start);gain.gain.linearRampToValueAtTime(volume,start+.015);gain.gain.exponentialRampToValueAtTime(.001,start+duration);
+    oscillator.connect(gain);gain.connect(audioContext.destination);oscillator.start(start);oscillator.stop(start+duration+.01);
+    if(ring){ringNodes.add(oscillator);oscillator.onended=()=>ringNodes.delete(oscillator)}
   }
   function sound(kind){
-    if(!soundEnabled || !audioContext || audioContext.state!=='running')return;
-    const notes={join:[440,660],leave:[660,440],mute:[330,220],unmute:[440,550]}[kind];
-    if(!notes)return;
-    notes.forEach((frequency,index)=>{
-      const oscillator=audioContext.createOscillator(),gain=audioContext.createGain(),start=audioContext.currentTime+index*.095;
-      oscillator.type='sine';oscillator.frequency.value=frequency;
-      gain.gain.setValueAtTime(0,start);gain.gain.linearRampToValueAtTime(.055,start+.012);gain.gain.exponentialRampToValueAtTime(.001,start+.085);
-      oscillator.connect(gain);gain.connect(audioContext.destination);oscillator.start(start);oscillator.stop(start+.09);
-    });
+    if(!soundEnabled)return;
+    const notes={join:[440,660],leave:[660,440],mute:[330,220],unmute:[440,550]}[kind];if(!notes)return;
+    unlockSound().then(ready=>{if(ready && soundEnabled)notes.forEach((frequency,index)=>note(frequency,audioContext.currentTime+index*.15,.14))});
   }
+  function ringPattern(){
+    if(!ringKind || !soundEnabled || audioContext?.state!=='running')return;
+    const start=audioContext.currentTime;
+    if(ringKind==='outgoing'){note(440,start,.8,.065,true);note(480,start,.8,.065,true)}
+    else for(const offset of [0,.55]){note(620,start+offset,.35,.075,true);note(780,start+offset,.35,.065,true)}
+  }
+  function stopRinging(){ringKind=null;clearInterval(ringTimer);for(const node of ringNodes){try{node.stop()}catch{}}ringNodes.clear()}
+  function startRinging(kind){stopRinging();ringKind=kind;ringPattern();ringTimer=setInterval(ringPattern,3000)}
+  function enableSounds(){
+    soundEnabled=true;const effects=$('voice-sound-effects');if(effects)effects.checked=true;
+    try{localStorage.setItem('lyria-voice-sounds','on')}catch{}
+    return unlockSound().then(ready=>{if(ready)ringPattern();return ready});
+  }
+  // A normal page interaction unlocks incoming-call audio before someone calls.
+  for(const event of ['pointerdown','keydown'])document.addEventListener(event,()=>{if(soundEnabled)unlockSound().then(ready=>{if(ready && ringKind)ringPattern()})},{once:true,capture:true});
+  function prepare(){
+    unlockSound();
+    if(!window.isSecureContext || !navigator.mediaDevices?.getUserMedia)return Promise.reject(new Error('Voice needs microphone access on HTTPS.'));
+    try{return navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true},video:false})}catch(error){return Promise.reject(error)}
+  }
+  function getSession(){return session && !session.closed?{id:session.id,room:session.room,channel:session.channel,joining:session.joining,connectedUserIds:participants(session).filter(([id])=>session.calls.get(id)?.connected).map(([,p])=>p.userId)}:null}
   function renderDirectory(){
     const list=$('voice-channels');if(!list)return;
     const current=Object.values(directoryMembers).filter(p=>stamp(p.updatedAt)>now()-PRESENCE_MS);
@@ -68,6 +94,7 @@
   function render(){
     const s=session, active=s && !s.closed;
     renderDirectory();
+    window.dispatchEvent(new CustomEvent('lyria:voice-state',{detail:getSession()}));
     if($('make-voice-call')){$('make-voice-call').disabled=Boolean(active);$('make-voice-call').style.display=active?'none':'inline-flex';}
     if($('end-call')){$('end-call').style.display=active?'inline-flex':'none';$('end-call').setAttribute('aria-label',s?.joining?'Cancel joining voice':'Leave voice call');$('end-call').innerHTML=UI.icon('phoneOff')+'<span class="button-label">'+(s?.joining?'Cancel':'Leave voice')+'</span>';}
     if($('voice-panel'))$('voice-panel').hidden=!active;
@@ -79,6 +106,7 @@
     const connected=peers.filter(entry=>entry.connected).length;
     const blocked=peers.some(entry=>entry.audio?.paused && entry.connected);
     if($('voice-enable-sound'))$('voice-enable-sound').hidden=!blocked;
+    if($('voice-enable-effects'))$('voice-enable-effects').hidden=soundEnabled && audioContext?.state==='running';
     if($('voice-retry'))$('voice-retry').hidden=!failed;
     if($('voice-mute')){$('voice-mute').disabled=!s.stream;$('voice-mute').setAttribute('aria-pressed',String(Boolean(s.muted)));$('voice-mute').textContent=s.muted?'Unmute':'Mute';}
     if(s.joining)return;
@@ -184,10 +212,10 @@
     if(!live(s)||!member||member.peerId!==call.peer||id.localeCompare(s.id)>=0||s.calls.has(id)){call.close();return;}
     addCall(s,id,call);call.answer(s.stream);
   }
-  async function join(channel='lounge',targetRoom=roomId,label){
+  async function join(channel='lounge',targetRoom=roomId,label,prepared){
     unlockSound();
     if(!CHANNELS.some(c=>c.id===channel))return;
-    if(session)return;
+    if(session)return false;
     const auth=window.firebaseConfig?.getAuth(), db=window.firebaseConfig?.getFirestore();
     const user=auth?.currentUser;
     if(!user || !targetRoom){UI.notify('Wait for your conversation to finish loading.');return;}
@@ -197,7 +225,7 @@
     const s={id,room:targetRoom,channel,label:label || document.getElementById('channel-title')?.textContent || (targetRoom==='community'?'Everyone':'Conversation'),userId:user.uid,db,presence:db.collection('channels').doc(targetRoom).collection('typingStatus'),presenceRef:db.collection('channels').doc(targetRoom).collection('typingStatus').doc(user.uid),calls:new Map(),members:{},joining:true,closed:false,registered:false};
     session=s;const version=++generation;render();status('Allow microphone access to join voice…');
     // Start microphone permission from this direct user gesture, not an incoming call.
-    const media=navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true},video:false}).then(stream=>{
+    const media=(prepared || prepare()).then(stream=>{
       if(!live(s)){stream.getTracks().forEach(track=>track.stop());throw new Error('Voice join cancelled.')}
       s.stream=stream;return stream;
     });
@@ -257,10 +285,11 @@
       s.heartbeat=setInterval(()=>{
         if(live(s))s.presenceRef.update({'voice.updatedAt':firebase.firestore.FieldValue.serverTimestamp()}).then(()=>{if(!live(s))clearPresence(s)}).catch(error=>console.warn('Voice presence update failed',error));
       },HEARTBEAT_MS);
-      s.presenceCheck=setInterval(()=>sync(s),5000);render();
+      s.presenceCheck=setInterval(()=>sync(s),5000);render();return true;
     }catch(error){
       if(live(s)){leave();UI.notify(failure(error),'error')}
       else stop(s);
+      return false;
     }
   }
   function setRoom(next){
@@ -273,10 +302,12 @@
   });
   $('voice-enable-sound')?.addEventListener('click',()=>{if(session)for(const entry of session.calls.values())if(entry.audio)play(entry)});
   $('voice-retry')?.addEventListener('click',()=>{const channel=session?.channel || 'lounge',room=session?.room,label=session?.label;leave();join(channel,room,label)});
-  window.addEventListener('pagehide',leave);
+  window.addEventListener('pagehide',()=>{stopRinging();leave()});
   window.leaveCurrentCall=leave;
   window.setupCallListeners=setRoom;
-  const effects=$('voice-sound-effects');if(effects){effects.checked=soundEnabled;effects.addEventListener('change',()=>{soundEnabled=effects.checked;unlockSound();try{localStorage.setItem('lyria-voice-sounds',soundEnabled?'on':'off')}catch{}})}
+  const effects=$('voice-sound-effects');if(effects){effects.checked=soundEnabled;effects.addEventListener('change',()=>{soundEnabled=effects.checked;unlockSound();if(!soundEnabled)for(const node of ringNodes){try{node.stop()}catch{}}try{localStorage.setItem('lyria-voice-sounds',soundEnabled?'on':'off')}catch{}})}
+  $('voice-enable-effects')?.addEventListener('click',async()=>{await enableSounds();sound('join');render()});
+  $('voice-test-sound')?.addEventListener('click',async()=>{await enableSounds();sound('join')});
   setInterval(renderDirectory,5000);
-  window.LyriaVoice={join,leave,setRoom,refreshDirectory:watchDirectory,leaveRoom:room=>{if(session?.room===room)leave()}};
+  window.LyriaVoice={join,leave,setRoom,prepare,getSession,startRinging,stopRinging,enableSounds,soundReady:()=>soundEnabled && audioContext?.state==='running',refreshDirectory:watchDirectory,leaveRoom:room=>{if(session?.room===room)leave()}};
 })();

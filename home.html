@@ -30,7 +30,7 @@
         <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9049091067762501" crossorigin="anonymous"></script>
         <script src="js/mobile.js?v=630bcfe83bf75bf8" defer></script>
       <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
-  <link rel="stylesheet" href="css/theme.css?v=a16995728b741861">
+  <link rel="stylesheet" href="css/theme.css?v=92902f791c2f1f05">
   <script src="js/ui.js?v=13a7e873f81a3144"></script>
   <script src="js/gif-library.js?v=0f7b242343ed6889"></script>
   <script src="js/media.js?v=c276e9cafb68d69b"></script>
@@ -63,7 +63,7 @@
                 <p id="voice-directory-label">Everyone’s voice channels</p>
                 <ul id="voice-channels" class="voice-channel-list"></ul>
                 <p id="voice-directory-status" role="status">Choose a channel to join · up to 6 people each</p>
-                <label class="voice-effects-setting"><input id="voice-sound-effects" type="checkbox" checked> Voice sound effects</label>
+                <label class="voice-effects-setting"><input id="voice-sound-effects" type="checkbox" checked> Voice sound effects</label><button id="voice-test-sound" class="voice-sound-test" type="button">Test call sound</button>
             </section>
             <nav class="sidebar-nav" aria-label="Community links">
                 <button class="sidebar-nav-item" id="news-feed-button" onclick="window.location.href='News.html'">
@@ -104,7 +104,7 @@
             <div id="connection-notice" class="connection-notice" role="status" hidden><span id="connection-message"></span><button id="retry-connection" type="button">Reconnect</button></div>
             <section id="voice-panel" class="voice-panel" aria-label="Voice call" hidden>
                 <div class="voice-call-info"><strong id="voice-room-name"></strong><p id="voice-status" role="status" aria-live="polite"></p><ul id="voice-participants" aria-label="People in your call"></ul></div>
-                <div class="voice-controls"><button id="voice-mute" type="button" aria-pressed="false">Mute</button><button id="voice-enable-sound" type="button" hidden>Enable sound</button><button id="voice-retry" type="button" hidden>Rejoin voice</button></div>
+                <div class="voice-controls"><button id="voice-mute" type="button" aria-pressed="false">Mute</button><button id="voice-enable-effects" type="button" hidden>Enable call sounds</button><button id="voice-enable-sound" type="button" hidden>Enable sound</button><button id="voice-retry" type="button" hidden>Rejoin voice</button></div>
             </section>
             <p id="community-notice" class="chat-room-notice" hidden>Everyone signed in can read this room · Latest 100 messages</p>
             <div class="messages" id="messages" role="log" aria-label="Conversation messages" aria-live="polite"><div class="empty-state"><span class="empty-icon"><span data-icon="chat" aria-hidden="true"></span></span><h2>Getting your space ready.</h2><p>Your conversations will appear here in a moment.</p></div></div>
@@ -168,6 +168,7 @@
                     <div id="profile-modal-badges" class="badges-container"></div>
                     <p id="profile-badges-empty" class="profile-empty">No badges yet</p>
                 </section>
+                <button id="call-profile-user" class="action-btn" type="button">Call</button>
                 <button id="send-friend-request" class="action-btn profile-friend-action" type="button">Send friend request</button>
             </div>
             <button id="close-profile-modal" class="close-button profile-close" type="button" aria-label="Close profile"><span data-icon="close" aria-hidden="true"></span></button>
@@ -295,9 +296,10 @@
     <script src="js/account.js?v=cde25f3103ef5197"></script>
     <script src="js/data-api.js?v=ead1f930c51a6d70"></script>
     <script src="js/friend-requests.js?v=165990bf120b126d"></script>
-    <script src="voiceCall.js?v=b890ba8ac312deff"></script>
-    <script src="chat.js?v=bb5fca19e98191aa"></script>
-    <script src="js/community.js?v=8bb071486f0dee02"></script>
+    <script src="voiceCall.js?v=9cf88d3e8de25d69"></script>
+    <script src="chat.js?v=09cebeaa8c62d58d"></script>
+    <script src="js/call-invites.js?v=bf9ab596f6bb87c8"></script>
+    <script src="js/community.js?v=f75698180b371fe3"></script>
     <script src="js/gif-picker.js?v=3dd6ed427b26c9d0"></script>
     <script src="js/profile-media.js?v=397b7291b4675d97"></script>
 

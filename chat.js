@@ -210,6 +210,7 @@ initializeFirebase().then(() => {
         listenForTypingStatus(currentChannel || COMMUNITY_CHANNEL_ID);
         window.LyriaVoice?.refreshDirectory?.();
         window.LyriaCommunity?.refreshRequests();
+        window.LyriaCalls?.refresh();
         window.LyriaAccount?.reconnect({restartLive:false});
     });
 
@@ -908,6 +909,7 @@ function showUserProfileModal(uid) {
             // Show the friend request button if the user is not the current user
             const currentUser = firebase.auth().currentUser;
             const sendFriendRequestBtn = document.getElementById('send-friend-request');
+            document.getElementById('call-profile-user').hidden=uid===currentUser?.uid || !window.LyriaAccount.getProfile().friends?.includes(uid);
 
             if (currentUser && currentUser.uid !== uid) {
                 sendFriendRequestBtn.style.display = 'block'; // Show the button

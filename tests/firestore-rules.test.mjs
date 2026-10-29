@@ -147,3 +147,25 @@ test('bounded HTTPS chat and friend requests work with existing rules, including
   await assert.rejects(Friends.respond(missing.docs[0].id,'accept'));
   assert.deepEqual((await getDoc(doc(member('bob'),'users/bob'))).data().friends,['alice']);
 });
+
+test('call invitations, replies, and cancellations use existing inbox permissions',async()=>{
+  const {runInNewContext}=await import('node:vm');let uid='alice';
+  const token=()=>{const now=Math.floor(Date.now()/1000);return Buffer.from(JSON.stringify({alg:'none',typ:'JWT'})).toString('base64url')+'.'+Buffer.from(JSON.stringify({aud:'demo-lyria',iss:'https://securetoken.google.com/demo-lyria',sub:uid,user_id:uid,iat:now,exp:now+3600,auth_time:now,firebase:{sign_in_provider:'google.com'}})).toString('base64url')+'.'};
+  const window={firebaseConfig:{getApp:()=>({options:{projectId:'demo-lyria'}}),getAuth:()=>({currentUser:{uid,getIdToken:async()=>token()}})}};
+  runInNewContext(await readFile(new URL('../js/data-api.js',import.meta.url),'utf8'),{window,AbortController,setTimeout,clearTimeout,fetch:(url,options)=>fetch(url.replace('https://firestore.googleapis.com','http://127.0.0.1:8085'),options)});
+  const API=window.LyriaDataAPI;
+  const create=(id,data)=>API.commit([{update:{name:API.name('inbox/'+id),fields:API.fields(data)},updateTransforms:[{fieldPath:'timestamp',setToServerValue:'REQUEST_TIME'}],currentDocument:{exists:false}}]);
+  await API.commit([{update:{name:API.name('channels/call-test'),fields:API.fields({createdBy:'alice',members:['alice','bob'],isDirectCall:true,isPublic:false})},currentDocument:{exists:false}}]);
+  await create('invite',{senderId:'alice',recipientId:'bob',type:'callInvite',status:'pending',room:'call-test',sessionId:'v'+'a'.repeat(32)});
+  await assert.rejects(API.read('inbox/invite'),e=>e.code==='permission-denied');
+  uid='bob';assert.equal((await API.query('inbox',{where:API.equal('recipientId','bob')})).docs[0].data().type,'callInvite');
+  await API.commit([{update:{name:API.name('inbox/invite'),fields:API.fields({status:'accepted'})},updateMask:{fieldPaths:['status']},currentDocument:{exists:true}}]);
+  await create('reply',{senderId:'bob',recipientId:'alice',type:'callReply',inviteId:'invite',status:'accepted'});
+  uid='eve';await assert.rejects(API.read('inbox/invite'),e=>e.code==='permission-denied');
+  await assert.rejects(create('spoofed',{senderId:'alice',recipientId:'bob',type:'callInvite'}),e=>e.code==='permission-denied');
+  await assert.rejects(API.query('messages',{parent:'channels/call-test'}),e=>e.code==='permission-denied');
+  uid='alice';assert.equal((await API.query('inbox',{where:API.equal('recipientId','alice')})).docs[0].data().status,'accepted');
+  await create('call-cancel-invite',{senderId:'alice',recipientId:'bob',type:'callCancel',inviteId:'invite'});
+  uid='bob';const received=await API.query('inbox',{where:API.equal('recipientId','bob')});
+  assert.equal(received.docs.length,2);assert.equal(received.docs.find(d=>d.id==='invite').data().status,'accepted');
+});
