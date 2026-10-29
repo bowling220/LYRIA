@@ -1,6 +1,10 @@
 # LYRIA Chat
 
-A modern, real-time messaging platform built with Firebase and vanilla JavaScript.
+A real-time community and chat platform built with Firebase and vanilla JavaScript.
+
+LYRIA has no paid feature tier, subscriptions, checkout, advertising, or paywalls.
+Everyone gets profiles, animated avatars and banners, personal themes, messages,
+GIFs, friends, channels, and voice. Universal technical safeguards still apply.
 
 ## 🚀 Features
 
@@ -8,9 +12,9 @@ A modern, real-time messaging platform built with Firebase and vanilla JavaScrip
 - **User Authentication**: Secure login with Google or anonymous access
 - **Channel System**: Create and join channels for organized conversations
 - **Friend System**: Add friends and see their online status
-- **Premium Preview**: Planned pricing and benefits; checkout is not connected
+- **Personal Profiles**: Avatars, animated GIF avatars/banners, bios, and community badges for everyone
 - **Mobile Responsive**: Works seamlessly on desktop and mobile devices
-- **Consistent Theme**: One forest-and-mint theme with an optional higher-contrast mode
+- **Personal Appearance**: Shared design with presets, custom colors, light/dark modes, spacing, and contrast controls
 
 ## 📁 Project Structure
 
@@ -33,8 +37,7 @@ LYRIA/
 ├── home.html            # Main chat application
 ├── login.html           # Authentication page
 ├── inbox.html           # Inbox page
-├── News.html            # News feed
-└── premium-upgrade.html # Planned Premium pricing; checkout disabled
+└── News.html            # News feed
 ```
 
 ## Shared chat and account saves
@@ -69,13 +72,12 @@ against the deployed project's rules.
 
 ## Shared web interface
 
-All six web pages load `css/theme.css` and `js/ui.js`. Edit the theme's root
+All five web pages load `css/theme.css` and `js/ui.js`. Edit the theme's root
 variables for colors and typography; reuse the shared button, dialog, card, and
 navigation classes instead of adding per-page style blocks. `LyriaUI.icon(name)`
 and `data-icon` use the same local SVG icon set. Routine feedback uses
 `LyriaUI.notify(message, type)`; dialogs share keyboard focus management and
-Escape/backdrop dismissal. The older CSS files remain for historical reference
-and are no longer loaded by the web pages.
+Escape/backdrop dismissal. Unused historical stylesheets have been removed; the web pages use the shared theme.
 
 `npm run build` creates the production assets. See [tests/README.md](tests/README.md)
 for reproducible browser checks and the remaining live-service checks.
@@ -160,7 +162,7 @@ service cloud.firestore {
 
 ### Themes
 
-The application supports theme customization through CSS custom properties. Modify `css/main.css`:
+The application supports theme customization through CSS custom properties. Modify `css/theme.css`:
 
 ```css
 :root {
@@ -364,7 +366,7 @@ and show a retry state on image failures instead of a user-avatar fallback.
 
 **Your account → Your look** previews and saves both profile pictures and banners.
 All signed-in accounts can choose library GIFs or upload GIF/JPG/PNG/WebP files;
-there is no Premium gate on appearance. `photoURL`/`avatarGif` and
+the same features and technical limits apply to everyone. `photoURL`/`avatarGif` and
 `bannerURL`/`bannerGif` are merged through the existing confirmed account-save API.
 Saved GIF animation is never converted through a canvas or a static-image encoder.
 The appearance also renders in chat avatars and profile cards after a reload.
@@ -475,6 +477,33 @@ Speaking activity is computed locally from received audio and is never written
 to Firestore. Layouts support two people on a phone and scrollable groups of six
 while keeping the dock visible. Reduced-motion preferences disable transitions.
 
-Personal appearance is available under Your account → Make LYRIA yours: six presets, light/dark mode, custom accent and background hue, corners, and chat spacing. Previews stay on this browser; Save appearance to account confirms cloud persistence. Shared appearance loads before page content on all six pages. Custom accent colors are adjusted for readable foreground contrast.
+Personal appearance is available under Your account → Make LYRIA yours: six presets, light/dark mode, custom accent and background hue, corners, and chat spacing. Previews stay on this browser; Save appearance to account confirms cloud persistence. Shared appearance loads before page content on all five pages. Custom accent colors are adjusted for readable foreground contrast.
 
 Messages have a React control with eight emoji choices. Counts toggle your own reaction using atomic Firestore array transforms, preserving concurrent members’ reactions. Existing channel membership rules apply; no rule deployment is required.
+
+
+## Full access and old account data
+
+The former Premium pricing page, promotions, payment placeholders, AdSense script,
+unused stylesheets, and payment badge image have been removed. No checkout or
+membership service exists. There are no feature gates based on account payment
+state. Non-payment role and community badges remain; supported badge IDs are
+`Beta`, `DevBadge`, `EarlyAccess`, `Mod`, `admin`, and `feature`. Add genuine future
+community badge IDs to the shared media helper and supply their assets.
+
+No destructive Firestore migration is performed. Old `isPremium` values and any
+obsolete tier/subscription fields are ignored. Unknown fields and old badge arrays
+remain in stored documents; profile saves still PATCH only edited fields. Only
+supported community badges are rendered, so an old payment badge does not appear
+and never grants or removes functionality. This applies to true, false, missing,
+and malformed historical values. The existing rules need no changes for this refactor.
+
+Universal safeguards remain: 4,000 characters per message, the latest 100 chat
+messages, six participants per voice room, 250 KB avatar uploads, 350 KB banner
+uploads, 8,192 pixels per image side, and a conservative 900 KB profile-document
+budget. These existing client safeguards do not replace Firestore authorization
+or provider quotas, and the product makes no unlimited-capacity promise.
+
+See [the product-access audit](docs/PRODUCT_ACCESS.md) for removal scope, regression
+coverage, and remaining repository search matches. [Voice setup](docs/VOICE_SETUP.md)
+still applies to reliable calling across different networks.

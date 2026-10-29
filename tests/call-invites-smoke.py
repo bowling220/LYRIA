@@ -68,25 +68,26 @@ with sync_playwright() as p:
  bob.locator('#decline-call').click();alice.wait_for_function("document.getElementById('call-invite-status').textContent.includes('declined')")
  alice.wait_for_function("__mic.every(s=>s.getTracks().every(t=>t.readyState==='ended'))")
  # Answer: both sides join the same private room and stop ringing.
- alice.locator('#start').click();bob.wait_for_function("document.getElementById('answer-call')?.hidden===false")
+ alice.locator('#start').click();bob.locator('#answer-call').wait_for(state='visible')
  bob.locator('#answer-call').click();bob.wait_for_function("document.getElementById('call-invite-panel').hidden")
  alice.wait_for_function("document.getElementById('call-invite-panel').hidden")
  assert alice.evaluate('LyriaVoice.getSession().room')==bob.evaluate('LyriaVoice.getSession().room')
  assert bob.evaluate('__mic.at(-1).getAudioTracks()[0].readyState')=='live'
  assert any(v.get('type')=='callInvite' and v.get('status')=='accepted' for v in STORE.values())
+ # Wait for the actual visible invitation: a hidden parent can retain the old Answer button state.
  # Explicit leave before another invitation; cancellation stops the caller's mic and recipient ring.
  alice.evaluate('LyriaVoice.leave()');bob.evaluate('LyriaVoice.leave()');alice.locator('#start').click()
- bob.wait_for_function("document.getElementById('answer-call')?.hidden===false")
+ bob.locator('#answer-call').wait_for(state='visible')
  alice.locator('#cancel-call-invite').click();bob.wait_for_function("document.getElementById('call-invite-status').textContent.includes('Missed')")
  assert alice.evaluate('__mic.every(s=>s.getTracks().every(t=>t.readyState===\'ended\'))')
  # No gesture: the incoming UI still appears and offers an explicit audio unlock.
  bob.close();bob=make('bob',390);bob.on('pageerror',lambda e:errors.append(str(e)))
- alice.locator('#start').click();bob.wait_for_function("document.getElementById('answer-call')?.hidden===false")
+ alice.locator('#start').click();bob.locator('#answer-call').wait_for(state='visible')
  assert bob.locator('#enable-call-ring').is_visible()
  bob.locator('#enable-call-ring').click();bob.wait_for_function('__tones.includes(620)')
  bob.locator('#decline-call').click();alice.wait_for_function("document.getElementById('call-invite-status').textContent.includes('declined')")
  # Unanswered calls end locally and release the microphone.
- alice.clock.install();alice.locator('#start').click();bob.wait_for_function("document.getElementById('answer-call')?.hidden===false")
+ alice.clock.install();alice.locator('#start').click();bob.locator('#answer-call').wait_for(state='visible')
  alice.clock.fast_forward(46000)
  alice.wait_for_function("document.getElementById('call-invite-status').textContent.includes('No answer')")
  assert alice.evaluate('__mic.every(s=>s.getTracks().every(t=>t.readyState===\'ended\'))')

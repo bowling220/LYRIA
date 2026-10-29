@@ -13,16 +13,15 @@ npm run build
 ```
 
 The test serves local files through Playwright's request interception; a local web
-server is not required. It checks all six web pages at six viewport sizes,
+server is not required. It checks all five web pages at six viewport sizes,
 horizontal overflow, duplicate IDs, script syntax, icon rendering, focus trapping
 and restoration, mobile keyboard resizing, channel creation, message sending and
 failure recovery, friends, news likes/comments and safe article rendering,
-mocked Google/guest sign-in, account saves surviving reloads, save failures, pending writes, newer unsaved edits, stalled-request timeouts, reconnection, draft restoration, the shared-room fallback, and the pricing preview. Screenshots are written to
+mocked Google/guest sign-in, account saves surviving reloads, save failures, pending writes, newer unsaved edits, stalled-request timeouts, reconnection, draft restoration, the shared-room fallback. Screenshots are written to
 `test-artifacts/`, which is ignored by Git.
 
 Real Google sign-in, Firestore permissions and indexes, microphone permissions,
-and iPhone/cellular voice calls still need staging or manual verification. No payment
-provider is configured; the Premium page intentionally cannot grant paid access.
+and iPhone/cellular voice calls still need staging or manual verification.
 
 ## Firestore rules
 
@@ -145,3 +144,33 @@ highlights from received WebRTC audio, stage microphone/sound controls, and
 switching between chat and call without changing the live session.
 
 `python3 tests/appearance-reactions-smoke.py` checks mobile/desktop theme previews, account save/reload, cross-page colors, reaction add/remove, and failed reaction writes. The rules suite also verifies concurrent reactions, duplicate prevention, removal, and private-room denial.
+
+
+## Universal product access
+
+After `npm run build`, run `node --test tests/product-access.test.mjs` and
+`python3 tests/product-access-smoke.py`. Static checks cover every authored runtime
+source, local HTML links, production output, removed pages/assets, and absence of
+monetization scripts or UI. Browser checks cover ordinary and historical accounts
+with true, false, and malformed obsolete flags: load/reload, preserved fields,
+profile saving, GIF avatars/banners, community badges, and message sending. They
+also assert that no ad requests are made. Existing GIF/appearance tests check all
+media paths and limits; the Firestore emulator checks that edits preserve ignored
+legacy fields under real authorization rules. No production records are migrated.
+
+The complete web regression set can be run with:
+
+```sh
+npm run version:assets
+npm run build
+node --test tests/product-access.test.mjs tests/voice-config.test.mjs
+npm run test:rules
+for test in ui gif appearance-reactions reload social-loading channel-selection voice-ui call-view voice-transport call-invites product-access; do
+  python3 "tests/$test-smoke.py" || exit 1
+done
+python3 tests/voice-smoke.py
+```
+
+The final command needs coturn and the isolated Node test dependencies as described
+above. The call-invitation test waits for a visible Answer control, including its
+parent panel, so previous hidden invitation UI cannot satisfy a new-call wait.

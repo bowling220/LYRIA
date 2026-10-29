@@ -49,5 +49,6 @@
     if(url)show();else{img.hidden=true;error.hidden=false;retry.hidden=true;toggle.hidden=true;}
     return card;
   }
-  window.LyriaMedia={safeUrl,profileSource,profileBanner,image,renderGif,reduced};
+  const profileBadges=profile=>profile?.showBadges===false?[]:[...new Set((Array.isArray(profile?.badges)?profile.badges:[]).filter(badge=>['Beta','DevBadge','EarlyAccess','Mod','admin','feature'].includes(badge)))];
+  window.LyriaMedia={profileBadges,safeUrl,profileSource,profileBanner,image,renderGif,reduced};
 })();

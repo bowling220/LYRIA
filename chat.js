@@ -51,83 +51,15 @@ let usedCommunityFallback = false;
 // Create notification sound
 const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
 
-// Define an array of UIDs for users who should have badges
-const badgeUserUIDs = ["qzf9fO2bBLU0PJhRDSQK9KnMZD32", "xLT0XKgtF5ZnlfX2fLj9hXrTcW02"]; // Replace with actual UIDs
-
-// Hardcoded badge details
+// Badges recognize roles and community contributions; they never gate features.
 const badgeDetails = {
-    "Beta": {
-        description: "Awarded to beta testers.",
-        userCount: 150 // Example number of users who have this badge
-    },
-    "admin": {
-        description: "Awarded to administrators.",
-        userCount: 2 // Example number of users who have this badge
-    },
-    "VIP": {
-        description: "Awarded to very important persons.",
-        userCount: 30 // Example number of users who have this badge
-    },
-    // Add more badges as needed
+    Beta: {description: 'Recognizes beta testing and feedback.'},
+    admin: {description: 'Community administrator.'},
+    Mod: {description: 'Community moderator.'},
+    DevBadge: {description: 'Contributes to building LYRIA.'},
+    EarlyAccess: {description: 'An early member of the community.'},
+    feature: {description: 'Featured community member.'}
 };
-
-// Function to display badges with hover tooltips
-function displayBadges(userId) {
-    const badgesContainer = document.getElementById('profile-modal-badges');
-    badgesContainer.innerHTML = ''; // Clear previous badges
-
-    db.collection('users').doc(userId).get().then(doc => {
-        if (doc.exists) {
-            const userData = doc.data();
-
-            if (userData.badges && Array.isArray(userData.badges)) {
-                userData.badges.forEach(badge => {
-                    const badgeDiv = document.createElement('div');
-                    badgeDiv.className = 'badge';
-                    badgeDiv.setAttribute('data-badge-name', badge);
-
-                    const badgeImage = document.createElement('img');
-                    badgeImage.src = `assets/${badge}.png`; // Assuming badge images are stored in assets
-                    badgeImage.alt = `${badge} Badge`;
-                    badgeImage.className = 'badge-image';
-                    badgeImage.width = 28;
-                    badgeImage.height = 28;
-
-                    // Add a tooltip for badge details
-                    const tooltip = document.createElement('div');
-                    tooltip.className = 'tooltip';
-                    const details = badgeDetails[badge];
-                    if (details) {
-                        tooltip.innerHTML = `
-                            <strong>${badge}</strong><br>
-                            ${details.description}<br>
-                            <strong>Users:</strong> ${details.userCount}
-                        `;
-                    } else {
-                        tooltip.innerHTML = `<strong>${badge}</strong><br>No details available.`;
-                    }
-
-                    badgeDiv.appendChild(badgeImage);
-                    badgeDiv.appendChild(tooltip);
-                    badgesContainer.appendChild(badgeDiv);
-
-                    // Show tooltip on hover
-                    badgeDiv.addEventListener('mouseenter', () => {
-                        tooltip.style.visibility = 'visible';
-                        tooltip.style.opacity = '1';
-                    });
-
-                    badgeDiv.addEventListener('mouseleave', () => {
-                        tooltip.style.visibility = 'hidden';
-                        tooltip.style.opacity = '0';
-                    });
-                });
-            }
-        }
-    }).catch(error => {
-        console.error("Error fetching user data:", error);
-    });
-}
 
 const featureUserUIDs = ["miu0tI2oHJUiNx2gxtPwSpJ136w1", "dIc6q6xdqsTuiVC9JWGQT9XVH6T2"]; // Add the UID for the feature badge
 
@@ -725,7 +657,7 @@ function loadMessages(channelId) {
                     if(!message.isConnected || !user.exists)return;
                     avatar.src=window.LyriaMedia.profileSource(user.data());
                     name.textContent=user.data().displayName || name.textContent;
-                    const badges = user.data().showBadges!==false && Array.isArray(user.data().badges) ? user.data().badges : [];
+                    const badges = window.LyriaMedia.profileBadges(user.data());
                     badges.forEach(badge=>{if(!/^[a-zA-Z0-9_-]+$/.test(badge))return;const img=document.createElement('img');img.src='assets/'+badge+'.png';img.alt=badge+' badge';img.className='admin-badge';img.width=18;img.height=18;sender.append(img)});
                 }).catch(error=>console.warn('Badges unavailable',error));
             }
@@ -861,8 +793,8 @@ function showUserProfileModal(uid) {
             let renderedBadges = 0;
 
             // Check if the user has any badges
-            if (userData.badges && Array.isArray(userData.badges)) {
-                userData.badges.forEach(badge => {
+            if (window.LyriaMedia.profileBadges(userData).length) {
+                window.LyriaMedia.profileBadges(userData).forEach(badge => {
                     const badgeDiv = document.createElement('button');
                     badgeDiv.type = 'button';
                     badgeDiv.className = 'badge';
@@ -896,7 +828,7 @@ function showUserProfileModal(uid) {
             }
 
             // Check if the user has the feature badge
-            if (featureUserUIDs.includes(uid)) {
+            if (userData.showBadges !== false && featureUserUIDs.includes(uid) && !window.LyriaMedia.profileBadges(userData).includes('feature')) {
                 const featureBadgeWrap = document.createElement('div');
                 featureBadgeWrap.className = 'badge';
                 const featureBadge = document.createElement('img');
