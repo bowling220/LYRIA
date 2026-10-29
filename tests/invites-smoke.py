@@ -44,7 +44,7 @@ with sync_playwright() as p:
  page.wait_for_url('**/invite.html?code=NEW123#accepted')
  result=page.evaluate("({id:__accepted,members:__testData.get('channels/new-room').members,channels:__testData.get('users/test-member').channels})")
  assert result['id']=='new-room' and 'test-member' in result['members'] and 'new-room' in result['channels']
- page.goto('http://localhost:8124/home.html')
+ page.goto('http://localhost:8124/home.html?channel=community')
  page.locator('#header-menu-toggle').click();page.locator('#join-channel').click()
  page.locator('#channel-action-input').fill('http://localhost:8124/invite.html?code=STUDIO')
  page.locator('#submit-channel-action').click()
@@ -58,7 +58,7 @@ with sync_playwright() as p:
  # Signed-out invitation survives either authentication choice without accepting silently.
  for button in ['google-signin','guest-login']:
   page=make_page(browser,ROOT)
-  page.add_init_script("if(location.pathname.endsWith('invite.html')){const a=firebase.auth();a.currentUser=null;a.onAuthStateChanged=fn=>{queueMicrotask(()=>fn(null));return()=>{}}}")
+  page.add_init_script("if(location.pathname.endsWith('invite.html') || location.pathname.endsWith('login.html')){const a=firebase.auth();a.currentUser=null;a.onAuthStateChanged=fn=>{queueMicrotask(()=>fn(null));return()=>{}}}")
   page.goto('http://localhost:8124/invite.html?code=STUDIO')
   page.wait_for_function("document.getElementById('accept-invite').textContent==='Continue to your invitation'")
   assert page.locator('#invite-title').inner_text()=='You’re invited.'

@@ -8,7 +8,7 @@ with sync_playwright() as p:
  for width,height in [(320,568),(390,844),(667,375),(768,1024),(1440,1000)]:
   page=make_page(browser,ROOT,width,height)
   errors=[];page.on('pageerror',lambda error:errors.append(str(error)))
-  page.goto('http://localhost:8124/home.html')
+  page.goto('http://localhost:8124/home.html?channel=community')
   page.wait_for_function("document.querySelectorAll('#voice-channels button').length===3")
   page.evaluate("""()=>{
    const voice=(id,channel,displayName,muted=false)=>({sessionId:'v'+id.repeat(32),peerId:'lyria-v'+id.repeat(32),channel,displayName,muted,updatedAt:{toMillis:()=>Date.now()}});

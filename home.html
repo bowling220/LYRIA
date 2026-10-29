@@ -22,7 +22,7 @@
 
         <!-- Utility Scripts -->
         <script src="js/runtime-config.js?v=2d5215ca595a64fe"></script>
-        <script src="js/config.js?v=83317555199fb156"></script>
+        <script src="js/config.js?v=0c88e1ace284ae8f"></script>
         <script src="js/utils.js?v=35ef4bfc11346489"></script>
         <script src="js/performance.js?v=b75533a7c9e9fa36"></script>
 
@@ -30,7 +30,7 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.5/peerjs.min.js"></script>
         <script src="js/mobile.js?v=630bcfe83bf75bf8" defer></script>
       <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
-  <link rel="stylesheet" href="css/theme.css?v=fa269918a2a28c34">
+  <link rel="stylesheet" href="css/theme.css?v=aaadd2c3b1f2a227">
   <script src="js/ui.js?v=c32d1a2c0cc58c63"></script>
   <script src="js/gif-library.js?v=0f7b242343ed6889"></script>
   <script src="js/badges.js?v=40763ed5718c4e15"></script>
@@ -40,7 +40,7 @@
 <body class="app-page">
 
 
-    <header class="top-header"><button class="menu-toggle" id="header-menu-toggle" aria-label="Open community menu" aria-expanded="false" aria-controls="community-sidebar"><span data-icon="menu" aria-hidden="true"></span></button><a class="brand" href="index.html" aria-label="LYRIA home"><span class="brand-mark"><span data-icon="chat" aria-hidden="true"></span></span><span>LYRIA</span></a><span class="header-divider"></span><span class="header-location">Your community</span><nav class="header-nav" aria-label="Main navigation"><a class="" href="home.html" aria-current="page">Community</a><a class="news-link" href="News.html">News</a></nav></header>
+    <header class="top-header"><button class="menu-toggle" id="header-menu-toggle" aria-label="Open community menu" aria-expanded="false" aria-controls="community-sidebar"><span data-icon="menu" aria-hidden="true"></span></button><a class="brand" href="home.html?view=hub" aria-label="LYRIA home"><span class="brand-mark"><span data-icon="chat" aria-hidden="true"></span></span><span>LYRIA</span></a><span class="header-divider"></span><span class="header-location">Your community</span><nav class="header-nav" aria-label="Main navigation"><a class="" href="home.html?view=hub" aria-current="page">Community</a><a class="news-link" href="News.html">News</a></nav></header>
     <div class="app-container">
         <aside class="sidebar" id="community-sidebar" aria-label="Community navigation">
             <div class="sidebar-mobile-header">
@@ -53,7 +53,7 @@
             <div class="workspace-heading"><span>Your corner of the internet</span><h2>Make yourself at home.</h2><p>Good conversations start here.</p></div>
             <div class="channels">
                 <h3>Conversations</h3><p id="read-state-status" class="save-status" role="status"></p>
-                <ul class="channels-list" id="channels-list"></ul>
+                <button id="open-hub" class="channel-btn" type="button">Conversations</button><ul class="channels-list" id="channels-list"></ul>
                 <div class="channel-actions" aria-label="Channel actions">
                     <button class="add-channel-btn" id="add-channel"><span data-icon="plus" aria-hidden="true"></span> New</button>
                     <button class="join-channel-btn" id="join-channel"><span data-icon="hash" aria-hidden="true"></span> Join</button>
@@ -95,8 +95,14 @@
             </div>
 
         </aside>
-        <main class="chat-area">
-            <header class="chat-header">
+        <main class="chat-area" data-view="hub">
+            <section id="conversation-hub" aria-labelledby="hub-title">
+                <div class="hub-intro"><p class="hub-kicker">YOUR LYRIA</p><h1 id="hub-title">A place for your people.</h1><p>Catch up, find your friends, or start something new.</p></div>
+                <nav class="hub-actions" aria-label="Community shortcuts"><button id="hub-friends" type="button">Friends</button><a href="inbox.html">Friend requests</a><button id="hub-create" type="button">New conversation</button><button id="hub-join" type="button">Join a conversation</button></nav>
+                <div class="hub-list-heading"><h2>Your conversations</h2><label>Find a conversation<input id="hub-search" type="search" placeholder="Search conversations…" maxlength="180"></label></div>
+                <div id="hub-conversations" class="hub-conversations" aria-live="polite"><p>Loading your conversations…</p></div>
+            </section>
+            <header class="chat-header"><button id="back-to-hub" type="button" aria-label="Back to conversations">←</button>
                 <div class="chat-title-group"><span class="channel-symbol" aria-hidden="true"><span data-icon="hash" aria-hidden="true"></span></span><div><h2 id="channel-title">Everyone</h2><p class="chat-subtitle">A little space to stay connected.</p></div></div>
                 <button id="make-voice-call" class="voice-call-btn" type="button" aria-label="Join voice call" title="Join voice"><span data-icon="mic" aria-hidden="true"></span><span class="button-label">Join voice</span></button>
                 <button id="end-call" class="voice-call-btn voice-call-end" type="button" aria-label="Leave voice call" title="Leave voice" style="display:none"><span data-icon="phoneOff" aria-hidden="true"></span><span class="button-label">Leave voice</span></button>
@@ -338,12 +344,12 @@
     <script src="js/voice-config.js?v=119a5da781b271fd"></script>
     <script src="js/voice-transport.js?v=fa2ca1547533d069"></script>
     <script src="js/voice-presence.js?v=3bab77acb0644b2b"></script>
-    <script src="voiceCall.js?v=9d61d01024fa6b6b"></script>
+    <script src="voiceCall.js?v=5a9d4dd8462a54f5"></script>
     <script src="js/voice-devices.js?v=bcc60610780043c3"></script>
     <script src="js/voice-view.js?v=9a6f2e727cbda043"></script>
     <script src="js/reactions.js?v=2ed845847fa3f200"></script>
     <script src="js/invites.js?v=23abf220b9d0b3bd"></script>
-    <script src="chat.js?v=c3fcab607b3a9a3d"></script>
+    <script src="chat.js?v=a483efdbd4c360db"></script>
     <script src="js/call-invites.js?v=7fa101a84eecac1e"></script>
     <script src="js/community.js?v=76e1a5acda0d84b9"></script>
     <script src="js/gif-picker.js?v=f9c05c3fd59f2481"></script>

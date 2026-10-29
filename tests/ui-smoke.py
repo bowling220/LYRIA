@@ -31,6 +31,7 @@ with sync_playwright() as p:
     def make_page(width=390,height=844,touch=True):
         page=browser.new_page(viewport={'width':width,'height':height},has_touch=touch)
         page.add_init_script(path=str(ROOT/'tests/firebase-fixture.js'))
+        page.add_init_script("if(location.pathname.endsWith('login.html'))firebase.auth().onAuthStateChanged=fn=>{queueMicrotask(()=>fn(null));return()=>{}}")
         def route(r):
             url=r.request.url
             if url.startswith('http://localhost:8124/'):
@@ -49,7 +50,7 @@ with sync_playwright() as p:
         page=make_page(width,height,width<=768)
         errors=[];page.on('pageerror',lambda error:errors.append(str(error)))
         for name in PAGES:
-            errors.clear();page.goto('http://localhost:8124/'+name,wait_until='load');page.wait_for_timeout(150)
+            errors.clear();page.goto('http://localhost:8124/'+name+('?channel=community' if name=='home.html' else ''),wait_until='load');page.wait_for_timeout(150)
             assert not errors,(name,width,errors)
             assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1'),(name,width,'horizontal overflow')
             clipped=page.evaluate('''() => [...document.querySelectorAll('button,input,textarea,.wrapper,.container')].filter(el=>{
@@ -63,7 +64,7 @@ with sync_playwright() as p:
             count+=1
         page.close()
     page=make_page()
-    page.goto('http://localhost:8124/home.html',wait_until='load');page.wait_for_timeout(150)
+    page.goto('http://localhost:8124/home.html?channel=community',wait_until='load');page.wait_for_timeout(150)
     page.locator('#header-menu-toggle').click();assert page.locator('#header-menu-toggle').get_attribute('aria-expanded')=='true'
     page.locator('#settings-btn').click();page.wait_for_timeout(60)
     assert page.locator('#settings-modal').get_attribute('aria-hidden')=='false'
@@ -83,7 +84,7 @@ with sync_playwright() as p:
     page.evaluate("Object.defineProperty(visualViewport,'height',{configurable:true,value:360});visualViewport.dispatchEvent(new Event('resize'))")
     page.wait_for_timeout(100);box=page.locator('.message-input').bounding_box();assert box['y']+box['height']<=361
     page.close()
-    page=make_page(1440,1000,False);page.goto('http://localhost:8124/home.html',wait_until='load');page.wait_for_timeout(100)
+    page=make_page(1440,1000,False);page.goto('http://localhost:8124/home.html?channel=community',wait_until='load');page.wait_for_timeout(100)
     page.locator('#add-channel').click();page.wait_for_timeout(50)
     page.locator('#channel-action-input').fill('Design notes');page.locator('#submit-channel-action').click();page.wait_for_timeout(150)
     assert page.locator('#channel-title').inner_text()=='Design notes'
@@ -93,7 +94,7 @@ with sync_playwright() as p:
     page.locator('#open-friends-modal').click();page.wait_for_timeout(100);assert 'Maya Chen' in page.locator('#friends-list').inner_text()
     page.close()
     # Account data is authoritative in Firestore, and save feedback must reflect confirmation.
-    page=make_page(1440,1000,False);page.goto('http://localhost:8124/home.html',wait_until='load');page.wait_for_timeout(100)
+    page=make_page(1440,1000,False);page.goto('http://localhost:8124/home.html?channel=community',wait_until='load');page.wait_for_timeout(100)
     assert page.locator('#channel-title').inner_text()=='Everyone'
     assert page.evaluate('window.__firestoreTransport.experimentalForceLongPolling') is True
     assert page.locator('[data-channel-id="community"]').count()==1
@@ -139,9 +140,9 @@ with sync_playwright() as p:
     page.evaluate('window.__emitFixture()');page.wait_for_timeout(80);assert page.locator('.user-submitted').count()==1
     page.close()
     for button in ['#guest-login','#google-signin']:
-        page=make_page();page.goto('http://localhost:8124/login.html',wait_until='load');page.locator(button).click();page.wait_for_url('**/home.html');page.close()
+        page=make_page();page.add_init_script("if(location.pathname.endsWith('login.html'))firebase.auth().onAuthStateChanged=fn=>{queueMicrotask(()=>fn(null));return()=>{}}");page.goto('http://localhost:8124/login.html',wait_until='load');page.locator(button).click();page.wait_for_url('**/home.html?view=hub');page.close()
     # A stalled HTTPS request must release the save button and expose recovery.
-    page=make_page(1440,1000,False);page.goto('http://localhost:8124/home.html',wait_until='load');page.wait_for_timeout(100)
+    page=make_page(1440,1000,False);page.goto('http://localhost:8124/home.html?channel=community',wait_until='load');page.wait_for_timeout(100)
     page.locator('#settings-btn').click();page.wait_for_timeout(50);page.clock.install()
     page.evaluate('window.__stallAccount=true');page.locator('#bio-input').fill('Keep this after a timeout');page.locator('#update-bio-btn').click()
     page.clock.fast_forward(16000)
@@ -157,7 +158,7 @@ with sync_playwright() as p:
     assert page.locator('#bio-input').get_attribute('data-dirty')=='true'
     page.locator('#update-bio-btn').click();page.wait_for_function("document.getElementById('bio-save-status').dataset.state==='saved'")
     page.close()
-    page=make_page();page.add_init_script('window.__denyCommunity=true');page.goto('http://localhost:8124/home.html',wait_until='load')
+    page=make_page();page.add_init_script('window.__denyCommunity=true');page.goto('http://localhost:8124/home.html?channel=community',wait_until='load')
     page.wait_for_function("document.getElementById('channel-title').textContent==='My personal channel'")
     assert page.locator('[data-channel-id="community"]').count()==1
     page.close()

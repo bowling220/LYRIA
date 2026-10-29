@@ -13,7 +13,7 @@ with sync_playwright() as p:
  browser=p.chromium.launch(executable_path='/usr/bin/chromium',headless=True,args=['--no-sandbox'])
  page=make_page(browser,ROOT);errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
  page.add_init_script("window.__stallChannels=!sessionStorage.getItem('reload-recovered');window.__stallMessages=window.__stallChannels;window.__stallRestQueries=window.__stallChannels;")
- page.goto('http://localhost:8124/home.html');page.wait_for_function('window.LyriaConnection && window.LyriaAccount.getProfile().displayName')
+ page.goto('http://localhost:8124/home.html?channel=community');page.wait_for_function('window.LyriaConnection && window.LyriaAccount.getProfile().displayName')
  page.locator('#message-input').fill('Keep this unsent message')
  page.wait_for_function("!document.getElementById('connection-notice').hidden",timeout=15000)
  assert page.locator('#connection-message').inner_text()

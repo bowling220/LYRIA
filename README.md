@@ -576,3 +576,7 @@ Reliable cross-network calling still requires the owner's working TURN configura
 
 **Activation is coordinated with Firebase rules and indexes.** See
 [ACTIVATION.md](docs/ACTIVATION.md) before deploying this update.
+
+### Conversation home and saved login
+
+Opening `home.html` shows the conversation hub without selecting a chat. Explicit `?channel=` links and reloads preserve an opened room; the Conversations button returns to the hub. App navigation keeps Firebase authentication intact. Firebase Auth uses local persistence, falling back to session storage where browser restrictions require it. Clearing browser data, private browsing restrictions, or signing out can still require a new login. No passwords or authentication tokens are stored manually.

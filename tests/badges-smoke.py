@@ -13,7 +13,7 @@ with sync_playwright() as p:
  for width in [320,390,768,1440]:
   page=make_page(browser,ROOT,width,900);errors=[];page.on('pageerror',lambda error:errors.append(str(error)))
   page.add_init_script("__testData.get('users/test-member').badges=['Admin','admin','Mod','moderator','DevBadge','developer','Beta','beta','EarlyAccess','early-access','feature','featured','VIP','unknown'];__testData.get('users/maya').badges=['Mod','Beta'];__testData.get('profiles/maya').badges=['Mod','Beta'];")
-  page.goto('http://localhost:8124/home.html');page.wait_for_function("document.getElementById('account-load-status').dataset.state==='ready'")
+  page.goto('http://localhost:8124/home.html?channel=community');page.wait_for_function("document.getElementById('account-load-status').dataset.state==='ready'")
   page.wait_for_function("document.querySelector('.message-badges[data-user-id=\"test-member\"]')?.children.length===6")
   assert page.locator('.message-badges img').first.evaluate('el=>el.width')==20
   page.locator('#user-profile-trigger').evaluate('(el)=>el.click()');page.wait_for_selector('#profile-modal .lyria-badge')
@@ -51,14 +51,14 @@ with sync_playwright() as p:
  # Missing artwork keeps a labelled, interactive badge, never a broken image or user-avatar substitution.
  page=make_page(browser,ROOT,390,844);page.add_init_script("__testData.get('users/test-member').badges=['Beta','DevBadge']")
  page.route('**/assets/badges/developer.svg',lambda route:route.fulfill(status=404,body=''))
- page.goto('http://localhost:8124/home.html');page.wait_for_function("document.getElementById('account-load-status').dataset.state==='ready'")
+ page.goto('http://localhost:8124/home.html?channel=community');page.wait_for_function("document.getElementById('account-load-status').dataset.state==='ready'")
  page.locator('#user-profile-trigger').evaluate('(el)=>el.click()');page.wait_for_selector('#profile-modal [data-asset-unavailable=true]')
  missing=page.locator('#profile-modal [data-badge-id=developer]');assert missing.locator('img').count()==0;assert missing.locator('.badge-fallback').inner_text()=='D'
  missing.click();assert 'build and maintain' in page.locator('#badge-tooltip').inner_text()
  page.close()
  # Light theme keeps the same recognizable dark tokens and readable descriptions.
  page=make_page(browser,ROOT,390,844);page.add_init_script("__testData.get('users/test-member').badges=['Mod','EarlyAccess']")
- page.goto('http://localhost:8124/home.html');page.wait_for_function("document.getElementById('account-load-status').dataset.state==='ready'")
+ page.goto('http://localhost:8124/home.html?channel=community');page.wait_for_function("document.getElementById('account-load-status').dataset.state==='ready'")
  page.evaluate("LyriaAppearance.apply({mode:'light',hue:225,accent:'#3e55b8'})")
  page.locator('#user-profile-trigger').evaluate('(el)=>el.click()');page.wait_for_selector('#profile-modal .lyria-badge')
  page.locator('#profile-modal [data-badge-id=early-access]').focus();assert page.locator('#badge-tooltip').is_visible()

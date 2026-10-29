@@ -8,7 +8,7 @@ with sync_playwright() as p:
  for width,height in [(390,844),(1280,960)]:
   page=make_page(browser,ROOT,width,height);errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
   page.add_init_script("""window.__stallChannelMetadata=true;__testData.get('channels/studio').name='Test';__testData.set('channels/studio/messages/private',{sender:'Maya',senderId:'maya',message:'Only in Test',timestamp:{toDate:()=>new Date('2026-10-29T10:30:00Z')}});""")
-  page.goto('http://localhost:8124/home.html');page.wait_for_function("document.querySelector('[data-channel-id=studio]')")
+  page.goto('http://localhost:8124/home.html?channel=community');page.wait_for_function("document.querySelector('[data-channel-id=studio]')")
   def select(id):
    if width<=768:page.locator('#header-menu-toggle').click()
    page.locator('[data-channel-id="'+id+'"]').click()

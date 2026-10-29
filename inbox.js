@@ -7,7 +7,7 @@
     window.LyriaConnection.pending('requests');empty('Loading friend requests…');
     off=window.LyriaFriendRequests.watch(true,snapshot=>{
       if(current!==version)return;window.LyriaConnection.ready('requests');container.replaceChildren();
-      if(snapshot.empty){container.innerHTML='<div class="empty-state"><span class="empty-icon">'+window.LyriaUI.icon('inbox')+'</span><h2>You’re all caught up.</h2><p>New friend requests will appear here.</p><a href="home.html">Back to community</a></div>';return}
+      if(snapshot.empty){container.innerHTML='<div class="empty-state"><span class="empty-icon">'+window.LyriaUI.icon('inbox')+'</span><h2>You’re all caught up.</h2><p>New friend requests will appear here.</p><a href="home.html?view=hub">Back to community</a></div>';return}
       for(const doc of snapshot.docs){
         const request=doc.data(),row=document.createElement('div');row.className='inbox-message';row.dataset.requestId=doc.id;
         const message=document.createElement('p');

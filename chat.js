@@ -150,23 +150,64 @@ initializeFirebase().then(() => {
         window.LyriaAccount?.reconnect({restartLive:false});
     });
 
+let hubChannels=[];
+function renderHub(){
+    const list=document.getElementById('hub-conversations');
+    const search=document.getElementById('hub-search').value.trim().toLowerCase();
+    list.replaceChildren();
+    const rooms=[{id:COMMUNITY_CHANNEL_ID,name:'Everyone',shared:true},...hubChannels].filter(room=>(room.name || 'Conversation').toLowerCase().includes(search));
+    for(const room of rooms){
+        const button=document.createElement('button');button.type='button';button.className='hub-conversation';
+        const mark=document.createElement('span');mark.className='hub-room-icon';mark.innerHTML=window.LyriaUI.icon(room.shared?'users':'hash');
+        const text=document.createElement('span');const title=document.createElement('strong');title.textContent=room.name || 'Conversation';
+        const detail=document.createElement('span');detail.textContent=room.shared?'One room for the whole community':room.favorite?'Favorite conversation':'Open conversation';
+        text.append(title,detail);button.append(mark,text);button.addEventListener('click',()=>switchChannel(room.id,room.name));list.append(button);
+    }
+    if(!rooms.length){const empty=document.createElement('p');empty.textContent='No conversations match your search.';list.append(empty)}
+}
+function showHub(historyMode='push'){
+    ++channelSelectionVersion;
+    window.LyriaConnection?.ready('messages');
+    if(currentChannel)setTypingStatus(false);
+    unsubscribeFromMessages?.();unsubscribeFromMessages=null;
+    unsubscribeTyping?.();unsubscribeTyping=null;
+    currentChannel=null;window.LyriaReadState?.setActive(null);window.LyriaMentions?.setPeople([]);
+    const area=document.querySelector('.chat-area');area.dataset.view='hub';delete area.dataset.selectedChannelId;
+    document.getElementById('conversation-hub').hidden=false;
+    document.getElementById('leave-channel').disabled=true;
+    document.getElementById('make-voice-call').disabled=true;
+    document.querySelectorAll('.channel-btn').forEach(button=>{button.classList.remove('active-channel');button.setAttribute('aria-current','false')});
+    document.getElementById('open-hub').setAttribute('aria-current','page');
+    window.LyriaVoiceView?.showChat();window.LyriaVoice?.setRoom(null);
+    try{const url=new URL(location.href);url.searchParams.delete('channel');url.searchParams.set('view','hub');if(url.href!==location.href)history[historyMode+'State'](null,'',url)}catch{}
+    setMobileMenuOpen(false);renderHub();
+}
+document.getElementById('open-hub').addEventListener('click',()=>showHub());
+document.getElementById('back-to-hub').addEventListener('click',()=>showHub());
+document.getElementById('hub-search').addEventListener('input',renderHub);
+document.getElementById('hub-friends').addEventListener('click',()=>window.LyriaCommunity?.openFriends());
+document.getElementById('hub-create').addEventListener('click',()=>document.getElementById('add-channel').click());
+document.getElementById('hub-join').addEventListener('click',()=>document.getElementById('join-channel').click());
+window.addEventListener('popstate',()=>{if(currentUser){++channelSelectionVersion;restoreConversation(currentUser)}});
+
 function restoreConversation(user){
     const version=channelSelectionVersion;
     let saved=null;try{saved=JSON.parse(localStorage.getItem('lyria:last-conversation:'+user.uid))}catch{}
     const requested=new URLSearchParams(location.search).get('channel');
-    const id=requested || saved?.id || COMMUNITY_CHANNEL_ID;
-    if(id===COMMUNITY_CHANNEL_ID || !/^[A-Za-z0-9_-]{1,180}$/.test(id)){switchChannel(COMMUNITY_CHANNEL_ID,undefined,{restore:true});return}
+    const id=requested;
+    if(!id){showHub('replace');return}
+    if(id===COMMUNITY_CHANNEL_ID || !/^[A-Za-z0-9_-]{1,180}$/.test(id)){if(id===COMMUNITY_CHANNEL_ID)switchChannel(id,undefined,'replace');else showHub('replace');return}
     document.getElementById('channel-title').textContent=saved?.id===id && typeof saved.name==='string'?saved.name:'Opening conversation…';
     document.getElementById('message-input').placeholder='Opening your conversation…';
     document.getElementById('make-voice-call').disabled=true;
     window.LyriaConnection?.pending('messages');
     return window.LyriaDataAPI.read('channels/'+id).then(doc=>{
         if(currentUser?.uid!==user.uid || channelSelectionVersion!==version)return;
-        if(doc.exists && Array.isArray(doc.data().members) && doc.data().members.includes(user.uid))switchChannel(doc.id,doc.data().name,{restore:true});
-        else {switchChannel(COMMUNITY_CHANNEL_ID);window.LyriaUI.notify('That conversation is no longer available to your account.','error')}
+        if(doc.exists && Array.isArray(doc.data().members) && doc.data().members.includes(user.uid))switchChannel(doc.id,doc.data().name,'replace');
+        else {showHub('replace');window.LyriaUI.notify('That conversation is no longer available to your account.','error')}
     }).catch(error=>{
         if(currentUser?.uid!==user.uid || channelSelectionVersion!==version)return;
-        if(error.code==='permission-denied' || error.code==='not-found')switchChannel(COMMUNITY_CHANNEL_ID);
+        if(error.code==='permission-denied' || error.code==='not-found')showHub('replace');
         else window.LyriaConnection?.fail('messages','Your last conversation couldn’t reopen. Try reconnecting.');
     });
 }
@@ -407,7 +448,7 @@ function setupUIEventListeners() {
                         favoriteChannels: firebase.firestore.FieldValue.arrayRemove(leavingChannelId)
                     }, { merge: true })
                 ]);
-                switchChannel(personalChannelId);
+                showHub();
                 loadChannels();
                 closeChannelActionModal();
             }
@@ -607,6 +648,7 @@ function loadChannels() {
                 // Sort channels: favorites first
                 channels.sort((a, b) => (b.favorite === a.favorite) ? 0 : (b.favorite ? 1 : -1));
 
+                hubChannels=channels;renderHub();
                 channels.forEach(channel => {
                     rememberChannelName(channel.id,channel.name);
                     const channelElement = document.createElement('li');
@@ -648,6 +690,7 @@ function loadChannels() {
             if(version!==channelLoadVersion)return;
             window.LyriaConnection?.fail('channels','Your conversations couldn’t load. Try reconnecting.');
             console.error("Error loading channels:", error);
+            document.getElementById('hub-conversations').append(Object.assign(document.createElement('p'),{textContent:'Your other conversations couldn’t load. Use Reconnect to try again.'}));
         });
 }
 
@@ -760,11 +803,15 @@ function logout() {
 }
 
 // Function to switch channels
-function switchChannel(channelId,name,{restore=false}={}) {
+function switchChannel(channelId,name,historyMode='push') {
+    const restoreUnread=historyMode==='replace' && new URLSearchParams(location.search).get('view')==='unread';
+    document.querySelector('.chat-area').dataset.view='chat';
+    document.getElementById('conversation-hub').hidden=true;
+    document.getElementById('open-hub').setAttribute('aria-current','false');
     ++channelSelectionVersion;
     const savedName=name || channelNames.get(channelId) || (channelId===`personal-${currentUser?.uid}`?'My personal channel':'Conversation');
     try{if(currentUser)localStorage.setItem('lyria:last-conversation:'+currentUser.uid,JSON.stringify({id:channelId,name:savedName}))}catch{}
-    try{const url=new URL(location.href);url.searchParams.set('channel',channelId);history.replaceState(null,'',url)}catch{}
+    try{const url=new URL(location.href);if(!restoreUnread)url.searchParams.delete('view');url.searchParams.set('channel',channelId);if(url.href!==location.href)history[historyMode+'State'](null,'',url)}catch{}
 
     if(currentChannel && currentChannel!==channelId)window.LyriaVoiceView?.showChat();
     if (currentChannel && currentChannel !== channelId) setTypingStatus(false);
@@ -784,7 +831,7 @@ function switchChannel(channelId,name,{restore=false}={}) {
         const active = button.dataset.channelId === channelId;
         button.classList.toggle('active-channel', active); button.setAttribute('aria-current', String(active));
     });
-    loadMessages(channelId,{unreadOnly:restore && new URLSearchParams(location.search).get('view')==='unread'});     // Load messages for the new channel
+    loadMessages(channelId,{unreadOnly:restoreUnread});     // Load messages for the new channel
     listenForTypingStatus(channelId); // Listen for typing status changes
     const voiceButton = document.getElementById('make-voice-call');
     voiceButton.disabled = false; voiceButton.title = 'Join voice (up to 6 people)';

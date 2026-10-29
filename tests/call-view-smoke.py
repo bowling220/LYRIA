@@ -8,7 +8,7 @@ with sync_playwright() as p:
  for width,height in [(320,568),(390,844),(667,375),(768,1024),(1440,1000)]:
   page=make_page(browser,ROOT,width,height);errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
   page.add_init_script("__testData.get('channels/studio').name='Test'")
-  page.goto('http://localhost:8124/home.html');page.wait_for_function("document.querySelector('[data-channel-id=studio]')")
+  page.goto('http://localhost:8124/home.html?channel=community');page.wait_for_function("document.querySelector('[data-channel-id=studio]')")
   if width<=768:page.locator('#header-menu-toggle').click()
   page.locator('[data-channel-id=studio]').click()
   page.evaluate("""()=>{

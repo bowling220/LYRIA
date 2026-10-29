@@ -282,3 +282,21 @@ html[data-appearance] .call-stage{background:radial-gradient(ellipse at 50% 0%,c
 .unread-actions { flex-wrap:wrap; }
 .unread-actions button { min-height:44px;flex:1 1 auto; }
 .unread-actions button[hidden],.voice-device-actions button[hidden] { display:none; }
+
+/* Conversation home shares the app shell and account session. */
+.chat-area[data-view="hub"] > .chat-header,
+.chat-area[data-view="hub"] > .messages,
+.chat-area[data-view="hub"] > .message-input,
+.chat-area[data-view="hub"] > .composer-hint,
+.chat-area[data-view="hub"] > #typing-status,
+.chat-area[data-view="hub"] > #community-notice {display:none!important}
+#conversation-hub{flex:1;min-height:0;overflow:auto;padding:clamp(20px,4vw,56px);width:100%;box-sizing:border-box}
+#conversation-hub[hidden]{display:none}
+.hub-intro{max-width:650px;margin-bottom:28px}.hub-kicker{font-size:12px;letter-spacing:.16em;font-weight:700;color:var(--accent,#c9f477)}
+.hub-intro h1{font-size:clamp(28px,4vw,42px);line-height:1.15;margin:12px 0}.hub-intro p{line-height:1.6}
+.hub-actions{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:36px}.hub-actions a,.hub-actions button{border:1px solid var(--line);border-radius:14px;padding:12px 16px;background:transparent;color:inherit;text-decoration:none;font:inherit;cursor:pointer}
+.hub-list-heading{display:flex;gap:20px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:20px}.hub-list-heading h2{font-size:20px}.hub-list-heading label{display:grid;gap:6px;font-size:13px}.hub-list-heading input{max-width:100%;box-sizing:border-box;padding:12px;border:1px solid currentColor;border-radius:12px;background:transparent;color:inherit;font:inherit}
+.hub-conversations{display:grid;gap:10px;max-width:960px}.hub-conversation{display:flex;align-items:center;gap:16px;padding:18px;text-align:left;border:1px solid var(--line);border-radius:18px;background:var(--surface);color:inherit;font:inherit;cursor:pointer;width:100%}.hub-conversation:hover{background:var(--surface-hover)}.hub-room-icon{display:grid;place-items:center;width:48px;height:48px;border-radius:15px;background:var(--surface-hover);flex-shrink:0}.hub-conversation strong,.hub-conversation span span{display:block}.hub-conversation strong{overflow-wrap:anywhere}.hub-conversation span span{font-size:13px;margin-top:6px}.hub-actions :focus-visible,.hub-conversation:focus-visible{outline:3px solid currentColor;outline-offset:3px}
+@media(max-width:600px){.hub-list-heading label{width:100%}.hub-list-heading input{width:100%}.hub-actions>*{flex:1 1 40%;text-align:center}.hub-conversation{padding:14px}}
+
+.chat-area[data-view="hub"] > .unread-actions,.chat-area[data-view="hub"] > .mention-suggestions{display:none!important}
