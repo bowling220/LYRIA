@@ -543,3 +543,36 @@ Reload keeps the current page and selected room. Open settings, profiles, friend
 conversation dialogs, and GIF-library views reopen in the same browser tab for the
 same account. Panels fetch fresh data, and closed panels stay closed. Restoring a
 view never submits a form, sends a GIF, places a call, or grants room membership.
+
+## Have an idea for LYRIA? Build it.
+
+Fork LYRIA, build a focused feature or fix, test it, and submit a pull request.
+Community changes require maintainer review; acceptance and production deployment
+are never automatic. Read [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md).
+A project-wide license still needs the owner's decision, so this is preparation for
+an open-source release, not a claim that redistribution rights are settled.
+
+## Community security and navigation
+
+Private room IDs no longer grant membership. Owners issue cryptographically random
+invites, can replace/revoke them, and choose expiration. Friend acceptance is atomic
+and cannot be replayed to add someone back. Private account records are separated
+from public profiles. Existing non-payment badge arrays and unrelated account fields
+are preserved; role/badge changes require an administrative assignment.
+
+Unread counts and mentions use private read markers and server aggregation. The
+sidebar refreshes counts for up to 50 conversations, with at most four concurrent
+checks and a 60-second refresh interval while the page is visible. Active messages
+still stream normally. Read markers sync across devices; failed counts are not
+reported as zero. The normal history window remains 100 messages. Jump to first unread fetches the
+earliest unread window of up to 100 messages, even when it is older than the latest
+window; Back to latest resumes the current conversation. Mark as read confirms the
+newest server message before clearing the room’s unread count.
+
+Voice & devices provides an opt-in five-second microphone test, input selection,
+and a relay check that verifies an actual TURN candidate. Tests do not send microphone
+audio to other people, reload does not reopen a microphone, and room capacity stays six.
+Reliable cross-network calling still requires the owner's working TURN configuration.
+
+**Activation is coordinated with Firebase rules and indexes.** See
+[ACTIVATION.md](docs/ACTIVATION.md) before deploying this update.

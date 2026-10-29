@@ -222,8 +222,10 @@ try:
   assert stalled.locator('#make-voice-call').is_enabled()
   stalled.evaluate('window.__releaseMic()');stalled.wait_for_function("__localStream?.getAudioTracks()[0].readyState==='ended'")
   stalled.close()
+  captures=alice.evaluate('__captures');assert alice.evaluate('LyriaVoiceTransport.probe()')=={'relay':True,'ready':True}
+  assert alice.evaluate('__captures')==captures and alice.evaluate('LyriaVoice.getSession()') is None
   assert not errors,errors
   browser.close()
- print('PASS: real two-browser relayed WebRTC audio with verified received packets in Everyone and private rooms; one connection per pair; sound unlock; mute; immediate microphone cleanup; microphone denial, wrong-room rejection, delayed permission cancellation, cleanup while offline, named-channel isolation, live participants/mute indicators, browsing text during a call, synthesized/toggleable sound effects, HTTPS presence with stalled SDK streams, capture handoff, ended/interrupted microphone repair, basic-constraint fallback, signaling and media recovery, input levels, and a permission deadline with late-capture cleanup.')
+ print('PASS: real two-browser relayed WebRTC audio with verified received packets in Everyone and private rooms; one connection per pair; sound unlock; mute; immediate microphone cleanup; microphone denial, wrong-room rejection, delayed permission cancellation, cleanup while offline, named-channel isolation, live participants/mute indicators, browsing text during a call, synthesized/toggleable sound effects, HTTPS presence with stalled SDK streams, capture handoff, ended/interrupted microphone repair, basic-constraint fallback, signaling and media recovery, input levels, a permission deadline with late-capture cleanup, and a real relay diagnostic without microphone capture.')
 finally:
  peer.terminate();peer.wait(timeout=5);turn.terminate();turn.wait(timeout=5);turn_log.close();server.shutdown();server.server_close()

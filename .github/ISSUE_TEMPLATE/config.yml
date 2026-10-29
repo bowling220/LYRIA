@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Report a security vulnerability privately
+    url: https://github.com/bowling220/LYRIA/security/advisories/new
+    about: Use private vulnerability reporting when enabled; otherwise follow SECURITY.md without posting sensitive details.

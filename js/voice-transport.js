@@ -20,5 +20,15 @@
       finally{clearTimeout(timer)}
     })().finally(()=>inFlight=null);return inFlight;
   }
-  window.LyriaVoiceTransport={get,clear:()=>{cached=null}};
+  async function probe(){
+    const config=await get();if(!config.relay)return {relay:false,ready:false};
+    if(typeof RTCPeerConnection!=='function')throw new Error('This browser does not support voice connections.');
+    const pc=new RTCPeerConnection({iceServers:config.iceServers,iceTransportPolicy:'relay'});let timer;
+    try{return await new Promise((resolve,reject)=>{
+      timer=setTimeout(()=>reject(new Error('A relay connection could not be verified. Check your network and try again.')),10000);
+      pc.addEventListener('icecandidate',event=>{if(event.candidate && (event.candidate.type==='relay' || / typ relay /.test(event.candidate.candidate)))resolve({relay:true,ready:true})});
+      pc.createDataChannel('lyria-check');pc.createOffer().then(offer=>pc.setLocalDescription(offer)).catch(reject);
+    })}finally{clearTimeout(timer);pc.close()}
+  }
+  window.LyriaVoiceTransport={get,probe,clear:()=>{cached=null}};
 })();

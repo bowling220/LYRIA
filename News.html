@@ -8,11 +8,12 @@
     <meta name="description" content="Product updates, community notes, and what's happening around LYRIA.">
 
 
+    <script src="js/runtime-config.js?v=2d5215ca595a64fe"></script>
     <script type="module">
         // Importing Firebase app and Firestore modules
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js';
-        import { initializeFirestore, doc, increment, onSnapshot, setDoc, getDoc, collection, addDoc, query, orderBy, getDocs } from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js';
-        import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js';
+        import { connectFirestoreEmulator, initializeFirestore, doc, increment, onSnapshot, setDoc, getDoc, collection, addDoc, query, orderBy, getDocs } from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js';
+        import { connectAuthEmulator, getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js';
 
         // Load environment variables for security
         window.env = window.env || {
@@ -36,9 +37,12 @@
         };
 
         // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
+        const runtime=window.LYRIA_RUNTIME;
+        if(runtime?.origin && location.origin!==runtime.origin)throw new Error('This build is configured for a different site.');
+        const app = initializeApp(runtime?.firebase || firebaseConfig);
         const db = initializeFirestore(app, {experimentalForceLongPolling:true,useFetchStreams:false});
         const auth = getAuth(app);
+        if(runtime?.emulators){connectFirestoreEmulator(db,runtime.emulators.host,runtime.emulators.firestorePort);connectAuthEmulator(auth,'http://'+runtime.emulators.host+':'+runtime.emulators.authPort,{disableWarnings:true})}
         const newsAuthReady = new Promise(resolve => {
             let unsubscribe = () => {};
             unsubscribe = onAuthStateChanged(auth, user => {
@@ -423,7 +427,7 @@
     }
     </script>
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
-  <link rel="stylesheet" href="css/theme.css?v=a466fb4e19b27d6d">
+  <link rel="stylesheet" href="css/theme.css?v=fa269918a2a28c34">
   <script src="js/ui.js?v=c32d1a2c0cc58c63"></script>
   <script src="js/appearance.js?v=f2b3fb9699b59da3"></script>
 </head>

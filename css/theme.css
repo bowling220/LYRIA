@@ -264,3 +264,21 @@ html[data-appearance] .call-stage{background:radial-gradient(ellipse at 50% 0%,c
 .invite-orbit { display: flex; gap: 28px; color: var(--subtle); margin-bottom: 32px; }
 .invite-orbit [data-icon]:nth-child(2) { color: var(--accent); transform: translateY(-8px); }
 @media(max-width:480px) { .invite-main { padding: 28px 16px; } .invite-card { padding: 28px 22px; border-radius: 24px; } }
+
+.channel-unread { margin-left:auto;min-width:22px;border-radius:8px;background:var(--accent);color:var(--accent-ink);font-size:11px;font-weight:800;padding:2px 6px; }
+.unread-actions { display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 20px;background:var(--surface-raised);border-bottom:1px solid var(--line); }
+.unread-actions[hidden],.mention-suggestions[hidden],#invite-owner-controls[hidden] { display:none; }
+.unread-actions button { min-height:36px;font-size:12px;padding:6px 10px; }
+.first-unread-marker { border-top:1px solid var(--accent);color:var(--accent);font-size:11px;margin:14px 0;padding-top:6px; }
+.message-mentioned { background:color-mix(in srgb,var(--accent) 8%,transparent);border-left:3px solid var(--accent);padding-left:12px;border-radius:8px; }
+.mention-label { color:var(--accent);font-size:11px; }
+.mention-suggestions { position:absolute;z-index:30;bottom:90px;left:16px;right:16px;max-height:240px;overflow:auto;border:1px solid var(--line);border-radius:16px;background:var(--surface);box-shadow:var(--shadow);padding:8px; }
+.mention-suggestions button { display:flex;width:100%;justify-content:flex-start;border:0;background:transparent; }
+.mention-suggestions button[aria-selected=true] { background:var(--surface-hover);color:var(--accent); }
+.voice-device-actions { display:flex;flex-wrap:wrap;gap:8px; }
+#voice-device-level { width:100%; }
+#invite-owner-controls { display:grid;gap:10px;margin-top:18px; }
+
+.unread-actions { flex-wrap:wrap; }
+.unread-actions button { min-height:44px;flex:1 1 auto; }
+.unread-actions button[hidden],.voice-device-actions button[hidden] { display:none; }

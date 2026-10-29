@@ -51,9 +51,9 @@ with sync_playwright() as p:
    assert not errors,(width,index,errors)
    page.close()
  # Channel joining/leaving retain membership and other account data.
- page=make_page(browser,ROOT,1440,1000);page.add_init_script("__testData.set('channels/join-test',{id:'join-test',name:'Community workshop',createdBy:'maya',joinCode:'OPEN42',members:['maya']})")
+ page=make_page(browser,ROOT,1440,1000);page.add_init_script("__testData.set('channels/join-test',{id:'join-test',name:'Community workshop',createdBy:'maya',members:['maya']});__testData.set('channelInvites/BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB',{channelId:'join-test',name:'Community workshop',createdBy:'maya',expiresAt:null,revoked:false})")
  page.goto('http://localhost:8124/home.html');page.wait_for_function("document.getElementById('account-load-status').dataset.state==='ready'")
- page.locator('#join-channel').click();page.locator('#channel-action-input').fill('open42');page.locator('#submit-channel-action').click()
+ page.locator('#join-channel').click();page.locator('#channel-action-input').fill('b'*32);page.locator('#submit-channel-action').click()
  page.wait_for_function("document.getElementById('channel-title').textContent==='Community workshop'")
  assert page.evaluate("__testData.get('channels/join-test').members.includes('test-member')")
  page.locator('#leave-channel').click();page.locator('#submit-channel-action').click()

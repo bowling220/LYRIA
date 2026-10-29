@@ -31,6 +31,9 @@ class FirebaseConfig {
             measurementId: "G-KV5FRFN63T"
         };
 
+        const runtime=window.LYRIA_RUNTIME;
+        if(runtime?.origin && location.origin!==runtime.origin)return Promise.reject(new Error('This build is configured for a different site.'));
+        if(runtime?.firebase){for(const key of Object.keys(config))delete config[key];Object.assign(config,runtime.firebase);}
         try {
             // Initialize Firebase
             this.app = firebase.apps.length ? firebase.app() : firebase.initializeApp(config);
@@ -40,6 +43,7 @@ class FirebaseConfig {
             // Configure transport before persistence or any Firestore read/write starts.
             this.db.settings({experimentalForceLongPolling: true, useFetchStreams: false});
             
+            if(runtime?.emulators){this.auth.useEmulator?.('http://'+runtime.emulators.host+':'+runtime.emulators.authPort,{disableWarnings:true});this.db.useEmulator?.(runtime.emulators.host,runtime.emulators.firestorePort);}
             // Enable offline persistence
             this.db.enablePersistence({
                 synchronizeTabs: true

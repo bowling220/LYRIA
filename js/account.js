@@ -71,7 +71,7 @@
     if(!result.exists){
       try{await API.create(user,defaults(user));}
       catch(error){if(error.code!=='already-exists')throw error}
-    }
+    }else await API.publish(user);
   }
 
   async function save(patch, {button, statusId, field}={}) {
