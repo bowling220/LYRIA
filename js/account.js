@@ -7,6 +7,8 @@
   let needsReconnect=false;
   let loadTimer;
   const API=window.LyriaAccountAPI;
+  const stable=value=>Array.isArray(value)?value.map(stable):value && typeof value==='object'?Object.fromEntries(Object.keys(value).sort().map(key=>[key,stable(value[key])])):value;
+  const same=(a,b)=>JSON.stringify(stable(a))===JSON.stringify(stable(b));
   const defaults = user => ({
     displayName: user.displayName || (user.isAnonymous ? 'Guest' : 'LYRIA member'),
     email: user.email || null, photoURL: user.photoURL || 'assets/avatar.svg',
@@ -43,7 +45,7 @@
   function render(data) {
     profile = data;
     if ($('user-name')) $('user-name').textContent = data.displayName || auth.currentUser?.displayName || 'LYRIA member';
-    if ($('user-avatar')) $('user-avatar').src = data.photoURL || 'assets/avatar.svg';
+    if ($('user-avatar')) $('user-avatar').src = window.LyriaMedia.profileSource(data);
     for (const [id,key] of [['display-name-input','displayName'],['bio-input','bio']]) {
       const input=$(id);if(input && input.dataset.dirty !== 'true' && document.activeElement !== input) input.value=data[key] || '';
     }
@@ -56,8 +58,11 @@
     if ($('notifications-toggle') && !$('notifications-toggle').disabled) $('notifications-toggle').checked=Boolean(data.notificationsEnabled);
     if ($('badge-visibility-toggle') && !$('badge-visibility-toggle').disabled) $('badge-visibility-toggle').checked=data.showBadges !== false;
     document.querySelectorAll('.admin-badge').forEach(el=>el.style.display=data.showBadges===false?'none':'inline-block');
-    if ($('profile-image-input')) $('profile-image-input').disabled=!data.isPremium;
-    if ($('update-profile-image')) $('update-profile-image').disabled=!data.isPremium;
+    window.LyriaProfileMedia?.render(data);
+    if(document.getElementById('profile-modal')?.dataset.userId===auth.currentUser?.uid){
+      window.LyriaMedia.image(document.getElementById('profile-modal-image'),window.LyriaMedia.profileSource(data),'assets/avatar.svg');
+      window.LyriaMedia.profileBanner(document.getElementById('profile-banner-image'),data);
+    }
   }
   async function ensureUser(user) {
     await window.firebaseConfig.initialize();
@@ -81,7 +86,7 @@
       // so saves do not depend on a live stream or an offline write queue draining.
       const confirmed=await API.save(user,patch);
       const data=confirmed.data;
-      if(Object.entries(patch).some(([key,value])=>JSON.stringify(data[key])!==JSON.stringify(value))){
+      if(Object.entries(patch).some(([key,value])=>!same(data[key],value))){
         throw Object.assign(new Error('Save could not be verified'),{userMessage:'Not confirmed. Your account returned a different value. Please retry.'});
       }
       if (auth.currentUser?.uid !== uid) return false;
@@ -94,7 +99,7 @@
       UI.notify(newerDraft?'Earlier change saved. Save again to keep your new edits.':'Saved to your account.','success');
       // Authentication profile details are a secondary copy, never a prerequisite to save LYRIA settings.
       const authPatch={};if ('displayName' in patch) authPatch.displayName=patch.displayName;
-      if ('photoURL' in patch && !patch.photoURL.startsWith('data:')) authPatch.photoURL=patch.photoURL;
+      if ('photoURL' in patch && /^https:\/\//.test(patch.photoURL)) authPatch.photoURL=patch.photoURL;
       if (Object.keys(authPatch).length) user.updateProfile(authPatch).catch(error=>console.warn('Auth profile sync deferred; LYRIA account is saved.',error));
       return true;
     } catch (error) {

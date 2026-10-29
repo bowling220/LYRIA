@@ -54,3 +54,21 @@ permissions, and rejecting a call with another room ID. It does not access real
 Firebase, real microphones, or production signaling. Downloading the pinned
 client from cdnjs requires network access. iOS autoplay behavior and public TURN
 relay connectivity must additionally be checked on real phones and networks.
+
+## GIF and appearance checks
+
+`python3 tests/gif-smoke.py` uses the shared browser fixture and a synthetic
+two-frame GIF from `tests/fixtures/animated.gif.base64`. GIPHY image requests are
+intercepted locally, and all Firebase access is mocked. The test covers 320px,
+390px, tablet, and desktop layouts; selecting and sending catalog GIFs; rejecting
+pasted URLs; play/pause; retry after an image failure; library GIF avatars and
+banners; saving/reloading nested media metadata; retaining original animated
+upload bytes; reset/removal; upload limits; and the on-screen keyboard. The mock
+REST response reorders map fields to exercise structural save verification.
+The Firestore emulator suite also verifies storing nested GIF metadata and the
+original banner bytes under the existing account-access rules.
+
+`browser_fixture.py` centralizes the media-aware routing used by the GIF checks.
+No production profiles or messages are modified by these tests. The live catalog
+URLs were separately checked for successful GIF responses; CDN availability on
+a particular user's network still needs a real-device check.

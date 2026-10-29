@@ -31,6 +31,8 @@
       <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
   <link rel="stylesheet" href="css/theme.css">
   <script src="js/ui.js"></script>
+  <script src="js/gif-library.js"></script>
+  <script src="js/media.js"></script>
 </head>
 <body class="app-page">
 
@@ -134,6 +136,7 @@
     <div id="profile-modal" class="modal profile-modal" inert aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="profile-modal-name">
         <div class="modal-content profile-card">
             <div class="profile-cover" aria-hidden="true">
+                <img id="profile-banner-image" class="profile-banner-image" alt="" hidden>
                 <span>LYRIA MEMBER</span>
                 <i></i>
             </div>
@@ -161,27 +164,20 @@
             <button id="close-profile-modal" class="close-button profile-close" type="button" aria-label="Close profile"><span data-icon="close" aria-hidden="true"></span></button>
         </div>
     </div>
-<div id="confirm-image-change-modal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="confirm-image-change-title">
-    <div class="modal-content compact-modal">
-        <button id="close-confirm-image-change-modal" class="close-button" aria-label="Close confirmation"><span data-icon="close" aria-hidden="true"></span></button>
-        <h2 id="confirm-image-change-title">Use this profile image?</h2>
-        <p>Your selected image will become your LYRIA avatar.</p>
-        <p id="image-confirm-save-status" class="save-status" role="status" aria-live="polite"></p>
-        <div class="modal-actions">
-            <button id="cancel-image-change-btn" class="action-btn" type="button">Cancel</button>
-            <button id="confirm-image-change-btn" class="action-btn primary-action" type="button">Update image</button>
+<div id="gif-modal" class="modal" aria-hidden="true" inert role="dialog" aria-labelledby="gif-modal-title">
+    <div class="modal-content gif-picker">
+        <button id="close-gif-modal" class="close-button" aria-label="Close GIF library"><span data-icon="close" aria-hidden="true"></span></button>
+        <p class="modal-eyebrow">The GIF library</p><h2 id="gif-modal-title">Say it with a GIF</h2>
+        <p id="gif-picker-description">Search the built-in library, choose a GIF, then send it.</p>
+        <label class="sr-only" for="gif-search">Search GIFs</label>
+        <div class="gif-search-wrap"><span data-icon="search" aria-hidden="true"></span><input id="gif-search" type="search" placeholder="Search hello, happy, cats…" autocomplete="off"></div>
+        <div id="gif-categories" class="gif-categories" role="group" aria-label="GIF categories"></div>
+        <div class="gif-results-heading"><span id="gif-results-count" role="status"></span><span>Choose a GIF to preview</span></div>
+        <div class="gif-grid-scroll"><div id="gif-results" class="gif-results" aria-label="GIF results"></div><p id="gif-no-results" class="gif-empty" hidden>No matches in this library. Try another word or category.</p></div>
+        <div class="gif-picker-footer">
+            <div class="gif-footer-main"><span id="gif-selection-idle">Choose a GIF to preview</span><div id="gif-selection" class="gif-selection" hidden><img id="gif-selection-image" alt="Selected GIF preview" data-managed-media="true"><span id="gif-selection-title"></span></div><button id="gif-picker-action" class="primary-action" type="button" disabled>Send GIF</button></div>
+            <p id="gif-picker-feedback" class="save-status" role="status" aria-live="polite"></p><span id="gif-library-source"></span>
         </div>
-    </div>
-</div>
-
-<div id="gif-modal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="gif-modal-title">
-    <div class="modal-content compact-modal">
-        <button id="close-gif-modal" class="close-button" aria-label="Close GIF dialog"><span data-icon="close" aria-hidden="true"></span></button>
-        <h2 id="gif-modal-title">Share a GIF</h2>
-        <p>Paste a direct link to a GIF from a source you trust.</p>
-        <label for="gif-url-input" class="modal-label">GIF URL</label>
-        <input id="gif-url-input" class="modal-input" type="url" inputmode="url" placeholder="https://example.com/reaction.gif">
-        <button id="send-gif-url" class="action-btn primary-action" type="button">Share GIF</button>
     </div>
 </div>
 
@@ -215,16 +211,26 @@
             <p id="contrast-save-status" class="save-status" role="status" aria-live="polite"></p>
         </div>
 
-        <!-- Update Profile Image -->
-        <div class="modal-section">
-            <label for="profile-image-input" class="modal-label">Update Profile Image:</label>
-            <input type="file" id="profile-image-input" class="modal-input" accept="image/*" disabled>
-            <button id="update-profile-image" class="action-btn" disabled>Update Image (Premium)</button>
-            <p id="image-save-status" class="save-status" role="status" aria-live="polite"></p>
-            <p class="premium-info">Premium users can change their profile picture.</p>
-        </div>
-
-
+        <section class="modal-section appearance-editor" aria-label="Profile appearance">
+            <h3>Your look</h3><p>Make it yours with an image or an animated GIF.</p>
+            <div class="appearance-preview"><img id="appearance-banner" class="appearance-banner" alt="Your profile banner" hidden><img id="appearance-avatar" class="appearance-avatar" src="assets/avatar.svg" alt="Your profile picture"><span>Profile preview</span></div>
+            <div class="appearance-target" data-media-target="avatar">
+                <label class="modal-label" for="profile-image-input">Profile picture</label>
+                <button id="choose-avatar-gif" class="action-btn" type="button"><span data-icon="image" aria-hidden="true"></span> Choose a library GIF</button>
+                <input type="file" id="profile-image-input" class="modal-input" accept="image/gif,image/png,image/jpeg,image/webp" aria-describedby="avatar-upload-help">
+                <p id="avatar-upload-help" class="upload-help">GIF, JPG, PNG, or WebP · uploads up to 250 KB. Library GIFs can be larger.</p>
+                <div class="appearance-actions"><button id="reset-avatar" type="button">Use default</button><button id="update-profile-image" class="primary-action" type="button" disabled>Save picture</button></div>
+                <p id="image-save-status" class="save-status" role="status" aria-live="polite"></p>
+            </div>
+            <div class="appearance-target" data-media-target="banner">
+                <label class="modal-label" for="profile-banner-input">Profile banner</label>
+                <button id="choose-banner-gif" class="action-btn" type="button"><span data-icon="image" aria-hidden="true"></span> Choose a library GIF</button>
+                <input type="file" id="profile-banner-input" class="modal-input" accept="image/gif,image/png,image/jpeg,image/webp" aria-describedby="banner-upload-help">
+                <p id="banner-upload-help" class="upload-help">GIF, JPG, PNG, or WebP · uploads up to 350 KB. Library GIFs keep their full animation.</p>
+                <div class="appearance-actions"><button id="reset-banner" type="button">Remove banner</button><button id="update-profile-banner" class="primary-action" type="button" disabled>Save banner</button></div>
+                <p id="banner-save-status" class="save-status" role="status" aria-live="polite"></p>
+            </div>
+        </section>
 
         <!-- Upgrade to Premium Section -->
         <div class="modal-section">
@@ -281,6 +287,8 @@
     <script src="voiceCall.js"></script>
     <script src="chat.js"></script>
     <script src="js/community.js"></script>
+    <script src="js/gif-picker.js"></script>
+    <script src="js/profile-media.js"></script>
 
     <!-- Firebase initialization check -->
 

@@ -489,22 +489,24 @@ async function sendMessage(messageText, isCode = false) {
     }
 }
 
-window.sendGifByUrl = async function sendGifByUrl(gifUrl) {
-    if (!currentUser || !currentChannel) throw new Error('No active channel');
-    const parsedUrl = new URL(gifUrl);
-    if (!['http:', 'https:'].includes(parsedUrl.protocol)) throw new Error('Invalid GIF URL');
-
-    await db.collection('channels').doc(currentChannel).collection('messages').add({
-        message: parsedUrl.href,
-        content: parsedUrl.href,
+window.sendLibraryGif = async function sendLibraryGif(id) {
+    if (!currentUser || !currentChannel) throw new Error('Wait for your conversation to finish loading.');
+    const gif = window.LyriaGifLibrary.metadata(id);
+    const channel = currentChannel;
+    const user = currentUser;
+    const profile = window.LyriaAccount.getProfile();
+    await db.collection('channels').doc(channel).collection('messages').add({
+        message: gif.url,
+        content: gif.url,
         type: 'gif',
-        sender: window.LyriaAccount.getProfile().displayName || currentUser.displayName || 'Guest',
-        displayName: window.LyriaAccount.getProfile().displayName || currentUser.displayName || 'Guest',
-        senderId: currentUser.uid,
-        senderPhotoURL: window.LyriaAccount.getProfile().photoURL || currentUser.photoURL || 'assets/avatar.svg',
+        gif,
+        sender: profile.displayName || user.displayName || 'LYRIA member',
+        senderId: user.uid,
+        senderPhotoURL: profile.photoURL || user.photoURL || 'assets/avatar.svg',
         timestamp: firebase.firestore.FieldValue.serverTimestamp()
     });
 };
+
 function escapeHtml(unsafe) {
     return unsafe
         .replace(/&/g, "&amp;")
@@ -690,14 +692,16 @@ function loadMessages(channelId) {
             if(data.senderId){
                 if(!users.has(data.senderId))users.set(data.senderId,db.collection('users').doc(data.senderId).get());
                 users.get(data.senderId).then(user=>{
-                    if(!message.isConnected || !user.exists || user.data().showBadges===false)return;
-                    const badges = Array.isArray(user.data().badges) ? user.data().badges : [];
+                    if(!message.isConnected || !user.exists)return;
+                    avatar.src=window.LyriaMedia.profileSource(user.data());
+                    name.textContent=user.data().displayName || name.textContent;
+                    const badges = user.data().showBadges!==false && Array.isArray(user.data().badges) ? user.data().badges : [];
                     badges.forEach(badge=>{if(!/^[a-zA-Z0-9_-]+$/.test(badge))return;const img=document.createElement('img');img.src='assets/'+badge+'.png';img.alt=badge+' badge';img.className='admin-badge';img.width=18;img.height=18;sender.append(img)});
                 }).catch(error=>console.warn('Badges unavailable',error));
             }
             const content=document.createElement('div');content.className='message-content';
             if(data.type==='gif'){
-                try{const url=new URL(data.content || data.message);if(!['https:','http:'].includes(url.protocol))throw new Error('Unsupported image URL');const img=document.createElement('img');img.src=url.href;img.alt='Shared GIF';img.loading='lazy';img.addEventListener('load',()=>{if(nearBottom)container.scrollTop=container.scrollHeight});content.append(img)}catch{content.textContent='This image is unavailable.'}
+                window.LyriaMedia.renderGif(content,data,{onLoad:()=>{if(nearBottom && container.scrollHeight-container.scrollTop-container.clientHeight<140)container.scrollTop=container.scrollHeight}});
             }else{content.textContent=data.message || data.content || ''}
             message.append(sender,content);container.append(message);
         });
@@ -809,7 +813,9 @@ function showUserProfileModal(uid) {
             const userData = doc.data();
             const profileName = userData.displayName || 'User';
             const profileImage = document.getElementById('profile-modal-image');
-            profileImage.src = userData.photoURL || 'assets/icon.png';
+            profileImage.src = window.LyriaMedia.profileSource(userData);
+            document.getElementById('profile-modal').dataset.userId=uid;
+            window.LyriaMedia.profileBanner(document.getElementById('profile-banner-image'),userData);
             profileImage.alt = `${profileName} avatar`;
             document.getElementById('profile-modal-name').textContent = profileName;
             document.getElementById('profile-modal-status').textContent = userData.status

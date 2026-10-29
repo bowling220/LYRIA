@@ -335,3 +335,35 @@ microphones, a local PeerServer and TCP TURN relay, and isolated room data. Both
 received audio packets and the selected relay candidate are checked; a media
 stream event alone does not prove that audio is flowing. Set
 `LYRIA_TEST_TURN_BINARY` if coturn is outside PATH.
+
+## GIF library and profile appearance
+
+The composer GIF button opens a searchable, curated 31-GIF library with reaction,
+celebration, animal, and vibe categories. GIFs are previewed before sending, and
+media remains hosted by its credited GIPHY source. This is a built-in catalog, not
+a full GIPHY/Tenor search integration; it needs no provider API key. The catalog is
+in `js/gif-library.js`, and `js/gif-picker.js` handles chat/avatar/banner selection.
+There is no URL-paste input. `sendLibraryGif(id)` resolves a catalog ID to trusted
+metadata; it rejects pasted URLs and unknown IDs. Older GIF messages still render
+through the shared media component. Chat GIFs reserve their aspect ratio, have
+play/pause controls when a still preview is available, respect reduced motion,
+and show a retry state on image failures instead of a user-avatar fallback.
+
+**Your account → Your look** previews and saves both profile pictures and banners.
+All signed-in accounts can choose library GIFs or upload GIF/JPG/PNG/WebP files;
+there is no Premium gate on appearance. `photoURL`/`avatarGif` and
+`bannerURL`/`bannerGif` are merged through the existing confirmed account-save API.
+Saved GIF animation is never converted through a canvas or a static-image encoder.
+The appearance also renders in chat avatars and profile cards after a reload.
+
+Until an object-storage upload service is configured, uploaded files are limited
+to 250 KB for avatars and 350 KB for banners, with a conservative 900 KB combined
+profile-document budget. The limits are visible in the editor. Library selections
+store only URLs and metadata, so larger animations do not consume the profile's
+image-byte budget. Original upload bytes are retained, and invalid images and
+oversized files are rejected before saving. Existing Firebase rules already permit
+these account fields; no new rules need publishing.
+
+Run `python3 tests/gif-smoke.py` for library-only selection, search, rendering,
+retry, GIF upload byte preservation, free avatar/banner customization, reload
+persistence, and mobile keyboard/viewport checks.

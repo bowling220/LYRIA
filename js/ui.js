@@ -95,7 +95,7 @@
     });
     // Hydrate icons added by live channel, news, and message updates.
     new MutationObserver(records=>{if(records.some(r=>r.addedNodes.length))hydrate(document)}).observe(document.body,{childList:true,subtree:true});
-    document.addEventListener('error',e=>{if(e.target.tagName==='IMG' && !e.target.src.endsWith('/assets/avatar.svg'))e.target.src='assets/avatar.svg'},true);
+    document.addEventListener('error',e=>{if(e.target.tagName==='IMG' && !e.target.dataset.managedMedia && !e.target.src.endsWith('/assets/avatar.svg'))e.target.src='assets/avatar.svg'},true);
   };
   window.LyriaUI = {icon, hydrate, notify, escape, openModal, closeModal};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setup);else setup();

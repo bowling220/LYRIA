@@ -5,7 +5,6 @@
   const open = id => UI.openModal($(id));
   const close = id => UI.closeModal($(id));
   let auth, db, unsubscribeRequests;
-  let pendingImage;
   const current = () => auth?.currentUser;
   const report = (message,error) => { console.error(message,error); UI.notify(message,'error'); };
 
@@ -24,7 +23,7 @@
         if(!doc.exists)return;
         const friend=doc.data();
         const li=document.createElement('li');
-        const avatar=document.createElement('img');avatar.src=friend.photoURL || 'assets/avatar.svg';avatar.alt='';avatar.className='friend-avatar';
+        const avatar=document.createElement('img');avatar.src=window.LyriaMedia.profileSource(friend);avatar.alt='';avatar.className='friend-avatar';
         const name=document.createElement('span');name.className='friend-name';name.textContent=friend.displayName || 'LYRIA member';
         const status=document.createElement('span');status.className='friend-status';status.textContent=friend.status || 'Member';
         const remove=document.createElement('button');remove.className='remove-friend-btn';remove.type='button';remove.innerHTML=UI.icon('close');remove.setAttribute('aria-label','Remove '+name.textContent+' from friends');
@@ -44,31 +43,6 @@
   $('open-friends-modal').addEventListener('click',()=>{open('friends-modal');loadFriends()});
   $('close-friends-modal').addEventListener('click',()=>close('friends-modal'));
   $('upgrade-to-premium').addEventListener('click',()=>location.href='premium-upgrade.html');
-  $('gif-button').addEventListener('click',()=>open('gif-modal'));
-  $('send-gif-url').addEventListener('click',async()=>{
-    const button=$('send-gif-url');if(button.disabled)return;button.disabled=true;
-    try{await window.sendGifByUrl($('gif-url-input').value.trim());$('gif-url-input').value='';close('gif-modal');UI.notify('GIF shared.','success')}
-    catch(error){report('Could not share that GIF. Check the URL and try again.',error)}
-    finally{button.disabled=false}
-  });
-  $('profile-image-input').addEventListener('change',()=>{pendingImage=null});
-  $('update-profile-image').addEventListener('click',async()=>{
-    const file=$('profile-image-input').files[0];
-    if(!file){UI.notify('Choose a profile image first.');return}
-    if(!['image/jpeg','image/png','image/webp','image/gif'].includes(file.type)){UI.notify('Choose a JPG, PNG, WebP, or GIF image.');return}
-    if(file.size>600000){UI.notify('Choose an image smaller than 600 KB.');return}
-    try{
-      pendingImage=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=reject;reader.readAsDataURL(file)});
-      open('confirm-image-change-modal');
-    }catch(error){report('Could not read that image.',error)}
-  });
-  $('cancel-image-change-btn').addEventListener('click',()=>close('confirm-image-change-modal'));
-  $('confirm-image-change-btn').addEventListener('click',async()=>{
-    if(!pendingImage || !current())return;
-    const saved=await window.LyriaAccount.save({photoURL:pendingImage},{button:$('confirm-image-change-btn'),statusId:'image-confirm-save-status'});
-    if(saved){$('profile-modal-image').src=pendingImage;$('image-save-status').textContent='Saved to your account.';$('image-save-status').dataset.state='saved';close('confirm-image-change-modal');pendingImage=null;}
-
-  });
   async function init(){
     try{
       if(!window.firebaseConfig)throw new Error('Firebase configuration is unavailable');

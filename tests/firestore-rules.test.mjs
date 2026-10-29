@@ -95,3 +95,19 @@ test('voice room presence shares existing rules with typing and is isolated by a
   await assertSucceeds(setDoc(doc(alice,'channels/private-voice'),{createdBy:'alice',members:['alice']}));
   await assertFails(getDocs(collection(bob,'channels/private-voice/typingStatus')));
 });
+
+test('GIF avatar metadata and original animated banner bytes persist under the existing account rules',async()=>{
+  const {runInNewContext}=await import('node:vm');
+  const window={firebaseConfig:{getApp:()=>({options:{projectId:'demo-lyria'}})}};
+  const nativeFetch=globalThis.fetch;
+  runInNewContext(await readFile(new URL('../js/account-api.js',import.meta.url),'utf8'),{window,AbortController,URLSearchParams,setTimeout,clearTimeout,fetch:(url,options)=>nativeFetch(url.replace('https://firestore.googleapis.com','http://127.0.0.1:8085'),options)});
+  const now=Math.floor(Date.now()/1000);
+  const token=Buffer.from(JSON.stringify({alg:'none',typ:'JWT'})).toString('base64url')+'.'+Buffer.from(JSON.stringify({aud:'demo-lyria',iss:'https://securetoken.google.com/demo-lyria',sub:'gif-alice',user_id:'gif-alice',iat:now,exp:now+3600,auth_time:now,firebase:{sign_in_provider:'google.com'}})).toString('base64url')+'.';
+  const user={uid:'gif-alice',getIdToken:async()=>token};
+  const original=(await readFile(new URL('./fixtures/animated.gif.base64',import.meta.url),'utf8')).trim();
+  const gif={id:'wave',provider:'giphy',width:200,height:100,url:'https://media.giphy.com/media/xT9IgG50Fb7Mi0prBC/giphy.gif'};
+  const data=await window.LyriaAccountAPI.save(user,{photoURL:gif.url,avatarGif:gif,bannerURL:'data:image/gif;base64,'+original,bannerGif:{provider:'upload',animated:true}});
+  assert.equal(data.data.avatarGif.width,200);assert.equal(data.data.bannerGif.animated,true);
+  const viewed=await assertSucceeds(getDoc(doc(member('gif-bob'),'users/gif-alice')));
+  assert.equal(viewed.data().photoURL,gif.url);assert.equal(viewed.data().bannerURL,'data:image/gif;base64,'+original);
+});

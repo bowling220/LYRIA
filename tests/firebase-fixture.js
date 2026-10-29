@@ -49,9 +49,9 @@
 
  // Exercise the real profile HTTPS adapter without touching a production account.
  const originalFetch=window.fetch.bind(window);
- const encode=value=>typeof value==='string'?{stringValue:value}:typeof value==='boolean'?{booleanValue:value}:value===null?{nullValue:null}:Array.isArray(value)?{arrayValue:{values:value.map(encode)}}:{mapValue:{fields:encodeFields(value)}};
- const encodeFields=data=>Object.fromEntries(Object.entries(data).map(([k,v])=>[k,encode(v)]));
- const decode=value=>'stringValue'in value?value.stringValue:'booleanValue'in value?value.booleanValue:'nullValue'in value?null:'arrayValue'in value?(value.arrayValue.values||[]).map(decode):Object.fromEntries(Object.entries(value.mapValue.fields).map(([k,v])=>[k,decode(v)]));
+ const encode=value=>typeof value==='string'?{stringValue:value}:typeof value==='boolean'?{booleanValue:value}:typeof value==='number'?{integerValue:String(value)}:value===null?{nullValue:null}:Array.isArray(value)?{arrayValue:{values:value.map(encode)}}:{mapValue:{fields:encodeFields(value)}};
+ const encodeFields=data=>Object.fromEntries(Object.entries(data).sort(([a],[b])=>a.localeCompare(b)).map(([k,v])=>[k,encode(v)]));
+ const decode=value=>'stringValue'in value?value.stringValue:'booleanValue'in value?value.booleanValue:'integerValue'in value?Number(value.integerValue):'nullValue'in value?null:'arrayValue'in value?(value.arrayValue.values||[]).map(decode):Object.fromEntries(Object.entries(value.mapValue.fields).map(([k,v])=>[k,decode(v)]));
  window.fetch=async(input,options={})=>{
    if(!String(input).startsWith('https://firestore.googleapis.com/v1/projects/'))return originalFetch(input,options);
    if(window.__offlineAccount)throw new TypeError('Simulated offline request');
