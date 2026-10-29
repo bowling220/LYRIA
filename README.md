@@ -395,3 +395,22 @@ network restart instead of restarting it twice.
 A full page reload still ends voice: explicitly join a voice channel again.
 Connection feedback and retries do not establish what failed on a particular
 user’s device; browser/network-specific failures still need their symptoms.
+
+## Chat and friend-request loading
+
+`js/data-api.js` supplies authenticated, bounded Firestore HTTPS queries and
+commits using the same Firebase ID token and existing database rules. Chat
+history and request lists can load even if the SDK’s live stream never opens.
+The live listener remains the fast path; a 15-second HTTPS poll runs only while
+that listener is unavailable, pauses in hidden/offline tabs, and stops when live
+server snapshots resume. Subscription generations reject late responses from
+previous rooms. New text and GIF messages use server-confirmed HTTPS commits and
+refresh the current history immediately after confirmation.
+
+`js/friend-requests.js` shares request reads and actions between the community
+badge, profile actions, and `inbox.js`. Reconnect restarts request subscriptions
+as well as chat. Inbox rows and controls render before optional sender-profile
+lookups. Acceptance commits both friend arrays and the request status together;
+a missing profile or denied write fails the whole operation. Request actions
+release their controls on failure and offer a refresh. The old inline inbox
+implementation has been removed; no Firebase rules/index deployment is required.

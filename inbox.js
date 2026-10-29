@@ -1,230 +1,39 @@
-// Use the already initialized Firebase instance from config.js
-// Wait for Firebase to be ready
-function initializeInboxFirebase() {
-    if (window.firebaseConfig && window.firebaseConfig.initialized) {
-        return Promise.resolve({
-            auth: window.firebaseConfig.getAuth(),
-            db: window.firebaseConfig.getFirestore()
-        });
-    } else {
-        return new Promise((resolve) => {
-            const checkFirebase = () => {
-                if (window.firebaseConfig && window.firebaseConfig.initialized) {
-                    resolve({
-                        auth: window.firebaseConfig.getAuth(),
-                        db: window.firebaseConfig.getFirestore()
-                    });
-                } else {
-                    setTimeout(checkFirebase, 100);
-                }
-            };
-            checkFirebase();
-        });
-    }
-}
-
-// Initialize Firebase for inbox
-let auth, db;
-initializeInboxFirebase().then(({ auth: authInstance, db: dbInstance }) => {
-    auth = authInstance;
-    db = dbInstance;
-    console.log('Firebase initialized for inbox');
-}).catch(error => {
-    console.error('Failed to initialize Firebase for inbox:', error);
-});
-
-// Settings Modal Functionality
-const settingsModal = document.getElementById('settings-modal');
-const settingsBtn = document.getElementById('settings-btn');
-const closeModal = document.getElementById('close-modal');
-const logoutBtn = document.getElementById('logout-btn');
-const updateDisplayNameBtn = document.getElementById('update-display-name');
-const displayNameInput = document.getElementById('display-name-input');
-
-settingsBtn.addEventListener('click', () => {
-    settingsModal.style.display = 'block';
-});
-
-closeModal.addEventListener('click', () => {
-    settingsModal.style.display = 'none';
-});
-
-window.addEventListener('click', (event) => {
-    if (event.target === settingsModal) {
-        settingsModal.style.display = 'none';
-    }
-});
-
-// Update Display Name
-updateDisplayNameBtn.addEventListener('click', () => {
-    const newDisplayName = displayNameInput.value.trim();
-    if (newDisplayName) {
-        const user = auth.currentUser;
-        db.collection('users').doc(user.uid).update({
-            displayName: newDisplayName
-        }).then(() => {
-            document.getElementById('user-name').textContent = newDisplayName;
-            displayNameInput.value = '';
-            alert('Display name updated successfully!');
-        }).catch(error => {
-            console.error("Error updating display name:", error);
-            alert('Error updating display name');
-        });
-    }
-});
-
-// Logout functionality
-logoutBtn.addEventListener('click', () => {
-    auth.signOut().then(() => {
-        window.location.href = 'login.html';
-    }).catch((error) => {
-        console.error("Error signing out:", error);
-    });
-});
-
-// Auth state observer
-firebase.auth().onAuthStateChanged(user => {
-    if (user) {
-        const userId = user.uid;
-
-        // Fetch user data from Firestore
-        db.collection('users').doc(userId).get().then(doc => {
-            if (doc.exists) {
-                const userData = doc.data();
-                document.getElementById('user-name').textContent = userData.displayName;
-                document.getElementById('user-avatar').src = userData.photoURL || 'assets/icon.png';
-            } else {
-                console.log("No such document!");
-            }
-        }).catch(error => {
-            console.error("Error getting document:", error);
-        });
-
-        // Load friend requests and history
-        loadFriendRequests(userId);
-    } else {
-        // No user is signed in, redirect to login
-        window.location.href = 'login.html';
-    }
-});
-
-async function handleFriendRequest(requestId, action, senderId) {
-    const currentUser = firebase.auth().currentUser;
-
-    if (!currentUser) {
-        alert('You must be logged in to handle friend requests.');
-        return;
-    }
-
-    try {
-        if (action === 'accept' || action === 'decline') {
-            // Fetch the friend request document
-            const requestDoc = await db.collection('friendRequests').doc(requestId).get();
-            if (!requestDoc.exists) {
-                throw new Error("Friend request not found");
-            }
-
-            const requestData = requestDoc.data();
-
-            // Check if the current user is the intended recipient
-            if (requestData.to !== currentUser.uid) {
-                throw new Error("You are not authorized to handle this friend request.");
-            }
-
-            if (action === 'accept') {
-                // Add users as friends in both user documents
-                await db.collection('users').doc(currentUser.uid).update({
-                    friends: firebase.firestore.FieldValue.arrayUnion(senderId)
-                });
-                await db.collection('users').doc(senderId).update({
-                    friends: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
-                });
-            }
-
-            // Update request status and add timestamp
-            await db.collection('friendRequests').doc(requestId).update({
-                status: action,
-                actionTimestamp: firebase.firestore.FieldValue.serverTimestamp()
-            });
-
-            // Refresh the friend requests display
-            loadFriendRequests(currentUser.uid);
+/* Render requests before optional profile lookups; recover listeners after reconnect. */
+(() => {
+  const container=document.getElementById('inbox-messages');let auth,db,off,version=0;const working=new Set();
+  function empty(text){const p=document.createElement('p');p.textContent=text;container.replaceChildren(p)}
+  function load(){
+    const user=auth?.currentUser;if(!user)return;off?.();const current=++version;
+    window.LyriaConnection.pending('requests');empty('Loading friend requests…');
+    off=window.LyriaFriendRequests.watch(true,snapshot=>{
+      if(current!==version)return;window.LyriaConnection.ready('requests');container.replaceChildren();
+      if(snapshot.empty){container.innerHTML='<div class="empty-state"><span class="empty-icon">'+window.LyriaUI.icon('inbox')+'</span><h2>You’re all caught up.</h2><p>New friend requests will appear here.</p><a href="home.html">Back to community</a></div>';return}
+      for(const doc of snapshot.docs){
+        const request=doc.data(),row=document.createElement('div');row.className='inbox-message';row.dataset.requestId=doc.id;
+        const message=document.createElement('p');
+        const incoming=request.to===user.uid && (!request.status || request.status==='pending');
+        message.textContent=incoming?(request.fromName || 'A member')+' sent you a friend request!':request.to==='accepted_'+user.uid?(request.acceptedByName || 'A member')+' accepted your friend request!':'You '+(['decline','declined'].includes(request.status)?'declined':'accepted')+' the request from '+(request.fromName || 'a member')+'.';row.append(message);container.append(row);
+        if(!incoming)continue;
+        const actions=document.createElement('div');actions.className='friend-request-actions';row.append(actions);
+        for(const action of ['accept','decline']){
+          const button=document.createElement('button');button.className=action+'-btn';button.textContent=action==='accept'?'Accept':'Decline';button.disabled=working.has(doc.id);actions.append(button);
+          button.addEventListener('click',async()=>{
+            if(working.has(doc.id))return;working.add(doc.id);for(const b of actions.children)b.disabled=true;
+            try{await window.LyriaFriendRequests.respond(doc.id,action);if(current!==version)return;window.LyriaUI.notify(action==='accept'?'Friend request accepted.':'Friend request declined.','success');load()}
+            catch(error){console.warn('Friend request response failed',error);if(current!==version)return;for(const b of actions.children)b.disabled=false;window.LyriaConnection.fail('requests','Couldn’t confirm that response. Reconnect to refresh requests before trying again.')}
+            finally{working.delete(doc.id);for(const currentRow of container.querySelectorAll('[data-request-id]'))if(currentRow.dataset.requestId===doc.id)for(const b of currentRow.querySelectorAll('button'))b.disabled=false}
+          });
         }
-    } catch (error) {
-        console.error("Error handling friend request:", error);
-        alert('Error processing friend request: ' + error.message);
-    }
-}
-
-async function loadFriendRequests(userId) {
-    const inboxMessagesContainer = document.getElementById('inbox-messages');
-    inboxMessagesContainer.innerHTML = ''; // Clear previous messages
-
-    // Create sections for pending and history
-    const pendingSection = document.createElement('div');
-    pendingSection.innerHTML = '<h3>Pending Requests</h3>';
-    const historySection = document.createElement('div');
-    historySection.innerHTML = '<h3>Request History</h3>';
-
-    // Fetch all friend requests from Firestore
-    const snapshot = await db.collection('friendRequests')
-        .where('to', '==', userId)
-        .orderBy('actionTimestamp', 'desc')
-        .get();
-
-    if (snapshot.empty) {
-        inboxMessagesContainer.innerHTML = '<div class="no-requests">No Friend Requests</div>';
-        return;
-    }
-
-    const userDoc = await db.collection('users').doc(userId).get();
-    const userData = userDoc.data();
-
-    for (const doc of snapshot.docs) {
-        const requestData = doc.data();
-        const senderDoc = await db.collection('users').doc(requestData.from).get();
-        const senderData = senderDoc.data();
-
-        // Check if already friends for pending requests
-        if (requestData.status === 'pending' && userData.friends && userData.friends.includes(requestData.from)) {
-            continue;
-        }
-
-        const messageElement = document.createElement('div');
-        messageElement.className = 'inbox-message';
-
-        const messageContent = document.createElement('div');
-        messageContent.textContent = `${senderData.displayName} sent you a friend request!`;
-
-        if (requestData.status === 'pending') {
-            const actionButtons = document.createElement('div');
-            actionButtons.className = 'friend-request-actions';
-
-            const acceptButton = document.createElement('button');
-            acceptButton.className = 'accept-btn';
-            acceptButton.textContent = 'Accept';
-            acceptButton.onclick = () => handleFriendRequest(doc.id, 'accept', requestData.from);
-
-            const declineButton = document.createElement('button');
-            declineButton.className = 'decline-btn';
-            declineButton.textContent = 'Decline';
-            declineButton.onclick = () => handleFriendRequest(doc.id, 'decline', requestData.from);
-
-            actionButtons.appendChild(acceptButton);
-            actionButtons.appendChild(declineButton);
-            messageElement.appendChild(messageContent);
-            messageElement.appendChild(actionButtons);
-            pendingSection.appendChild(messageElement);
-        } else {
-            // Add status and timestamp for history
-            const status = requestData.status === 'accept' ? 'Accepted' : 'Declined';
-            const timestamp = requestData.actionTimestamp ? requestData.actionTimestamp.toDate().toLocaleString() : 'Unknown time';
-            messageContent.textContent = `${senderData.displayName}'s friend request was ${status.toLowerCase()} on ${timestamp}`;
-            messageElement.appendChild(messageContent);
-            historySection.appendChild(messageElement);
-        }
-    }
-
-    inboxMessagesContainer.appendChild(pendingSection);
-    inboxMessagesContainer.appendChild(historySection);
-}
+        // This lookup never delays rendering the request or its controls.
+        window.LyriaDataAPI.read('users/'+request.from).then(profile=>{if(current===version && row.isConnected && profile.exists)message.textContent=(profile.data().displayName || request.fromName || 'A member')+' sent you a friend request!'}).catch(()=>{});
+      }
+    },error=>{if(current!==version)return;console.warn('Request loading failed',error);window.LyriaConnection.fail('requests','Friend requests couldn’t load. Try reconnecting.')});
+  }
+  (async()=>{
+    try{
+      await window.firebaseConfig.initialize();auth=window.firebaseConfig.getAuth();db=window.firebaseConfig.getFirestore();
+      window.LyriaConnection.setRetry(async()=>{window.LyriaConnection.ready('recovery');await db.disableNetwork();await db.enableNetwork();load()});
+      auth.onAuthStateChanged(user=>{off?.();version++;if(!user){location.href='login.html';return}window.LyriaConnection.ready('startup');load()});
+    }catch(error){console.warn(error);window.LyriaConnection.fail('startup','Your inbox couldn’t start. Reload LYRIA to try again.')}
+  })();
+})();

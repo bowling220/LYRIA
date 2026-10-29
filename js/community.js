@@ -9,16 +9,17 @@
   const report = (message,error) => { console.error(message,error); UI.notify(message,'error'); };
 
   async function loadFriends() {
-    const list=$('friends-list'); list.replaceChildren();
+    const list=$('friends-list'); list.textContent='Loading friends…';
     if(!current())return;
     try {
-      const doc=await db.collection('users').doc(current().uid).get();
+      const doc=await window.LyriaDataAPI.read('users/'+current().uid);
+      list.replaceChildren();
       const ids=doc.data()?.friends || [];
       if(!ids.length){
         list.innerHTML='<li class="empty-state"><span class="empty-icon">'+UI.icon('users')+'</span><h3>Good company starts here.</h3><p>Open someone’s profile in a conversation to send a friend request.</p></li>';
         return;
       }
-      const friends=await Promise.all(ids.map(id=>db.collection('users').doc(id).get()));
+      const friends=await Promise.all(ids.map(id=>window.LyriaDataAPI.read('users/'+id)));
       friends.forEach((doc,index)=>{
         if(!doc.exists)return;
         const friend=doc.data();
@@ -43,24 +44,21 @@
   $('open-friends-modal').addEventListener('click',()=>{open('friends-modal');loadFriends()});
   $('close-friends-modal').addEventListener('click',()=>close('friends-modal'));
   $('upgrade-to-premium').addEventListener('click',()=>location.href='premium-upgrade.html');
+  function refreshRequests(){
+    unsubscribeRequests?.();if(!current())return;
+    window.LyriaConnection.pending('requests');
+    unsubscribeRequests=window.LyriaFriendRequests.watch(false,snapshot=>{
+      window.LyriaConnection.ready('requests');
+      const count=snapshot.docs.filter(doc=>!doc.data().status || doc.data().status==='pending').length;
+      const badge=$('friend-request-count');badge.textContent=count;badge.style.display=count?'inline-block':'none';
+      $('inbox-btn').setAttribute('aria-label',count?`Friend requests: ${count} pending`:'Open friend requests');
+    },error=>{console.warn('Friend requests unavailable',error);window.LyriaConnection.fail('requests','Friend requests couldn’t load. Try reconnecting.')});
+  }
   async function init(){
     try{
-      if(!window.firebaseConfig)throw new Error('Firebase configuration is unavailable');
       await window.firebaseConfig.initialize();auth=window.firebaseConfig.getAuth();db=window.firebaseConfig.getFirestore();
-      auth.onAuthStateChanged(async user=>{
-        unsubscribeRequests?.();if(!user)return;
-        try{
-          unsubscribeRequests=db.collection('friendRequests').where('to','==',user.uid).onSnapshot(snapshot=>{
-            const count=snapshot.docs.filter(doc=>!doc.data().status || doc.data().status==='pending').length;
-            const badge=$('friend-request-count');badge.textContent=count;badge.style.display=count?'inline-block':'none';
-            $('inbox-btn').setAttribute('aria-label',count?`Friend requests: ${count} pending`:'Open friend requests');
-          },error=>console.error('Friend requests could not load',error));
-        }catch(error){console.error('Profile extras could not load',error)}
-      });
-    }catch(error){
-      console.error(error);
-      $('messages').innerHTML='<div class="empty-state"><span class="empty-icon">'+UI.icon('info')+'</span><h2>We couldn’t connect.</h2><p>Check your connection, then reload to get back to your conversations.</p><button type="button" onclick="location.reload()">Try again</button></div>';
-    }
+      auth.onAuthStateChanged(()=>refreshRequests());
+    }catch(error){console.warn('Friend request startup failed',error);window.LyriaConnection.fail('requests','Friend requests couldn’t start. Reload to try again.')}
   }
-  init();
+  window.LyriaCommunity={refreshRequests};init();
 })();

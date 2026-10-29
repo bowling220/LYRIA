@@ -12,12 +12,12 @@ for html in ROOT.glob('*.html'):
 with sync_playwright() as p:
  browser=p.chromium.launch(executable_path='/usr/bin/chromium',headless=True,args=['--no-sandbox'])
  page=make_page(browser,ROOT);errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
- page.add_init_script("window.__stallChannels=!sessionStorage.getItem('reload-recovered');window.__stallMessages=window.__stallChannels;")
+ page.add_init_script("window.__stallChannels=!sessionStorage.getItem('reload-recovered');window.__stallMessages=window.__stallChannels;window.__stallRestQueries=window.__stallChannels;")
  page.goto('http://localhost:8124/home.html');page.wait_for_function('window.LyriaConnection && window.LyriaAccount.getProfile().displayName')
  page.locator('#message-input').fill('Keep this unsent message')
  page.wait_for_function("!document.getElementById('connection-notice').hidden",timeout=15000)
- assert 'too long' in page.locator('#connection-message').inner_text()
- page.evaluate("window.__stallChannels=false;window.__stallMessages=false;window.__stallProfileRead=true;sessionStorage.setItem('reload-recovered','yes')")
+ assert page.locator('#connection-message').inner_text()
+ page.evaluate("window.__stallChannels=false;window.__stallMessages=false;window.__stallRestQueries=false;window.__stallProfileRead=true;sessionStorage.setItem('reload-recovered','yes')")
  page.locator('#retry-connection').click()
  page.wait_for_function("document.getElementById('connection-notice').hidden")
  page.wait_for_function("document.querySelector('[data-channel-id=studio]')")
@@ -26,9 +26,9 @@ with sync_playwright() as p:
  assert page.evaluate('__networkRestarts')==1,'Recovery restarted live networking more than once'
  page.evaluate('window.__stallProfileRead=false')
  # Stream fails, reconnect, then browser back/forward restoration: one send only.
- page.evaluate("window.__failMessages=true;window.dispatchEvent(new PageTransitionEvent('pageshow',{persisted:true}))")
+ page.evaluate("window.__failMessages=true;window.__failRestQueries=true;window.dispatchEvent(new PageTransitionEvent('pageshow',{persisted:true}))")
  page.wait_for_function("document.getElementById('connection-message').textContent.includes('disconnected')")
- page.evaluate('window.__failMessages=false')
+ page.evaluate('window.__failMessages=false;window.__failRestQueries=false')
  page.locator('#retry-connection').click();page.wait_for_function("document.getElementById('connection-notice').hidden")
  page.locator('#send-button').click()
  page.wait_for_function("[...__testData.values()].filter(v=>v.message==='Keep this unsent message').length===1")

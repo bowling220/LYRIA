@@ -209,6 +209,7 @@ initializeFirebase().then(() => {
         loadMessages(currentChannel || COMMUNITY_CHANNEL_ID);loadChannels();
         listenForTypingStatus(currentChannel || COMMUNITY_CHANNEL_ID);
         window.LyriaVoice?.refreshDirectory?.();
+        window.LyriaCommunity?.refreshRequests();
         window.LyriaAccount?.reconnect({restartLive:false});
     });
 
@@ -486,17 +487,17 @@ async function sendMessage(messageText, isCode = false) {
     const draft = input.value;
     isSendingMessage = true; button.disabled = true; button.setAttribute('aria-busy', 'true');
     try {
-        await db.collection('channels').doc(channelId).collection('messages').add({
+        await window.LyriaDataAPI.commit([{update:{name:window.LyriaDataAPI.name('channels/'+channelId+'/messages/'+crypto.randomUUID()),fields:window.LyriaDataAPI.fields({
             message: messageText.trim(),
             sender: document.getElementById('user-name').textContent || currentUser.displayName || 'LYRIA member',
             senderId: currentUser.uid,
-            senderPhotoURL: document.getElementById('user-avatar').src || 'assets/avatar.svg',
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        });
+            senderPhotoURL: document.getElementById('user-avatar').src || 'assets/avatar.svg'
+        })},updateTransforms:[{fieldPath:'timestamp',setToServerValue:'REQUEST_TIME'}],currentDocument:{exists:false}}]);
+        if(currentChannel===channelId)unsubscribeFromMessages?.refresh?.();
         if (input.value === draft && currentChannel === channelId) { input.value = ''; input.style.height = ''; }
         setTypingStatus(false);
     } catch (error) {
-        console.error(error); window.LyriaUI.notify('Message not sent. Your draft is still here; try again.', 'error');
+        console.error(error); window.LyriaUI.notify('Couldn’t confirm the message. Your draft is still here; reconnect before trying again.', 'error');
     } finally {
         isSendingMessage = false; button.disabled = false; button.removeAttribute('aria-busy');
     }
@@ -508,7 +509,7 @@ window.sendLibraryGif = async function sendLibraryGif(id) {
     const channel = currentChannel;
     const user = currentUser;
     const profile = window.LyriaAccount.getProfile();
-    await db.collection('channels').doc(channel).collection('messages').add({
+    await window.LyriaDataAPI.commit([{update:{name:window.LyriaDataAPI.name('channels/'+channel+'/messages/'+crypto.randomUUID()),fields:window.LyriaDataAPI.fields({
         message: gif.url,
         content: gif.url,
         type: 'gif',
@@ -516,8 +517,8 @@ window.sendLibraryGif = async function sendLibraryGif(id) {
         sender: profile.displayName || user.displayName || 'LYRIA member',
         senderId: user.uid,
         senderPhotoURL: profile.photoURL || user.photoURL || 'assets/avatar.svg',
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-    });
+    })},updateTransforms:[{fieldPath:'timestamp',setToServerValue:'REQUEST_TIME'}],currentDocument:{exists:false}}]);
+    if(currentChannel===channel)unsubscribeFromMessages?.refresh?.();
 };
 
 function escapeHtml(unsafe) {
@@ -594,14 +595,12 @@ function loadChannels() {
     everyone.addEventListener('click',()=>{switchChannel(COMMUNITY_CHANNEL_ID);setMobileMenuOpen(false)});
 
     // Get channels where user is a member
-    db.collection('channels')
-        .where('members', 'array-contains', currentUser.uid)
-        .get()
+    window.LyriaDataAPI.query('channels',{where:window.LyriaDataAPI.equal('members',currentUser.uid,'ARRAY_CONTAINS')})
         .then(async snapshot => {
             // Preferences are optional: a stalled profile stream must not hide conversations.
             let timer;
             const userDoc=await Promise.race([
-                db.collection('users').doc(currentUser.uid).get().catch(()=>null),
+                window.LyriaDataAPI.read('users/'+currentUser.uid).catch(()=>null),
                 new Promise(resolve=>{timer=setTimeout(()=>resolve(null),3000)})
             ]).finally(()=>clearTimeout(timer));
                 if (version !== channelLoadVersion) return;
@@ -688,7 +687,9 @@ function loadMessages(channelId) {
             document.getElementById('message-input').placeholder = 'Message ' + name + '…';
         }
     }).catch(error => console.error('Channel details unavailable', error));
-    unsubscribeFromMessages = db.collection('channels').doc(channelId).collection('messages').orderBy('timestamp').limitToLast(100).onSnapshot(snapshot => {
+    unsubscribeFromMessages = window.LyriaDataAPI.watch(
+        db.collection('channels').doc(channelId).collection('messages').orderBy('timestamp').limitToLast(100),
+        'messages',{parent:'channels/'+channelId,orderBy:[{field:{fieldPath:'timestamp'},direction:'DESCENDING'}],limit:100,reverse:true,onHealthy:()=>window.LyriaConnection?.ready('messages')},snapshot => {
         if (currentChannel !== channelId || version!==messageLoadVersion) return;
         if(snapshot.metadata?.fromCache){window.LyriaConnection?.pending('messages')}else window.LyriaConnection?.ready('messages');
         const nearBottom = firstSnapshot || container.scrollHeight - container.scrollTop - container.clientHeight < 100;
@@ -830,7 +831,7 @@ function showUserProfileModal(uid) {
     if (!uid || !db) return;
     profileUserId = uid; // Set the profileUserId to the ID of the user being viewed
 
-    db.collection('users').doc(uid).get().then(doc => {
+    window.LyriaDataAPI.read('users/'+uid).then(doc => {
         if (doc.exists) {
             const userData = doc.data();
             const profileName = userData.displayName || 'User';
@@ -929,63 +930,11 @@ function showUserProfileModal(uid) {
 
 // Add friend request functionality
 document.getElementById('send-friend-request').addEventListener('click', async () => {
-    const currentUser = firebase.auth().currentUser; // Get the current user
-    if (!currentUser || !profileUserId) {
-        console.error("Missing user information");
-        window.LyriaUI.notify('Unable to send friend request - missing user information');
-        return; // Exit if user information is missing
-    }
-
-    console.log("Current User:", currentUser.uid);
-    console.log("Profile User:", profileUserId);
-
-    // Check if sending request to self
-    if (currentUser.uid === profileUserId) {
-        window.LyriaUI.notify('You cannot send a friend request to yourself');
-        return;
-    }
-
-    // Check if already friends
-    const currentUserDoc = await db.collection('users').doc(currentUser.uid).get();
-    const currentUserData = currentUserDoc.data();
-    if (currentUserData.friends && currentUserData.friends.includes(profileUserId)) {
-        window.LyriaUI.notify('You are already friends with this user');
-        return;
-    }
-
-    // Check if request already sent
-    const existingRequest = await db.collection('friendRequests')
-        .where('from', '==', currentUser.uid)
-        .where('to', '==', profileUserId)
-        .where('status', '==', 'pending')
-        .get();
-
-    if (!existingRequest.empty) {
-        window.LyriaUI.notify('You have already sent a friend request to this user');
-        return;
-    }
-
-    // Create friend request document
-    await db.collection('friendRequests').add({
-        from: currentUser.uid,
-        to: profileUserId,
-        status: 'pending',
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-    });
-
-    // Add notification to recipient's inbox
-    const senderName = currentUserData.displayName || 'Unknown User';
-    await db.collection('inbox').add({
-        recipientId: profileUserId,
-        senderId: currentUser.uid,
-        senderName: senderName,
-        message: `${senderName} sent you a friend request!`,
-        type: 'friendRequest',
-        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-        read: false
-    });
-
-    window.LyriaUI.notify('Friend request sent successfully!');
+    const button=document.getElementById('send-friend-request'),target=profileUserId;
+    if(button.disabled)return;button.disabled=true;
+    try{await window.LyriaFriendRequests.send(target);window.LyriaUI.notify('Friend request sent.','success')}
+    catch(error){console.warn('Sending friend request failed',error);window.LyriaUI.notify(error.message || 'Couldn’t confirm the friend request. Reconnect and try again.','error')}
+    finally{button.disabled=false}
 });
 
 // Add a global variable to store the list of users

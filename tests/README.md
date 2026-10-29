@@ -87,3 +87,13 @@ restoration, offline/online recovery, preservation of the current composer
 draft during reconnect, repeated reload controls, and missing-script feedback.
 All accounts and streams are local fixtures. Required SDK script requests are
 fulfilled by those fixtures, while actual missing-script errors remain visible.
+
+## Chat and friend-request fallback
+
+`python3 tests/social-loading-smoke.py` checks chat history, sending, request
+badges and the inbox across repeated reloads with SDK reads/listeners stalled.
+It covers missing sender-profile responses, acceptance, decline, and recovery
+from a failed response on mobile and desktop. The Firestore emulator suite also
+runs the real HTTPS adapter against the existing rules: message commits and
+queries, channel membership queries, sending/accepting/declining requests,
+private-room denial, and atomic failure if a sender’s profile is missing.

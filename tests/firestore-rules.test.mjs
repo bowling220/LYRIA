@@ -111,3 +111,39 @@ test('GIF avatar metadata and original animated banner bytes persist under the e
   const viewed=await assertSucceeds(getDoc(doc(member('gif-bob'),'users/gif-alice')));
   assert.equal(viewed.data().photoURL,gif.url);assert.equal(viewed.data().bannerURL,'data:image/gif;base64,'+original);
 });
+
+test('bounded HTTPS chat and friend requests work with existing rules, including atomic acceptance',async()=>{
+  const {runInNewContext}=await import('node:vm');
+  const {webcrypto}=await import('node:crypto');
+  const token=uid=>{const now=Math.floor(Date.now()/1000);return Buffer.from(JSON.stringify({alg:'none',typ:'JWT'})).toString('base64url')+'.'+Buffer.from(JSON.stringify({aud:'demo-lyria',iss:'https://securetoken.google.com/demo-lyria',sub:uid,user_id:uid,iat:now,exp:now+3600,auth_time:now,firebase:{sign_in_provider:'google.com'}})).toString('base64url')+'.'};
+  const user=uid=>({uid,displayName:uid,getIdToken:async()=>token(uid)});let active=user('alice');
+  const window={firebaseConfig:{getApp:()=>({options:{projectId:'demo-lyria'}}),getAuth:()=>({currentUser:active})}};
+  const context={window,AbortController,setTimeout,clearTimeout,crypto:webcrypto,fetch:(url,options)=>fetch(url.replace('https://firestore.googleapis.com','http://127.0.0.1:8085'),options)};
+  for(const path of ['../js/data-api.js','../js/friend-requests.js'])runInNewContext(await readFile(new URL(path,import.meta.url),'utf8'),context);
+  const API=window.LyriaDataAPI,Friends=window.LyriaFriendRequests;
+  await setDoc(doc(member('alice'),'users/alice'),{displayName:'Alice',friends:[],bio:'Keep my bio'});
+  await setDoc(doc(member('bob'),'users/bob'),{displayName:'Bob',friends:[]});
+  await API.commit([{update:{name:API.name('channels/community/messages/rest-test'),fields:API.fields({senderId:'alice',message:'REST chat works'})},updateTransforms:[{fieldPath:'timestamp',setToServerValue:'REQUEST_TIME'}],currentDocument:{exists:false}}]);
+  const messages=await API.query('messages',{parent:'channels/community',orderBy:[{field:{fieldPath:'timestamp'},direction:'DESCENDING'}],limit:100,reverse:true});
+  assert.equal(messages.docs[0].data().message,'REST chat works');assert.ok(messages.docs[0].data().timestamp.toDate().getTime()>0);
+  await setDoc(doc(member('alice'),'channels/rest-private'),{createdBy:'alice',members:['alice']});
+  assert.equal((await API.query('channels',{where:API.equal('members','alice','ARRAY_CONTAINS')})).docs.length,1);
+  await Friends.send('bob');active=user('bob');
+  const requests=await API.query('friendRequests',{where:API.equal('to',['bob','accepted_bob'],'IN')});
+  assert.equal(requests.docs.length,1);const id=requests.docs[0].id;
+  await Friends.respond(id,'accept');
+  assert.deepEqual((await getDoc(doc(member('alice'),'users/alice'))).data().friends,['bob']);
+  assert.equal((await getDoc(doc(member('alice'),'users/alice'))).data().bio,'Keep my bio');
+  assert.deepEqual((await getDoc(doc(member('bob'),'users/bob'))).data().friends,['alice']);
+  await assert.rejects(API.query('messages',{parent:'channels/rest-private'}),e=>e.code==='permission-denied');
+  active=user('alice');const accepted=await API.query('friendRequests',{where:API.equal('to',['alice','accepted_alice'],'IN')});
+  assert.equal(accepted.docs[0].data().status,'accepted');assert.equal(accepted.docs[0].data().acceptedByName,'bob');
+  await assert.rejects(Friends.send('bob'),/already friends/);
+  active=user('eve');await setDoc(doc(member('eve'),'users/eve'),{displayName:'Eve',friends:[]});await Friends.send('bob');
+  active=user('bob');const pending=await API.query('friendRequests',{where:API.equal('to','bob')});await Friends.respond(pending.docs[0].id,'decline');
+  assert.equal((await API.query('friendRequests',{where:API.equal('to','bob')})).docs.length,0);
+  // Missing sender profile must fail the whole acceptance, never add only one friend.
+  active=user('missing');await Friends.send('bob');active=user('bob');const missing=await API.query('friendRequests',{where:API.equal('to','bob')});
+  await assert.rejects(Friends.respond(missing.docs[0].id,'accept'));
+  assert.deepEqual((await getDoc(doc(member('bob'),'users/bob'))).data().friends,['alice']);
+});
