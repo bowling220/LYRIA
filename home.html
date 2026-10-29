@@ -2,7 +2,7 @@
 <html lang="en">
     <head>
         <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
         <title>Community — LYRIA</title>
         
         <!-- Meta Tags for Educational Purpose -->
@@ -82,6 +82,7 @@
 
         </style>
         <link rel="stylesheet" href="css/lyria-v6.css">
+        <script src="js/mobile.js" defer></script>
     </head>
 <body class="app-page">
 
@@ -158,7 +159,7 @@
             <!-- Typing Status Indicator -->
             <div id="typing-status" class="typing-status" style="display: none;"></div>
             <div class="message-input">
-                <textarea id="message-input" placeholder="Write a message..." style="height: 15px;"></textarea>
+                <textarea id="message-input" aria-label="Message" placeholder="Write a message..." rows="2"></textarea>
                 <button id="gif-button" class="gif-btn" type="button" aria-label="Share a GIF">GIF</button>
                 <button id="send-button" class="send-btn" style="background-color: rgba(255, 255, 255, 0.2); color: rgb(0, 0, 0); border: 1px solid rgba(255, 255, 255, 0.4); padding: 6px 12px; font-size: 14px; cursor: pointer; border-radius: 8px; backdrop-filter: blur(4px); margin-right: 100px;">
                     Send
@@ -929,3 +930,4 @@
 
 </body>
 </html>
+

@@ -160,7 +160,8 @@ function setupMobileMenu() {
         }
     });
 
-    window.addEventListener('resize', () => setMobileMenuOpen(false));
+    // Keyboard and browser toolbar resizes should not dismiss the drawer.
+    window.matchMedia('(max-width: 768px)').addEventListener('change', () => setMobileMenuOpen(false));
     setMobileMenuOpen(false);
 }
 
@@ -386,8 +387,10 @@ function setupUIEventListeners() {
         sendMessage(messageText); // Call sendMessage with the input value
     });
 
-    document.getElementById('message-input').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
+    document.getElementById('message-input').addEventListener('keydown', (e) => {
+        // Touch keyboards use Return for newlines; Send remains explicit.
+        if (e.key === 'Enter' && !e.shiftKey && !e.isComposing &&
+            !window.matchMedia('(pointer: coarse)').matches) {
             e.preventDefault();
             const messageText = messageInput.value; // Get the value from the textarea
             sendMessage(messageText); // Call sendMessage with the input value
@@ -1383,4 +1386,5 @@ document.getElementById('update-bio-btn').addEventListener('click', () => {
 });
 
 });
+
 
