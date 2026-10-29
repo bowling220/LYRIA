@@ -580,3 +580,7 @@ Reliable cross-network calling still requires the owner's working TURN configura
 ### Conversation home and saved login
 
 Opening `home.html` shows the conversation hub without selecting a chat. Explicit `?channel=` links and reloads preserve an opened room; the Conversations button returns to the hub. App navigation keeps Firebase authentication intact. Firebase Auth uses local persistence, falling back to session storage where browser restrictions require it. Clearing browser data, private browsing restrictions, or signing out can still require a new login. No passwords or authentication tokens are stored manually.
+
+### Sidebar and feedback
+
+The sidebar keeps profile/settings controls fixed while conversations and voice channels scroll independently. **Ideas & feedback** accepts account-backed ideas and bug reports, retains failed drafts, and shows confirmed submissions. See [feedback review and storage](docs/FEEDBACK.md) for maintainer instructions and privacy limitations.
