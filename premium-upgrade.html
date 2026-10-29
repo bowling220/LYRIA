@@ -5,307 +5,37 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
     <title>Premium — LYRIA</title>
     <meta name="description" content="Upgrade your LYRIA experience with more personalization and premium community features.">
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #2c2f33;
-            color: #ffffff;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 20px;
-        }
-        .container {
-            background-color: #36393f;
-            padding: 40px;
-            border-radius: 15px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
-            width: 90%;
-            max-width: 700px;
-            text-align: center;
-        }
-        h1 {
-            margin-bottom: 30px;
-            font-size: 2.5rem;
-            color: #fff;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        }
-        h2 {
-            color: #7289da;
-            margin: 30px 0 20px;
-            font-size: 1.8rem;
-        }
-        .feature-list {
-            text-align: left;
-            margin: 30px auto;
-            max-width: 400px;
-            list-style-position: inside;
-            padding: 0;
-        }
-        .feature-list li {
-            margin: 15px 0;
-            font-size: 1.1rem;
-            padding: 10px;
-            background-color: #2f3136;
-            border-radius: 8px;
-        }
-        .upgrade-btn {
-            background: linear-gradient(45deg, #43b581, #3ca374);
-            color: #ffffff;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1.2rem;
-            transition: all 0.3s ease;
-            margin: 20px 10px;
-            box-shadow: 0 4px 15px rgba(67, 181, 129, 0.3);
-        }
-        .upgrade-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(67, 181, 129, 0.4);
-        }
-        .cancel-btn {
-            background-color: red;
-            color: #ffffff;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1.2rem;
-            transition: all 0.3s ease;
-            margin: 20px auto;
-            box-shadow: 0 4px 15px rgba(255, 0, 0, 0.3);
-            display: block;
-        }
-        .cancel-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(255, 0, 0, 0.4);
-        }
-        .back-btn {
-            margin-top: 30px;
-            background: none;
-            border: 2px solid #ffffff;
-            color: #ffffff;
-            cursor: pointer;
-            font-size: 1rem;
-            padding: 10px 20px;
-            border-radius: 5px;
-            transition: all 0.3s ease;
-        }
-        .back-btn:hover {
-            background: rgba(255,255,255,0.1);
-        }
-        .premium-image {
-            width: 200px;
-            margin: 0 auto 30px;
-            display: block;
-            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
-        }
-        .tier-selection {
-            margin: 30px auto;
-            padding: 20px;
-            background-color: #2f3136;
-            border-radius: 10px;
-            max-width: 400px;
-            text-align: left;
-        }
-        .tier-selection label {
-            display: block;
-            margin: 15px 0;
-            cursor: pointer;
-            padding: 15px;
-            border-radius: 8px;
-            transition: background-color 0.3s;
-        }
-        .tier-selection label:hover {
-            background-color: #36393f;
-        }
-        .pricing-info {
-            margin: 30px 0;
-            font-size: 1.3rem;
-            color: #ffcc00;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        }
-        #payment-message {
-            font-size: 1.1rem;
-            margin-top: 20px;
-            padding: 10px;
-            border-radius: 5px;
-            background-color: rgba(255,204,0,0.1);
-        }
-    </style>
-    <link rel="stylesheet" href="css/lyria-v6.css">
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="stylesheet" href="css/theme.css">
+  <script src="js/ui.js"></script>
 </head>
 <body class="premium-page">
-    <div class="container">
-        <img src="assets/premium.png" alt="Premium Upgrade" class="premium-image">
-        <h1>Make LYRIA yours.</h1>
-        <p>More ways to express yourself, support the community, and stand out in every conversation.</p>
-        
-        <h2>Everything included</h2>
-        <ul class="feature-list">
-            <li>Change your profile picture</li>
-            <li>Access to premium channels</li>
-            <li>Priority customer support</li>
-            <li>Exclusive badges</li>
-            <li>New benefits as they launch</li>
-        </ul>
-
-        <h2>Choose your plan</h2>
+<header class="top-header"><a class="brand" href="index.html" aria-label="LYRIA home"><span class="brand-mark"><span data-icon="chat" aria-hidden="true"></span></span><span>LYRIA</span></a><span class="header-divider" aria-hidden="true"></span><span class="header-location">Premium</span><nav class="header-nav" aria-label="Main navigation"><a class="" href="home.html">Community</a><a class="news-link" href="News.html">News</a><a class="nav-premium" href="premium-upgrade.html" aria-current="page">Premium</a></nav></header><main class="premium-layout"><div class="container"><section class="premium-copy">
+        <span class="premium-emblem"><span data-icon="sparkles" aria-hidden="true"></span></span><p class="page-kicker">A little more you</p>
+        <h1>Make LYRIA<br><span>yours.</span></h1>
+        <p>More ways to express yourself and support the space that brings your people together.</p>
+        <h2>Everything included</h2><ul class="feature-list">
+        <li><span data-icon="check" aria-hidden="true"></span>A profile picture that feels like you</li><li><span data-icon="check" aria-hidden="true"></span>Access to premium channels</li><li><span data-icon="check" aria-hidden="true"></span>Priority customer support</li><li><span data-icon="check" aria-hidden="true"></span>Exclusive profile badges</li><li><span data-icon="check" aria-hidden="true"></span>New benefits as they launch</li>
+        </ul></section><section class="premium-plans" aria-label="Premium plans"><h2>Find your fit</h2>
         <div class="tier-selection">
-            <label>
-                <input type="radio" name="premium-tier" value="basic" checked> Basic Tier - $1.67/month
-            </label>
-            <label>
-                <input type="radio" name="premium-tier" value="premium"> Premium Tier - $3.00/month
-            </label>
+          <label><input type="radio" name="premium-tier" value="basic" checked><span><span class="plan-name">Basic</span><span class="plan-price">$1.67 / month</span></span></label>
+          <label><input type="radio" name="premium-tier" value="premium"><span><span class="plan-name">Premium</span><span class="plan-price">$3.00 / month</span></span></label>
         </div>
-
-        <div class="pricing-info" id="pricing-info">
-            <p id="selected-price">You have selected the Basic Tier at $1.67/month.</p>
-            <p id="selected-yearly-price">Yearly Subscription: $20.00 (Save 16.67%)</p>
-        </div>
-
-        <button class="upgrade-btn" id="confirm-upgrade">Choose Premium</button>
-        <button class="cancel-btn" id="cancel-upgrade" style="display: none;">Cancel Subscription</button>
-        <p id="payment-message" style="color: #ffcc00; margin-top: 10px;"></p>
-
-        <button class="back-btn" onclick="window.history.back()">Back to LYRIA</button>
-    </div>
-
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+        <div class="pricing-info" id="pricing-info" aria-live="polite"><p id="selected-price">Basic · $1.67 per month</p><p id="selected-yearly-price">$20.00 for 12 months at the listed annual price.</p></div>
+        <button class="upgrade-btn" id="confirm-upgrade" disabled>Checkout coming soon</button>
+        <button class="cancel-btn" id="cancel-upgrade" style="display:none">Remove legacy Premium access</button>
+        <p id="payment-message" role="status"></p>
+        <div class="premium-note"><strong>Good things take a little time.</strong>Payments aren’t connected yet. These are planned prices; this page won’t charge you or change your membership.</div>
+        </section></div><a class="back-btn button button-small" href="home.html"><span data-icon="back" aria-hidden="true"></span> Back to community</a></main>
     <script>
-        // Load environment variables for security
-        window.env = window.env || {
-            VITE_FIREBASE_API_KEY: "AIzaSyDWpApnJ-mfHQJZhkbNDdsJ7l8-8rVHHTc",
-            VITE_FIREBASE_AUTH_DOMAIN: "lyria-49a54.firebaseapp.com",
-            VITE_FIREBASE_PROJECT_ID: "lyria-49a54",
-            VITE_FIREBASE_STORAGE_BUCKET: "lyria-49a54.firebasestorage.app",
-            VITE_FIREBASE_MESSAGING_SENDER_ID: "704449928785",
-            VITE_FIREBASE_APP_ID: "1:704449928785:web:5b3c58c8f82d31d3f1a270",
-            VITE_FIREBASE_MEASUREMENT_ID: "G-KV5FRFN63T"
-        };
-
-        const firebaseConfig = {
-            apiKey: window.env.VITE_FIREBASE_API_KEY,
-            authDomain: window.env.VITE_FIREBASE_AUTH_DOMAIN,
-            projectId: window.env.VITE_FIREBASE_PROJECT_ID,
-            storageBucket: window.env.VITE_FIREBASE_STORAGE_BUCKET,
-            messagingSenderId: window.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-            appId: window.env.VITE_FIREBASE_APP_ID,
-            measurementId: window.env.VITE_FIREBASE_MEASUREMENT_ID
-        };
-
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-
-        // Add an authentication state observer
-        firebase.auth().onAuthStateChanged(async (user) => {
-            if (user) {
-                document.getElementById('confirm-upgrade').disabled = false; // Enable button if logged in
-                const userDoc = await db.collection('users').doc(user.uid).get();
-                if (userDoc.exists && userDoc.data().isPremium) {
-                    document.getElementById('cancel-upgrade').style.display = 'block'; // Show cancel button if premium
-                }
-            } else {
-                document.getElementById('confirm-upgrade').disabled = true; // Disable button if not logged in
-            }
-        });
-
-        // Update pricing info based on selected tier
-        const pricingInfo = document.getElementById('pricing-info');
         const selectedPrice = document.getElementById('selected-price');
         const selectedYearlyPrice = document.getElementById('selected-yearly-price');
-        const radioButtons = document.querySelectorAll('input[name="premium-tier"]');
-
-        radioButtons.forEach(radio => {
+        document.querySelectorAll('input[name="premium-tier"]').forEach(radio => {
             radio.addEventListener('change', () => {
-                if (radio.value === 'premium') {
-                    selectedPrice.textContent = 'You have selected the Premium Tier at $3.00/month.';
-                    selectedYearlyPrice.textContent = 'Yearly Subscription: $36.00 (Save 16.67%)'; // Adjusted yearly price for premium
-                } else {
-                    selectedPrice.textContent = 'You have selected the Basic Tier at $1.67/month.';
-                    selectedYearlyPrice.textContent = 'Yearly Subscription: $20.00 (Save 16.67%)'; // Yearly price for basic
-                }
+                const premium = radio.value === 'premium';
+                selectedPrice.textContent = premium ? 'Premium · $3.00 per month' : 'Basic · $1.67 per month';
+                selectedYearlyPrice.textContent = premium ? '$36.00 for 12 months at the listed annual price.' : '$20.00 for 12 months at the listed annual price.';
             });
-        });
-
-        document.getElementById('confirm-upgrade').addEventListener('click', async () => {
-            const currentUser = firebase.auth().currentUser;
-            if (!currentUser) {
-                alert('You must be logged in to upgrade your account.');
-                return;
-            }
-
-            const selectedTier = document.querySelector('input[name="premium-tier"]:checked').value; // Get selected tier
-            const paymentMessage = document.getElementById('payment-message');
-            paymentMessage.textContent = 'Processing your upgrade...';
-
-            // Simulate a payment process
-            setTimeout(async () => {
-                try {
-                    // Update Firestore to set isPremium and tier
-                    await db.collection('users').doc(currentUser.uid).update({
-                        isPremium: true,
-                        premiumTier: selectedTier, // Store the selected tier
-                        badges: firebase.firestore.FieldValue.arrayUnion('premium') // Ensure this is lowercase
-                    });
-
-                    paymentMessage.textContent = 'Thank you for your purchase! Your account has been upgraded to Premium.';
-                    
-                    // Show cancel button after upgrade
-                    document.getElementById('cancel-upgrade').style.display = 'block';
-
-                    // Redirect to the home page after a short delay
-                    setTimeout(() => {
-                        window.location.href = 'home.html'; // Redirect to home page after upgrade
-                    }, 3000); // Redirect after 3 seconds
-                } catch (error) {
-                    console.error('Error updating premium status:', error);
-                    paymentMessage.textContent = 'Failed to upgrade your account. Please try again.';
-                }
-            }, 2000); // Simulate a 2-second upgrade processing time
-        });
-
-        document.getElementById('cancel-upgrade').addEventListener('click', async () => {
-            const currentUser = firebase.auth().currentUser;
-            if (!currentUser) {
-                alert('You must be logged in to cancel your subscription.');
-                return;
-            }
-
-            const paymentMessage = document.getElementById('payment-message');
-            paymentMessage.textContent = 'Cancelling your subscription...';
-
-            // Simulate cancellation process
-            setTimeout(async () => {
-                try {
-                    // Update Firestore to set isPremium to false
-                    await db.collection('users').doc(currentUser.uid).update({
-                        isPremium: false,
-                        premiumTier: null // Clear the premium tier
-                    });
-
-                    paymentMessage.textContent = 'Your subscription has been cancelled. We hope to see you again!';
-                    
-                    // Hide cancel button after cancellation
-                    document.getElementById('cancel-upgrade').style.display = 'none';
-
-                    // Redirect to the home page after a short delay
-                    setTimeout(() => {
-                        window.location.href = 'home.html'; // Redirect to home page after cancellation
-                    }, 3000); // Redirect after 3 seconds
-                } catch (error) {
-                    console.error('Error cancelling subscription:', error);
-                    paymentMessage.textContent = 'Failed to cancel your subscription. Please try again.';
-                }
-            }, 2000); // Simulate a 2-second cancellation processing time
         });
     </script>
 </body>

@@ -5,114 +5,27 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
   <title>Sign in — LYRIA</title>
   <meta name="description" content="Sign in to LYRIA and return to your conversations.">
-  <link rel="stylesheet" href="css/main.css">
-  
+
   <!-- Firebase CDN Links -->
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
-  
+
   <!-- Utility Scripts -->
   <script src="js/config.js"></script>
   <script src="js/utils.js"></script>
-  
-  <style>
-    /* Glassmorphism styling */
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { 
-      display: flex; 
-      flex-direction: column;
-      justify-content: center; 
-      align-items: center; 
-      min-height: 100vh; 
-      font-family: Arial, sans-serif; 
-      background: url('assets/background.png') no-repeat center center fixed; 
-      background-size: cover; 
-      color: #ffffff;
-    }
-    .wrapper { 
-      width: 100%; 
-      max-width: 400px; 
-      padding: 2rem; 
-      background: rgba(255, 255, 255, 0.2); /* Glass effect */
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); 
-      border-radius: 8px; 
-      text-align: center; 
-      backdrop-filter: blur(10px); /* Blur for glass effect */
-      border: 1px solid rgba(255, 255, 255, 0.3);
-    }
-    h2 { margin-bottom: 1rem; color: #fff; }
-    .google-button, .guest-button { 
-      width: 100%; 
-      padding: 0.75rem; 
-      font-weight: bold; 
-      color: #ffffff; 
-      border: none; 
-      cursor: pointer; 
-      border-radius: 4px; 
-      transition: background-color 0.3s; 
-      margin-top: 1rem;
-    }
-    .google-button { background-color: #db4437; }
-    .google-button:hover { background-color: #c33b2e; }
-    .guest-button { background-color: #3c3f42; }
-    .guest-button:hover { background-color: #2f3236; }
-    #error-message { color: red; font-size: 0.9rem; margin-top: 1rem; }
-    footer {
-      position: fixed;
-      bottom: 0;
-      width: 100%;
-      text-align: center;
-      font-size: 0.9em;
-      color: #ffffff; /* White text */
-      background-color: transparent;
-      padding: 1rem 0;
-    }
-
-    .modal {
-        display: none; /* Hidden by default */
-        position: fixed; /* Stay in place */
-        z-index: 1000; /* Sit on top */
-        left: 0;
-        top: 0;
-        width: 100%; /* Full width */
-        height: 100%; /* Full height */
-        overflow: auto; /* Enable scroll if needed */
-        background-color: rgb(0,0,0); /* Fallback color */
-        background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
-    }
-
-    .modal-content {
-        background-color: #fefefe;
-        margin: 15% auto; /* 15% from the top and centered */
-        padding: 20px;
-        border: 1px solid #888;
-        width: 80%; /* Could be more or less, depending on screen size */
-    }
-
-    /* Notification styling */
-    #notification {
-      display: none; /* Hidden by default */
-      background-color: rgba(255, 255, 0, 0.8); /* Yellow background */
-      color: black;
-      padding: 10px;
-      border-radius: 5px;
-      margin-top: 20px;
-      text-align: center;
-      position: relative;
-      z-index: 1000; /* Sit on top */
-    }
-  </style>
-  <link rel="stylesheet" href="css/lyria-v6.css">
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="stylesheet" href="css/theme.css">
+  <script src="js/ui.js"></script>
 </head>
-<body class="login-page" onload="document.getElementById('notification').style.display = 'block'">
-  <div class="wrapper">
-    <h2>Good to see you.</h2>
-    <button id="google-signin" class="google-button">Continue with Google</button>
-    <button id="guest-login" class="guest-button">Explore as a guest</button>
-    <p id="error-message"></p>
-    <div id="notification">A little housekeeping: older inactive channels may be cleared periodically to keep LYRIA running smoothly.</div>
-  </div>
+<body class="login-page">
+  <header class="site-header"><a class="brand" href="index.html" aria-label="LYRIA home"><span class="brand-mark"><span data-icon="chat" aria-hidden="true"></span></span><span>LYRIA</span></a><a class="text-link" href="News.html">What’s new</a></header><main class="auth-main"><div class="wrapper">
+    <span class="auth-emblem"><span data-icon="chat" aria-hidden="true"></span></span><p class="page-kicker">A place to belong</p><h1>Good to see you.</h1><p class="auth-description">Your people. Your conversations.<br>Pick up right where you left off.</p>
+    <button id="google-signin" class="google-button"><span data-icon="google" aria-hidden="true"></span> Continue with Google</button>
+    <div class="auth-divider">or take a look around</div><button id="guest-login" class="guest-button"><span data-icon="arrow" aria-hidden="true"></span> Explore as a guest</button>
+    <p id="error-message" role="alert"></p>
+    <div id="notification">Guest accounts are temporary. Sign in with Google to keep your account across devices.</div>
+  </div></main>
 
   <script>
     // Load environment variables for security
@@ -241,21 +154,16 @@
       });
     });
 
-    // Auto-hide notification after 5 seconds
-    setTimeout(() => {
-      document.getElementById('notification').style.display = 'none';
-    }, 5000);
+
   </script>
 
-  <footer>
-    &copy; 2024 LYRIA. All rights reserved. Trademarked by LYRIA.
-  </footer>
+  <footer>© 2026 LYRIA · A little closer, wherever you are.</footer>
 
   <div id="welcome-modal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="welcome-modal-title">
     <div class="modal-content">
         <h2 id="welcome-modal-title">Welcome!</h2>
         <p>You've received a Beta Tester badge for signing up early!</p>
-        <button id="close-welcome-modal" class="close-button" aria-label="Close Welcome Modal">&times;</button>
+        <button id="close-welcome-modal" class="close-button" aria-label="Close Welcome Modal"><span data-icon="close" aria-hidden="true"></span></button>
     </div>
   </div>
 </body>

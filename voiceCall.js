@@ -36,11 +36,11 @@ function initializePeer() {
             console.warn('Voice is already connected in another LYRIA tab.');
             peer.destroy();
             peer = null;
-            alert('Voice is already open in another LYRIA tab. Close it there, then try again.');
+            window.LyriaUI.notify('Voice is already open in another LYRIA tab. Close it there, then try again.');
             return;
         }
         console.error('Voice connection error:', error);
-        alert('Voice could not connect. Please try again.');
+        window.LyriaUI.notify('Voice could not connect. Please try again.');
     });
 }
 
@@ -67,7 +67,7 @@ function handleCallEvents(call) {
 // Function to start or join a call
 function startOrJoinCall() {
     if (!currentUser || !currentChannel) {
-        alert('Choose a channel before joining voice.');
+        window.LyriaUI.notify('Choose a channel before joining voice.');
         return;
     }
     initializePeer();
@@ -80,7 +80,7 @@ function startOrJoinCall() {
             })
             .catch(error => {
                 console.error('Error accessing media devices.', error);
-                alert('Microphone access is required to make or join a voice call.');
+                window.LyriaUI.notify('Microphone access is required to make or join a voice call.');
             });
     } else {
         joinActiveCall();
@@ -245,17 +245,17 @@ function updateCallButton(callActive, activeMembers) {
         if (activeMembers.includes(currentUser.uid)) {
             // User is in call
             callButton.style.display = 'none';
-            if (leaveButton) leaveButton.style.display = 'inline-block';
+            if (leaveButton) leaveButton.style.display = 'inline-flex';
         } else {
             // User is not in call
-            callButton.textContent = 'Join voice';
-            callButton.style.display = 'inline-block';
+            callButton.innerHTML = window.LyriaUI.icon('mic') + '<span class="button-label">Join voice</span>';
+            callButton.style.display = 'inline-flex';
             if (leaveButton) leaveButton.style.display = 'none';
         }
     } else {
         // No active call
-        callButton.textContent = 'Start voice';
-        callButton.style.display = 'inline-block';
+        callButton.innerHTML = window.LyriaUI.icon('mic') + '<span class="button-label">Start voice</span>';
+        callButton.style.display = 'inline-flex';
         if (leaveButton) leaveButton.style.display = 'none';
     }
 }

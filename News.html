@@ -6,456 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
     <title>What's new — LYRIA</title>
     <meta name="description" content="Product updates, community notes, and what's happening around LYRIA.">
-    <link rel="stylesheet" href="chat.css">
-    <link rel="stylesheet" href="voiceCall.css">
-    <style>
-        .news-container {
-            max-width: 800px;
-            margin: 20px auto;
-            padding: 20px;
-            padding-bottom: 200px; /* Add padding at bottom to prevent footer overlap */
-            height: calc(100vh - 140px);
-            overflow-y: auto;
-        }
 
-        .news-article {
-            background: #2c3e50;
-            color: white;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            transition: transform 0.2s;
-            font-size: 0.9em;
-        }
-
-        .news-article.recent {
-            border: 2px solid gold;
-            animation: glow 2s infinite;
-        }
-
-        @keyframes glow {
-            0% { box-shadow: 0 0 5px gold; }
-            50% { box-shadow: 0 0 20px gold; }
-            100% { box-shadow: 0 0 5px gold; }
-        }
-
-        .news-article:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-        }
-
-        .news-article h3 {
-            color: white;
-            margin-bottom: 10px;
-            font-size: 1.4em;
-        }
-
-        .date {
-            color: #ccc;
-            font-style: italic;
-        }
-
-        .read-more {
-            display: inline-block;
-            margin-top: 15px;
-            color: #3498db;
-            text-decoration: none;
-            font-weight: bold;
-            transition: color 0.2s;
-        }
-
-        .read-more:hover {
-            color: #2980b9;
-            text-decoration: underline;
-        }
-
-        .like-button {
-            background: none;
-            border: none;
-            color: #3498db;
-            cursor: pointer;
-            font-size: 1em;
-            margin-top: 10px;
-        }
-
-        .top-header {
-            background: #2c3e50;
-            color: white;
-            padding: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        footer {
-            background: #2c3e50;
-            color: white;
-            padding: 15px;
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-            text-align: center;
-            z-index: 100;
-        }
-
-        #version-info {
-            font-size: 0.9em;
-            opacity: 0.9;
-        }
-
-        body {
-            margin: 0;
-            padding: 0;
-            min-height: 100vh;
-            position: relative;
-        }
-
-        .home-button {
-            background-color: #3498db;
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 1em;
-            transition: background-color 0.3s;
-        }
-
-        .home-button:hover {
-            background-color: #2980b9;
-        }
-
-        .download-button {
-            background-color: #27ae60;
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 1.1em;
-            margin: 10px;
-            transition: background-color 0.3s;
-            display: inline-block;
-        }
-
-        .download-button:hover {
-            background-color: #219a52;
-        }
-
-        .download-section {
-            text-align: center;
-            padding: 20px;
-            background: #34495e;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-
-        .comment-section {
-            margin-top: 10px;
-            padding: 10px;
-            background: #34495e;
-            border-radius: 5px;
-        }
-
-        .comment {
-            background: #d1ecf1;
-            border-radius: 5px;
-            padding: 10px;
-            margin-top: 10px;
-            color: #333;
-        }
-
-        .comment .comment-header {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 5px;
-            font-size: 0.9em;
-            color: #666;
-        }
-
-        .comment .comment-content {
-            word-wrap: break-word;
-        }
-
-        textarea {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 10px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-            resize: vertical;
-            min-height: 60px;
-        }
-
-        button {
-            padding: 10px;
-            border: none;
-            border-radius: 5px;
-            background-color: #007bff;
-            color: white;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background-color: #0056b3;
-        }
-
-        .create-post-button {
-            background: linear-gradient(45deg, #FF1493, #FF69B4);
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 25px;
-            cursor: pointer;
-            font-size: 1.2em;
-            margin: 20px 0;
-            transition: all 0.3s ease;
-            display: block;
-            width: 100%;
-            box-shadow: 0 4px 15px rgba(255, 20, 147, 0.3);
-            text-transform: uppercase;
-            font-weight: bold;
-            letter-spacing: 1px;
-        }
-
-        .create-post-button:hover {
-            background: linear-gradient(45deg, #FF69B4, #FF1493);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(255, 20, 147, 0.4);
-        }
-
-        .user-article-section {
-            background: #2c3e50;
-            color: white;
-            padding: 20px;
-            border-radius: 8px;
-            margin: 20px 0;
-        }
-
-        .article-form {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-
-        .form-group label {
-            font-weight: bold;
-        }
-
-        .form-group input,
-        .form-group textarea {
-            padding: 10px;
-            border-radius: 4px;
-            border: 1px solid #ccc;
-            background: #fff;
-            color: #333;
-        }
-
-        .form-group textarea {
-            min-height: 150px;
-            resize: vertical;
-        }
-
-        .submit-article-btn {
-            background: #3498db;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        .submit-article-btn:hover {
-            background: #2980b9;
-        }
-
-        .article-tags {
-            display: flex;
-            gap: 5px;
-            flex-wrap: wrap;
-            margin-top: 5px;
-        }
-
-        .article-tag {
-            background: #3498db;
-            color: white;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 0.8em;
-        }
-
-        .article-meta {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-            font-size: 0.9em;
-            color: #ccc;
-        }
-
-        .article-author {
-            font-weight: bold;
-            color: #3498db;
-        }
-
-        .guest-post {
-            border-left: 3px solid #e74c3c;
-        }
-
-        .guest-post .article-author {
-            color: #e74c3c;
-        }
-
-        .user-submitted {
-            position: relative;
-            border-left: 4px solid #FF1493;
-        }
-
-        .user-submitted-tag {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: linear-gradient(45deg, #FF1493, #FF69B4);
-            color: white;
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 0.8em;
-            font-weight: bold;
-            text-transform: uppercase;
-            box-shadow: 0 2px 4px rgba(255, 20, 147, 0.3);
-        }
-
-        .fab-container {
-            position: fixed;
-            top: 80px;
-            right: 30px;
-            z-index: 1000;
-        }
-
-        .fab {
-            background: linear-gradient(135deg, #00ffff, #ff69b4, #4169e1);
-            color: white;
-            border: none;
-            border-radius: 15px;
-            width: 56px;
-            height: 56px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            box-shadow: 
-                0 0 15px rgba(0, 255, 255, 0.3),
-                0 0 30px rgba(255, 105, 180, 0.2),
-                0 0 45px rgba(65, 105, 225, 0.1);
-            transition: all 0.3s ease;
-            overflow: hidden;
-            position: relative;
-            transform: rotate(45deg);
-            animation: shimmer 3s infinite;
-            background-size: 200% 200%;
-        }
-
-        .fab:hover {
-            width: 160px;
-            transform: rotate(0deg);
-            background: linear-gradient(135deg, #ff69b4, #4169e1, #00ffff);
-            box-shadow: 
-                0 0 20px rgba(0, 255, 255, 0.4),
-                0 0 40px rgba(255, 105, 180, 0.3),
-                0 0 60px rgba(65, 105, 225, 0.2);
-        }
-
-        .fab-icon {
-            font-size: 24px;
-            position: absolute;
-            left: 50%;
-            transform: translate(-50%, -50%) rotate(-45deg);
-            transition: all 0.3s ease;
-            top: 50%;
-        }
-
-        .fab-text {
-            position: absolute;
-            width: 100%;
-            text-align: center;
-            opacity: 0;
-            transition: all 0.3s ease;
-            font-size: 16px;
-            font-weight: bold;
-            transform: rotate(-45deg);
-            white-space: nowrap;
-        }
-
-        .fab:hover .fab-icon {
-            opacity: 0;
-            transform: translate(-50%, -50%) rotate(0deg);
-        }
-
-        .fab:hover .fab-text {
-            opacity: 1;
-            transform: rotate(0deg);
-        }
-
-        @keyframes shimmer {
-            0% {
-                background-position: 0% 50%;
-            }
-            50% {
-                background-position: 100% 50%;
-            }
-            100% {
-                background-position: 0% 50%;
-            }
-        }
-
-        .ban-message-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #2c3e50;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-            color: white;
-            text-align: center;
-            padding: 20px;
-        }
-
-        .ban-message {
-            font-size: 24px;
-            margin-bottom: 20px;
-        }
-
-        .ban-home-button {
-            background: #e74c3c;
-            color: white;
-            padding: 15px 30px;
-            border: none;
-            border-radius: 5px;
-            font-size: 18px;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-
-        .ban-home-button:hover {
-            background: #c0392b;
-        }
-    </style>
 
     <script type="module">
         // Importing Firebase app and Firestore modules
@@ -498,7 +49,7 @@
 
         async function getNewsUser(showPrompt = false) {
             const user = auth.currentUser || await newsAuthReady;
-            if (!user && showPrompt) alert('Sign in to like or comment on LYRIA News.');
+            if (!user && showPrompt) window.LyriaUI.notify('Sign in to like or comment on LYRIA News.');
             return user;
         }
 
@@ -516,7 +67,8 @@
 
         // Function to format date
         function formatDate(date) {
-            return new Date(date).toLocaleString();
+            const value = date?.toDate?.() || new Date(date);
+            return Number.isNaN(value.getTime()) ? 'Just now' : value.toLocaleDateString([], {month:'short',day:'numeric',year:'numeric'});
         }
 
         // Function to check if article is recent (within last week)
@@ -527,38 +79,57 @@
             return articleDate > weekAgo;
         }
 
+        function updateLikeButton(button, liked) {
+            if (!button) return;
+            button.innerHTML = window.LyriaUI.icon('heart') + (liked ? ' Liked' : ' Like');
+            button.classList.toggle('liked', liked);
+            button.setAttribute('aria-pressed', String(liked));
+        }
+        const likeSubscriptions = new Set();
+        const commentSubscriptions = new Set();
         // Function to like or unlike a post
         window.toggleLike = async function(postId) {
-            const user = await getNewsUser(true);
-            if (!user) return;
-            const userLikeRef = doc(db, 'userLikes', user.uid, 'likes', postId);
-            const postRef = doc(db, 'posts', postId);
+            const button = document.getElementById(postId + '-like-button');
+            if (button?.disabled) return;
+            if (button) button.disabled = true;
+            try {
+                const user = await getNewsUser(true);
+                if (!user) return;
+                const userLikeRef = doc(db, 'userLikes', user.uid, 'likes', postId);
+                const postRef = doc(db, 'posts', postId);
 
-            const userLikeDoc = await getDoc(userLikeRef);
-            const postDoc = await getDoc(postRef);
+                const userLikeDoc = await getDoc(userLikeRef);
+                const postDoc = await getDoc(postRef);
 
-            if (userLikeDoc.exists() && userLikeDoc.data().liked) {
-                // User has already liked the post, so we remove the like
-                const currentLikes = postDoc.exists() ? postDoc.data().likes || 0 : 0;
-                if (currentLikes > 0) {
-                    await setDoc(postRef, { likes: increment(-1) }, { merge: true });
+                if (userLikeDoc.exists() && userLikeDoc.data().liked) {
+                    // User has already liked the post, so we remove the like
+                    const currentLikes = postDoc.exists() ? postDoc.data().likes || 0 : 0;
+                    if (currentLikes > 0) {
+                        await setDoc(postRef, { likes: increment(-1) }, { merge: true });
+                    }
+                    await setDoc(userLikeRef, { liked: false });
+                    const likeButton = document.getElementById(postId + '-like-button');
+                    updateLikeButton(likeButton, false);
+                } else {
+                    // User has not liked the post, so we add the like
+                    await setDoc(postRef, { likes: increment(1) }, { merge: true });
+                    await setDoc(userLikeRef, { liked: true });
+                    const likeButton = document.getElementById(postId + '-like-button');
+                    updateLikeButton(likeButton, true);
                 }
-                await setDoc(userLikeRef, { liked: false });
-                const likeButton = document.getElementById(postId + '-like-button');
-                if (likeButton) likeButton.innerText = '👍 Like';
-            } else {
-                // User has not liked the post, so we add the like
-                await setDoc(postRef, { likes: increment(1) }, { merge: true });
-                await setDoc(userLikeRef, { liked: true });
-                const likeButton = document.getElementById(postId + '-like-button');
-                if (likeButton) likeButton.innerText = '👎 Unlike';
-            }
 
-            fetchLikes(postId);
+                fetchLikes(postId);
+            } catch (error) {
+                console.error('Like could not be saved', error);
+                window.LyriaUI.notify('Could not save your reaction. Please try again.', 'error');
+            } finally { if (button) button.disabled = false; }
+
         };
 
         // Function to fetch and display likes for a post
         function fetchLikes(postId) {
+            if (likeSubscriptions.has(postId)) return;
+            likeSubscriptions.add(postId);
             const postRef = doc(db, 'posts', postId);
             onSnapshot(postRef, (docSnapshot) => {
                 if (docSnapshot.exists()) {
@@ -575,16 +146,16 @@
             if (!likeButton) return;
             const user = await getNewsUser(false);
             if (!user) {
-                likeButton.innerText = '👍 Like';
+                updateLikeButton(likeButton, false);
                 return;
             }
             const userLikeRef = doc(db, 'userLikes', user.uid, 'likes', postId);
             const userLikeDoc = await getDoc(userLikeRef);
 
             if (userLikeDoc.exists() && userLikeDoc.data().liked) {
-                likeButton.innerText = '👎 Unlike';
+                updateLikeButton(likeButton, true);
             } else {
-                likeButton.innerText = '👍 Like';
+                updateLikeButton(likeButton, false);
             }
         }
 
@@ -609,15 +180,18 @@
                     await fetchComments(articleId);
                 } catch (error) {
                     console.error("Error adding comment: ", error);
+                    window.LyriaUI.notify('Your comment was not posted. Please try again.', 'error');
                 }
             }
         };
 
         // Function to fetch and display comments
         async function fetchComments(articleId) {
+            if (commentSubscriptions.has(articleId)) return;
+            commentSubscriptions.add(articleId);
             const commentsRef = collection(db, 'articles', articleId, 'comments');
             const q = query(commentsRef, orderBy('timestamp', 'desc'));
-            
+
             // Set up real-time listener for comments
             onSnapshot(q, (snapshot) => {
                 const commentsList = document.getElementById(`comments-list-${articleId}`);
@@ -673,9 +247,9 @@
             // Check if user is blocked from creating articles
             const currentUser = auth.currentUser;
             const blockedUsers = ['', 'dOVyjlLfVXPA9cWO2VCxR5zfgKW2'];
-            
+
             if (currentUser && blockedUsers.includes(currentUser.uid)) {
-                alert('You do not have permission to create articles.');
+                window.LyriaUI.notify('You do not have permission to create articles.');
                 return;
             }
 
@@ -696,7 +270,7 @@
 
             onAuthStateChanged(auth, (user) => {
                 const blockedUsers = ['', 'dOVyjlLfVXPA9cWO2VCxR5zfgKW2'];
-                
+
                 if (user && blockedUsers.includes(user.uid)) {
                     createButton.style.display = 'none';
                 } else {
@@ -717,7 +291,7 @@
             if (articleForm) {
                 articleForm.addEventListener('submit', async (e) => {
                     e.preventDefault();
-                    
+
                     const authorName = document.getElementById('article-author').value.trim() || 'LYRIA';
                     const title = document.getElementById('article-title').value.trim();
                     const body = document.getElementById('article-body').value.trim();
@@ -727,7 +301,7 @@
                         .filter(tag => tag.length > 0);
 
                     if (!title || !body) {
-                        alert('Please fill in both title and content fields');
+                        window.LyriaUI.notify('Please fill in both title and content fields');
                         return;
                     }
 
@@ -742,13 +316,13 @@
 
                         // Clear form
                         articleForm.reset();
-                        alert('Article submitted successfully!');
-                        
+                        window.LyriaUI.notify('Article submitted successfully!');
+
                         // Hide the form after successful submission
                         document.getElementById('user-article-section').style.display = 'none';
                     } catch (error) {
                         console.error('Error submitting article:', error);
-                        alert('Error submitting article. Please try again.');
+                        window.LyriaUI.notify('Error submitting article. Please try again.');
                     }
                 });
             }
@@ -757,26 +331,27 @@
         // Load and display user articles
         function loadUserArticles() {
             const q = query(collection(db, 'userArticles'), orderBy('timestamp', 'desc'));
-            
+
             onSnapshot(q, (snapshot) => {
                 const newsContainer = document.querySelector('.news-container');
+                newsContainer.querySelectorAll('.user-submitted').forEach(article => article.remove());
                 const firstNewsArticle = newsContainer.querySelector('.news-article');
 
                 snapshot.forEach((doc) => {
                     const article = doc.data();
                     const articleElement = document.createElement('div');
                     articleElement.className = 'news-article user-submitted';
-                    
+
                     articleElement.innerHTML = `
                         <div class="user-submitted-tag">User Submitted</div>
-                        <h3>${article.title}</h3>
+                        <h3>${window.LyriaUI.escape(article.title)}</h3>
                         <div class="article-meta">
-                            <span class="article-author">By: ${article.authorName || 'LYRIA'}</span>
+                            <span class="article-author">By: ${window.LyriaUI.escape(article.authorName || 'LYRIA')}</span>
                             <span class="date">Published on: ${formatDate(article.timestamp)}</span>
                         </div>
-                        <p>${article.body}</p>
+                        <p>${window.LyriaUI.escape(article.body)}</p>
                         <div class="article-tags">
-                            ${article.tags.map(tag => `<span class="article-tag">${tag}</span>`).join('')}
+                            ${(Array.isArray(article.tags) ? article.tags : []).map(tag => `<span class="article-tag">${window.LyriaUI.escape(tag)}</span>`).join('')}
                         </div>
                     `;
 
@@ -794,7 +369,7 @@
         // Add this function to check for banned users
         function checkBannedUser() {
             const blockedUsers = ['', ''];
-            
+
             onAuthStateChanged(auth, (user) => {
                 if (user && blockedUsers.includes(user.uid)) {
                     // Create and show ban message
@@ -804,12 +379,12 @@
                         <div class="ban-message">You have been banned from creating articles.</div>
                         <button class="ban-home-button" onclick="window.location.href='home.html'">Return Home</button>
                     `;
-                    
+
                     // Hide the main content
                     document.querySelector('.news-container').style.display = 'none';
                     document.querySelector('.top-header').style.display = 'none';
                     document.querySelector('footer').style.display = 'none';
-                    
+
                     // Add the ban message to the body
                     document.body.appendChild(banContainer);
                 }
@@ -835,11 +410,11 @@
 
     async function checkAndStoreDeviceFingerprint() {
         const deviceId = await getDeviceFingerprint();
-        
+
         // Check against banned devices in your database
         const bannedDevices = await getBannedDevicesFromDatabase(); // Implement this function to fetch banned devices
         if (bannedDevices.includes(deviceId)) {
-            alert('This device is not allowed to create accounts');
+            window.LyriaUI.notify('This device is not allowed to create accounts');
             return;
         }
 
@@ -847,141 +422,64 @@
         await storeDeviceIdInDatabase(deviceId); // Implement this function to store the device ID
     }
     </script>
-
-    <link rel="stylesheet" href="css/lyria-v6.css">
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="stylesheet" href="css/theme.css">
+  <script src="js/ui.js"></script>
 </head>
 
 <body class="news-page">
-    <header class="top-header">
-        <button class="menu-toggle" onclick="window.location.href='home.html'">☰</button>
-        <span style="flex: 1; text-align: center;">LYRIA / NEWS</span>
-        <div class="fab-container">
-            <button class="fab" id="create-article-button" aria-label="Create article" onclick="toggleUserArticles()">
-                <span class="fab-icon">+</span>
-                <span class="fab-text">Create Article</span>
-            </button>
-        </div>
-        <button class="home-button" onclick="window.location.href='home.html'">Home</button>
-    </header>
+    <header class="top-header"><a class="brand" href="index.html" aria-label="LYRIA home"><span class="brand-mark"><span data-icon="chat" aria-hidden="true"></span></span><span>LYRIA</span></a><span class="header-divider" aria-hidden="true"></span><span class="header-location">News</span><nav class="header-nav" aria-label="Main navigation"><a class="" href="home.html">Community</a><a class="news-link" href="News.html" aria-current="page">News</a><a class="nav-premium" href="premium-upgrade.html">Premium</a></nav><button class="fab" id="create-article-button" aria-label="Create article" onclick="toggleUserArticles()"><span data-icon="plus" aria-hidden="true"></span><span class="fab-text">Write an article</span></button></header>
 
     <div class="news-container">
-      
-        <h2>What's happening at LYRIA</h2>
-        <div class="news-article" style="animation: fadeInScale 0.8s ease-out">
-            <h3 style="animation: slideInRight 1s ease-out">Introducing Our New Status Feature! 🚀</h3>
-            <p>Published on: <span class="date" style="animation: fadeIn 1.2s ease-out">2024-12-06</span></p>
-            <p style="animation: slideInLeft 1.4s ease-out">We are excited to announce the launch of our new status feature on the LYRIA platform! This allows users to set their current status, making it easier to communicate availability and engage with others. Whether you're available, busy, or away, you can now share your status with the community.</p>
-            <div class="image-gallery" style="animation: fadeIn 1.6s ease-out">
+
+        <div class="page-heading"><span class="page-kicker">The community journal</span><h1>A little news. A lot of possibility.</h1><p>Product updates, community stories, and what’s next for LYRIA.</p></div>
+        <div class="news-article">
+            <h3>Introducing Our New Status Feature! 🚀</h3>
+            <p>Published on: <span class="date">2024-12-06</span></p>
+            <p>We are excited to announce the launch of our new status feature on the LYRIA platform! This allows users to set their current status, making it easier to communicate availability and engage with others. Whether you're available, busy, or away, you can now share your status with the community.</p>
+            <div class="image-gallery">
                 <img src="assets/status-feature.png" alt="New Status Feature" style="width: 50%; max-width: 250px; border-radius: 8px; margin-bottom: 10px;">
             </div>
-            <p style="animation: slideInLeft 1.4s ease-out">To set your status, simply navigate to your profile and choose from the available options. We believe this feature will enhance your experience and foster better communication within our community. Try it out today!</p>
-            <div style="animation: bounceIn 1.6s ease-out">
-                <button class="like-button" id="status-feature-like-button" onclick="toggleLike('status-feature')">👍 Like</button>
+            <p>To set your status, simply navigate to your profile and choose from the available options. We believe this feature will enhance your experience and foster better communication within our community. Try it out today!</p>
+            <div>
+                <button class="like-button" id="status-feature-like-button" onclick="toggleLike('status-feature')"><span data-icon="heart" aria-hidden="true"></span> Like</button>
                 <span id="status-feature-likes">0 Likes</span>
             </div>
-            <div class="comment-section" style="animation: fadeInUp 1.8s ease-out">
+            <div class="comment-section">
                 <h4>Comments</h4>
-                <textarea id="comment-input-status-feature" placeholder="Add a comment..."></textarea>
-                <button onclick="submitComment('status-feature')">Post Comment</button>
+                <textarea id="comment-input-status-feature" placeholder="Add a comment..." aria-label="Write a comment"></textarea>
+                <button onclick="submitComment('status-feature')"><span data-icon="send" aria-hidden="true"></span> Post comment</button>
                 <div id="comments-list-status-feature"></div>
             </div>
         </div>
-        <div class="news-article" style="animation: fadeInScale 0.8s ease-out">
-            <h3 style="animation: slideInRight 1s ease-out">Create Your Own Articles - Now Live! 🎉</h3>
-            <p>Published on: <span class="date" style="animation: fadeIn 1.2s ease-out">2024-12-04</span></p>
-            <p style="animation: slideInLeft 1.4s ease-out">The wait is over! You can now create and share your own articles on LYRIA News. Click the + button in the top-right corner to start sharing your stories, updates, and announcements with the LYRIA community. Your voice matters - start contributing today!</p>
-            <div style="animation: bounceIn 1.6s ease-out">
-                <button class="like-button" id="article-creation-like-button" onclick="toggleLike('article-creation')">👍 Like</button>
+        <div class="news-article">
+            <h3>Create Your Own Articles - Now Live! 🎉</h3>
+            <p>Published on: <span class="date">2024-12-04</span></p>
+            <p>The wait is over! You can now create and share your own articles on LYRIA News. Click the + button in the top-right corner to start sharing your stories, updates, and announcements with the LYRIA community. Your voice matters - start contributing today!</p>
+            <div>
+                <button class="like-button" id="article-creation-like-button" onclick="toggleLike('article-creation')"><span data-icon="heart" aria-hidden="true"></span> Like</button>
                 <span id="article-creation-likes">0 Likes</span>
             </div>
-            <div class="comment-section" style="animation: fadeInUp 1.8s ease-out">
+            <div class="comment-section">
                 <h4>Comments</h4>
-                <textarea id="comment-input-article-creation" placeholder="Add a comment..."></textarea>
-                <button onclick="submitComment('article-creation')">Post Comment</button>
+                <textarea id="comment-input-article-creation" placeholder="Add a comment..." aria-label="Write a comment"></textarea>
+                <button onclick="submitComment('article-creation')"><span data-icon="send" aria-hidden="true"></span> Post comment</button>
                 <div id="comments-list-article-creation"></div>
             </div>
         </div>
 
-        <style>
-        @keyframes fadeInScale {
-            from {
-                opacity: 0;
-                transform: scale(0.8);
-            }
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
-        }
 
-        @keyframes slideInRight {
-            from {
-                opacity: 0;
-                transform: translateX(50px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-
-        @keyframes slideInLeft {
-            from {
-                opacity: 0;
-                transform: translateX(-50px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        @keyframes bounceIn {
-            0% {
-                opacity: 0;
-                transform: scale(0.3);
-            }
-            50% {
-                opacity: 0.9;
-                transform: scale(1.1);
-            }
-            80% {
-                opacity: 1;
-                transform: scale(0.9);
-            }
-            100% {
-                opacity: 1;
-                transform: scale(1);
-            }
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        </style>
 
         <div class="news-article">
             <h3>Create Your Own News Articles - Coming Soon!</h3>
             <p>Published on: <span class="date">2024-12-03</span></p>
             <p>Get ready to become a LYRIA news contributor! Soon you'll be able to create and share your own news posts with the LYRIA community. Share updates, announcements, and stories that matter to you. Stay tuned for this exciting feature!</p>
-            <button class="like-button" id="create-news-like-button" onclick="toggleLike('create-news')">👍 Like</button>
+            <button class="like-button" id="create-news-like-button" onclick="toggleLike('create-news')"><span data-icon="heart" aria-hidden="true"></span> Like</button>
             <span id="create-news-likes">0 Likes</span>
             <div class="comment-section">
                 <h4>Comments</h4>
-                <textarea id="comment-input-create-news" placeholder="Add a comment..."></textarea>
-                <button onclick="submitComment('create-news')">Post Comment</button>
+                <textarea id="comment-input-create-news" placeholder="Add a comment..." aria-label="Write a comment"></textarea>
+                <button onclick="submitComment('create-news')"><span data-icon="send" aria-hidden="true"></span> Post comment</button>
                 <div id="comments-list-create-news"></div>
             </div>
         </div>
@@ -992,8 +490,8 @@
             <p>As we continue to grow and evolve, we want to hear from you! We're looking for suggestions on how to improve and expand the LYRIA platform. What features would you like to see added? What changes would make your experience better? Share your ideas with us and help shape the future of LYRIA!</p>
             <div class="comment-section">
                 <h4>Comments</h4>
-                <textarea id="comment-input-article1" placeholder="Add a comment..."></textarea>
-                <button onclick="submitComment('article1')">Post Comment</button>
+                <textarea id="comment-input-article1" placeholder="Add a comment..." aria-label="Write a comment"></textarea>
+                <button onclick="submitComment('article1')"><span data-icon="send" aria-hidden="true"></span> Post comment</button>
                 <div id="comments-list-article1"></div>
             </div>
         </div>
@@ -1002,12 +500,12 @@
             <h3>LYRIA Browser Temporarily Removed for Bug Fixes</h3>
             <p>Published on: <span class="date">2024-11-28</span></p>
             <p>As part of our ongoing efforts to ensure the highest quality experience for our users, we have temporarily removed the LYRIA Web Browser from our platform. This decision was made to address several bugs and issues that have been reported by our users. We are working diligently to resolve these issues and improve the overall performance of the browser. We apologize for any inconvenience this may cause and appreciate your patience as we work to bring back a better, more reliable browser experience.</p>
-            <button class="like-button" id="browser-removal-like-button" onclick="toggleLike('browser-removal')">👍 Like</button>
+            <button class="like-button" id="browser-removal-like-button" onclick="toggleLike('browser-removal')"><span data-icon="heart" aria-hidden="true"></span> Like</button>
             <span id="browser-removal-likes">0 Likes</span>
             <div class="comment-section">
                 <h4>Comments</h4>
-                <textarea id="comment-input-browser-removal" placeholder="Add a comment..."></textarea>
-                <button onclick="submitComment('browser-removal')">Post Comment</button>
+                <textarea id="comment-input-browser-removal" placeholder="Add a comment..." aria-label="Write a comment"></textarea>
+                <button onclick="submitComment('browser-removal')"><span data-icon="send" aria-hidden="true"></span> Post comment</button>
                 <div id="comments-list-browser-removal"></div>
             </div>
         </div>
@@ -1016,12 +514,12 @@
             <h3>LYRIA Web Browser Now Available!</h3>
             <p>Published on: <span class="date">2024-11-25</span></p>
             <p>We're thrilled to announce the release of our very own LYRIA Web Browser! Now available for both Mac and Windows, our browser offers a seamless and integrated experience with the LYRIA platform. Features include enhanced privacy controls, built-in chat functionality, and optimized performance for LYRIA services. Download now to experience the web the LYRIA way!</p>
-            <button class="like-button" id="browser-release-like-button" onclick="toggleLike('browser-release')">👍 Like</button>
+            <button class="like-button" id="browser-release-like-button" onclick="toggleLike('browser-release')"><span data-icon="heart" aria-hidden="true"></span> Like</button>
             <span id="browser-release-likes">0 Likes</span>
             <div class="comment-section">
                 <h4>Comments</h4>
-                <textarea id="comment-input-browser-release" placeholder="Add a comment..."></textarea>
-                <button onclick="submitComment('browser-release')">Post Comment</button>
+                <textarea id="comment-input-browser-release" placeholder="Add a comment..." aria-label="Write a comment"></textarea>
+                <button onclick="submitComment('browser-release')"><span data-icon="send" aria-hidden="true"></span> Post comment</button>
                 <div id="comments-list-browser-release"></div>
             </div>
         </div>
@@ -1030,12 +528,12 @@
             <h3>Voice Call Feature Coming Soon!</h3>
             <p>Published on: <span class="date">2024-11-22</span></p>
             <p>We're working on implementing voice call capabilities! Soon you'll be able to have voice conversations with your friends on LYRIA. The feature will include high-quality audio, mute controls, and seamless integration with our existing chat system.</p>
-            <button class="like-button" id="voice-call-feature-like-button" onclick="toggleLike('voice-call-feature')">👍 Like</button>
+            <button class="like-button" id="voice-call-feature-like-button" onclick="toggleLike('voice-call-feature')"><span data-icon="heart" aria-hidden="true"></span> Like</button>
             <span id="voice-call-feature-likes">0 Likes</span>
             <div class="comment-section">
                 <h4>Comments</h4>
-                <textarea id="comment-input-voice-call" placeholder="Add a comment..."></textarea>
-                <button onclick="submitComment('voice-call')">Post Comment</button>
+                <textarea id="comment-input-voice-call" placeholder="Add a comment..." aria-label="Write a comment"></textarea>
+                <button onclick="submitComment('voice-call')"><span data-icon="send" aria-hidden="true"></span> Post comment</button>
                 <div id="comments-list-voice-call"></div>
             </div>
         </div>
@@ -1044,12 +542,12 @@
             <h3>News Articles in the making!</h3>
             <p>Published on: <span class="date">2024-11-22</span></p>
             <p>We're excited to announce the launch of our new friend request system! Users can now send, accept, and decline friend requests through their inbox. The system includes a pending section for new requests and a history section to track past interactions. Friend requests will show the sender's display name and timestamp for better tracking.</p>
-            <button class="like-button" id="news-articles-making-like-button" onclick="toggleLike('news-articles-making')">👍 Like</button>
+            <button class="like-button" id="news-articles-making-like-button" onclick="toggleLike('news-articles-making')"><span data-icon="heart" aria-hidden="true"></span> Like</button>
             <span id="news-articles-making-likes">0 Likes</span>
             <div class="comment-section">
                 <h4>Comments</h4>
-                <textarea id="comment-input-news-articles" placeholder="Add a comment..."></textarea>
-                <button onclick="submitComment('news-articles')">Post Comment</button>
+                <textarea id="comment-input-news-articles" placeholder="Add a comment..." aria-label="Write a comment"></textarea>
+                <button onclick="submitComment('news-articles')"><span data-icon="send" aria-hidden="true"></span> Post comment</button>
                 <div id="comments-list-news-articles"></div>
             </div>
         </div>
@@ -1058,12 +556,12 @@
             <h3>New Friend Request System Launch!</h3>
             <p>Published on: <span class="date">2024-01-15</span></p>
             <p>We're excited to announce the launch of our new friend request system! Users can now send, accept, and decline friend requests through their inbox. The system includes a pending section for new requests and a history section to track past interactions. Friend requests will show the sender's display name and timestamp for better tracking.</p>
-            <button class="like-button" id="friend-request-launch-like-button" onclick="toggleLike('friend-request-launch')">👍 Like</button>
+            <button class="like-button" id="friend-request-launch-like-button" onclick="toggleLike('friend-request-launch')"><span data-icon="heart" aria-hidden="true"></span> Like</button>
             <span id="friend-request-launch-likes">0 Likes</span>
             <div class="comment-section">
                 <h4>Comments</h4>
-                <textarea id="comment-input-friend-request" placeholder="Add a comment..."></textarea>
-                <button onclick="submitComment('friend-request')">Post Comment</button>
+                <textarea id="comment-input-friend-request" placeholder="Add a comment..." aria-label="Write a comment"></textarea>
+                <button onclick="submitComment('friend-request')"><span data-icon="send" aria-hidden="true"></span> Post comment</button>
                 <div id="comments-list-friend-request"></div>
             </div>
         </div>
@@ -1072,12 +570,12 @@
             <h3>Beta Tester Recognition Program</h3>
             <p>Published on: <span class="date">2024-01-14</span></p>
             <p>As a special thank you to our early adopters, we're awarding Beta Tester badges to all users who sign up during our beta phase! These exclusive badges will be a permanent recognition of your early support of LYRIA. Join now to claim your Beta Tester status!</p>
-            <button class="like-button" id="beta-tester-recognition-like-button" onclick="toggleLike('beta-tester-recognition')">👍 Like</button>
+            <button class="like-button" id="beta-tester-recognition-like-button" onclick="toggleLike('beta-tester-recognition')"><span data-icon="heart" aria-hidden="true"></span> Like</button>
             <span id="beta-tester-recognition-likes">0 Likes</span>
             <div class="comment-section">
                 <h4>Comments</h4>
-                <textarea id="comment-input-beta-tester" placeholder="Add a comment..."></textarea>
-                <button onclick="submitComment('beta-tester')">Post Comment</button>
+                <textarea id="comment-input-beta-tester" placeholder="Add a comment..." aria-label="Write a comment"></textarea>
+                <button onclick="submitComment('beta-tester')"><span data-icon="send" aria-hidden="true"></span> Post comment</button>
                 <div id="comments-list-beta-tester"></div>
             </div>
         </div>
@@ -1086,12 +584,12 @@
             <h3>Guest Access Now Available</h3>
             <p>Published on: <span class="date">2024-01-13</span></p>
             <p>Try LYRIA before signing up! We've introduced a guest login feature that allows users to explore our platform. Guest users get access to general channels and can experience our core features. Guest accounts come with basic functionality including access to the general channel and friend system.</p>
-            <button class="like-button" id="guest-access-like-button" onclick="toggleLike('guest-access')">👍 Like</button>
+            <button class="like-button" id="guest-access-like-button" onclick="toggleLike('guest-access')"><span data-icon="heart" aria-hidden="true"></span> Like</button>
             <span id="guest-access-likes">0 Likes</span>
             <div class="comment-section">
                 <h4>Comments</h4>
-                <textarea id="comment-input-guest-access" placeholder="Add a comment..."></textarea>
-                <button onclick="submitComment('guest-access')">Post Comment</button>
+                <textarea id="comment-input-guest-access" placeholder="Add a comment..." aria-label="Write a comment"></textarea>
+                <button onclick="submitComment('guest-access')"><span data-icon="send" aria-hidden="true"></span> Post comment</button>
                 <div id="comments-list-guest-access"></div>
             </div>
         </div>
@@ -1100,12 +598,12 @@
             <h3>UI Improvements for a Cleaner Experience</h3>
             <p>Published on: <span class="date">2024-01-12</span></p>
             <p>We've revamped the UI with a fresh and clean design! The new layout is more intuitive, with easy access to all major features, and looks great on both desktop and mobile. We're also introducing dark mode and a new set of emojis for richer conversations.</p>
-            <button class="like-button" id="ui-improvements-like-button" onclick="toggleLike('ui-improvements')">👍 Like</button>
+            <button class="like-button" id="ui-improvements-like-button" onclick="toggleLike('ui-improvements')"><span data-icon="heart" aria-hidden="true"></span> Like</button>
             <span id="ui-improvements-likes">0 Likes</span>
             <div class="comment-section">
                 <h4>Comments</h4>
-                <textarea id="comment-input-ui-improvements" placeholder="Add a comment..."></textarea>
-                <button onclick="submitComment('ui-improvements')">Post Comment</button>
+                <textarea id="comment-input-ui-improvements" placeholder="Add a comment..." aria-label="Write a comment"></textarea>
+                <button onclick="submitComment('ui-improvements')"><span data-icon="send" aria-hidden="true"></span> Post comment</button>
                 <div id="comments-list-ui-improvements"></div>
             </div>
         </div>
@@ -1114,12 +612,12 @@
             <h3>Initial Release of LYRIA!</h3>
             <p>Published on: <span class="date">2023-12-01</span></p>
             <p>The moment has finally arrived! LYRIA is now live! We're proud to announce the official launch of our platform, bringing you a new and innovative way to chat with friends, join groups, and stay connected with the community.</p>
-            <button class="like-button" id="initial-release-like-button" onclick="toggleLike('initial-release')">👍 Like</button>
+            <button class="like-button" id="initial-release-like-button" onclick="toggleLike('initial-release')"><span data-icon="heart" aria-hidden="true"></span> Like</button>
             <span id="initial-release-likes">0 Likes</span>
             <div class="comment-section">
                 <h4>Comments</h4>
-                <textarea id="comment-input-initial-release" placeholder="Add a comment..."></textarea>
-                <button onclick="submitComment('initial-release')">Post Comment</button>
+                <textarea id="comment-input-initial-release" placeholder="Add a comment..." aria-label="Write a comment"></textarea>
+                <button onclick="submitComment('initial-release')"><span data-icon="send" aria-hidden="true"></span> Post comment</button>
                 <div id="comments-list-initial-release"></div>
             </div>
         </div>
@@ -1134,17 +632,17 @@
                     <label for="article-author">Author Name:</label>
                     <input type="text" id="article-author" placeholder="Enter your name (optional)">
                 </div>
-                
+
                 <div class="form-group">
                     <label for="article-title">Title:</label>
                     <input type="text" id="article-title" required placeholder="Enter article title...">
                 </div>
-                
+
                 <div class="form-group">
                     <label for="article-body">Content:</label>
                     <textarea id="article-body" required placeholder="Write your article content here..."></textarea>
                 </div>
-                
+
                 <div class="form-group">
                     <label for="article-tags">Tags (comma-separated):</label>
                     <input type="text" id="article-tags" placeholder="news, update, feature, etc...">
@@ -1152,105 +650,17 @@
 
                 <button type="submit" class="submit-article-btn">Submit Article</button>
             </form>
-            
+
             <div id="user-articles-list"></div>
         </div>
 
         <!-- Floating Action Button for Creating Articles -->
-       
+
     </div>
 
-    <footer>
-        <div id="version-info">
-            LYRIA News Version: Beta 3.0.0<br>
-            &copy; 2024 LYRIA. All rights reserved. Trademarked by LYRIA.
-        </div>
-    </footer>
+    <footer>© 2026 LYRIA · Made for real connection. <a href="home.html">Back to the community</a></footer>
 
-    <script>
-    function confirmDownload(platform) {
-        let message = platform === 'mac' 
-            ? 'Download LYRIA Browser for Mac?' 
-            : 'Download LYRIA Browser for Windows?';
-        
-        if (confirm(message)) {
-            let downloadUrl = platform === 'mac'
-                ? 'https://drive.google.com/file/d/1ktHB1OkAlNTAa7ZFGwNuJj6HXCt9VIpY/view?usp=share_link'
-                : 'https://drive.google.com/file/d/1p3GwavOx9Nw9WMFxtfa-Pjoc6wBVNmMU/view?usp=share_link';
-                
-            window.location.href = downloadUrl;
-            
-            alert('Thank you for downloading LYRIA Browser! Your download will begin shortly.');
-        }
-    }
 
-    // Function to submit a user article
-    async function submitUserArticle() {
-        const authorName = document.getElementById('article-author').value.trim() || 'LYRIA';
-        const title = document.getElementById('article-title').value.trim();
-        const body = document.getElementById('article-body').value.trim();
-        const tags = document.getElementById('article-tags').value
-            .split(',')
-            .map(tag => tag.trim())
-            .filter(tag => tag.length > 0);
-
-        if (!title || !body) {
-            alert('Please fill in both title and content fields');
-            return;
-        }
-
-        try {
-            await addDoc(collection(db, 'userArticles'), {
-                authorName,
-                title,
-                body,
-                tags,
-                timestamp: new Date().toISOString()
-            });
-
-            // Clear form
-            document.getElementById('article-form').reset();
-            alert('Article submitted successfully!');
-        } catch (error) {
-            console.error('Error submitting article:', error);
-            alert('Error submitting article. Please try again.');
-        }
-    }
-
-    // Load and display user articles
-    function loadUserArticles() {
-        const q = query(collection(db, 'userArticles'), orderBy('timestamp', 'desc'));
-        
-        onSnapshot(q, (snapshot) => {
-            const newsContainer = document.querySelector('.news-container');
-            const firstNewsArticle = newsContainer.querySelector('.news-article');
-
-            snapshot.forEach((doc) => {
-                const article = doc.data();
-                const articleElement = document.createElement('div');
-                articleElement.className = 'news-article user-submitted';
-                
-                articleElement.innerHTML = `
-                    <div class="user-submitted-tag">User Submitted</div>
-                    <h3>${article.title}</h3>
-                    <div class="article-meta">
-                        <span class="article-author">By: ${article.authorName || 'LYRIA'}</span>
-                        <span class="date">Published on: ${formatDate(article.timestamp)}</span>
-                    </div>
-                    <p>${article.body}</p>
-                    <div class="article-tags">
-                        ${article.tags.map(tag => `<span class="article-tag">${tag}</span>`).join('')}
-                    </div>
-                `;
-
-                // Insert after the "Latest News" heading and before the first news article
-                if (firstNewsArticle) {
-                    newsContainer.insertBefore(articleElement, firstNewsArticle);
-                }
-            });
-        });
-    }
-    </script>
 </body>
 
 </html>

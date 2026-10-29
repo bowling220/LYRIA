@@ -8,9 +8,9 @@ A modern, real-time messaging platform built with Firebase and vanilla JavaScrip
 - **User Authentication**: Secure login with Google or anonymous access
 - **Channel System**: Create and join channels for organized conversations
 - **Friend System**: Add friends and see their online status
-- **Premium Features**: Upgrade for enhanced functionality
+- **Premium Preview**: Planned pricing and benefits; checkout is not connected
 - **Mobile Responsive**: Works seamlessly on desktop and mobile devices
-- **Dark/Light Theme**: Toggle between themes for better user experience
+- **Consistent Theme**: One forest-and-mint theme with an optional higher-contrast mode
 
 ## 📁 Project Structure
 
@@ -19,22 +19,36 @@ LYRIA/
 ├── assets/
 │   └── images/          # Image assets (logos, icons, etc.)
 ├── css/
-│   ├── main.css         # Main consolidated stylesheet
-│   └── components/      # Component-specific styles
+│   └── theme.css        # Shared design tokens, components, and responsive layouts
 ├── js/
 │   ├── config.js        # Firebase configuration
 │   ├── utils.js         # Utility functions and error handling
-│   └── modules/         # JavaScript modules
+│   ├── ui.js            # Shared local SVG icons, dialogs, and feedback
+│   ├── community.js     # Profile settings, friends, and GIF controls
+│   └── mobile.js        # Keyboard-aware visual viewport handling
 ├── chat.js              # Main chat functionality
 ├── voiceCall.js         # Voice calling features
-├── inbox.js             # Inbox and friend request handling
+├── tests/               # Browser smoke checks with an in-memory Firebase fixture
 ├── index.html           # Landing page
 ├── home.html            # Main chat application
 ├── login.html           # Authentication page
 ├── inbox.html           # Inbox page
 ├── News.html            # News feed
-└── premium-upgrade.html # Premium upgrade page
+└── premium-upgrade.html # Planned Premium pricing; checkout disabled
 ```
+
+## Shared web interface
+
+All six web pages load `css/theme.css` and `js/ui.js`. Edit the theme's root
+variables for colors and typography; reuse the shared button, dialog, card, and
+navigation classes instead of adding per-page style blocks. `LyriaUI.icon(name)`
+and `data-icon` use the same local SVG icon set. Routine feedback uses
+`LyriaUI.notify(message, type)`; dialogs share keyboard focus management and
+Escape/backdrop dismissal. The older CSS files remain for historical reference
+and are no longer loaded by the web pages.
+
+`npm run build` creates the production assets. See [tests/README.md](tests/README.md)
+for reproducible browser checks and the remaining live-service checks.
 
 ## 🛠️ Installation & Setup
 

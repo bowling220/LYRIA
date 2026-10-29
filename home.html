@@ -4,101 +4,38 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
         <title>Community — LYRIA</title>
-        
+
         <!-- Meta Tags for Educational Purpose -->
         <meta name="description" content="LYRIA Chat is an educational platform designed to facilitate communication and collaboration among students and educators.">
         <meta name="keywords" content="education, chat, communication, students, teachers, learning, collaboration">
         <meta name="author" content="Bowling220 & TurquoiseBrush">
         <meta name="robots" content="index, follow">
-        <meta name="theme-color" content="#5865f2">
+        <meta name="theme-color" content="#101b17">
         <link rel="preconnect" href="https://www.gstatic.com">
         <link rel="preload" href="assets/icon.png" as="image">
-    
-        <link rel="stylesheet" href="css/main.css">
-        
+
         <!-- Firebase SDKs -->
         <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
         <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
         <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
-        
+
         <!-- Utility Scripts -->
         <script src="js/config.js"></script>
         <script src="js/utils.js"></script>
         <script src="js/performance.js"></script>
-        
+
         <!-- PeerJS powers voice calls -->
         <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.3.1/peerjs.min.js"></script>
         <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9049091067762501" crossorigin="anonymous"></script>
-
-       <style>
-            /* Background Options */
-            #background-options {
-                display: flex; /* Use flexbox for layout */
-                justify-content: space-around; /* Space out the images */
-                flex-wrap: wrap; /* Allow wrapping to the next line if needed */
-                margin-top: 10px; /* Space above the options */
-            }
-
-            .background-option {
-                cursor: pointer; /* Pointer cursor on hover */
-                width: 50px; /* Smaller width for thumbnails */
-                height: auto; /* Maintain aspect ratio */
-                border: 2px solid transparent; /* Default border */
-                transition: border-color 0.3s; /* Transition for border color */
-            }
-
-            .background-option:hover {
-                border-color: #5865f2; /* Highlight border on hover */
-            }
-            .centered-heading {
-    text-align: center; /* Centers the heading */
-}
-
-.info-text {
-    color: rgb(255, 0, 0); /* White color for the information part */
-    background-color: #1e272e; /* Dark background to make it stand out */
-    padding: 5px 10px; /* Add padding to make it feel more like a tag */
-    border-radius: 5px; /* Slightly rounded corners for a soft look */
-    font-size: 1rem; /* Slightly smaller font size to differentiate */
-    margin-left: 10px; /* Space it out from the main heading */
-    display: inline-block; /* Keep it inline with the heading */
-}
-
-/* Maintenance Overlay Styling */
-.maintenance-overlay {
-    position: fixed; /* Cover the entire screen */
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.8); /* Semi-transparent background */
-    color: white; /* Text color */
-    display: flex;
-    flex-direction: column;
-    justify-content: center; /* Center vertically */
-    align-items: center; /* Center horizontally */
-    z-index: 1000; /* Ensure it is on top of other content */
-}
-
-        </style>
-        <link rel="stylesheet" href="css/lyria-v6.css">
         <script src="js/mobile.js" defer></script>
-    </head>
+      <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="stylesheet" href="css/theme.css">
+  <script src="js/ui.js"></script>
+</head>
 <body class="app-page">
 
 
-    <!-- Mobile Experience Message -->
-    <div id="mobile-message" style="display: none; background-color: #ffcccb; padding: 10px; text-align: center; position: sticky; top: 0; z-index: 1000;">
-        You're viewing LYRIA's compact mobile layout.
-        <button id="close-mobile-message" style="margin-left: 10px; background-color: #f44336; color: white; border: none; cursor: pointer;">
-            Close
-        </button>
-    </div>
-
-    <header class="top-header">
-        <button class="menu-toggle" id="header-menu-toggle" aria-label="Open community menu" aria-expanded="false" aria-controls="community-sidebar">☰</button>
-        <h1 style="flex: 1; text-align: center; margin: 0; font-size: 1.2rem;">LYRIA / COMMUNITY</h1>
-    </header>
+    <header class="top-header"><button class="menu-toggle" id="header-menu-toggle" aria-label="Open community menu" aria-expanded="false" aria-controls="community-sidebar"><span data-icon="menu" aria-hidden="true"></span></button><a class="brand" href="index.html" aria-label="LYRIA home"><span class="brand-mark"><span data-icon="chat" aria-hidden="true"></span></span><span>LYRIA</span></a><span class="header-divider"></span><span class="header-location">Your community</span><nav class="header-nav" aria-label="Main navigation"><a class="" href="home.html" aria-current="page">Community</a><a class="news-link" href="News.html">News</a><a class="nav-premium" href="premium-upgrade.html">Premium</a></nav></header>
     <div class="app-container">
         <aside class="sidebar" id="community-sidebar" aria-label="Community navigation">
             <div class="sidebar-mobile-header">
@@ -106,25 +43,26 @@
                     <span>LYRIA</span>
                     <strong>Your community</strong>
                 </div>
-                <button id="close-mobile-menu" class="close-mobile-menu" type="button" aria-label="Close community menu">&times;</button>
+                <button id="close-mobile-menu" class="close-mobile-menu" type="button" aria-label="Close community menu"><span data-icon="close" aria-hidden="true"></span></button>
             </div>
+            <div class="workspace-heading"><span>Your corner of the internet</span><h2>Make yourself at home.</h2><p>Good conversations start here.</p></div>
             <div class="channels">
-                <h3 class="centered-heading">Conversations<span class="info-text">Refresh once if a new channel does not appear.</span></h3>
+                <h3>Conversations</h3>
                 <ul class="channels-list" id="channels-list"></ul>
                 <div class="channel-actions" aria-label="Channel actions">
-                    <button class="add-channel-btn" id="add-channel"><span aria-hidden="true">+</span> New</button>
-                    <button class="join-channel-btn" id="join-channel"><span aria-hidden="true">#</span> Join</button>
+                    <button class="add-channel-btn" id="add-channel"><span data-icon="plus" aria-hidden="true"></span> New</button>
+                    <button class="join-channel-btn" id="join-channel"><span data-icon="hash" aria-hidden="true"></span> Join</button>
                     <button class="leave-channel-btn" id="leave-channel" disabled>Personal channel</button>
                 </div>
             </div>
             <nav class="sidebar-nav" aria-label="Community links">
                 <button class="sidebar-nav-item" id="news-feed-button" onclick="window.location.href='News.html'">
-                    <span class="sidebar-nav-icon" aria-hidden="true">&#9670;</span>
+                    <span data-icon="news" aria-hidden="true"></span>
                     <span>News</span>
                     <span class="new-pill">New</span>
                 </button>
                 <button id="open-friends-modal" class="sidebar-nav-item">
-                    <span class="sidebar-nav-icon" aria-hidden="true">&#9675;</span>
+                    <span data-icon="users" aria-hidden="true"></span>
                     <span>Friends</span>
                 </button>
             </nav>
@@ -133,38 +71,34 @@
             <div class="suggestions-section sidebar-suggestion">
                 <h3>Help shape LYRIA</h3>
                 <p>Have an idea that would make the community better?</p>
-                <button id="open-suggestions-modal" class="suggestions-link">Share an idea &rarr;</button>
+                <button id="open-suggestions-modal" class="suggestions-link">Share an idea <span data-icon="arrow" aria-hidden="true"></span></button>
             </div>
 
             <div class="user-profile">
                 <button class="user-profile-trigger" id="user-profile-trigger" type="button" aria-label="Open your profile">
-                    <img class="avatar" id="user-avatar" src="assets/icon.png" alt="User avatar" width="40" height="40">
+                    <img class="avatar" id="user-avatar" src="assets/avatar.svg" alt="User avatar" width="40" height="40">
                     <span class="username" id="user-name">User</span>
                 </button>
-                <button class="settings-btn" id="settings-btn">Settings</button>
+                <button class="settings-btn" id="settings-btn" aria-label="Open settings" title="Settings"><span data-icon="settings" aria-hidden="true"></span></button>
             </div>
 
         </aside>
         <main class="chat-area">
             <header class="chat-header">
-                <h2 id="channel-title"># general</h2>
-                <button id="make-voice-call" class="voice-call-btn" type="button">Join voice</button>
-                <button id="end-call" class="voice-call-btn voice-call-end" type="button" style="display: none;">Leave voice</button>
-                <button id="copy-join-code" class="copy-join-code-btn">Invite</button>
-                <button id="inbox-btn" aria-label="Open inbox" onclick="window.location.href='inbox.html'" style="background: none; border: none; color: var(--text-color); cursor: pointer; padding: 8px; font-size: 1.2rem;">
-                    Inbox <span id="friend-request-count" style="background: red; color: white; padding: 2px 6px; border-radius: 50%; font-size: 0.8rem; display: none;">1</span>
-                </button>
+                <div class="chat-title-group"><span class="channel-symbol" aria-hidden="true"><span data-icon="hash" aria-hidden="true"></span></span><div><h2 id="channel-title">Your conversations</h2><p class="chat-subtitle">A little space to stay connected.</p></div></div>
+                <button id="make-voice-call" class="voice-call-btn" type="button" aria-label="Join voice call" title="Join voice"><span data-icon="mic" aria-hidden="true"></span><span class="button-label">Join voice</span></button>
+                <button id="end-call" class="voice-call-btn voice-call-end" type="button" aria-label="Leave voice call" title="Leave voice" style="display:none"><span data-icon="phoneOff" aria-hidden="true"></span><span class="button-label">Leave voice</span></button>
+                <button id="copy-join-code" class="copy-join-code-btn" aria-label="Copy channel invite code" title="Copy invite code"><span data-icon="link" aria-hidden="true"></span><span class="button-label">Invite</span></button>
+                <button id="inbox-btn" aria-label="Open friend requests" title="Friend requests" onclick="window.location.href='inbox.html'"><span data-icon="inbox" aria-hidden="true"></span><span id="friend-request-count" class="count-badge" style="display:none">0</span></button>
             </header>
-            <div class="messages" id="messages"></div>
+            <div class="messages" id="messages" role="log" aria-label="Conversation messages" aria-live="polite"><div class="empty-state"><span class="empty-icon"><span data-icon="chat" aria-hidden="true"></span></span><h2>Getting your space ready.</h2><p>Your conversations will appear here in a moment.</p></div></div>
             <!-- Typing Status Indicator -->
             <div id="typing-status" class="typing-status" style="display: none;"></div>
             <div class="message-input">
-                <textarea id="message-input" aria-label="Message" placeholder="Write a message..." rows="2"></textarea>
-                <button id="gif-button" class="gif-btn" type="button" aria-label="Share a GIF">GIF</button>
-                <button id="send-button" class="send-btn" style="background-color: rgba(255, 255, 255, 0.2); color: rgb(0, 0, 0); border: 1px solid rgba(255, 255, 255, 0.4); padding: 6px 12px; font-size: 14px; cursor: pointer; border-radius: 8px; backdrop-filter: blur(4px); margin-right: 100px;">
-                    Send
-                </button>
-            </div>
+                <textarea id="message-input" aria-label="Message" placeholder="Write a message…" rows="1" maxlength="4000"></textarea>
+                <button id="gif-button" class="gif-btn" type="button" aria-label="Share a GIF" title="Share a GIF"><span data-icon="image" aria-hidden="true"></span><span class="button-label">GIF</span></button>
+                <button id="send-button" class="send-btn" type="button" aria-label="Send message"><span data-icon="send" aria-hidden="true"></span><span class="button-label">Send</span></button>
+            </div><p class="composer-hint">Enter to send · Shift + Enter for a new line</p>
         </main>
     </div>
 
@@ -173,10 +107,10 @@
          block for position:fixed descendants, which trapped this modal off-screen too) -->
     <div id="friends-modal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="friends-modal-title">
         <div class="modal-content">
-            <button id="close-friends-modal" class="close-button" aria-label="Close Friends Modal">&times;</button>
+            <button id="close-friends-modal" class="close-button" aria-label="Close Friends Modal"><span data-icon="close" aria-hidden="true"></span></button>
             <h2 id="friends-modal-title">Friends</h2>
             <ul class="friends-list" id="friends-list">
-                Add Some Friends!
+                <li class="empty-state"><span class="empty-icon"><span data-icon="users" aria-hidden="true"></span></span><p>Your friends will appear here.</p></li>
             </ul>
             <div class="set-status">
                 <h4>Set Your Status</h4>
@@ -199,7 +133,7 @@
             </div>
             <div class="profile-card-body">
                 <div class="profile-avatar-shell">
-                    <img id="profile-modal-image" src="assets/icon.png" alt="User avatar" width="96" height="96">
+                    <img id="profile-modal-image" src="assets/avatar.svg" alt="User avatar" width="96" height="96">
                     <span class="profile-presence" aria-hidden="true"></span>
                 </div>
                 <div class="profile-identity">
@@ -218,16 +152,12 @@
                 </section>
                 <button id="send-friend-request" class="action-btn profile-friend-action" type="button">Send friend request</button>
             </div>
-            <button id="close-profile-modal" class="close-button profile-close" type="button" aria-label="Close profile">&times;</button>
+            <button id="close-profile-modal" class="close-button profile-close" type="button" aria-label="Close profile"><span data-icon="close" aria-hidden="true"></span></button>
         </div>
     </div>
-<div id="version-info" style="position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); color: var(--text-color); font-size: 12px; font-weight: bold; text-shadow: 1px 1px 2px var(--background-color);">
-    LYRIA 6.0 &copy; 2026
-</div>
-
 <div id="confirm-image-change-modal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="confirm-image-change-title">
     <div class="modal-content compact-modal">
-        <button id="close-confirm-image-change-modal" class="close-button" aria-label="Close confirmation">&times;</button>
+        <button id="close-confirm-image-change-modal" class="close-button" aria-label="Close confirmation"><span data-icon="close" aria-hidden="true"></span></button>
         <h2 id="confirm-image-change-title">Use this profile image?</h2>
         <p>Your selected image will become your LYRIA avatar.</p>
         <div class="modal-actions">
@@ -239,7 +169,7 @@
 
 <div id="gif-modal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="gif-modal-title">
     <div class="modal-content compact-modal">
-        <button id="close-gif-modal" class="close-button" aria-label="Close GIF dialog">&times;</button>
+        <button id="close-gif-modal" class="close-button" aria-label="Close GIF dialog"><span data-icon="close" aria-hidden="true"></span></button>
         <h2 id="gif-modal-title">Share a GIF</h2>
         <p>Paste a direct link to a GIF from a source you trust.</p>
         <label for="gif-url-input" class="modal-label">GIF URL</label>
@@ -250,7 +180,7 @@
 
 <div id="channel-action-modal" class="modal" aria-hidden="true" inert role="dialog" aria-labelledby="channel-action-title">
     <div class="modal-content compact-modal channel-action-sheet">
-        <button id="close-channel-action-modal" class="close-button" type="button" aria-label="Close channel dialog">&times;</button>
+        <button id="close-channel-action-modal" class="close-button" type="button" aria-label="Close channel dialog"><span data-icon="close" aria-hidden="true"></span></button>
         <p class="modal-eyebrow">Conversations</p>
         <h2 id="channel-action-title">Start a conversation</h2>
         <p id="channel-action-description">Give your new conversation a short, memorable name.</p>
@@ -268,44 +198,44 @@
 <!-- Settings Modal -->
 <div id="settings-modal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="settings-modal-title">
     <div class="modal-content">
-        <button id="close-modal" class="close-button" aria-label="Close Settings Modal">&times;</button>
+        <button id="close-modal" class="close-button" aria-label="Close Settings Modal"><span data-icon="close" aria-hidden="true"></span></button>
         <h2 id="settings-modal-title">Settings</h2>
-        
+
         <!-- Toggle Dark Mode -->
         <div class="modal-section">
-            <button id="toggle-dark-mode" class="action-btn">Toggle Dark Mode</button>
+            <button id="toggle-dark-mode" class="action-btn" aria-pressed="false"><span data-icon="contrast" aria-hidden="true"></span> Increase contrast</button>
         </div>
-        
+
         <!-- Update Profile Image -->
         <div class="modal-section">
             <label for="profile-image-input" class="modal-label">Update Profile Image:</label>
             <input type="file" id="profile-image-input" class="modal-input" accept="image/*" disabled>
             <button id="update-profile-image" class="action-btn" disabled>Update Image (Premium)</button>
-            <p class="premium-info" style="color: #ffcc00;">Premium users can change their profile picture.</p>
+            <p class="premium-info">Premium users can change their profile picture.</p>
         </div>
 
-      
+
 
         <!-- Upgrade to Premium Section -->
         <div class="modal-section">
-            <button id="upgrade-to-premium" class="action-btn upgrade-btn">👑 Upgrade to Premium</button>
-            <p style="color: #ffcc00;">Unlock premium features by upgrading your account!</p>
+            <button id="upgrade-to-premium" class="action-btn upgrade-btn"><span data-icon="sparkles" aria-hidden="true"></span> Explore Premium</button>
+            <p>See what’s included in LYRIA Premium.</p>
         </div>
 
         <!-- Update Display Name -->
         <div class="modal-section">
             <label for="display-name-input" class="modal-label">Update Display Name:</label>
-            <input type="text" id="display-name-input" class="modal-input" placeholder="Enter new display name">
+            <input type="text" id="display-name-input" maxlength="48" class="modal-input" placeholder="Enter new display name">
             <button id="update-display-name" class="action-btn">Update Name</button>
         </div>
-        
+
         <!-- Update Bio Section -->
         <div class="modal-section">
             <label for="bio-input" class="modal-label">Update Bio:</label>
-            <input type="text" id="bio-input" class="modal-input" placeholder="Enter your bio">
+            <input type="text" id="bio-input" maxlength="240" class="modal-input" placeholder="Enter your bio">
             <button id="update-bio-btn" class="action-btn">Update Bio</button>
         </div>
-        
+
         <!-- Enable Notifications -->
         <div class="modal-section">
             <label class="toggle-switch">
@@ -314,7 +244,7 @@
                 Enable Notifications
             </label>
         </div>
-        
+
         <!-- Toggle Badge Visibility (only visible if user has the admin badge) -->
         <div class="modal-section" id="badge-visibility-section" style="display: none;">
             <label class="toggle-switch">
@@ -323,10 +253,10 @@
                 Show Badges
             </label>
         </div>
-        
+
         <!-- Logout Button -->
         <div class="modal-section">
-            <button id="logout-btn" class="action-btn logout-btn">Logout</button>
+            <button id="logout-btn" class="action-btn logout-btn"><span data-icon="logout" aria-hidden="true"></span> Sign out</button>
         </div>
     </div>
 </div>
@@ -334,594 +264,17 @@
     <!-- Include voiceCall.js before chat.js -->
     <script src="voiceCall.js"></script>
     <script src="chat.js"></script>
+    <script src="js/community.js"></script>
 
     <!-- Firebase initialization check -->
-    <script>
-        // Wait for Firebase to be initialized before using it
-        function waitForFirebase() {
-            if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
-                // Firebase is ready, initialize the rest of the app
-                console.log('Firebase initialized, starting home page...');
-            } else {
-                // Wait and try again
-                setTimeout(waitForFirebase, 100);
-            }
-        }
-
-        // Start waiting for Firebase
-        waitForFirebase();
-    </script>
-
-    <script>
-        function changeBackground(image) {
-            document.body.style.backgroundImage = `url(${image})`;
-        }
-
-        function changeProfileImage(image) {
-            const profileModalImage = document.getElementById('profile-modal-image');
-            profileModalImage.src = image; // Update the profile image
-
-            const currentUser = firebase.auth().currentUser;
-            if (currentUser) {
-                // Update Firestore with the new background image
-                db.collection('users').doc(currentUser.uid).update({
-                    backgroundImage: image
-                }).then(() => {
-                    console.log('Background image updated successfully!');
-                }).catch((error) => {
-                    console.error('Error updating background image:', error);
-                });
-            }
-        }
-
-        // Detect if the user is on a mobile device
-        function isMobileDevice() {
-            return /Mobi|Android|iPhone|iPad|iPod|Windows Phone/i.test(navigator.userAgent);
-        }
-
-        // Display the mobile message if on a mobile device
-        window.addEventListener('load', () => {
-            const mobileMessage = document.getElementById('mobile-message');
-            if (isMobileDevice()) {
-                mobileMessage.style.display = 'block';
-            }
-        });
-
-        // Close the mobile message
-        document.getElementById('close-mobile-message').addEventListener('click', () => {
-            const mobileMessage = document.getElementById('mobile-message');
-            mobileMessage.style.display = 'none';
-        });
-
-        // Assuming you have already initialized Firebase and authenticated the user
-        firebase.auth().onAuthStateChanged(user => {
-            if (user) {
-                const userId = user.uid;
-
-                // Wait for Firebase to be ready before using db
-                function waitForDb() {
-                    if (typeof db !== 'undefined') {
-                        // Fetch user data from Firestore
-                        db.collection('users').doc(userId).get().then(doc => {
-                    if (doc.exists) {
-                        const userData = doc.data();
-                        document.getElementById('user-name').textContent = userData.displayName;
-                        document.getElementById('user-avatar').src = userData.photoURL || 'assets/icon.png';
-
-                        // Set initial values for settings
-                        document.getElementById('notifications-toggle').checked = userData.notificationsEnabled || false;
-                        document.getElementById('bio-input').value = userData.bio || '';
-                        document.getElementById('profile-modal-bio').textContent = userData.bio || 'No bio added yet.';
-
-                        // Set dark mode based on user preference
-                        if (userData.darkMode) {
-                            document.body.classList.add('dark-mode');
-                        }
-
-                        // Load friends
-                        loadFriends(userId);
-                        
-                        // Check for friend requests
-                        checkFriendRequests(userId);
-
-                        // Check if user is premium and unlock features
-                        if (userData.isPremium) {
-                            // Enable premium features
-                            document.getElementById('profile-image-input').disabled = false;
-                            document.getElementById('update-profile-image').disabled = false;
-                            document.getElementById('bio-input').disabled = false;
-                            document.getElementById('update-bio-btn').disabled = false;
-                        }
-                    } else {
-                        console.log("No such document!");
-                    }
-                        }).catch(error => {
-                            console.error("Error getting document:", error);
-                        });
-
-                    } else {
-                        // db is not ready yet, wait and try again
-                        setTimeout(waitForDb, 100);
-                    }
-                }
-
-                // Check if the user is the one to be banned
-                if (userId === '') {
-                    // Disable the News Feed button
-                    const newsButton = document.getElementById('news-feed-button');
-                    if (newsButton) {
-                        newsButton.disabled = true;
-                        newsButton.style.cursor = 'not-allowed';
-                        newsButton.title = 'Access to News Feed is restricted.';
-                    }
-                }
-
-                // Start waiting for db to be ready
-                waitForDb();
-            }
-        });
-
-        // Function to check for friend requests
-        function checkFriendRequests(userId) {
-            db.collection('friendRequests')
-                .where('to', '==', userId)
-                .onSnapshot(snapshot => {
-                    const requestCount = snapshot.docs.length;
-                    const countElement = document.getElementById('friend-request-count');
-                    if (requestCount > 0) {
-                        countElement.style.display = 'inline';
-                        countElement.textContent = requestCount;
-                    } else {
-                        countElement.style.display = 'none';
-                    }
-                });
-        }
-
-        // Function to remove friend
-        async function removeFriend(friendId) {
-            const currentUser = firebase.auth().currentUser;
-            if (!currentUser) return;
-
-            try {
-                // Remove friend from current user's friends list
-                await db.collection('users').doc(currentUser.uid).update({
-                    friends: firebase.firestore.FieldValue.arrayRemove(friendId)
-                });
-
-                // Remove current user from friend's friends list
-                await db.collection('users').doc(friendId).update({
-                    friends: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)
-                });
-
-                // Reload friends list
-                loadFriends(currentUser.uid);
-            } catch (error) {
-                console.error('Error removing friend:', error);
-                alert('Failed to remove friend. Please try again.');
-            }
-        }
-
-        // Function to load friends with images and names
-        async function loadFriends(userId) {
-            const friendsList = document.getElementById('friends-list');
-            friendsList.innerHTML = ''; // Clear previous content
-
-            try {
-                // Get the current user's document
-                const userDoc = await db.collection('users').doc(userId).get();
-
-                if (userDoc.exists) {
-                    const userData = userDoc.data();
-                    const friends = userData.friends || []; // Get the friends array
-
-                    if (friends.length === 0) {
-                        friendsList.innerHTML = '<li>No friends added yet.</li>';
-                        return;
-                    }
-
-                    // Loop through each friend's ID
-                    for (const friendId of friends) {
-                        // Fetch friend's details from the users collection
-                        const friendDoc = await db.collection('users').doc(friendId).get();
-                        if (friendDoc.exists) {
-                            const friendData = friendDoc.data();
-                            const friendName = friendData.displayName || 'Unknown Friend';
-                            const friendAvatar = friendData.photoURL || 'default-avatar.png';
-                            const friendStatus = friendData.status || 'No status set';
-
-                            // Determine status color based on the status text
-                            let statusColor;
-                            if (friendStatus.toLowerCase() === 'available') {
-                                statusColor = 'green';
-                            } else if (friendStatus.toLowerCase() === 'busy') {
-                                statusColor = 'red';
-                            } else if (friendStatus.toLowerCase() === 'away') {
-                                statusColor = 'orange';
-                            } else {
-                                statusColor = 'gray'; // Default color for unknown status
-                            }
-
-                            // Add the friend's information to the list with remove button
-                            const listItem = document.createElement('li');
-                            listItem.innerHTML = `
-                                <img src="${friendAvatar}" alt="${friendName}" class="friend-avatar">
-                                <span class="friend-name">${friendName}</span>
-                                <span class="friend-status" style="display: inline-block; width: 10px; height: 10px; background-color: ${statusColor}; border-radius: 50%; margin-left: 10px; margin-right: 5px;"></span>
-                                <button onclick="removeFriend('${friendId}')" class="remove-friend-btn" style="margin-left: auto; background: none; border: none; color: #ff4444; cursor: pointer;">
-                                    ❌
-                                </button>
-                            `;
-                            listItem.style.display = 'flex';
-                            listItem.style.alignItems = 'center';
-                            listItem.style.justifyContent = 'space-between';
-                            friendsList.appendChild(listItem);
-                        }
-                    }
-                } else {
-                    friendsList.innerHTML = '<li>No user data found.</li>';
-                }
-            } catch (error) {
-                console.error('Error loading friends:', error);
-                friendsList.innerHTML = '<li>Failed to load friends.</li>';
-            }
-        }
-
-        async function acceptFriendRequest(requestId) {
-            const requestDoc = await db.collection('friendRequests').doc(requestId).get();
-            if (requestDoc.exists) {
-                const requestData = requestDoc.data();  
-                const currentUser = firebase.auth().currentUser;
-
-                // Update both users' friends arrays
-                await db.collection('users').doc(currentUser.uid).update({
-                    friends: firebase.firestore.FieldValue.arrayUnion(requestData.from)
-                });
-                await db.collection('users').doc(requestData.from).update({
-                    friends: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
-                });
-
-                // Remove the friend request
-                await db.collection('friendRequests').doc(requestId).delete();
-
-                alert('Friend request accepted!');
-            }
-        }
-
-        // Add event listener for profile image update
-        document.getElementById('update-profile-image').addEventListener('click', async () => {
-            const currentUser = firebase.auth().currentUser;
-            if (!currentUser) return;
-
-            const fileInput = document.getElementById('profile-image-input');
-            const file = fileInput.files[0];
-
-            if (file) {
-                // Show confirmation modal (guard: modal markup is not present on this page yet)
-                const confirmModal = document.getElementById('confirm-image-change-modal');
-                if (confirmModal) {
-                    confirmModal.style.display = 'flex';
-                    confirmModal.setAttribute('aria-hidden', 'false');
-                } else {
-                    alert('Profile image update is temporarily unavailable. Please try again later.');
-                }
-            } else {
-                alert('Please select an image file first.');
-            }
-        });
-
-        // Add event listener for the upgrade to premium button
-        document.getElementById('upgrade-to-premium').addEventListener('click', () => {
-            // Redirect to a payment page or show a modal for payment options
-            window.location.href = 'premium-upgrade.html'; // Replace with your actual upgrade page
-        });
-
-        function submitSuggestion(articleId) {
-            const suggestionInput = document.getElementById(`suggestion-input-${articleId.split('-')[1]}`);
-            const suggestionText = suggestionInput.value;
-
-            if (suggestionText.trim() !== '') {
-                const suggestionList = document.getElementById(`suggestion-list-${articleId.split('-')[1]}`);
-                const suggestionElement = document.createElement('div');
-                suggestionElement.className = 'comment';
-                suggestionElement.innerText = suggestionText;
-
-                suggestionList.appendChild(suggestionElement);
-                suggestionInput.value = ''; // Clear the input after submitting
-
-                // Optionally, save the suggestion to Firestore
-                const suggestionRef = doc(db, 'suggestions', articleId);
-                setDoc(suggestionRef, { suggestion: suggestionText }, { merge: true });
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const gifButton = document.getElementById('gif-button');
-            const gifModal = document.getElementById('gif-modal');
-            const closeGifModal = document.getElementById('close-gif-modal');
-            const gifUrlInput = document.getElementById('gif-url-input');
-            const sendGifButton = document.getElementById('send-gif-url');
-
-            gifButton?.addEventListener('click', () => {
-                gifModal.style.display = 'flex';
-                gifModal.setAttribute('aria-hidden', 'false');
-                gifUrlInput.focus();
-            });
-            closeGifModal?.addEventListener('click', () => {
-                gifModal.style.display = 'none';
-                gifModal.setAttribute('aria-hidden', 'true');
-            });
-            sendGifButton?.addEventListener('click', async () => {
-                try {
-                    await window.sendGifByUrl(gifUrlInput.value.trim());
-                    gifUrlInput.value = '';
-                    gifModal.style.display = 'none';
-                    gifModal.setAttribute('aria-hidden', 'true');
-                } catch (error) {
-                    console.error('Error sharing GIF:', error);
-                    alert('Paste a valid direct GIF URL and try again.');
-                }
-            });
-        });
-
-        // Function to display a single message
-        function displayMessage(message) {
-            const messagesContainer = document.getElementById('messages');
-            const messageElement = document.createElement('div');
-            messageElement.className = 'message';
-
-            const currentUser = firebase.auth().currentUser;
-            const isAdmin = currentUser && currentUser.admin; // Check if the user is an admin
-
-            console.log('Current User:', currentUser);
-            console.log('Is Admin:', isAdmin);
-
-            messageElement.innerHTML = `
-                <div class="message-header">
-                    <strong>${message.displayName}</strong>
-                    <span class="timestamp">${message.timestamp ? new Date(message.timestamp.toDate()).toLocaleString() : 'Just now'}</span>
-                    ${isAdmin ? '<button class="pin-message-btn" onclick="pinMessage(\'' + message.id + '\')">📌</button>' : ''}
-                </div>
-                <div class="message-content">
-                    ${message.content}
-                </div>
-            `;
-
-            messagesContainer.appendChild(messageElement);
-            messagesContainer.scrollTop = messagesContainer.scrollHeight; // Scroll to the bottom
-        }
-
-        // Function to update the user's bio
-        document.getElementById('update-bio-btn').addEventListener('click', async () => {
-            const currentUser = firebase.auth().currentUser; // Get the currently authenticated user
-            if (!currentUser) return; // Exit if no user is authenticated
-
-            const newBio = document.getElementById('bio-input').value.trim(); // Get the new bio from input
-            if (newBio === '') {
-                alert('Bio cannot be empty.'); // Alert if the bio is empty
-                return;
-            }
-
-            try {
-                // Update the user's bio in Firestore
-                await db.collection('users').doc(currentUser.uid).update({
-                    bio: newBio // Update only the current user's bio
-                });
-
-                // Optionally update the displayed bio in the UI
-                const bioProfile = document.getElementById('profile-modal-bio');
-                if (bioProfile) {
-                    bioProfile.textContent = newBio;
-                }
-
-                alert('Bio updated successfully!'); // Alert on success
-            } catch (error) {
-                console.error('Error updating bio:', error); // Log the error for debugging
-                alert('Failed to update bio. Please try again.'); // Alert on failure
-            }
-        });
-
-        // Function to load user data and display the bio and status
-        async function loadUserData(userId) {
-            // Wait for db to be ready
-            function waitForDbInLoadUserData() {
-                if (typeof db !== 'undefined') {
-                    db.collection('users').doc(userId).get()
-                        .then(userDoc => {
-                            if (userDoc.exists) {
-                                const userData = userDoc.data();
-                                document.getElementById('user-name').textContent = userData.displayName;
-                                document.getElementById('user-avatar').src = userData.photoURL || 'assets/icon.png';
-                                document.getElementById('bio-input').value = userData.bio || 'No Bio'; // Set initial bio value
-                                document.getElementById('profile-modal-bio').textContent = userData.bio || 'No bio added yet.';
-                            }
-                        }).catch(error => {
-                            console.error('Error loading user data:', error);
-                        });
-                } else {
-                    setTimeout(waitForDbInLoadUserData, 100);
-                }
-            }
-
-            waitForDbInLoadUserData();
-        }
-
-        // Wait for Firebase to be ready, then setup auth state listener
-        function setupAuthListener() {
-            if (typeof firebase !== 'undefined' && window.firebaseConfig && window.firebaseConfig.initialized) {
-                const auth = window.firebaseConfig.getAuth();
-                auth.onAuthStateChanged(user => {
-                    if (user) {
-                        const userId = user.uid;
-                        loadUserData(userId);
-                    }
-                });
-            } else {
-                setTimeout(setupAuthListener, 100);
-            }
-        }
-
-        setupAuthListener();
-
-        // Add event listener for updating status
-        document.getElementById('update-status-btn').addEventListener('click', async () => {
-            if (!window.firebaseConfig || !window.firebaseConfig.initialized) return;
-            const currentUser = window.firebaseConfig.getAuth().currentUser;
-            if (!currentUser) return;
-
-            const selectedStatus = document.getElementById('status-select').value;
-            if (selectedStatus === '') {
-                alert('Please select a status.');
-                return;
-            }
-
-            try {
-                // Update user's status in Firestore
-                await db.collection('users').doc(currentUser.uid).update({
-                    status: selectedStatus
-                });
-
-                alert('Status updated successfully!');
-                loadFriends(currentUser.uid); // Reload friends to reflect the new status
-            } catch (error) {
-                console.error('Error updating status:', error);
-                alert('Failed to update status. Please try again.');
-            }
-        });
-
-        // Open Friends Modal
-        document.getElementById('open-friends-modal').addEventListener('click', () => {
-            // 'flex' (not 'block'): every other modal opens this way, and the mobile
-            // bottom-sheet layout (align-items: end on .modal) only takes effect on
-            // a flex container.
-            const friendsModal = document.getElementById('friends-modal');
-            friendsModal.style.display = 'flex';
-            friendsModal.setAttribute('aria-hidden', 'false');
-            loadFriends(firebase.auth().currentUser.uid); // Load friends when modal opens
-        });
-
-        // Close Friends Modal
-        document.getElementById('close-friends-modal').addEventListener('click', () => {
-            const friendsModal = document.getElementById('friends-modal');
-            friendsModal.style.display = 'none';
-            friendsModal.setAttribute('aria-hidden', 'true');
-        });
-
-        async function pinMessage(messageId) {
-            const currentUser = firebase.auth().currentUser;
-            if (!currentUser) return;
-
-            try {
-                // Update the message in Firestore to mark it as pinned
-                await db.collection('channels').doc(currentChannelId).collection('messages').doc(messageId).update({
-                    pinned: true
-                });
-
-                alert('Message pinned successfully!');
-                // Optionally, refresh the messages to show the pinned message at the top
-                loadChannelMessages(currentChannelId);
-            } catch (error) {
-                console.error('Error pinning message:', error);
-                alert('Failed to pin message. Please try again.');
-            }
-        }
-
-        async function loadChannelMessages(channelId) {
-            const messagesContainer = document.getElementById('messages');
-            messagesContainer.innerHTML = ''; // Clear previous messages
-
-            // Fetch messages from Firestore
-            const messagesSnapshot = await db.collection('channels').doc(channelId).collection('messages')
-                .orderBy('timestamp', 'asc').get();
-
-            // Display pinned messages first
-            messagesSnapshot.forEach(doc => {
-                const message = { id: doc.id, ...doc.data() };
-                if (message.pinned) {
-                    displayMessage(message); // Display pinned messages
-                }
-            });
-
-            // Then display regular messages
-            messagesSnapshot.forEach(doc => {
-                const message = { id: doc.id, ...doc.data() };
-                if (!message.pinned) {
-                    displayMessage(message); // Display regular messages
-                }
-            });
-        }
-
-        // Handle confirmation of image change (guard element exists)
-        const confirmImageBtn = document.getElementById('confirm-image-change-btn');
-        if (confirmImageBtn) confirmImageBtn.addEventListener('click', async () => {
-            const currentUser = firebase.auth().currentUser;
-            const fileInput = document.getElementById('profile-image-input');
-            const file = fileInput.files[0];
-
-            if (file) {
-                try {
-                    const reader = new FileReader();
-                    reader.onload = async (e) => {
-                        const base64Image = e.target.result;
-
-                        // Update user's photoURL in Firestore with base64 string
-                        await db.collection('users').doc(currentUser.uid).update({
-                            photoURL: base64Image
-                        });
-
-                        // Update all UI elements showing the user's avatar
-                        const avatarElements = document.querySelectorAll(`img[src="${document.getElementById('user-avatar').src}"]`);
-                        avatarElements.forEach(element => {
-                            element.src = base64Image;
-                        });
-
-                        // Update profile modal image if it exists
-                        const profileModalImage = document.getElementById('profile-modal-image');
-                        if (profileModalImage) {
-                            profileModalImage.src = base64Image;
-                        }
-
-                        // Force refresh of friends list to update avatar there
-                        loadFriends(currentUser.uid);
-
-                        alert('Profile image updated successfully!');
-                        // Close the confirmation modal
-                        const confirmModal = document.getElementById('confirm-image-change-modal');
-                        confirmModal.style.display = 'none';
-                        confirmModal.setAttribute('aria-hidden', 'true');
-                    };
-                    reader.readAsDataURL(file);
-                } catch (error) {
-                    console.error('Error updating profile image:', error);
-                    alert('Failed to update profile image. Please try again.');
-                }
-            }
-        });
-
-        // Handle cancellation of image change (guard element exists)
-        const cancelImageBtn = document.getElementById('cancel-image-change-btn');
-        if (cancelImageBtn) cancelImageBtn.addEventListener('click', () => {
-            const confirmModal = document.getElementById('confirm-image-change-modal');
-            confirmModal.style.display = 'none';
-            confirmModal.setAttribute('aria-hidden', 'true');
-        });
-
-        // Close the confirmation modal when the close button is clicked (guard element exists)
-        const closeConfirmImageModalBtn = document.getElementById('close-confirm-image-change-modal');
-        if (closeConfirmImageModalBtn) closeConfirmImageModalBtn.addEventListener('click', () => {
-            const confirmModal = document.getElementById('confirm-image-change-modal');
-            confirmModal.style.display = 'none';
-            confirmModal.setAttribute('aria-hidden', 'true');
-        });
-   
-    </script>
 
     <!-- Suggestions Modal -->
     <div id="suggestions-modal" class="modal" inert aria-labelledby="suggestions-modal-title">
         <div class="modal-content">
-            <button id="close-suggestions-modal" class="close-button" aria-label="Close Suggestions Modal">&times;</button>
+            <button id="close-suggestions-modal" class="close-button" aria-label="Close Suggestions Modal"><span data-icon="close" aria-hidden="true"></span></button>
             <h2 id="suggestions-modal-title">Submit Your Suggestions</h2>
             <div class="suggestions-fallback">
-                <p>The old suggestion form has retired. The next feedback space is being prepared now.</p>
+                <p>We’re building LYRIA with our community. Check the news for updates and ways to get involved.</p>
                 <a class="action-btn" href="News.html">See what the LYRIA team is building</a>
             </div>
         </div>

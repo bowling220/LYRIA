@@ -43,50 +43,12 @@ class Utils {
 
     // Generic notification system
     showNotification(message, type = 'info', duration = 5000) {
-        // Remove existing notifications of the same type
-        const existingNotifications = document.querySelectorAll(`.notification.${type}`);
-        existingNotifications.forEach(notification => notification.remove());
-
-        const notification = document.createElement('div');
-        notification.className = `notification ${type} fade-in`;
-        notification.setAttribute('role', 'alert');
-        notification.setAttribute('aria-live', 'assertive');
-        
-        notification.innerHTML = `
-            <div class="notification-content">
-                <span class="notification-icon">${this.getNotificationIcon(type)}</span>
-                <span class="notification-message">${this.escapeHtml(message)}</span>
-                <button class="notification-close" aria-label="Close notification">&times;</button>
-            </div>
-        `;
-
-        // Add to DOM
-        document.body.appendChild(notification);
-
-        // Position the notification
-        this.positionNotification(notification);
-
-        // Add event listeners
-        const closeBtn = notification.querySelector('.notification-close');
-        closeBtn.addEventListener('click', () => this.closeNotification(notification));
-
-        // Auto-close after duration
-        if (duration > 0) {
-            setTimeout(() => this.closeNotification(notification), duration);
-        }
-
-        return notification;
+        window.LyriaUI.notify(message, type);
     }
 
     // Get icon for notification type
     getNotificationIcon(type) {
-        const icons = {
-            success: '✅',
-            error: '❌',
-            warning: '⚠️',
-            info: 'ℹ️'
-        };
-        return icons[type] || icons.info;
+        return window.LyriaUI.icon(type === 'success' ? 'check' : 'info');
     }
 
     // Position notification
@@ -95,7 +57,7 @@ class Utils {
         const baseTop = 20;
         const spacing = 10;
         const notificationHeight = 60;
-        
+
         const index = Array.from(notifications).indexOf(notification);
         notification.style.cssText = `
             position: fixed;
@@ -115,10 +77,10 @@ class Utils {
     // Close notification
     closeNotification(notification) {
         if (!notification || !notification.parentNode) return;
-        
+
         notification.style.transform = 'translateX(100%)';
         notification.style.opacity = '0';
-        
+
         setTimeout(() => {
             if (notification.parentNode) {
                 notification.parentNode.removeChild(notification);
@@ -199,20 +161,20 @@ class Utils {
     // Retry mechanism for failed operations
     async retry(asyncFunction, maxAttempts = 3, delay = 1000) {
         let lastError;
-        
+
         for (let attempt = 1; attempt <= maxAttempts; attempt++) {
             try {
                 return await asyncFunction();
             } catch (error) {
                 lastError = error;
                 console.warn(`Attempt ${attempt} failed:`, error);
-                
+
                 if (attempt < maxAttempts) {
                     await this.delay(delay * attempt); // Exponential backoff
                 }
             }
         }
-        
+
         throw lastError;
     }
 
@@ -268,7 +230,7 @@ class Utils {
     // Format timestamp
     formatTimestamp(timestamp) {
         if (!timestamp) return 'Unknown time';
-        
+
         const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
         const now = new Date();
         const diffMs = now - date;
@@ -280,14 +242,14 @@ class Utils {
         if (diffMins < 60) return `${diffMins}m ago`;
         if (diffHours < 24) return `${diffHours}h ago`;
         if (diffDays < 7) return `${diffDays}d ago`;
-        
+
         return date.toLocaleDateString();
     }
 
     // Check if element is in viewport
     isInViewport(element) {
         if (!element) return false;
-        
+
         const rect = element.getBoundingClientRect();
         return (
             rect.top >= 0 &&
@@ -300,7 +262,7 @@ class Utils {
     // Smooth scroll to element
     scrollToElement(element, behavior = 'smooth') {
         if (!element) return;
-        
+
         element.scrollIntoView({
             behavior,
             block: 'nearest',

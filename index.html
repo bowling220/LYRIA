@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
   <meta name="description" content="LYRIA is a focused, real-time home for communities, conversations, and the people who make them matter.">
-  <meta name="theme-color" content="#071312">
+  <meta name="theme-color" content="#101b17">
   <meta name="robots" content="index, follow">
   <meta property="og:type" content="website">
   <meta property="og:title" content="LYRIA — Your people are here">
@@ -15,13 +15,13 @@
   <meta name="twitter:description" content="A calmer real-time place for community, conversation, and the people who matter.">
   <meta name="twitter:image" content="assets/og.png">
   <title>LYRIA — Find your people. Keep the conversation.</title>
-  <link rel="icon" type="image/png" href="assets/icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/lyria-v6.css">
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="stylesheet" href="css/theme.css">
+  <script src="js/ui.js"></script>
 </head>
-<body class="landing-page">
+<body class="landing-page"><a class="skip-link" href="#main-content">Skip to content</a>
   <header class="site-header">
     <a class="brand" href="index.html" aria-label="LYRIA home">
       <span class="brand-mark" aria-hidden="true"><i></i><b></b><em></em></span>
@@ -34,11 +34,11 @@
     </nav>
     <div class="site-actions">
       <a class="text-link" href="login.html">Sign in</a>
-      <a class="button button-small button-primary" href="login.html">Open LYRIA <span aria-hidden="true">&rarr;</span></a>
+      <a class="button button-small button-primary" href="login.html">Open LYRIA <span aria-hidden="true"><span data-icon="arrow" aria-hidden="true"></span></span></a>
     </div>
   </header>
 
-  <main>
+  <main id="main-content">
     <section class="hero-section">
       <div class="hero-glow" aria-hidden="true"></div>
       <div class="hero-copy reveal">
@@ -46,8 +46,8 @@
         <h1>Your people are here.<br><span>Say something.</span></h1>
         <p>LYRIA gives communities a calmer place to talk, share, and stay close—without the noise getting in the way.</p>
         <div class="hero-actions">
-          <a class="button button-primary" href="login.html">Start a conversation <span aria-hidden="true">&rarr;</span></a>
-          <a class="button button-quiet" href="login.html"><span class="play-icon" aria-hidden="true">&#9654;</span> Enter the community</a>
+          <a class="button button-primary" href="login.html">Start a conversation <span aria-hidden="true"><span data-icon="arrow" aria-hidden="true"></span></span></a>
+          <a class="button button-quiet" href="login.html"><span class="play-icon" aria-hidden="true"><span data-icon="chat" aria-hidden="true"></span></span> Enter the community</a>
         </div>
         <div class="trust-line">
           <div class="mini-avatars" aria-hidden="true"><span>J</span><span>M</span><span>A</span><span>+</span></div>
@@ -93,7 +93,7 @@
               </article>
               <article class="chat-row">
                 <span class="avatar blue">J</span>
-                <div><div class="chat-meta"><b>Jonah</b><time>8:43 PM</time></div><p>Always. Drop it in show-and-tell.</p><div class="reaction">&#10024; 4</div></div>
+                <div><div class="chat-meta"><b>Jonah</b><time>8:43 PM</time></div><p>Always. Drop it in show-and-tell.</p><div class="reaction"><span data-icon="sparkles" aria-hidden="true"></span> 4</div></div>
               </article>
               <article class="chat-row latest">
                 <span class="avatar lime">A</span>
@@ -109,7 +109,7 @@
           <div><b>Open studio</b><small>6 people talking</small></div>
           <span class="join-pill">Join</span>
         </div>
-        <div class="floating-card reaction-card"><span>&#10024;</span> Good energy only</div>
+        <div class="floating-card reaction-card"><span><span data-icon="sparkles" aria-hidden="true"></span></span> Good energy only</div>
       </div>
     </section>
 
@@ -131,7 +131,7 @@
             <span class="bubble b2">Now I wish I was.</span>
             <span class="bubble b3">Next time?</span>
           </div>
-          <div><h3>Conversation that flows</h3><p>Fast messaging, focused channels, and expressive reactions keep every thread moving naturally.</p></div>
+          <div><h3>Conversation that flows</h3><p>Real-time messages and focused channels keep every conversation moving naturally.</p></div>
         </article>
         <article class="story-card card-community">
           <div class="card-number">02</div>
@@ -155,7 +155,7 @@
         <div class="eyebrow light"><span class="live-dot"></span> Your next conversation starts here</div>
         <h2>Come as you are.<br><span>Stay for the people.</span></h2>
         <p>A better corner of the internet is one click away.</p>
-        <a class="button button-light" href="login.html">Join LYRIA <span aria-hidden="true">&rarr;</span></a>
+        <a class="button button-light" href="login.html">Join LYRIA <span aria-hidden="true"><span data-icon="arrow" aria-hidden="true"></span></span></a>
       </div>
       <div class="closing-rings" aria-hidden="true"><i></i><i></i><i></i></div>
     </section>
@@ -167,13 +167,6 @@
     <div><a href="News.html">News</a><a href="premium-upgrade.html">Premium</a><a href="login.html">Sign in</a></div>
     <small>&copy; 2026 LYRIA. Made for real connection.</small>
   </footer>
-
-  <script>
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => entry.isIntersecting && entry.target.classList.add('is-visible'));
-    }, { threshold: 0.12 });
-    document.querySelectorAll('.reveal, .story-card').forEach((element) => observer.observe(element));
-  </script>
 </body>
 </html>
 

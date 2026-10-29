@@ -8,182 +8,15 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            background-color: #2c2f33;
-            color: #ffffff;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        .top-header {
-            background-color: #23272a;
-            padding: 1.2rem;
-            font-size: 1.3rem;
-            font-weight: 600;
-            text-align: center;
-            color: #ffffff;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-        }
-
-        .back-btn {
-            background: none;
-            border: none;
-            color: #ffffff;
-            cursor: pointer;
-            font-size: 1.2rem;
-            padding: 8px 15px;
-            transition: transform 0.2s;
-        }
-
-        .back-btn:hover {
-            transform: scale(1.1);
-        }
-
-        .inbox-area {
-            padding: 25px;
-            background-color: #2c2f33;
-            height: 100%;
-            overflow-y: auto;
-            scrollbar-width: thin;
-            scrollbar-color: #202225 #2c2f33;
-        }
-
-        .inbox-message {
-            background-color: #36393f;
-            margin-bottom: 15px;
-            padding: 20px;
-            border-radius: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-
-        .inbox-message:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        }
-
-        .inbox-message div {
-            flex: 1;
-            font-size: 1.1rem;
-        }
-
-        .friend-request-actions {
-            display: flex;
-            gap: 15px;
-        }
-
-        .accept-btn, .decline-btn {
-            padding: 12px 20px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 1rem;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .accept-btn {
-            background-color: #43b581;
-            color: #ffffff;
-        }
-
-        .accept-btn:hover {
-            background-color: #3ca374;
-            transform: scale(1.05);
-            box-shadow: 0 2px 8px rgba(67,181,129,0.4);
-        }
-
-        .decline-btn {
-            background-color: #f04747;
-            color: #ffffff;
-        }
-
-        .decline-btn:hover {
-            background-color: #dc4242;
-            transform: scale(1.05);
-            box-shadow: 0 2px 8px rgba(240,71,71,0.4);
-        }
-
-        .no-requests {
-            text-align: center;
-            color: #99aab5;
-            padding: 3rem;
-            font-size: 1.2rem;
-            font-weight: 500;
-        }
-
-        .loading {
-            text-align: center;
-            color: #ffffff;
-            padding: 3rem;
-            font-size: 1.2rem;
-            font-weight: 500;
-        }
-
-        .loading::after {
-            content: '...';
-            animation: dots 1.5s steps(5, end) infinite;
-        }
-
-        @keyframes dots {
-            0%, 20% { content: '.'; }
-            40% { content: '..'; }
-            60%, 100% { content: '...'; }
-        }
-
-        .error-message {
-            background-color: #f04747;
-            color: white;
-            padding: 1.2rem;
-            border-radius: 8px;
-            margin: 1.2rem 0;
-            text-align: center;
-            font-weight: 500;
-            box-shadow: 0 2px 10px rgba(240,71,71,0.3);
-        }
-
-        /* Custom scrollbar for webkit browsers */
-        .inbox-area::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .inbox-area::-webkit-scrollbar-track {
-            background: #2c2f33;
-        }
-
-        .inbox-area::-webkit-scrollbar-thumb {
-            background: #202225;
-            border-radius: 4px;
-        }
-
-        .inbox-area::-webkit-scrollbar-thumb:hover {
-            background: #18191c;
-        }
-    </style>
-    <link rel="stylesheet" href="css/lyria-v6.css">
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="stylesheet" href="css/theme.css">
+  <script src="js/ui.js"></script>
 </head>
 <body class="inbox-page">
-    <header class="top-header">
-        <button class="back-btn" onclick="window.history.back()">←</button>
-        <span>LYRIA / INBOX</span>
-        <div style="width: 30px"></div>
-    </header>
-    <main class="inbox-area" id="inbox-messages">
+    <header class="top-header"><a class="brand" href="index.html" aria-label="LYRIA home"><span class="brand-mark"><span data-icon="chat" aria-hidden="true"></span></span><span>LYRIA</span></a><span class="header-divider" aria-hidden="true"></span><span class="header-location">Inbox</span><nav class="header-nav" aria-label="Main navigation"><a class="" href="home.html">Community</a><a class="news-link" href="News.html">News</a><a class="nav-premium" href="premium-upgrade.html">Premium</a></nav></header>
+    <main class="inbox-area"><div class="page-heading"><span class="page-kicker">Your people, a little closer</span><h1>Friend requests</h1><p>New connections start with a hello. Manage your invitations here.</p></div><div id="inbox-messages" aria-live="polite">
         <div class="loading">Loading friend requests</div>
-    </main>
+    </div></main>
 
 
     <script>
@@ -267,9 +100,9 @@
                     .where("to", "in", [userId, "accepted_" + userId])
                     .onSnapshot(async (snapshot) => {
                         inboxContainer.innerHTML = "";
-                        
+
                         if (snapshot.empty) {
-                            inboxContainer.innerHTML = '<div class="no-requests">No friend requests at the moment</div>';
+                            inboxContainer.innerHTML = '<div class="empty-state"><span class="empty-icon">'+window.LyriaUI.icon('inbox')+'</span><h2>You’re all caught up.</h2><p>New friend requests will appear here. Head back to the community to meet your people.</p><a class="button button-quiet button-small" href="home.html">Back to community</a></div>';
                             return;
                         }
 
@@ -357,7 +190,7 @@
                 if (action === "accept") {
                     // Start a batch write
                     const batch = db.batch();
-                    
+
                     // Add each other as friends
                     batch.update(db.collection("users").doc(userId), {
                         friends: firebase.firestore.FieldValue.arrayUnion(senderId),
@@ -401,7 +234,7 @@
         // Load friend requests when page loads
         document.addEventListener('DOMContentLoaded', loadFriendRequests);
 
-        
+
     </script>
 </body>
 </html>

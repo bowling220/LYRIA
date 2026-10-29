@@ -73,3 +73,6 @@ build/
 # Temporary files
 *.tmp
 *.temp
+
+# Browser validation artifacts
+test-artifacts/
