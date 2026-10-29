@@ -16,7 +16,7 @@
         <script src="js/config.js?v=691e0fa4d3c5aa3d"></script>
   <script src="js/utils.js?v=35ef4bfc11346489"></script>
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
-  <link rel="stylesheet" href="css/theme.css?v=6ff9e8f4a9e81439">
+  <link rel="stylesheet" href="css/theme.css?v=a466fb4e19b27d6d">
   <script src="js/ui.js?v=be836fd63bec8fd8"></script>
   <script src="js/appearance.js?v=f2b3fb9699b59da3"></script>
 </head>
@@ -29,7 +29,10 @@
     <div id="notification">Guest accounts are temporary. Sign in with Google to keep your account across devices.</div>
   </div></main>
 
+  <script src="js/invites.js?v=69288a4922f5c3bd"></script>
   <script>
+    const invitation=window.LyriaInvites.parse(new URLSearchParams(location.search).get('invite'));
+    const loginDestination=invitation ? window.LyriaInvites.url(invitation) : 'home.html';
     // Initialize Firebase for login page
     function initializeLoginFirebase() {
         if (window.firebaseConfig && window.firebaseConfig.initialized) {
@@ -65,7 +68,7 @@
       const provider = new firebase.auth.GoogleAuthProvider();
       auth.signInWithPopup(provider)
         .then(async result => {
-          window.location.href = 'home.html';
+          window.location.href = loginDestination;
         })
         .catch(error => {
           document.getElementById('error-message').textContent = error.message;
@@ -76,7 +79,7 @@
     document.getElementById('guest-login').addEventListener('click', function() {
       auth.signInAnonymously()
         .then(async result => {
-          window.location.href = 'home.html';
+          window.location.href = loginDestination;
         })
         .catch(error => {
           document.getElementById('error-message').textContent = error.message;

@@ -490,3 +490,17 @@ The existing two manually assigned Featured awards are retained centrally. Visib
 belongs to each profile; hiding your badges does not hide someone else's awards.
 No badge grants permissions or unlocks features, and profile saves preserve badge
 arrays verbatim. [docs/BADGES.md](docs/BADGES.md) documents the visual system and aliases.
+
+## Shareable invitations
+
+The Invite button copies a complete link such as
+`https://your-site.example/invite.html?code=ABC123`. It opens a custom, mobile-friendly
+LYRIA welcome card. Sign-in (Google or guest) returns to the same invitation; accepting
+joins the conversation and opens its chat. Existing codes and pasted LYRIA links both
+work in the Join dialog. Everyone has a shareable invitation too.
+
+Conversation details load only after authentication under the existing rules. No public
+Firestore access or database migration is added. Invite links work on static hosting
+without routing rewrites. Hosting still requires the owner-reviewed configuration in
+[deployment setup](docs/DEPLOYMENT.md); this does not deploy or resolve the separate
+[release blockers](docs/OPEN_SOURCE_READINESS.md).
