@@ -29,7 +29,7 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.5/peerjs.min.js"></script>
         <script src="js/mobile.js?v=630bcfe83bf75bf8" defer></script>
       <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
-  <link rel="stylesheet" href="css/theme.css?v=cb59dc5b0bc83a88">
+  <link rel="stylesheet" href="css/theme.css?v=8e6aa1b661f6a085">
   <script src="js/ui.js?v=c32d1a2c0cc58c63"></script>
   <script src="js/gif-library.js?v=0f7b242343ed6889"></script>
   <script src="js/badges.js?v=40763ed5718c4e15"></script>
@@ -49,41 +49,37 @@
                 </div>
                 <button id="close-mobile-menu" class="close-mobile-menu" type="button" aria-label="Close community menu"><span data-icon="close" aria-hidden="true"></span></button>
             </div>
-            <div class="workspace-heading"><span>Your corner of the internet</span><h2>Make yourself at home.</h2><p>Good conversations start here.</p></div>
-            <div class="channels">
-                <h3>Conversations</h3>
-                <button id="open-hub" class="channel-btn" type="button">Conversations</button><ul class="channels-list" id="channels-list"></ul>
-                <div class="channel-actions" aria-label="Channel actions">
-                    <button class="add-channel-btn" id="add-channel"><span data-icon="plus" aria-hidden="true"></span> New</button>
-                    <button class="join-channel-btn" id="join-channel"><span data-icon="hash" aria-hidden="true"></span> Join</button>
-                    <button class="leave-channel-btn" id="leave-channel" disabled>Personal channel</button>
-                </div>
-            </div>
-            <section class="voice-directory" aria-labelledby="voice-directory-title">
-                <h3 id="voice-directory-title">Voice channels</h3>
-                <p id="voice-directory-label">Everyone’s voice channels</p>
-                <ul id="voice-channels" class="voice-channel-list"></ul>
-                <p id="voice-directory-status" role="status">Choose a channel to join · up to 6 people each</p>
-                <label class="voice-effects-setting"><input id="voice-sound-effects" type="checkbox" checked> Voice sound effects</label><button id="voice-test-sound" class="voice-sound-test" type="button">Test call sound</button>
-            </section>
+            <div class="workspace-heading"><h2>Your space</h2><span>CONVERSATIONS &amp; COMMUNITY</span></div>
             <nav class="sidebar-nav" aria-label="Community links">
                 <button class="sidebar-nav-item" id="news-feed-button" onclick="window.location.href='News.html'">
                     <span data-icon="news" aria-hidden="true"></span>
                     <span>News</span>
-                    <span class="new-pill">New</span>
                 </button>
                 <button id="open-friends-modal" class="sidebar-nav-item">
                     <span data-icon="users" aria-hidden="true"></span>
                     <span>Friends</span>
                 </button>
             </nav>
+            <div class="sidebar-scroll" tabindex="0" aria-label="Conversations and voice channels">
+                <div class="channels">
+                    <h3>Conversations</h3>
+                    <button id="open-hub" class="channel-btn" type="button"><span data-icon="chat" aria-hidden="true"></span>All conversations</button><ul class="channels-list" id="channels-list"></ul>
+                    <div class="channel-actions" aria-label="Channel actions">
+                        <button class="add-channel-btn" id="add-channel"><span data-icon="plus" aria-hidden="true"></span> New</button>
+                        <button class="join-channel-btn" id="join-channel"><span data-icon="hash" aria-hidden="true"></span> Join</button>
+                        <button class="leave-channel-btn" id="leave-channel" disabled>Personal channel</button>
+                    </div>
+                </div>
+                <section class="voice-directory" aria-labelledby="voice-directory-title">
+                    <h3 id="voice-directory-title">Voice channels</h3>
+                    <p id="voice-directory-label">Everyone’s voice channels</p>
+                    <ul id="voice-channels" class="voice-channel-list"></ul>
+                    <p id="voice-directory-status" role="status">Choose a channel to join · up to 6 people each</p>
+                    <label class="voice-effects-setting"><input id="voice-sound-effects" type="checkbox" checked> Voice sound effects</label><button id="voice-test-sound" class="voice-sound-test" type="button">Test call sound</button>
+                </section>
 
-            <!-- Suggestions Section -->
-            <div class="suggestions-section sidebar-suggestion">
-                <h3>Help shape LYRIA</h3>
-                <p>Have an idea that would make the community better?</p>
-                <button id="open-suggestions-modal" class="suggestions-link">Share an idea <span data-icon="arrow" aria-hidden="true"></span></button>
             </div>
+            <button id="open-suggestions-modal" class="sidebar-feedback" type="button"><span data-icon="chat" aria-hidden="true"></span><span>Ideas &amp; feedback</span><span data-icon="arrow" aria-hidden="true"></span></button>
 
             <div class="user-profile">
                 <button class="user-profile-trigger" id="user-profile-trigger" type="button" aria-label="Open your profile">
@@ -323,7 +319,7 @@
     <script src="js/voice-view.js?v=62cb1fc8d3c3c407"></script>
     <script src="js/reactions.js?v=2ed845847fa3f200"></script>
     <script src="js/invites.js?v=69288a4922f5c3bd"></script>
-    <script src="chat.js?v=55d2cb1ebf0b2ba5"></script>
+    <script src="chat.js?v=07705138b4e8e1de"></script>
     <script src="js/call-invites.js?v=bf9ab596f6bb87c8"></script>
     <script src="js/community.js?v=aee345ecff13d71e"></script>
     <script src="js/gif-picker.js?v=f9c05c3fd59f2481"></script>
@@ -335,11 +331,16 @@
     <div id="suggestions-modal" class="modal" inert aria-labelledby="suggestions-modal-title">
         <div class="modal-content">
             <button id="close-suggestions-modal" class="close-button" aria-label="Close Suggestions Modal"><span data-icon="close" aria-hidden="true"></span></button>
-            <h2 id="suggestions-modal-title">Submit Your Suggestions</h2>
-            <div class="suggestions-fallback">
-                <p>We’re building LYRIA with our community. Check the news for updates and ways to get involved.</p>
-                <a class="action-btn" href="News.html">See what the LYRIA team is building</a>
-            </div>
+            <h2 id="suggestions-modal-title">Make LYRIA better</h2>
+            <p class="feedback-intro">Have an idea, or found something that isn’t working? Tell us.</p>
+            <form id="feedback-form">
+                <label for="feedback-kind">What’s on your mind?</label><select id="feedback-kind"><option value="idea">An idea or feature request</option><option value="bug">Something isn’t working</option><option value="other">Other feedback</option></select>
+                <label for="feedback-title">A short summary</label><input id="feedback-title" maxlength="80" required placeholder="What would you like to improve?">
+                <label for="feedback-details">Tell us more</label><textarea id="feedback-details" rows="5" maxlength="1500" required placeholder="For a bug, tell us what happened and what you expected."></textarea>
+                <p class="feedback-privacy">Stored with your LYRIA account for maintainer review. Don’t include passwords, private messages, or other sensitive information.</p>
+                <button id="feedback-submit" type="submit" disabled class="primary-action"><span data-icon="send" aria-hidden="true"></span>Send feedback</button><p id="feedback-status" class="save-status" role="status" aria-live="polite"></p>
+            </form>
+            <section class="feedback-history" aria-labelledby="feedback-history-title"><h3 id="feedback-history-title">Your recent submissions</h3><div id="feedback-history"></div></section>
         </div>
     </div>
 
@@ -353,6 +354,7 @@
     <input id="share-invite-link" class="modal-input" type="text" readonly autocomplete="off">
   </div>
 </div>
+<script src="js/feedback.js?v=752e3790207d8004" defer></script>
 </body>
 </html>
 

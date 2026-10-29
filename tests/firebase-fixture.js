@@ -18,7 +18,8 @@
  const docSnapshot=path=>({id:path.split('/').at(-1),exists:data.has(path),metadata:{hasPendingWrites:false,fromCache:false},data:()=>data.get(path)});
  const querySnapshot=ref=>{const docs=[...data.keys()].filter(p=>p.startsWith(ref.path+'/') && p.split('/').length===ref.path.split('/').length+1).filter(p=>ref.filters.every(([field,op,val])=>{const v=data.get(p)[field];return op==='array-contains'?v?.includes(val):op==='in'?val.includes(v):v===val})).map(docSnapshot);return{docs,empty:!docs.length,size:docs.length,forEach:fn=>docs.forEach(fn)}};
  const emit=()=>watchers.forEach(w=>w.fn(w.ref.document?docSnapshot(w.ref.path):querySnapshot(w.ref)));
- const mutate=(path,values)=>{const target={...(data.get(path)||{})};for(const [field,val]of Object.entries(values)){const parts=field.split('.'),key=parts.pop();let node=target;for(const part of parts){node[part]={...(node[part]||{})};node=node[part]}if(val?.op==='union')node[key]=[...new Set([...(node[key]||[]),...val.values])];else if(val?.op==='remove')node[key]=(node[key]||[]).filter(x=>!val.values.includes(x));else if(val?.op==='increment')node[key]=(node[key]||0)+val.value;else node[key]=val}data.set(path,target);emit()};
+ const stable=value=>JSON.stringify(value,(_,item)=>item && typeof item==='object' && !Array.isArray(item)?Object.fromEntries(Object.entries(item).sort(([a],[b])=>a.localeCompare(b))):item);
+ const mutate=(path,values)=>{const target={...(data.get(path)||{})};for(const [field,val]of Object.entries(values)){const parts=field.split('.'),key=parts.pop();let node=target;for(const part of parts){node[part]={...(node[part]||{})};node=node[part]}if(val?.op==='union')node[key]=[...(node[key]||[]),...val.values.filter(value=>!(node[key]||[]).some(existing=>stable(existing)===stable(value)))];else if(val?.op==='remove')node[key]=(node[key]||[]).filter(x=>!val.values.includes(x));else if(val?.op==='increment')node[key]=(node[key]||0)+val.value;else node[key]=val}data.set(path,target);emit()};
  class Ref{
   constructor(path,document=false,filters=[]){this.path=path;this.document=document;this.filters=filters;this.id=path.split('/').at(-1)}
   collection(name){return new Ref(this.path+'/'+name)}
@@ -85,7 +86,9 @@
        const values=write.update?Object.fromEntries(Object.entries(write.update.fields||{}).map(([k,v])=>[k,decode(v)])):{};
        for(const t of write.updateTransforms || write.transform?.fieldTransforms || [])values[t.fieldPath]=t.setToServerValue?{toDate:()=>new Date(),toMillis:()=>Date.now()}:t.appendMissingElements?{op:'union',values:t.appendMissingElements.values.map(decode)}:{op:'remove',values:t.removeAllFromArray.values.map(decode)};
        mutate(path,values);
+       if(path==='users/test-member')sessionStorage.setItem('lyria-test-profile',JSON.stringify(data.get(path)));
      }
+     if(window.__loseFeedbackAck && writes.some(w=>w.transform?.fieldTransforms?.some(t=>t.fieldPath==='feedbackSubmissions'))){window.__loseFeedbackAck=false;return json({error:{message:'Simulated lost feedback acknowledgement'}},503)}
      return json({writeResults:writes.map(()=>({updateTime:'2026-10-29T10:30:00Z'}))});
    }
    if(method==='GET' && window.__stallProfileUid && documentPath==='users/'+window.__stallProfileUid)return block();
