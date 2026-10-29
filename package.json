@@ -5,6 +5,6 @@
     "build": "node build.mjs",
     "version:assets": "node scripts/version-assets.mjs",
     "test:rules": "node tests/run-rules.mjs",
-    "test": "node --test tests/auth-persistence.test.mjs tests/badges.test.mjs tests/product-access.test.mjs tests/voice-config.test.mjs tests/news.test.mjs"
+    "test": "node --test tests/auth-persistence.test.mjs tests/badges.test.mjs tests/product-access.test.mjs tests/voice-config.test.mjs tests/news.test.mjs tests/releases.test.mjs"
   }
 }

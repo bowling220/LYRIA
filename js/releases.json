@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "releases": [
+    {
+      "id": "2026-10-29-journal",
+      "date": "2026-10-29",
+      "title": "A little more room for your stories.",
+      "summary": "A new Community Journal, and a better way to catch up with LYRIA.",
+      "changes": [
+        {"type": "New", "icon": "news", "title": "Your own community publication", "description": "Featured stories, categories, and a cleaner way to browse what’s happening around LYRIA."},
+        {"type": "Improved", "icon": "chat", "title": "Stories worth settling into", "description": "A dedicated reading view with author details, reading time, reactions, and comments. All existing articles and discussions are still here."},
+        {"type": "New", "icon": "sparkles", "title": "A welcome with every update", "description": "See what changed once per release, then get back to your space. Reopen What’s new beside your profile whenever you like."}
+      ]
+    },
+    {
+      "id": "2026-10-29-sidebar",
+      "date": "2026-10-29",
+      "title": "Your space, settled.",
+      "summary": "A calmer sidebar and a real home for your feedback.",
+      "changes": [
+        {"type": "Improved", "icon": "users", "title": "Your profile stays put", "description": "Profile and settings stay pinned while conversations and voice rooms scroll independently."},
+        {"type": "New", "icon": "chat", "title": "Ideas & feedback", "description": "Send an idea or bug report, keep drafts after failed sends, and see confirmed submissions."}
+      ]
+    },
+    {
+      "id": "2026-10-29-hub",
+      "date": "2026-10-29",
+      "title": "Somewhere between conversations.",
+      "summary": "Browse your community without keeping a chat open.",
+      "changes": [
+        {"type": "New", "icon": "hash", "title": "A conversation home", "description": "Find your conversations, open Friends, or start something new from a dedicated hub."},
+        {"type": "Improved", "icon": "check", "title": "Pick up where you left off", "description": "Saved login, channel and panel restoration, and in-app back links that return to your conversation hub."}
+      ]
+    }
+  ]
+}
