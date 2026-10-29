@@ -118,7 +118,7 @@ with sync_playwright() as p:
     page.locator('#update-bio-btn').click();page.wait_for_function("document.getElementById('bio-save-status').dataset.state==='saved'")
     page.reload(wait_until='load');page.wait_for_timeout(100)
     assert page.locator('#user-name').inner_text()=='Saved Name'
-    page.locator('#settings-btn').click();page.wait_for_timeout(50)
+    page.wait_for_selector('#settings-modal[data-ui-open=true]')
     assert page.locator('#bio-input').input_value()=='A newer unsaved edit'
     page.evaluate("window.__testData.delete('users/test-member')")
     page.locator('#bio-input').fill('Restored missing profile');page.locator('#update-bio-btn').click()
@@ -152,7 +152,7 @@ with sync_playwright() as p:
     page.evaluate('window.__stallAccount=false');page.locator('#reconnect-account').click()
     page.wait_for_function("document.getElementById('account-load-status').dataset.state==='ready'")
     assert page.locator('#bio-input').input_value()=='Keep this after a timeout'
-    page.reload(wait_until='load');page.wait_for_timeout(100);page.locator('#settings-btn').click();page.wait_for_timeout(50)
+    page.reload(wait_until='load');page.wait_for_selector('#settings-modal[data-ui-open=true]')
     assert page.locator('#bio-input').input_value()=='Keep this after a timeout'
     assert page.locator('#bio-input').get_attribute('data-dirty')=='true'
     page.locator('#update-bio-btn').click();page.wait_for_function("document.getElementById('bio-save-status').dataset.state==='saved'")

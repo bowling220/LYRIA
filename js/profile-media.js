@@ -17,7 +17,7 @@
   function setDraft(target,url,gif){revision[target]=(revision[target]||0)+1;reading[target]=false;if(gif?.provider!=='upload')$(targets[target].input).value='';drafts[target]={url,gif};feedback(target,'Preview updated. Save to keep this change.');render(profile);}
   function chooseGif(target){
     UI.closeModal($('settings-modal'));
-    window.LyriaGifPicker.open({title:target==='avatar'?'Find your profile GIF':'Find your banner GIF',action:'Use this GIF',description:'Choose a GIF, then preview it on your profile before saving.',onSelect:item=>setDraft(target,item.url,window.LyriaGifLibrary.metadata(item.id)),onClose:()=>{UI.openModal($('settings-modal'));}});
+    window.LyriaGifPicker.open({context:target,title:target==='avatar'?'Find your profile GIF':'Find your banner GIF',action:'Use this GIF',description:'Choose a GIF, then preview it on your profile before saving.',onSelect:item=>setDraft(target,item.url,window.LyriaGifLibrary.metadata(item.id)),onClose:()=>{UI.openModal($('settings-modal'));}});
   }
   async function readFile(file,target){
     const config=targets[target];if(file.size>config.limit)throw new Error('Use a file under '+(config.limit/1000)+' KB, or choose a library GIF for a larger animation.');

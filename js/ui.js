@@ -64,6 +64,52 @@
     toast.addEventListener('focusin',()=>clearTimeout(timer));
     toast.addEventListener('mouseleave',()=>{timer=setTimeout(close,8000)});
   };
+  // Remember navigation UI in this tab, never account data, files, or pending actions.
+  let panelScope=null,panelHandlers={},restoringPanels=false,panelToken=0,saveFrame=0,panelInteraction=0;
+  const panelOrder=[];
+  function savePanels(){
+    if(!panelScope || restoringPanels)return;
+    const panels=panelOrder.map(id=>{
+      const modal=document.getElementById(id),handler=panelHandlers[id];
+      if(!modal || !handler || modal.dataset.uiOpen!=='true' || !modal.style.display || modal.style.display==='none')return null;
+      const active=document.activeElement;
+      return {id,data:handler.capture?.(modal) || {},scroll:modal.scrollTop,contentScroll:modal.querySelector('.modal-content')?.scrollTop || 0,focus:modal.contains(active)?active.id:''};
+    }).filter(Boolean);
+    try{sessionStorage.setItem(panelScope,JSON.stringify(panels))}catch{}
+  }
+  function queuePanelSave(){if(!saveFrame)saveFrame=requestAnimationFrame(()=>{saveFrame=0;savePanels()})}
+  function stopPanelRestoration(){++panelToken;restoringPanels=false;panelScope=null;panelHandlers={}}
+  async function restorePanels(user,handlers,revision=panelInteraction){
+    const token=++panelToken,scope='lyria:panels:'+location.pathname+':'+user.uid;
+    panelScope=scope;panelHandlers=handlers;restoringPanels=true;
+    if(revision!==panelInteraction){restoringPanels=false;savePanels();return}
+    let saved=[];try{const value=JSON.parse(sessionStorage.getItem(scope));if(Array.isArray(value))saved=value.slice(0,8)}catch{}
+    const current=()=>panelToken===token && panelScope===scope;
+    try{
+      for(const panel of saved){
+        if(!current())break;
+        const handler=handlers[panel?.id];if(!handler || !Object.hasOwn(handlers,panel.id))continue;
+        try{
+          await handler.open(panel.data || {},current);
+          await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+          if(!current())break;
+          const modal=document.getElementById(panel.id);if(modal?.dataset.uiOpen!=='true')continue;
+          const top=value=>Number.isFinite(value)?Math.max(0,Math.min(value,10000000)):0;
+          modal.scrollTop=top(panel.scroll);const content=modal.querySelector('.modal-content');if(content)content.scrollTop=top(panel.contentScroll);
+          const focus=typeof panel.focus==='string'?document.getElementById(panel.focus):null;
+          if(focus && modal.contains(focus) && !focus.disabled && focus.getClientRects().length && focus.type!=='file')focus.focus({preventScroll:true});
+        }catch(error){console.warn('Panel could not reopen:',panel.id,error.code || 'unavailable')}
+      }
+    }finally{if(current()){restoringPanels=false;savePanels()}}
+  }
+  document.addEventListener('pointerdown',event=>{if(event.isTrusted)++panelInteraction;if(event.isTrusted && restoringPanels){++panelToken;restoringPanels=false;queuePanelSave()}},true);
+  document.addEventListener('keydown',event=>{if(event.isTrusted)++panelInteraction;if(event.isTrusted && restoringPanels){++panelToken;restoringPanels=false;queuePanelSave()}},true);
+  document.addEventListener('focusin',queuePanelSave);
+  document.addEventListener('input',queuePanelSave);
+  document.addEventListener('click',queuePanelSave);
+  document.addEventListener('scroll',queuePanelSave,true);
+  window.addEventListener('pagehide',savePanels);
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)savePanels()});
   const previousFocus = new WeakMap();
   let lastTrigger;
   document.addEventListener('click', event => { lastTrigger = event.target.closest('button, a'); }, true);
@@ -76,6 +122,8 @@
       const open = modal.style.display && modal.style.display !== 'none';
       if (modal.dataset.uiOpen === String(Boolean(open))) return;
       modal.dataset.uiOpen = String(Boolean(open));
+      const order=panelOrder.indexOf(modal.id);if(order>=0)panelOrder.splice(order,1);if(open)panelOrder.push(modal.id);
+      panelOrder.forEach((id,index)=>{document.getElementById(id).style.zIndex=String(1000+index)});
       modal.setAttribute('aria-hidden', String(!open)); modal.toggleAttribute('inert', !open);
       modal.setAttribute('role','dialog'); modal.setAttribute('aria-modal','true');
       if (open) {
@@ -89,14 +137,15 @@
         previousFocus.delete(modal);
       }
       document.body.classList.toggle('dialog-open',modals.some(el=>el.style.display && el.style.display !== 'none'));
+      queuePanelSave();
     };
     modals.forEach(modal => {
-      sync(modal); new MutationObserver(()=>sync(modal)).observe(modal,{attributes:true,attributeFilter:['style']});
+      sync(modal); new MutationObserver(()=>{sync(modal);queuePanelSave()}).observe(modal,{attributes:true,attributeFilter:['style','data-user-id']});
       modal.addEventListener('click',e=>{if (e.target === modal) closeModal(modal)});
       modal.querySelectorAll('.close-button').forEach(button=>button.addEventListener('click',()=>closeModal(modal)));
     });
     document.addEventListener('keydown',e=>{
-      const modal = modals.filter(el=>el.dataset.uiOpen === 'true').at(-1);
+      const modal = document.getElementById(panelOrder.at(-1));
       if (!modal) return;
       if(e.key === 'Escape') {e.preventDefault();closeModal(modal);return;}
       if(e.key !== 'Tab')return;
@@ -112,6 +161,6 @@
     new MutationObserver(records=>{if(records.some(r=>r.addedNodes.length))hydrate(document)}).observe(document.body,{childList:true,subtree:true});
     document.addEventListener('error',e=>{if(e.target.tagName==='IMG' && !e.target.dataset.managedMedia && !e.target.src.endsWith('/assets/avatar.svg'))e.target.src='assets/avatar.svg'},true);
   };
-  window.LyriaUI = {icon, hydrate, notify, escape, openModal, closeModal};
+  window.LyriaUI = {icon, hydrate, notify, escape, openModal, closeModal, restorePanels, stopPanelRestoration, panelRevision:()=>panelInteraction};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setup);else setup();
 })();

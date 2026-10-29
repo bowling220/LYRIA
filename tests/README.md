@@ -196,3 +196,7 @@ Google and guest sign-in. It never connects to production Firebase.
 
 `python3 tests/location-restore-smoke.py` verifies page/room restoration on mobile
 and desktop, explicit Everyone selection, and rejection of deleted/inaccessible rooms.
+
+`python3 tests/panel-restore-smoke.py` verifies account/tab-scoped settings, profiles,
+friends, draft dialogs, and GIF-library restoration. Closed panels stay closed; reload
+does not submit drafts, send GIFs, place calls, or repeat friend actions.

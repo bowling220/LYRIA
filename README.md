@@ -536,3 +536,10 @@ work in the Join dialog. Everyone has a shareable invitation too.
 Conversation details load only after authentication under the existing rules. No public
 Firestore access or database migration is added. Invite links work on static hosting
 without routing rewrites, using the existing hosting and Firebase configuration.
+
+## Resume your place
+
+Reload keeps the current page and selected room. Open settings, profiles, friends,
+conversation dialogs, and GIF-library views reopen in the same browser tab for the
+same account. Panels fetch fresh data, and closed panels stay closed. Restoring a
+view never submits a form, sends a GIF, places a call, or grants room membership.

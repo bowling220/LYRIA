@@ -159,7 +159,7 @@ function restoreConversation(user){
     document.getElementById('message-input').placeholder='Opening your conversation…';
     document.getElementById('make-voice-call').disabled=true;
     window.LyriaConnection?.pending('messages');
-    window.LyriaDataAPI.read('channels/'+id).then(doc=>{
+    return window.LyriaDataAPI.read('channels/'+id).then(doc=>{
         if(currentUser?.uid!==user.uid || channelSelectionVersion!==version)return;
         if(doc.exists && Array.isArray(doc.data().members) && doc.data().members.includes(user.uid))switchChannel(doc.id,doc.data().name);
         else {switchChannel(COMMUNITY_CHANNEL_ID);window.LyriaUI.notify('That conversation is no longer available to your account.','error')}
@@ -174,13 +174,36 @@ function restoreConversation(user){
     // Use one authentication path for user setup, channel setup and UI listeners.
     auth.onAuthStateChanged(async (user) => {
         if (!user) {
+            window.LyriaUI.stopPanelRestoration();
             window.location.href = 'login.html';
             return;
         }
 
         currentUser = user;
         window.LyriaConnection?.ready('startup');
-        restoreConversation(user);
+        const viewRevision=window.LyriaUI.panelRevision();
+        const selectionReady=restoreConversation(user);
+        // Wait for page listeners and room validation; restoration never submits an action.
+        const restoreViews=()=>Promise.resolve(selectionReady).then(()=>{
+            if(currentUser?.uid!==user.uid)return;
+            const click=id=>document.getElementById(id)?.click();
+            return window.LyriaUI.restorePanels(user,{
+                'settings-modal':{open:()=>click('settings-btn')},
+                'friends-modal':{open:()=>window.LyriaCommunity.openFriends()},
+                'profile-modal':{capture:modal=>({uid:modal.dataset.userId}),open:(data,canOpen)=>typeof data.uid==='string' && data.uid.length<=128?showUserProfileModal(data.uid,{canOpen}):undefined},
+                'suggestions-modal':{open:()=>click('open-suggestions-modal')},
+                'channel-action-modal':{capture:modal=>({mode:modal.dataset.mode,value:document.getElementById('channel-action-input').value}),open:data=>{
+                    const trigger={create:'add-channel',join:'join-channel',leave:'leave-channel'}[data.mode];if(!trigger || (data.mode==='leave' && !currentChannel))return;
+                    click(trigger);const input=document.getElementById('channel-action-input');if(typeof data.value==='string')input.value=data.value.slice(0,input.maxLength);
+                }},
+                'share-invite-modal':{capture:()=>({link:document.getElementById('share-invite-link').value}),open:data=>{
+                    const code=window.LyriaInvites.parse(data.link);if(!code)return;
+                    document.getElementById('share-invite-link').value=window.LyriaInvites.url(code);window.LyriaUI.openModal(document.getElementById('share-invite-modal'));
+                }},
+                'gif-modal':{capture:()=>window.LyriaGifPicker.capture(),open:data=>window.LyriaGifPicker.restore(data)}
+            },viewRevision);
+        });
+        if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(restoreViews,0),{once:true});else setTimeout(restoreViews,0);
         loadChannels();
         try {
             await window.LyriaAccount.ensureUser(user);
@@ -771,12 +794,13 @@ window.addEventListener('lyria:profile-updated',event=>{
 });
 
 // One registry supplies profile and inline badge artwork and descriptions.
-function showUserProfileModal(uid) {
+function showUserProfileModal(uid,{canOpen=()=>true}={}) {
     if (!uid || !db) return;
+    const viewer=currentUser?.uid;
     profileUserId = uid; // Set the profileUserId to the ID of the user being viewed
 
-    window.LyriaDataAPI.read('users/'+uid).then(doc => {
-        if(profileUserId!==uid)return;
+    return window.LyriaDataAPI.read('users/'+uid).then(doc => {
+        if(profileUserId!==uid || firebase.auth().currentUser?.uid!==viewer || !canOpen())return;
         if (doc.exists) {
             const userData = doc.data();
             const profileName = userData.displayName || 'User';

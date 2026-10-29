@@ -42,7 +42,8 @@
       });
     }catch(error){list.innerHTML='<li>Friends couldn’t load. Close this panel and try again.</li>';console.error(error)}
   }
-  $('open-friends-modal').addEventListener('click',()=>{open('friends-modal');loadFriends()});
+  const openFriends=()=>{open('friends-modal');return loadFriends()};
+  $('open-friends-modal').addEventListener('click',openFriends);
   $('close-friends-modal').addEventListener('click',()=>close('friends-modal'));
   $('call-profile-user').addEventListener('click',()=>{const modal=$('profile-modal');const uid=modal.dataset.userId;if(uid){close('profile-modal');window.LyriaCalls.callFriend(uid,$('profile-modal-name').textContent)}});
   function refreshRequests(){
@@ -61,5 +62,5 @@
       auth.onAuthStateChanged(()=>refreshRequests());
     }catch(error){console.warn('Friend request startup failed',error);window.LyriaConnection.fail('requests','Friend requests couldn’t start. Reload to try again.')}
   }
-  window.LyriaCommunity={refreshRequests};init();
+  window.LyriaCommunity={refreshRequests,openFriends};init();
 })();

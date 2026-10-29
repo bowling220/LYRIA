@@ -62,5 +62,14 @@
     if(typeof window.sendLibraryGif!=='function')throw new Error('Wait for your conversation to finish loading.');
     await window.sendLibraryGif(item.id);UI.notify('GIF sent.','success');
   }}));
-  window.LyriaGifPicker={open};
+  function capture(){return {target:options?.context || 'message',search:$('gif-search').value,category:modal.dataset.category,selected:selected?.id}}
+  function restore(data){
+    const trigger={message:'gif-button',avatar:'choose-avatar-gif',banner:'choose-banner-gif'}[data.target];if(!trigger)return;
+    $(trigger).click();
+    $('gif-search').value=typeof data.search==='string'?data.search.slice(0,160):'';
+    modal.dataset.category=library.categories.includes(data.category)?data.category:'All';
+    for(const chip of $('gif-categories').children)chip.setAttribute('aria-pressed',String(chip.dataset.category===modal.dataset.category));
+    render();const item=typeof data.selected==='string'?library.get(data.selected):null;if(item)select(item);
+  }
+  window.LyriaGifPicker={open,capture,restore};
 })();
