@@ -29,7 +29,7 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.5/peerjs.min.js"></script>
         <script src="js/mobile.js?v=630bcfe83bf75bf8" defer></script>
       <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
-  <link rel="stylesheet" href="css/theme.css?v=0e23241683f2a432">
+  <link rel="stylesheet" href="css/theme.css?v=cb59dc5b0bc83a88">
   <script src="js/ui.js?v=c32d1a2c0cc58c63"></script>
   <script src="js/gif-library.js?v=0f7b242343ed6889"></script>
   <script src="js/badges.js?v=40763ed5718c4e15"></script>
@@ -96,12 +96,14 @@
         </aside>
         <main class="chat-area" data-view="hub">
             <section id="conversation-hub" aria-labelledby="hub-title">
-                <div class="hub-intro"><p class="hub-kicker">YOUR LYRIA</p><h1 id="hub-title">A place for your people.</h1><p>Catch up, find your friends, or start something new.</p></div>
-                <nav class="hub-actions" aria-label="Community shortcuts"><button id="hub-friends" type="button">Friends</button><a href="inbox.html">Friend requests</a><button id="hub-create" type="button">New conversation</button><button id="hub-join" type="button">Join a conversation</button></nav>
-                <div class="hub-list-heading"><h2>Your conversations</h2><label>Find a conversation<input id="hub-search" type="search" placeholder="Search conversations…" maxlength="180"></label></div>
+                <header class="hub-header"><div class="hub-heading"><span class="hub-heading-icon" data-icon="chat" aria-hidden="true"></span><div><h1 id="hub-title">Conversations</h1><p>Your people. Your corner of LYRIA.</p></div></div><button id="hub-create" class="hub-new" type="button" aria-label="New conversation"><span data-icon="plus" aria-hidden="true"></span><span>New</span></button></header>
+                <nav class="hub-actions" aria-label="Community shortcuts"><button class="hub-tab hub-tab-current" type="button" aria-current="page"><span data-icon="chat" aria-hidden="true"></span>Messages</button><button id="hub-friends" class="hub-tab" type="button"><span data-icon="users" aria-hidden="true"></span>Friends</button><a class="hub-tab hub-inbox" href="inbox.html" aria-label="Friend requests" title="Friend requests"><span data-icon="inbox" aria-hidden="true"></span><span>Requests</span></a></nav>
+                <div class="hub-content"><label class="hub-search"><span data-icon="search" aria-hidden="true"></span><input id="hub-search" type="search" aria-label="Find a conversation" placeholder="Find a conversation" maxlength="180"></label>
+                <div class="hub-list-heading"><h2>Your conversations</h2><button id="hub-join" type="button"><span data-icon="link" aria-hidden="true"></span>Join with a link</button></div>
                 <div id="hub-conversations" class="hub-conversations" aria-live="polite"><p>Loading your conversations…</p></div>
+                <p class="hub-footnote">A little room to catch up. Pick a conversation when you’re ready.</p></div>
             </section>
-            <header class="chat-header"><button id="back-to-hub" type="button" aria-label="Back to conversations">←</button>
+            <header class="chat-header"><button id="back-to-hub" type="button" aria-label="Back to conversations"><span data-icon="back" aria-hidden="true"></span></button>
                 <div class="chat-title-group"><span class="channel-symbol" aria-hidden="true"><span data-icon="hash" aria-hidden="true"></span></span><div><h2 id="channel-title">Everyone</h2><p class="chat-subtitle">A little space to stay connected.</p></div></div>
                 <button id="make-voice-call" class="voice-call-btn" type="button" aria-label="Join voice call" title="Join voice"><span data-icon="mic" aria-hidden="true"></span><span class="button-label">Join voice</span></button>
                 <button id="end-call" class="voice-call-btn voice-call-end" type="button" aria-label="Leave voice call" title="Leave voice" style="display:none"><span data-icon="phoneOff" aria-hidden="true"></span><span class="button-label">Leave voice</span></button>
@@ -321,7 +323,7 @@
     <script src="js/voice-view.js?v=62cb1fc8d3c3c407"></script>
     <script src="js/reactions.js?v=2ed845847fa3f200"></script>
     <script src="js/invites.js?v=69288a4922f5c3bd"></script>
-    <script src="chat.js?v=5d131ab5829fda0c"></script>
+    <script src="chat.js?v=55d2cb1ebf0b2ba5"></script>
     <script src="js/call-invites.js?v=bf9ab596f6bb87c8"></script>
     <script src="js/community.js?v=aee345ecff13d71e"></script>
     <script src="js/gif-picker.js?v=f9c05c3fd59f2481"></script>

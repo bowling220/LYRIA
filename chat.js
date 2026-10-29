@@ -159,8 +159,12 @@ function renderHub(){
         const button=document.createElement('button');button.type='button';button.className='hub-conversation';
         const mark=document.createElement('span');mark.className='hub-room-icon';mark.innerHTML=window.LyriaUI.icon(room.shared?'users':'hash');
         const text=document.createElement('span');const title=document.createElement('strong');title.textContent=room.name || 'Conversation';
-        const detail=document.createElement('span');detail.textContent=room.shared?'One room for the whole community':room.favorite?'Favorite conversation':'Open conversation';
-        text.append(title,detail);button.append(mark,text);button.addEventListener('click',()=>switchChannel(room.id,room.name));list.append(button);
+        const detail=document.createElement('span');detail.textContent=room.shared?'The whole community, together':room.id===`personal-${currentUser?.uid}`?'Notes, ideas, and a little space for you':room.favorite?'One of your favorites':'Your shared space to catch up';
+        text.className='hub-room-copy';text.append(title,detail);button.append(mark,text);
+        const end=document.createElement('span');end.className='hub-room-end';
+        if(room.shared){end.textContent='COMMUNITY';end.classList.add('hub-community-tag')}
+        else end.innerHTML=window.LyriaUI.icon(room.favorite?'star':'arrow');
+        end.setAttribute('aria-hidden','true');button.append(end);button.addEventListener('click',()=>switchChannel(room.id,room.name));list.append(button);
     }
     if(!rooms.length){const empty=document.createElement('p');empty.textContent='No conversations match your search.';list.append(empty)}
 }
