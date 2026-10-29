@@ -594,3 +594,7 @@ New member articles add optional `category`, `excerpt`, `imageURL`, `authorId`, 
 Member documents are loaded in bounded pages of 24; six cards are displayed at a time, with explicit pagination rather than an infinite feed. The current single-document article schema still includes the body in each fetched page. Comments subscribe only in the open reader and show the latest 100, with listener cleanup on navigation. Counts use actual saved likes; no synthetic popularity or weekly rankings are shown. Publishing checks authentication and keeps the existing blocked-author behavior; Firestore remains the permission boundary.
 
 Run `npm test` and `python tests/news-smoke.py` for model/legacy-compatibility and browser coverage. Browser snapshots are generated under `test-artifacts/journal/` using isolated demonstration data, never live account writes.
+
+### Update welcome and changelog
+
+An unseen release gets a LYRIA welcome with actual startup feedback and a changelog. It is dismissible, shown once per browser release, and preserves the selected page/room and restored panels. **What’s new** beside your profile (and on News/Inbox) reopens current and earlier notes. See [release publishing](docs/RELEASES.md) to add the next update.

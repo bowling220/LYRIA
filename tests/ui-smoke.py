@@ -31,6 +31,8 @@ with sync_playwright() as p:
     def make_page(width=390,height=844,touch=True):
         page=browser.new_page(viewport={'width':width,'height':height},has_touch=touch)
         page.add_init_script(path=str(ROOT/'tests/firebase-fixture.js'))
+        release=json.loads((ROOT/'js/releases.json').read_text())['releases'][0]['id']
+        page.add_init_script("try{localStorage.setItem('lyria:release-seen',"+json.dumps(release)+")}catch{}")
         page.add_init_script("if(location.pathname.endsWith('login.html'))firebase.auth().onAuthStateChanged=fn=>{queueMicrotask(()=>fn(null));return()=>{}}")
         def route(r):
             url=r.request.url

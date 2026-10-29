@@ -139,11 +139,16 @@
       document.body.classList.toggle('dialog-open',modals.some(el=>el.style.display && el.style.display !== 'none'));
       queuePanelSave();
     };
-    modals.forEach(modal => {
+    const registered=new WeakSet();
+    const mountModal=modal=>{
+      if(registered.has(modal))return;registered.add(modal);
+      if(!modals.includes(modal))modals.push(modal);
       sync(modal); new MutationObserver(()=>{sync(modal);queuePanelSave()}).observe(modal,{attributes:true,attributeFilter:['style','data-user-id']});
       modal.addEventListener('click',e=>{if (e.target === modal) closeModal(modal)});
       modal.querySelectorAll('.close-button').forEach(button=>button.addEventListener('click',()=>closeModal(modal)));
-    });
+    };
+    modals.forEach(mountModal);
+    window.LyriaUI.mountModal=mountModal;
     document.addEventListener('keydown',e=>{
       const modal = document.getElementById(panelOrder.at(-1));
       if (!modal) return;

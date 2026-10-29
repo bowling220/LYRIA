@@ -1,10 +1,13 @@
 """Shared browser routing. Local files and in-memory Firebase only; no production writes."""
 from pathlib import Path
-import base64,mimetypes,urllib.request
+import base64,mimetypes,urllib.request,json
 
-def make_page(browser,root,width=390,height=844,touch=True,gif_options=None):
+def make_page(browser,root,width=390,height=844,touch=True,gif_options=None,release_seen=True):
     page=browser.new_page(viewport={'width':width,'height':height},has_touch=touch)
     page.add_init_script(path=str(root/'tests/firebase-fixture.js'))
+    if release_seen:
+        release=json.loads((root/'js/releases.json').read_text())['releases'][0]['id']
+        page.add_init_script("try{localStorage.setItem('lyria:release-seen',"+json.dumps(release)+")}catch{}")
     options=gif_options if gif_options is not None else {}
     gif=base64.b64decode((root/'tests/fixtures/animated.gif.base64').read_text())
     def route(r):
