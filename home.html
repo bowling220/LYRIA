@@ -57,6 +57,13 @@
                     <button class="leave-channel-btn" id="leave-channel" disabled>Personal channel</button>
                 </div>
             </div>
+            <section class="voice-directory" aria-labelledby="voice-directory-title">
+                <h3 id="voice-directory-title">Voice channels</h3>
+                <p id="voice-directory-label">Everyone’s voice channels</p>
+                <ul id="voice-channels" class="voice-channel-list"></ul>
+                <p id="voice-directory-status" role="status">Choose a channel to join · up to 6 people each</p>
+                <label class="voice-effects-setting"><input id="voice-sound-effects" type="checkbox" checked> Voice sound effects</label>
+            </section>
             <nav class="sidebar-nav" aria-label="Community links">
                 <button class="sidebar-nav-item" id="news-feed-button" onclick="window.location.href='News.html'">
                     <span data-icon="news" aria-hidden="true"></span>
@@ -94,7 +101,7 @@
                 <button id="inbox-btn" aria-label="Open friend requests" title="Friend requests" onclick="window.location.href='inbox.html'"><span data-icon="inbox" aria-hidden="true"></span><span id="friend-request-count" class="count-badge" style="display:none">0</span></button>
             </header>
             <section id="voice-panel" class="voice-panel" aria-label="Voice call" hidden>
-                <span data-icon="mic" aria-hidden="true"></span><p id="voice-status" role="status" aria-live="polite"></p>
+                <div class="voice-call-info"><strong id="voice-room-name"></strong><p id="voice-status" role="status" aria-live="polite"></p><ul id="voice-participants" aria-label="People in your call"></ul></div>
                 <div class="voice-controls"><button id="voice-mute" type="button" aria-pressed="false">Mute</button><button id="voice-enable-sound" type="button" hidden>Enable sound</button><button id="voice-retry" type="button" hidden>Rejoin voice</button></div>
             </section>
             <p id="community-notice" class="chat-room-notice" hidden>Everyone signed in can read this room · Latest 100 messages</p>

@@ -415,6 +415,7 @@ function setupUIEventListeners() {
                 const personalChannelId = `personal-${currentUser.uid}`;
                 if (!currentChannel || currentChannel === personalChannelId || currentChannel === COMMUNITY_CHANNEL_ID) return;
                 const leavingChannelId = currentChannel;
+                window.LyriaVoice?.leaveRoom(leavingChannelId);
                 const channelRef = db.collection('channels').doc(leavingChannelId);
                 await Promise.all([
                     channelRef.update({ members: firebase.firestore.FieldValue.arrayRemove(currentUser.uid) }),
@@ -739,9 +740,6 @@ function logout() {
 
 // Function to switch channels
 function switchChannel(channelId) {
-    if (currentChannel && currentChannel !== channelId && typeof window.leaveCurrentCall === 'function') {
-        window.leaveCurrentCall();
-    }
     if (currentChannel && currentChannel !== channelId) setTypingStatus(false);
     currentChannel = channelId; // Update currentChannel when switching channels
     const leaveButton = document.getElementById('leave-channel');

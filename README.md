@@ -307,10 +307,16 @@ profile adapter. Both connection and ID-token refresh waits are bounded.
 
 ## Voice calls
 
-Voice is opt-in: each person selects the same conversation, taps **Join voice**,
-and allows microphone access. The call panel shows connection status, Mute,
+Voice is opt-in: each conversation has Lounge, Gaming, and Quiet Corner voice
+channels in the sidebar. Select the same voice channel and allow microphone
+access; the header’s **Join voice** shortcut joins Lounge. Each channel shows
+current participants, mute indicators, and a count (up to six people). The call panel shows connection status, Mute,
 Enable sound when the browser blocks playback, and Rejoin voice after a failed
-connection. Leaving or switching rooms stops local microphone tracks immediately.
+connection. Calls remain connected while browsing text conversations. Leaving
+voice, changing voice channels, logging out, or leaving the active conversation
+stops the microphone immediately. Join/leave and mute/unmute cues are generated
+locally with Web Audio after a user gesture. The sidebar’s Voice sound effects
+toggle persists on that browser and only affects these cues, never call audio.
 
 PeerJS 1.5.5 is pinned in `home.html`. The default SDK STUN/TURN configuration is
 preserved, including its public relay pool, rather than replacing it with STUN
@@ -322,12 +328,13 @@ this repository. `signaling` can override the PeerServer host for a deployment.
 
 Per-account voice presence shares the existing per-room activity documents at
 `channels/{room}/typingStatus/{uid}`. The `voice` field is independent of `isTyping`
-and includes a random session/peer ID plus heartbeat timestamp. Existing rules
+and includes a random session/peer ID, voice channel, display name, mute state,
+and heartbeat timestamp. Existing rules
 already restrict writes to that account and reads to room members, including
 Everyone. No rule changes are required. Cleanup transactions compare session IDs
 so an old tab cannot remove a newer session; stale presence expires from the
 active list after 65 seconds. Each peer pair has exactly one offerer, and incoming
-calls are accepted only after opting in and checking room and participant IDs.
+calls are accepted only after opting in and checking conversation, voice channel, and participant IDs.
 
 Install coturn (the `turnserver` executable), then run `npm ci --prefix tests` and
 `python3 tests/voice-smoke.py` for real two-browser WebRTC tests. The tests use fake

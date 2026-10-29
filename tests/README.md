@@ -49,7 +49,9 @@ two actual Chromium WebRTC sessions with fake microphones. It verifies received
 audio bytes in both directions and a selected relay candidate, without relaxing
 browser policies that block direct UDP. It covers Everyone,
 private rooms, one media connection per pair, blocked playback recovery, mute,
-room changes, immediate track cleanup while offline, denied/delayed microphone
+named voice-channel isolation, live participant/mute indicators, keeping a call
+while browsing text, synthesized sound cues and the persisted effects toggle,
+immediate track cleanup while offline, denied/delayed microphone
 permissions, and rejecting a call with another room ID. It does not access real
 Firebase, real microphones, or production signaling. Downloading the pinned
 client from cdnjs requires network access. iOS autoplay behavior and public TURN
@@ -72,3 +74,7 @@ original banner bytes under the existing account-access rules.
 No production profiles or messages are modified by these tests. The live catalog
 URLs were separately checked for successful GIF responses; CDN availability on
 a particular user's network still needs a real-device check.
+
+`python3 tests/voice-ui-smoke.py` checks the voice directory at four screen sizes,
+live channel counts and mute indicators, conversation scoping, touch targets, and
+the persisted sound-effects preference using the local browser fixture.
