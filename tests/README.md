@@ -21,7 +21,7 @@ mocked Google/guest sign-in, account saves surviving reloads, save failures, pen
 `test-artifacts/`, which is ignored by Git.
 
 Real Google sign-in, Firestore permissions and indexes, microphone permissions,
-and multi-person voice calls still need staging or manual verification. No payment
+and iPhone/cellular voice calls still need staging or manual verification. No payment
 provider is configured; the Premium page intentionally cannot grant paid access.
 
 ## Firestore rules
@@ -38,3 +38,15 @@ permission failures without relying on WebChannel listeners. Browser tests verif
 that a hung request releases the save button, offers reconnecting, and keeps the
 unsaved draft through a reload. These do not establish that a specific user's
 Safari network is working; that still needs checking on the device.
+
+## Voice integration
+
+After `npm ci --prefix tests`, run `python3 tests/voice-smoke.py`. It starts a local
+PeerServer and presence fixture, uses the pinned PeerJS browser client, and joins
+two actual Chromium WebRTC sessions with fake microphones. It covers Everyone,
+private rooms, one media connection per pair, blocked playback recovery, mute,
+room changes, immediate track cleanup while offline, denied/delayed microphone
+permissions, and rejecting a call with another room ID. It does not access real
+Firebase, real microphones, or production signaling. Downloading the pinned
+client from cdnjs requires network access. iOS autoplay behavior and public TURN
+relay connectivity must additionally be checked on real phones and networks.

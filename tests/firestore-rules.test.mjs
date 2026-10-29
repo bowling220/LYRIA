@@ -80,3 +80,18 @@ test('the real account HTTPS adapter merges and verifies profiles without a live
   assert.equal((await getDoc(doc(member('rest-alice'),'users/rest-alice'))).data().bio,'Confirmed over HTTPS');
   await assert.rejects(window.LyriaAccountAPI.save({uid:'rest-alice',getIdToken:async()=>token('bob')},{bio:'Not my account'}),error=>error.code==='permission-denied');
 });
+
+test('voice room presence shares existing rules with typing and is isolated by account and room',async()=>{
+  const alice=member('alice'),bob=member('bob');
+  const presence=doc(alice,'channels/community/typingStatus/alice');
+  await assertSucceeds(setDoc(presence,{isTyping:true,displayName:'Alice',timestamp:serverTimestamp()}));
+  await assertSucceeds(setDoc(presence,{voice:{sessionId:'session-alice',peerId:'peer-alice',updatedAt:serverTimestamp()}},{merge:true}));
+  assert.equal((await getDoc(presence)).data().isTyping,true);
+  await assertSucceeds(setDoc(presence,{isTyping:false},{merge:true}));
+  assert.equal((await getDoc(presence)).data().voice.peerId,'peer-alice');
+  const others=await assertSucceeds(getDocs(collection(bob,'channels/community/typingStatus')));
+  assert.equal(others.docs[0].data().voice.sessionId,'session-alice');
+  await assertFails(setDoc(doc(bob,'channels/community/typingStatus/alice'),{voice:{peerId:'not-alice'}},{merge:true}));
+  await assertSucceeds(setDoc(doc(alice,'channels/private-voice'),{createdBy:'alice',members:['alice']}));
+  await assertFails(getDocs(collection(bob,'channels/private-voice/typingStatus')));
+});

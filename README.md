@@ -42,7 +42,7 @@ LYRIA/
 Every signed-in user (including guests) starts in **Everyone**. It uses the fixed
 `channels/community/messages` path, with no growing membership document. Messages
 show the latest 100 entries. Personal and invite-only conversations stay separate;
-voice calls remain available in those private conversations.
+voice is available in both Everyone and private conversations (up to six people per room).
 
 `js/account.js` is the single profile-save controller. `js/account-api.js` sends
 regular authenticated HTTPS requests to Firestore, merges changes into
@@ -304,3 +304,30 @@ polling with fetch streams disabled, before reads or persistence are initialized
 to avoid buffering issues on mobile connections and proxies. Account HTTPS calls
 use the current Firebase user's ID token; credentials are never stored by the
 profile adapter. Both connection and ID-token refresh waits are bounded.
+
+## Voice calls
+
+Voice is opt-in: each person selects the same conversation, taps **Join voice**,
+and allows microphone access. The call panel shows connection status, Mute,
+Enable sound when the browser blocks playback, and Rejoin voice after a failed
+connection. Leaving or switching rooms stops local microphone tracks immediately.
+
+PeerJS 1.5.5 is pinned in `home.html`. The default SDK STUN/TURN configuration is
+preserved, including its public relay pool, rather than replacing it with STUN
+only. Signaling/relay availability and Wi-Fi-to-cellular behavior still require
+real-device testing. A managed production relay can be supplied through
+`window.LYRIA_VOICE_CONFIG.iceServers`, using short-lived credentials obtained from
+an authenticated backend; do not place private long-lived relay credentials in
+this repository. `signaling` can override the PeerServer host for a deployment.
+
+Per-account voice presence shares the existing per-room activity documents at
+`channels/{room}/typingStatus/{uid}`. The `voice` field is independent of `isTyping`
+and includes a random session/peer ID plus heartbeat timestamp. Existing rules
+already restrict writes to that account and reads to room members, including
+Everyone. No rule changes are required. Cleanup transactions compare session IDs
+so an old tab cannot remove a newer session; stale presence expires from the
+active list after 65 seconds. Each peer pair has exactly one offerer, and incoming
+calls are accepted only after opting in and checking room and participant IDs.
+
+Run `npm ci --prefix tests` and `python3 tests/voice-smoke.py` for real two-browser
+WebRTC tests with fake microphones, a local PeerServer, and isolated room data.

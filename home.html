@@ -25,7 +25,7 @@
         <script src="js/performance.js"></script>
 
         <!-- PeerJS powers voice calls -->
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.3.1/peerjs.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.5/peerjs.min.js"></script>
         <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9049091067762501" crossorigin="anonymous"></script>
         <script src="js/mobile.js" defer></script>
       <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
@@ -91,6 +91,10 @@
                 <button id="copy-join-code" class="copy-join-code-btn" aria-label="Copy channel invite code" title="Copy invite code"><span data-icon="link" aria-hidden="true"></span><span class="button-label">Invite</span></button>
                 <button id="inbox-btn" aria-label="Open friend requests" title="Friend requests" onclick="window.location.href='inbox.html'"><span data-icon="inbox" aria-hidden="true"></span><span id="friend-request-count" class="count-badge" style="display:none">0</span></button>
             </header>
+            <section id="voice-panel" class="voice-panel" aria-label="Voice call" hidden>
+                <span data-icon="mic" aria-hidden="true"></span><p id="voice-status" role="status" aria-live="polite"></p>
+                <div class="voice-controls"><button id="voice-mute" type="button" aria-pressed="false">Mute</button><button id="voice-enable-sound" type="button" hidden>Enable sound</button><button id="voice-retry" type="button" hidden>Rejoin voice</button></div>
+            </section>
             <p id="community-notice" class="chat-room-notice" hidden>Everyone signed in can read this room · Latest 100 messages</p>
             <div class="messages" id="messages" role="log" aria-label="Conversation messages" aria-live="polite"><div class="empty-state"><span class="empty-icon"><span data-icon="chat" aria-hidden="true"></span></span><h2>Getting your space ready.</h2><p>Your conversations will appear here in a moment.</p></div></div>
             <!-- Typing Status Indicator -->

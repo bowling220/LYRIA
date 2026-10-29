@@ -522,12 +522,13 @@ function setTypingStatus(isTyping) {
         if (isTyping) {
             typingRef.set({
                 displayName: document.getElementById('user-name').textContent || 'LYRIA member',
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            }).catch(error => {
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                isTyping: true
+            },{merge:true}).catch(error => {
                 console.error("Error setting typing status:", error);
             });
         } else {
-            typingRef.delete().catch(error => {
+            typingRef.set({isTyping:false},{merge:true}).catch(error => {
                 console.error("Error deleting typing status:", error);
             });
         }
@@ -550,7 +551,8 @@ function listenForTypingStatus(channelId) {
         const typingUsers = [];
         snapshot.forEach(doc => {
             const updated = doc.data().timestamp?.toDate?.();
-            if (doc.id !== currentUser.uid && (!updated || Date.now() - updated.getTime() < 15000)) {
+            const typing = doc.data().isTyping === true || (doc.data().isTyping === undefined && Boolean(updated));
+            if (typing && doc.id !== currentUser.uid && (!updated || Date.now() - updated.getTime() < 15000)) {
                 typingUsers.push(doc.data().displayName || 'Someone');
             }
         });
@@ -751,10 +753,9 @@ function switchChannel(channelId) {
     });
     loadMessages(channelId);     // Load messages for the new channel
     listenForTypingStatus(channelId); // Listen for typing status changes
-    const shared = channelId === COMMUNITY_CHANNEL_ID;
     const voiceButton = document.getElementById('make-voice-call');
-    voiceButton.disabled = shared; voiceButton.style.display = shared ? 'none' : 'inline-flex'; voiceButton.title = shared ? 'Voice is available in your private conversations.' : 'Join voice';
-    if (!shared && typeof window.setupCallListeners === 'function') window.setupCallListeners();
+    voiceButton.disabled = false; voiceButton.title = 'Join voice (up to 6 people)';
+    if (typeof window.setupCallListeners === 'function') window.setupCallListeners(channelId);
 }
 
 // Function to open the modal
