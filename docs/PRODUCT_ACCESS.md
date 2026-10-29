@@ -7,7 +7,7 @@ web architecture, shared UI, authenticated profile PATCH saves, and connection r
 
 - The former Premium page contained Basic/Premium prices, plan selection, a disabled
   checkout placeholder, a hidden legacy-access button, and promised private benefits.
-  No payment provider or working membership backend was connected. The page is deleted.
+  No payment provider or working membership backend was connected. Its complete implementation is removed; only a compatibility redirect remains at the old address.
 - Community, News, Inbox, and landing-footer navigation linked to that page. The
   account dialog promoted it and `community.js` attached its navigation handler.
   All are removed, including the handler so friends/request startup still runs.
@@ -15,8 +15,9 @@ web architecture, shared UI, authenticated profile PATCH saves, and connection r
   connection controller's advertising-script exception are removed. No ad slots,
   loading functions, or payment dependencies were found elsewhere in authored sources.
 - Active and historical CSS contained plan/promotion styles. Those rules and the
-  six entirely unreferenced legacy stylesheets are deleted. Only the shared theme
-  remains. The unused payment badge asset is deleted.
+  six entirely unreferenced legacy stylesheet implementations are removed. Their
+  old addresses contain only a retirement comment; normal pages use the shared theme.
+  The payment badge artwork is replaced by a transparent compatibility pixel.
 - Badge rendering previously accepted arbitrary stored IDs, including payment badges.
   Chat and profile cards now share a supported community/role badge list. Staff,
   moderators, developers, beta testers, early users, and featured members remain.
@@ -52,7 +53,7 @@ Expected remaining terms have these meanings:
 
 - This audit, README, and regression tests discuss removed monetization or use
   obsolete account fields to prove compatibility. Negative assertions intentionally
-  name forbidden scripts, IDs, selectors, and the deleted page.
+  name forbidden scripts, IDs, selectors, and the retired page.
 - The landing section says “shouldn’t need an upgrade” and “No Nitro. No boosts.
   No paywalls. No ads.” These communicate universal access, not offers or controls.
 - `likeSubscriptions`, `commentSubscriptions`, `unsubscribeRequests`, and listener
@@ -81,7 +82,7 @@ external validation. The refactor does not require changes to Firebase rules.
 ### Completed checks (2026-10-29)
 
 - Production build and syntax checks for all authored web JavaScript/build scripts: passed.
-- Static product-access and voice-config Node suites: 4 tests passed.
+- Static product-access and voice-config Node suites: 5 tests passed.
 - Firestore emulator: 13 tests passed, including ignored legacy fields and atomic reactions.
 - Browser suites: `ui-smoke.py` (30 responsive page cases), `gif-smoke.py`,
   `appearance-reactions-smoke.py`, `reload-smoke.py`, `social-loading-smoke.py`,
@@ -105,3 +106,19 @@ controller changes or feature disabling were needed.
 Real Google provider login and physical iPhone microphones cannot be established
 by browser fixtures. Public cross-network TURN still depends on owner-configured
 Metered settings; local relay verification does not establish public relay setup.
+
+
+### Retained static-host objects
+
+Live verification found that Render continued serving removed deployment objects
+beyond a cache refresh, even though new app pages and repository deletions were correct.
+The host publishes the repository root (verified by public root files and absent
+`dist/client/` routes), so root compatibility HTML at
+the former pricing address redirects to `/`, retired stylesheet addresses contain
+only a retirement comment, and the old badge address returns a transparent pixel.
+These generated responses contain no plan, payment UI, ad code, or feature gate;
+none are linked by normal application navigation. The original page, image artwork, and six stylesheet implementations
+are removed. Only these minimal compatibility responses remain at the old paths
+and are copied unchanged by the existing build. Regression checks verify their
+contents instead of expecting the retaining host to delete objects. This avoids depending on a host cache
+purge or leaving an old pricing page reachable by a bookmark.

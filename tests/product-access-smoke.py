@@ -1,6 +1,6 @@
 """Universal profile access and safe ignored historical data, with no production writes."""
 from pathlib import Path
-import json
+import json,mimetypes
 from playwright.sync_api import sync_playwright
 from browser_fixture import make_page
 ROOT=Path(__file__).resolve().parents[1]
@@ -61,5 +61,17 @@ with sync_playwright() as p:
  assert not page.evaluate("__testData.get('channels/join-test').members.includes('test-member')")
  assert not page.evaluate("__testData.get('users/test-member').channels.includes('join-test')")
  assert page.evaluate("__testData.get('users/test-member').friends")==['maya']
+ page.close()
+ # A bookmarked retired address must navigate to the normal landing page, with no old UI.
+ page=browser.new_page()
+ def retired_route(route):
+  if not route.request.url.startswith('http://localhost:8126/'):route.abort();return
+  path=route.request.url.split('8126/')[1].split('?')[0] or 'index.html'
+  file=ROOT/'dist/client'/path
+  if file.is_file():route.fulfill(body=file.read_bytes(),content_type=mimetypes.guess_type(str(file))[0] or 'text/plain')
+  else:route.fulfill(status=404,body='')
+ page.route('**/*',retired_route);page.goto('http://localhost:8126/premium-upgrade.html')
+ page.wait_for_url('http://localhost:8126/');page.wait_for_selector('.everyone-section')
+ assert page.locator('#confirm-upgrade,.premium-plans').count()==0
  page.close();browser.close()
 print('PASS: 8 mobile/desktop ordinary/guest/legacy profile cases; GIF avatars/banners, bios, statuses, badges, reload, preserved fields, messaging, no ad requests, channel join/leave.')

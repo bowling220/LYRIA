@@ -14,7 +14,7 @@ test('all runtime sources and production output are free of monetization impleme
   assert.equal(forbidden.test(source),false,path);
  }
 });
-test('all five page links and assets resolve; deleted product cannot be shipped',async()=>{
+test('all five page links resolve; retired addresses cannot ship their old implementation',async()=>{
  for(const name of ['index.html','home.html','login.html','News.html','inbox.html']){
   for(const directory of [root,resolve(root,'dist/client')]){
    const html=await readFile(resolve(directory,name),'utf8');
@@ -26,9 +26,19 @@ test('all five page links and assets resolve; deleted product cannot be shipped'
   }
  }
  for(const path of ['premium-upgrade.html','assets/premium.png','chat.css','inbox.css','styles.css','voiceCall.css','css/main.css','css/lyria-v6.css']){
-  for(const directory of [root,resolve(root,'dist/client')])await assert.rejects(access(resolve(directory,path)));
+  const retired=await readFile(resolve(root,'dist/client',path));
+  assert.deepEqual(await readFile(resolve(root,path)),retired,'source and built compatibility response must match');
+  if(path.endsWith('.html')){assert.match(retired.toString(),/location.replace\("\/"\)/);assert.doesNotMatch(retired.toString(),forbidden)}
+  else if(path.endsWith('.css'))assert.equal(retired.toString(),'/* Retired stylesheet. LYRIA uses css/theme.css. */\n');
+  else assert.ok(retired.length<100,'retired badge must not retain its image');
  }
 });
+test('retired page redirects to LYRIA without loading old product code',async()=>{
+ const html=await readFile(resolve(root,'dist/client/premium-upgrade.html'),'utf8');
+ assert.match(html,/http-equiv="refresh" content="0;url=\/"/);
+ assert.match(html,/<a href="\/">Open LYRIA<\/a>/);
+});
+
 test('landing positioning is confined to one shared-style section',async()=>{
  const html=await readFile(resolve(root,'index.html'),'utf8');
  assert.equal((html.match(/class="everyone-section"/g)||[]).length,1);

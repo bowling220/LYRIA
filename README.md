@@ -77,7 +77,7 @@ variables for colors and typography; reuse the shared button, dialog, card, and
 navigation classes instead of adding per-page style blocks. `LyriaUI.icon(name)`
 and `data-icon` use the same local SVG icon set. Routine feedback uses
 `LyriaUI.notify(message, type)`; dialogs share keyboard focus management and
-Escape/backdrop dismissal. Unused historical stylesheets have been removed; the web pages use the shared theme.
+Escape/backdrop dismissal. Historical styles have been retired; normal web pages load only the shared theme.
 
 `npm run build` creates the production assets. See [tests/README.md](tests/README.md)
 for reproducible browser checks and the remaining live-service checks.
@@ -485,8 +485,11 @@ Messages have a React control with eight emoji choices. Counts toggle your own r
 ## Full access and old account data
 
 The former Premium pricing page, promotions, payment placeholders, AdSense script,
-unused stylesheets, and payment badge image have been removed. No checkout or
-membership service exists. There are no feature gates based on account payment
+old stylesheet rules, and payment badge artwork have been removed. No checkout or
+membership service exists. On static hosts that retain deleted objects, minimal
+compatibility responses redirect the old page address to the landing page and
+replace retired styles/images with harmless empty content. These contain none of the original
+page, badge artwork, or style rules and are never linked by normal navigation. There are no feature gates based on account payment
 state. Non-payment role and community badges remain; supported badge IDs are
 `Beta`, `DevBadge`, `EarlyAccess`, `Mod`, `admin`, and `feature`. Add genuine future
 community badge IDs to the shared media helper and supply their assets.

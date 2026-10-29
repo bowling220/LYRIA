@@ -150,7 +150,7 @@ switching between chat and call without changing the live session.
 
 After `npm run build`, run `node --test tests/product-access.test.mjs` and
 `python3 tests/product-access-smoke.py`. Static checks cover every authored runtime
-source, local HTML links, production output, removed pages/assets, and absence of
+source, local HTML links, production output, retired implementation removal and harmless compatibility redirects/placeholders for retaining hosts, and absence of
 monetization scripts or UI. Browser checks cover ordinary and historical accounts
 with true, false, and malformed obsolete flags: load/reload, preserved fields,
 profile saving, GIF avatars/banners, community badges, and message sending. They
