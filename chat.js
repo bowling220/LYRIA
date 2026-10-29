@@ -26,6 +26,19 @@ const initializeFirebase = async () => {
 
 let currentUser;
 let currentChannel;
+const channelNames=new Map([[COMMUNITY_CHANNEL_ID,'Everyone']]);
+function rememberChannelName(id,name){
+    if(typeof name==='string' && name.trim())channelNames.set(id,name.trim());
+    if(currentChannel===id)renderChannelIdentity(id);
+}
+function renderChannelIdentity(id){
+    if(currentChannel!==id)return;
+    const name=channelNames.get(id) || (id===`personal-${currentUser?.uid}`?'My personal channel':'Conversation');
+    const heading=document.getElementById('channel-title');heading.textContent=name;heading.dataset.selectedChannelId=id;
+    document.querySelector('.chat-area').dataset.selectedChannelId=id;
+    document.getElementById('message-input').placeholder=id===COMMUNITY_CHANNEL_ID?'Message everyone…':'Message #'+name;
+    window.setupCallListeners?.(id,name);
+}
 let lastMessageTimestamp = null;
 let unsubscribeFromMessages = null;
 let unsubscribeTyping = null; // Unsubscribe function for message listener
@@ -396,7 +409,7 @@ function setupUIEventListeners() {
                 }, { merge: true });
                 await batch.commit();
 
-                switchChannel(channelId);
+                switchChannel(channelId,value);
                 loadChannels();
                 closeChannelActionModal();
 
@@ -422,7 +435,7 @@ function setupUIEventListeners() {
                 await userDocRefForCurrentUser().set({
                     channels: firebase.firestore.FieldValue.arrayUnion(channelId)
                 }, { merge: true });
-                switchChannel(channelId);
+                switchChannel(channelId,channel.name);
                 loadChannels();
                 closeChannelActionModal();
             } else {
@@ -619,6 +632,7 @@ function loadChannels() {
                 channels.sort((a, b) => (b.favorite === a.favorite) ? 0 : (b.favorite ? 1 : -1));
 
                 channels.forEach(channel => {
+                    rememberChannelName(channel.id,channel.name);
                     const channelElement = document.createElement('li');
                     const channelContainer = document.createElement('div');
                     channelContainer.className = 'channel-container';
@@ -631,10 +645,7 @@ function loadChannels() {
                     button.setAttribute('aria-current', channel.id === currentChannel ? 'true' : 'false');
                     button.setAttribute('data-channel-id', channel.id);
                     button.onclick = () => {
-                        switchChannel(channel.id);
-                        document.querySelectorAll('.channel-btn').forEach(btn => btn.classList.remove('active-channel'));
-                        button.classList.add('active-channel');
-                        document.getElementById('message-input').placeholder = `Message #${channel.name}`;
+                        switchChannel(channel.id,channel.name);
                         if (window.innerWidth <= 768) {
                             setMobileMenuOpen(false);
                         }
@@ -678,16 +689,10 @@ function loadMessages(channelId) {
     const notice=document.getElementById('community-notice');
     if(notice)notice.hidden=channelId !== COMMUNITY_CHANNEL_ID;
     if(subtitle)subtitle.textContent=channelId === COMMUNITY_CHANNEL_ID?'Everyone signed in to LYRIA can read this room.':'A little space to stay connected.';
-    if (channelId === COMMUNITY_CHANNEL_ID) {
-        document.getElementById('channel-title').textContent='Everyone';
-        document.getElementById('message-input').placeholder='Message everyone…';
-    } else db.collection('channels').doc(channelId).get().then(doc => {
-        if (doc.exists && currentChannel === channelId) {
-            const name = doc.data().name || 'Conversation';
-            document.getElementById('channel-title').textContent = name;
-            document.getElementById('message-input').placeholder = 'Message ' + name + '…';
-        }
-    }).catch(error => console.error('Channel details unavailable', error));
+    renderChannelIdentity(channelId);
+    if(!channelNames.has(channelId))window.LyriaDataAPI.read('channels/'+channelId).then(doc=>{
+        if(version===messageLoadVersion && currentChannel===channelId && doc.exists)rememberChannelName(channelId,doc.data().name);
+    }).catch(error=>console.warn('Channel details unavailable',error));
     unsubscribeFromMessages = window.LyriaDataAPI.watch(
         db.collection('channels').doc(channelId).collection('messages').orderBy('timestamp').limitToLast(100),
         'messages',{parent:'channels/'+channelId,orderBy:[{field:{fieldPath:'timestamp'},direction:'DESCENDING'}],limit:100,reverse:true,onHealthy:()=>window.LyriaConnection?.ready('messages')},snapshot => {
@@ -765,9 +770,10 @@ function logout() {
 }
 
 // Function to switch channels
-function switchChannel(channelId) {
+function switchChannel(channelId,name) {
     if (currentChannel && currentChannel !== channelId) setTypingStatus(false);
-    currentChannel = channelId; // Update currentChannel when switching channels
+    currentChannel = channelId;
+    rememberChannelName(channelId,name);
     const leaveButton = document.getElementById('leave-channel');
     if (leaveButton && currentUser) {
         const isPersonalChannel = channelId === `personal-${currentUser.uid}`;
@@ -784,7 +790,7 @@ function switchChannel(channelId) {
     listenForTypingStatus(channelId); // Listen for typing status changes
     const voiceButton = document.getElementById('make-voice-call');
     voiceButton.disabled = false; voiceButton.title = 'Join voice (up to 6 people)';
-    if (typeof window.setupCallListeners === 'function') window.setupCallListeners(channelId);
+
 }
 
 // Function to open the modal

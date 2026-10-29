@@ -455,3 +455,9 @@ interrupted/ended microphone repair, signaling/media recovery, stalled SDK
 presence streams, and late permission cleanup. They do not prove iPhone hardware
 behavior or the user's Metered configuration. Cross-network readiness still
 requires completing [VOICE_SETUP.md](docs/VOICE_SETUP.md) and checking two devices.
+
+Room selection updates the heading and composer immediately from the same room
+metadata used by the sidebar. Voice receives that room ID and label explicitly.
+A separate SDK metadata lookup can no longer leave Everyone in the heading while
+a private conversation is selected; unknown names use a bounded HTTPS lookup
+with a stale-response guard.

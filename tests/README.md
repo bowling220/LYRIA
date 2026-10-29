@@ -127,3 +127,10 @@ The emulator suite checks version-guarded presence cleanup and preservation of
 typing fields. `voice-ui-smoke.py` also checks active recovery controls and the
 composer on five screen sizes. Physical iPhone and Wi-Fi/cellular verification
 remain necessary after the owner configures Metered.
+
+`python3 tests/channel-selection-smoke.py` reproduces a selected Test room while
+SDK channel-metadata reads never resolve. It verifies the heading, composer,
+active row, private message reads/writes, and the actual voice-session target and
+label, then repeatedly switches between shared, personal, and private rooms on
+phone/tablet layouts. It cancels the inspected voice session before connecting
+to a signaling service and never accesses production accounts.

@@ -3,7 +3,7 @@
   const $=id=>document.getElementById(id);
   const UI=window.LyriaUI, Presence=window.LyriaVoicePresence;
   const MAX_PEOPLE=6, PRESENCE_MS=65000, HEARTBEAT_MS=20000;
-  let roomId=null, session=null, generation=0, directoryOff=null, directoryMembers={}, directoryVersion=0, directorySignature='';
+  let roomId=null, roomLabel='Everyone', session=null, generation=0, directoryOff=null, directoryMembers={}, directoryVersion=0, directorySignature='';
   const CHANNELS=[{id:'lounge',name:'Lounge'},{id:'gaming',name:'Gaming'},{id:'quiet',name:'Quiet Corner'}];
   const channelOf=p=>CHANNELS.some(c=>c.id===p?.channel)?p.channel:'lounge';
   const channelName=id=>CHANNELS.find(c=>c.id===id)?.name || 'Lounge';
@@ -314,7 +314,7 @@
     if(!window.isSecureContext || !navigator.mediaDevices?.getUserMedia){UI.notify('Voice needs a microphone-capable browser on HTTPS.','error');return;}
     if(typeof Peer!=='function'){UI.notify('The voice connection library could not load. Refresh and try again.','error');return;}
     const id='v'+Array.from(crypto.getRandomValues(new Uint8Array(16)),byte=>byte.toString(16).padStart(2,'0')).join('');
-    const s={id,room:targetRoom,channel,label:label || document.getElementById('channel-title')?.textContent || (targetRoom==='community'?'Everyone':'Conversation'),userId:user.uid,db,calls:new Map(),retries:new Map(),members:{},joining:true,closed:false,registered:false};
+    const s={id,room:targetRoom,channel,label:label || (targetRoom===roomId?roomLabel:targetRoom==='community'?'Everyone':'Conversation'),userId:user.uid,db,calls:new Map(),retries:new Map(),members:{},joining:true,closed:false,registered:false};
     session=s;const version=++generation;render();status('Allow microphone access to join voice…');
     // Start microphone permission from this direct user gesture, not an incoming call.
     const media=(prepared || prepare()).then(stream=>{
@@ -365,7 +365,8 @@
       return false;
     }
   }
-  function setRoom(next){
+  function setRoom(next,label){
+    roomLabel=label || (next==='community'?'Everyone':'Conversation');
     if(next!==roomId){roomId=next;watchDirectory()}render();
   }
   $('make-voice-call')?.addEventListener('click',()=>join('lounge'));
