@@ -38,7 +38,7 @@ with sync_playwright() as p:
                 if file.is_file():r.fulfill(body=file.read_bytes(),content_type=mimetypes.guess_type(str(file))[0] or 'text/plain')
                 else:r.fulfill(status=404,body='')
             elif 'www.gstatic.com/firebasejs/' in url and not '-compat' in url:
-                names={'firebase-app.js':['initializeApp'],'firebase-auth.js':['getAuth','onAuthStateChanged'],'firebase-firestore.js':['getFirestore','doc','increment','onSnapshot','setDoc','getDoc','collection','addDoc','query','orderBy','getDocs']}.get(url.split('/')[-1],[])
+                names={'firebase-app.js':['initializeApp'],'firebase-auth.js':['getAuth','onAuthStateChanged'],'firebase-firestore.js':['initializeFirestore','getFirestore','doc','increment','onSnapshot','setDoc','getDoc','collection','addDoc','query','orderBy','getDocs']}.get(url.split('/')[-1],[])
                 r.fulfill(body='\n'.join('export const '+name+'=window.__firebaseModule.'+name+';' for name in names),content_type='text/javascript')
             else:r.abort()
         page.route('**/*',route)
@@ -94,6 +94,7 @@ with sync_playwright() as p:
     # Account data is authoritative in Firestore, and save feedback must reflect confirmation.
     page=make_page(1440,1000,False);page.goto('http://localhost:8124/home.html',wait_until='load');page.wait_for_timeout(100)
     assert page.locator('#channel-title').inner_text()=='Everyone'
+    assert page.evaluate('window.__firestoreTransport.experimentalForceLongPolling') is True
     assert page.locator('[data-channel-id="community"]').count()==1
     assert page.locator('#leave-channel').is_disabled()
     page.locator('#settings-btn').click();page.wait_for_timeout(50)
@@ -138,6 +139,23 @@ with sync_playwright() as p:
     page.close()
     for button in ['#guest-login','#google-signin']:
         page=make_page();page.goto('http://localhost:8124/login.html',wait_until='load');page.locator(button).click();page.wait_for_url('**/home.html');page.close()
+    # A stalled HTTPS request must release the save button and expose recovery.
+    page=make_page(1440,1000,False);page.goto('http://localhost:8124/home.html',wait_until='load');page.wait_for_timeout(100)
+    page.locator('#settings-btn').click();page.wait_for_timeout(50);page.clock.install()
+    page.evaluate('window.__stallAccount=true');page.locator('#bio-input').fill('Keep this after a timeout');page.locator('#update-bio-btn').click()
+    page.clock.fast_forward(16000)
+    page.wait_for_function("document.getElementById('bio-save-status').dataset.state==='error'")
+    assert page.locator('#update-bio-btn').is_enabled()
+    assert page.locator('#bio-input').input_value()=='Keep this after a timeout'
+    assert page.locator('#reconnect-account').is_visible()
+    page.evaluate('window.__stallAccount=false');page.locator('#reconnect-account').click()
+    page.wait_for_function("document.getElementById('account-load-status').dataset.state==='ready'")
+    assert page.locator('#bio-input').input_value()=='Keep this after a timeout'
+    page.reload(wait_until='load');page.wait_for_timeout(100);page.locator('#settings-btn').click();page.wait_for_timeout(50)
+    assert page.locator('#bio-input').input_value()=='Keep this after a timeout'
+    assert page.locator('#bio-input').get_attribute('data-dirty')=='true'
+    page.locator('#update-bio-btn').click();page.wait_for_function("document.getElementById('bio-save-status').dataset.state==='saved'")
+    page.close()
     page=make_page();page.add_init_script('window.__denyCommunity=true');page.goto('http://localhost:8124/home.html',wait_until='load')
     page.wait_for_function("document.getElementById('channel-title').textContent==='My personal channel'")
     assert page.locator('[data-channel-id="community"]').count()==1

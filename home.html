@@ -15,9 +15,9 @@
         <link rel="preload" href="assets/icon.png" as="image">
 
         <!-- Firebase SDKs -->
-        <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-        <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
-        <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-app-compat.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-auth-compat.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore-compat.js"></script>
 
         <!-- Utility Scripts -->
         <script src="js/config.js"></script>
@@ -203,7 +203,7 @@
     <div class="modal-content">
         <button id="close-modal" class="close-button" aria-label="Close Settings Modal"><span data-icon="close" aria-hidden="true"></span></button>
         <h2 id="settings-modal-title">Your account</h2>
-        <div class="account-summary"><p id="account-identity"></p><p id="account-load-status" role="status" aria-live="polite"></p></div>
+        <div class="account-summary"><p id="account-identity"></p><p id="account-load-status" role="status" aria-live="polite"></p><button id="reconnect-account" class="action-btn" type="button" hidden>Reconnect account</button></div>
 
         <!-- Toggle Dark Mode -->
         <div class="modal-section">
@@ -272,6 +272,7 @@
 </div>
 
     <!-- Include voiceCall.js before chat.js -->
+    <script src="js/account-api.js"></script>
     <script src="js/account.js"></script>
     <script src="voiceCall.js"></script>
     <script src="chat.js"></script>

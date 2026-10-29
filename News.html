@@ -10,9 +10,9 @@
 
     <script type="module">
         // Importing Firebase app and Firestore modules
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js';
-        import { getFirestore, doc, increment, onSnapshot, setDoc, getDoc, collection, addDoc, query, orderBy, getDocs } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js';
-        import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js';
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js';
+        import { initializeFirestore, doc, increment, onSnapshot, setDoc, getDoc, collection, addDoc, query, orderBy, getDocs } from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js';
+        import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js';
 
         // Load environment variables for security
         window.env = window.env || {
@@ -37,7 +37,7 @@
 
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+        const db = initializeFirestore(app, {experimentalForceLongPolling:true,useFetchStreams:false});
         const auth = getAuth(app);
         const newsAuthReady = new Promise(resolve => {
             let unsubscribe = () => {};

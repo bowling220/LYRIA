@@ -44,9 +44,12 @@ Every signed-in user (including guests) starts in **Everyone**. It uses the fixe
 show the latest 100 entries. Personal and invite-only conversations stay separate;
 voice calls remain available in those private conversations.
 
-`js/account.js` is the single profile-save controller. It merges changes into
-`users/{auth.uid}`, verifies the result with a server read, and shows unsaved,
-saving, saved, or failed states. A failed or disconnected save never reports
+`js/account.js` is the single profile-save controller. `js/account-api.js` sends
+regular authenticated HTTPS requests to Firestore, merges changes into
+`users/{auth.uid}`, and verifies the server response. Requests time out after 15
+seconds, independently of live chat streams. The UI shows unsaved, saving, saved,
+or failed states and offers a reconnect action. Unsaved name/bio drafts survive a
+refresh in the same tab, scoped to the signed-in account. A failed or disconnected save never reports
 success. Display names are saved to LYRIA first; updating Firebase Auth's optional
 profile copy cannot prevent an account save.
 
@@ -296,3 +299,8 @@ The application includes Firebase Analytics integration. Monitor:
 **Built with ❤️ by the LYRIA Team**
 
 For questions or support, please contact the development team or create an issue on GitHub.
+The web Firebase SDK is pinned to 11.10.0. All Firestore clients use forced long
+polling with fetch streams disabled, before reads or persistence are initialized,
+to avoid buffering issues on mobile connections and proxies. Account HTTPS calls
+use the current Firebase user's ID token; credentials are never stored by the
+profile adapter. Both connection and ID-token refresh waits are bounded.

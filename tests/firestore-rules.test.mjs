@@ -59,3 +59,24 @@ test('signed-in guests can also take part in Everyone',async()=>{
   await assertSucceeds(addDoc(collection(guest,'channels/community/messages'),{senderId:'guest',message:'Hello as a guest',timestamp:serverTimestamp()}));
   assert.equal((await getDocs(collection(member('alice'),'channels/community/messages'))).size,1);
 });
+
+test('the real account HTTPS adapter merges and verifies profiles without a live stream',async()=>{
+  const {runInNewContext}=await import('node:vm');
+  const window={firebaseConfig:{getApp:()=>({options:{projectId:'demo-lyria'}})}};
+  const nativeFetch=globalThis.fetch;
+  runInNewContext(await readFile(new URL('../js/account-api.js',import.meta.url),'utf8'),{
+    window,AbortController,URLSearchParams,setTimeout,clearTimeout,
+    fetch:(url,options)=>nativeFetch(url.replace('https://firestore.googleapis.com','http://127.0.0.1:8085'),options)
+  });
+  const token=uid=>{
+    const now=Math.floor(Date.now()/1000);
+    return Buffer.from(JSON.stringify({alg:'none',typ:'JWT'})).toString('base64url')+'.'+Buffer.from(JSON.stringify({aud:'demo-lyria',iss:'https://securetoken.google.com/demo-lyria',sub:uid,user_id:uid,iat:now,exp:now+3600,auth_time:now,firebase:{sign_in_provider:'google.com'}})).toString('base64url')+'.';
+  };
+  const user={uid:'rest-alice',getIdToken:async()=>token('rest-alice')};
+  assert.equal((await window.LyriaAccountAPI.read(user)).exists,false);
+  await window.LyriaAccountAPI.create(user,{displayName:'Alice',bio:'First bio',darkMode:false,friends:[]});
+  const result=await window.LyriaAccountAPI.save(user,{bio:'Confirmed over HTTPS',darkMode:true});
+  assert.equal(result.data.bio,'Confirmed over HTTPS');assert.equal(result.data.darkMode,true);assert.equal(result.data.displayName,'Alice');
+  assert.equal((await getDoc(doc(member('rest-alice'),'users/rest-alice'))).data().bio,'Confirmed over HTTPS');
+  await assert.rejects(window.LyriaAccountAPI.save({uid:'rest-alice',getIdToken:async()=>token('bob')},{bio:'Not my account'}),error=>error.code==='permission-denied');
+});

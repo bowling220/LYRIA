@@ -33,9 +33,12 @@ class FirebaseConfig {
 
         try {
             // Initialize Firebase
-            this.app = firebase.initializeApp(config);
+            this.app = firebase.apps.length ? firebase.app() : firebase.initializeApp(config);
             this.auth = firebase.auth();
             this.db = firebase.firestore();
+            // Regular long-poll requests tolerate mobile network switches and buffering proxies.
+            // Configure transport before persistence or any Firestore read/write starts.
+            this.db.settings({experimentalForceLongPolling: true, useFetchStreams: false});
             
             // Enable offline persistence
             this.db.enablePersistence({

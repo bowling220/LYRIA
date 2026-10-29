@@ -17,7 +17,7 @@ server is not required. It checks all six web pages at six viewport sizes,
 horizontal overflow, duplicate IDs, script syntax, icon rendering, focus trapping
 and restoration, mobile keyboard resizing, channel creation, message sending and
 failure recovery, friends, news likes/comments and safe article rendering,
-mocked Google/guest sign-in, account saves surviving reloads, save failures, pending writes, newer unsaved edits, the shared-room fallback, and the pricing preview. Screenshots are written to
+mocked Google/guest sign-in, account saves surviving reloads, save failures, pending writes, newer unsaved edits, stalled-request timeouts, reconnection, draft restoration, the shared-room fallback, and the pricing preview. Screenshots are written to
 `test-artifacts/`, which is ignored by Git.
 
 Real Google sign-in, Firestore permissions and indexes, microphone permissions,
@@ -31,3 +31,10 @@ Install the isolated test dependencies with `npm ci --prefix tests`, then run
 `demo-lyria`, so they cannot access production. They verify shared messages
 between two accounts, signed-in guest access, sender ownership, private-chat
 access, and saving a missing profile under the same account UID.
+
+The account adapter is tested against the real Firestore emulator REST endpoint
+using an emulator-only token. It verifies merges, server-confirmed values, and
+permission failures without relying on WebChannel listeners. Browser tests verify
+that a hung request releases the save button, offers reconnecting, and keeps the
+unsaved draft through a reload. These do not establish that a specific user's
+Safari network is working; that still needs checking on the device.
