@@ -193,3 +193,6 @@ The isolated suite checks full-link copying, clipboard-denied fallback, invite c
 at four widths, explicit acceptance, failed-join feedback/retry, room selection,
 pasted links in the Join dialog, invalid links, Everyone, and returning from both
 Google and guest sign-in. It never connects to production Firebase.
+
+`python3 tests/location-restore-smoke.py` verifies page/room restoration on mobile
+and desktop, explicit Everyone selection, and rejection of deleted/inaccessible rooms.

@@ -27,6 +27,8 @@ const initializeFirebase = async () => {
 let currentUser;
 let currentChannel;
 const channelNames=new Map([[COMMUNITY_CHANNEL_ID,'Everyone']]);
+let channelSelectionVersion=0;
+
 function rememberChannelName(id,name){
     if(typeof name==='string' && name.trim())channelNames.set(id,name.trim());
     if(currentChannel===id)renderChannelIdentity(id);
@@ -139,13 +141,35 @@ initializeFirebase().then(() => {
         if(!currentUser){location.reload();return;}
         window.LyriaConnection.ready('recovery');
         await db.disableNetwork();await db.enableNetwork();
-        loadMessages(currentChannel || COMMUNITY_CHANNEL_ID);loadChannels();
-        listenForTypingStatus(currentChannel || COMMUNITY_CHANNEL_ID);
+        if(currentChannel)loadMessages(currentChannel);else restoreConversation(currentUser);loadChannels();
+        if(currentChannel)listenForTypingStatus(currentChannel);
         window.LyriaVoice?.refreshConnection?.();
         window.LyriaCommunity?.refreshRequests();
         window.LyriaCalls?.refresh();
         window.LyriaAccount?.reconnect({restartLive:false});
     });
+
+function restoreConversation(user){
+    const version=channelSelectionVersion;
+    let saved=null;try{saved=JSON.parse(localStorage.getItem('lyria:last-conversation:'+user.uid))}catch{}
+    const requested=new URLSearchParams(location.search).get('channel');
+    const id=requested || saved?.id || COMMUNITY_CHANNEL_ID;
+    if(id===COMMUNITY_CHANNEL_ID || !/^[A-Za-z0-9_-]{1,180}$/.test(id)){switchChannel(COMMUNITY_CHANNEL_ID);return}
+    document.getElementById('channel-title').textContent=saved?.id===id && typeof saved.name==='string'?saved.name:'Opening conversation…';
+    document.getElementById('message-input').placeholder='Opening your conversation…';
+    document.getElementById('make-voice-call').disabled=true;
+    window.LyriaConnection?.pending('messages');
+    window.LyriaDataAPI.read('channels/'+id).then(doc=>{
+        if(currentUser?.uid!==user.uid || channelSelectionVersion!==version)return;
+        if(doc.exists && Array.isArray(doc.data().members) && doc.data().members.includes(user.uid))switchChannel(doc.id,doc.data().name);
+        else {switchChannel(COMMUNITY_CHANNEL_ID);window.LyriaUI.notify('That conversation is no longer available to your account.','error')}
+    }).catch(error=>{
+        if(currentUser?.uid!==user.uid || channelSelectionVersion!==version)return;
+        if(error.code==='permission-denied' || error.code==='not-found')switchChannel(COMMUNITY_CHANNEL_ID);
+        else window.LyriaConnection?.fail('messages','Your last conversation couldn’t reopen. Try reconnecting.');
+    });
+}
+
 
     // Use one authentication path for user setup, channel setup and UI listeners.
     auth.onAuthStateChanged(async (user) => {
@@ -156,16 +180,8 @@ initializeFirebase().then(() => {
 
         currentUser = user;
         window.LyriaConnection?.ready('startup');
-        // Everyone is a shared room, not a growing per-user membership list.
-        switchChannel(COMMUNITY_CHANNEL_ID);
+        restoreConversation(user);
         loadChannels();
-        // An invitation opens its accepted room; URL parameters alone never grant membership.
-        const requested=new URLSearchParams(location.search).get('channel');
-        if(requested && requested!==COMMUNITY_CHANNEL_ID && /^[A-Za-z0-9_-]{1,180}$/.test(requested)){
-            window.LyriaInvites.bounded(db.collection('channels').doc(requested).get({source:'server'})).then(doc=>{
-                if(currentUser?.uid===user.uid && currentChannel===COMMUNITY_CHANNEL_ID && doc.exists && doc.data().members?.includes(user.uid))switchChannel(doc.id,doc.data().name);
-            }).catch(()=>window.LyriaUI.notify('The invited conversation could not open. Try its invite link again.','error'));
-        }
         try {
             await window.LyriaAccount.ensureUser(user);
             const personalChannelId = `personal-${user.uid}`;
@@ -691,6 +707,11 @@ function logout() {
 
 // Function to switch channels
 function switchChannel(channelId,name) {
+    ++channelSelectionVersion;
+    const savedName=name || channelNames.get(channelId) || (channelId===`personal-${currentUser?.uid}`?'My personal channel':'Conversation');
+    try{if(currentUser)localStorage.setItem('lyria:last-conversation:'+currentUser.uid,JSON.stringify({id:channelId,name:savedName}))}catch{}
+    try{const url=new URL(location.href);url.searchParams.set('channel',channelId);history.replaceState(null,'',url)}catch{}
+
     if(currentChannel && currentChannel!==channelId)window.LyriaVoiceView?.showChat();
     if (currentChannel && currentChannel !== channelId) setTypingStatus(false);
     currentChannel = channelId;
