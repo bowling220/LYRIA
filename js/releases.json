@@ -2,6 +2,26 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "id": "2026-10-30-a-warmer-welcome",
+      "date": "2026-10-30",
+      "title": "A little more at home.",
+      "summary": "A friendlier welcome and fewer moments wondering what’s loading.",
+      "changes": [
+        {
+          "type": "Improved",
+          "icon": "star",
+          "title": "A better way to catch up",
+          "description": "A fresh look, one simple pager, and older updates just a tap away. Version details are here when you need them."
+        },
+        {
+          "type": "New",
+          "icon": "chat",
+          "title": "Room to settle in",
+          "description": "Slow startup, chats and your inbox now show real loading feedback, with a retry when needed. Your drafts stay safe."
+        }
+      ]
+    },
+    {
       "id": "2026-10-30-expression-library",
       "date": "2026-10-30",
       "title": "More ways to say it.",

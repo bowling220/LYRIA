@@ -19,10 +19,11 @@ No Firestore schema or rules change is needed for discovery.
 
 ## Verify the deployed configuration
 
-Open **What’s new** (sparkles in the sidebar). The footer shows the release ID,
-short deployed commit, and GIF configuration status, without the credential.
-Build date is available in the footer tooltip. If the footer says the key was not
-included, inspect that commit's Render build log for `GIF search configuration:`.
+Open **What’s new** (sparkles in the sidebar), then select the information button
+(**Version and build details**). It shows the release ID, short deployed commit,
+build date and GIF configuration status, without the credential. If these details
+say the key was not included, inspect that commit's Render build log for
+`GIF search configuration:`.
 Confirm the build runs `npm ci && npm run build`, and the environment variable
 belongs to that same service. `configured` confirms presence, not provider quota
 or GIPHY production approval. A request failure appears in the GIF picker with Retry.

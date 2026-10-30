@@ -11,19 +11,37 @@ with sync_playwright() as p:
   page=make_page(browser,ROOT,width,height,release_seen=False);errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
   page.goto('http://localhost:8124/home.html?channel=studio');page.wait_for_selector('#release-modal[data-ui-open=true]');page.wait_for_selector('#release-changes',state='visible')
   assert page.locator('.release-change').count()==1
+  output=ROOT/'test-artifacts';output.mkdir(parents=True,exist_ok=True)
+  page.screenshot(path=str(output/f'whats-new-{width}x{height}.png'))
+  page.locator('#release-dots button').nth(1).focus();page.keyboard.press('Enter')
+  assert page.locator('#release-dots button[aria-current=true]').evaluate('el=>el===document.activeElement')
+  page.locator('#release-dots button').first.click()
   page.locator('#release-change-next').click();assert 'Change 2 of' in page.locator('#release-change-page').inner_text()
+  page.locator('#release-info-toggle').click()
   assert 'GIF search: key not included' in page.locator('#release-build').inner_text()
+  assert page.locator('#release-details').is_visible()
+  assert page.locator('.release-content').evaluate('el=>el.scrollHeight<=el.clientHeight+1'),(width,height,'version details overflow')
+  page.locator('#release-info-toggle').click()
   assert page.locator('.release-content').evaluate('el=>el.scrollHeight<=el.clientHeight+1'),(width,height,page.locator('.release-content').evaluate('el=>[el.scrollHeight,el.clientHeight]'))
   assert page.locator('#release-continue').bounding_box()['y']+page.locator('#release-continue').bounding_box()['height']<=height
   assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1')
   assert 'channel=studio' in page.url
+  if (width,height) in [(320,480),(667,375)]:
+   for index,entry in enumerate(json.loads((ROOT/'js/releases.json').read_text())['releases']):
+    page.locator('#release-select').select_option(str(index))
+    for change in range(len(entry['changes'])):
+     if change:page.locator('#release-change-next').click()
+     assert page.locator('.release-content').evaluate('el=>el.scrollHeight<=el.clientHeight+1'),(width,height,entry['id'],change)
+     assert page.locator('#release-modal .close-button').evaluate('el=>el.contains(document.elementFromPoint(el.getBoundingClientRect().x+el.clientWidth/2,el.getBoundingClientRect().y+el.clientHeight/2))'),(width,height,'close button covered')
+   page.locator('#release-select').select_option('0')
+   page.locator('#release-change-next').click()
   page.screenshot(path='/tmp/lyria-update-'+str(width)+'.png')
   page.locator('#release-continue').click();page.wait_for_selector('#release-modal[data-ui-open=false]',state='attached')
   assert page.evaluate("localStorage.getItem('lyria:release-seen')")==release
   page.reload();page.wait_for_selector('.message-input',state='visible');page.wait_for_timeout(150)
   assert page.locator('#release-modal[data-ui-open=true]').count()==0
   if width<=768:page.locator('#header-menu-toggle').click()
-  page.locator('[data-open-release]').click();page.wait_for_selector('#release-changes',state='visible');page.locator('#release-older').click();assert page.locator('#release-title').inner_text()==json.loads((ROOT/'js/releases.json').read_text())['releases'][1]['title'];page.locator('#release-newer').click()
+  page.locator('[data-open-release]').click();page.wait_for_selector('#release-changes',state='visible');page.locator('#release-select').select_option('1');assert page.locator('#release-title').inner_text()==json.loads((ROOT/'js/releases.json').read_text())['releases'][1]['title'];page.locator('#release-select').select_option('0')
   page.keyboard.press('Escape');page.wait_for_selector('#release-modal[data-ui-open=false]',state='attached')
   assert not errors,errors
   page.close()
@@ -49,4 +67,4 @@ with sync_playwright() as p:
  page=make_page(browser,ROOT,1440,1000,release_seen=False);page.add_init_script("const original=Storage.prototype.setItem;Storage.prototype.setItem=function(key,value){if(key.startsWith('lyria:release'))throw new DOMException('Storage restricted','SecurityError');return original.call(this,key,value)};")
  page.goto('http://localhost:8124/home.html');page.wait_for_selector('#channels-list .channel-btn');page.wait_for_timeout(100);assert page.locator('#release-modal[data-ui-open=true]').count()==0;page.locator('[data-open-release]').click();page.wait_for_selector('#release-changes',state='visible');page.locator('#release-continue').click();page.close()
  browser.close()
-print('PASS: version/configuration status, paged history and changes without dialog scrolling, once per release, four layouts, manual history, real loading/timeout/skip, saved room, restored panels, News article retention, new versions and failed metadata recovery.')
+print('PASS: six welcome layouts, all published changes on small screens, keyboard step navigation, version details, no dialog scrolling, once-per-release dismissal, real loading/retry, saved panels/room, News retention and storage failures.')
