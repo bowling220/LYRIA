@@ -872,13 +872,15 @@
     position: fixed;
     width: 100%;
     height: var(--visible-height, 100dvh);
-    padding-top: var(--visible-top, 0px);
+    padding-top: 0;
+    --shell-safe-top: env(safe-area-inset-top, 0px);
+    --shell-safe-bottom: env(safe-area-inset-bottom, 0px);
   }
   .lyria-community .top-header {
     display: flex;
-    height: 54px;
-    min-height: 54px;
-    padding: 8px 14px;
+    height: calc(54px + var(--shell-safe-top));
+    min-height: calc(54px + var(--shell-safe-top));
+    padding: calc(8px + var(--shell-safe-top)) 14px 8px;
     border: 0;
     background: transparent;
   }
@@ -894,7 +896,7 @@
     display: flex;
     flex: 1;
     height: auto;
-    padding: 0 8px 64px;
+    padding: 0 8px calc(64px + var(--shell-safe-bottom));
     gap: 0;
     min-height: 0;
   }
@@ -908,8 +910,8 @@
     bottom: 0;
     left: 0;
     right: 0;
-    height: calc(58px + env(safe-area-inset-bottom));
-    padding: 3px 8px env(safe-area-inset-bottom);
+    height: calc(58px + var(--shell-safe-bottom));
+    padding: 3px 8px var(--shell-safe-bottom);
     border-radius: 0;
     border: 0;
     border-top: 1px solid var(--line);
@@ -969,11 +971,14 @@
   }
   .lyria-community .conversation-panel {
     position: fixed;
-    top: 54px;
-    bottom: 62px;
+    top: calc(var(--visible-top, 0px) + 54px + var(--shell-safe-top));
+    bottom: auto;
     left: 8px;
     width: calc(100% - 16px);
-    height: auto;
+    height: calc(
+      var(--visible-height, 100dvh) - 118px - var(--shell-safe-top) -
+        var(--shell-safe-bottom)
+    );
     transform: translateX(-110%);
     z-index: 500;
     transition: transform 0.2s;
@@ -1370,5 +1375,116 @@ html[data-density="compact"] .lyria-community .message {
   }
   .lyria-community .call-person-avatar {
     width: 52px;
+  }
+}
+/* Keep the profile dock inside short windows and scroll destinations if needed. */
+@media (min-width: 769px) {
+  .lyria-community .rail-brand {
+    flex-shrink: 0;
+  }
+  .lyria-community .rail-destinations {
+    min-height: 0;
+    overflow-y: auto;
+    flex: 0 1 auto;
+    scrollbar-width: thin;
+  }
+  .lyria-community .rail-destination {
+    flex-shrink: 0;
+  }
+}
+@media (min-width: 769px) and (max-height: 740px) {
+  .lyria-community .app-rail {
+    gap: 10px;
+    padding-block: 14px;
+  }
+  .lyria-community .rail-destinations {
+    gap: 6px;
+  }
+  .lyria-community .rail-destination {
+    min-height: 54px;
+    padding-block: 7px;
+  }
+}
+.lyria-community .chat-panel > .mention-suggestions {
+  bottom: var(--composer-offset, 100px);
+  max-height: min(240px, var(--mention-space, 35dvh));
+}
+.lyria-community #toast-region {
+  bottom: var(--notification-bottom, 110px);
+  max-height: min(180px, 30dvh);
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+/* A suggestion menu takes priority over a temporary notification while typing. */
+.lyria-community:has(.mention-suggestions:not([hidden])) #toast-region {
+  visibility: hidden;
+  pointer-events: none;
+}
+@media (max-width: 768px) {
+  .lyria-community .message-composer textarea {
+    max-height: min(100px, calc(var(--visible-height, 100dvh) * 0.18));
+  }
+}
+/* Long names must shrink within their column, never paint beneath header actions. */
+.lyria-community .chat-title-group {
+  min-width: 0;
+}
+.lyria-community .chat-title-group > div {
+  min-width: 0;
+  flex: 1;
+}
+.lyria-community .chat-title-group .channel-symbol {
+  flex-shrink: 0;
+}
+.lyria-community .chat-header h2 {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lyria-community .chat-subtitle,
+.lyria-community .conversation-card-description,
+.lyria-community .details-cover p {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+.lyria-community .chat-subtitle,
+.lyria-community .conversation-card-description {
+  -webkit-line-clamp: 2;
+}
+.lyria-community .details-cover p {
+  -webkit-line-clamp: 3;
+}
+.lyria-community .details-card p {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 768px) {
+  .lyria-community.keyboard-open .app-rail {
+    display: none;
+  }
+  .lyria-community.keyboard-open .lyria-shell {
+    padding-bottom: 8px;
+  }
+  .lyria-community.keyboard-open .conversation-panel {
+    height: calc(var(--visible-height, 100dvh) - 62px - var(--shell-safe-top));
+    overflow-y: auto;
+  }
+  .lyria-community.keyboard-open .sidebar-scroll {
+    flex: none;
+    overflow: visible;
+  }
+  .lyria-community.keyboard-open .conversation-panel-heading {
+    padding-block: 12px;
+  }
+  .lyria-community.keyboard-open .conversation-panel-heading p {
+    display: none;
+  }
+  .lyria-community.keyboard-open:has(.chat-panel[data-view="hub"])
+    .conversation-panel {
+    height: 100%;
   }
 }

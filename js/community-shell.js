@@ -303,6 +303,7 @@
     $("details-invite-people").disabled = false;
     $("details-pin").disabled = false;
     syncMobile();
+    positionFloatingUI();
   }
   function hub() {
     selected = null;
@@ -489,5 +490,42 @@
     { attributes: true, attributeFilter: ["data-view"] },
   );
   matchMedia("(max-width:768px)").addEventListener("change", syncMobile);
+  // Anchor transient UI above the real composer, including multiline/keyboard resizing.
+  const composer = document.querySelector(".message-composer");
+  const chatPanel = document.querySelector(".chat-panel");
+  function positionFloatingUI() {
+    if (!composer.getClientRects().length) return;
+    const inputBox = composer.getBoundingClientRect();
+    const panelBox = chatPanel.getBoundingClientRect();
+    const streamTop = Math.max(
+      $("messages").getBoundingClientRect().top,
+      document.querySelector(".chat-header").getBoundingClientRect().bottom,
+    );
+    chatPanel.style.setProperty(
+      "--mention-space",
+      Math.max(32, inputBox.top - streamTop - 12) + "px",
+    );
+    chatPanel.style.setProperty(
+      "--composer-offset",
+      Math.max(0, panelBox.bottom - inputBox.top + 8) + "px",
+    );
+    document.body.style.setProperty(
+      "--notification-bottom",
+      Math.max(16, innerHeight - inputBox.top + 12) + "px",
+    );
+  }
+  const composerObserver =
+    typeof ResizeObserver === "function"
+      ? new ResizeObserver(positionFloatingUI)
+      : null;
+  composerObserver?.observe(composer);
+  composerObserver?.observe(chatPanel);
+  composerObserver?.observe($("messages"));
+  if (!composerObserver)
+    composer.addEventListener("input", () =>
+      requestAnimationFrame(positionFloatingUI),
+    );
+  window.visualViewport?.addEventListener("resize", positionFloatingUI);
+  window.addEventListener("resize", positionFloatingUI);
   window.LyriaShell = { select, rooms: setRooms, hub };
 })();

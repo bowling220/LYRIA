@@ -37,3 +37,11 @@ against isolated fixtures, plus `npm run test:browser` for existing regressions.
 Screenshots are generated in `test-artifacts/community-shell/`.
 
 No database schema, rules, credentials or new runtime dependencies are required.
+
+Layout guardrails also cover short desktop windows, unbroken titles/descriptions,
+multiline composers, notification placement, safe-area insets and keyboard viewport
+offsets. The mobile rail is temporarily hidden when the software keyboard takes
+most of the viewport; conversation navigation returns when it closes. Composer
+resize observers keep mention suggestions and notifications above typing controls.
+`tests/layout-overlap-smoke.py` checks geometry and actual control hit targets,
+including simulated phone safe areas and a shifted keyboard viewport.
