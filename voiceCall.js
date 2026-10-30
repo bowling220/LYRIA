@@ -43,25 +43,30 @@
   }
   // A normal page interaction unlocks incoming-call audio before someone calls.
   for(const event of ['pointerdown','keydown'])document.addEventListener(event,()=>{if(soundEnabled)unlockSound().then(ready=>{if(ready && ringKind)ringPattern()})},{once:true,capture:true});
-  const micLeases=new Set();let capturePending,captureSource;
+  const micLeases=new Set();let capturePending,captureSource,captureDevice,inputDevice='';
+  try{inputDevice=localStorage.getItem('lyria-voice-input') || ''}catch{}
+
   const usable=stream=>stream?.getAudioTracks().some(track=>track.readyState==='live' && !track.muted);
   const stopStream=stream=>stream?.getTracks().forEach(track=>track.stop());
   function lease(stream){
     if(!usable(stream))throw new Error('The microphone stopped before it was ready. Try reconnecting it.');
     const copy=stream.clone();copy.getAudioTracks().forEach(track=>track.enabled=true);micLeases.add(copy);return copy;
   }
-  function prepare(){
+  function prepare({force=false}={}){
     unlockSound();window.LyriaVoiceTransport?.get().catch(()=>{});
     if(!window.isSecureContext || !navigator.mediaDevices?.getUserMedia)return Promise.reject(new Error('Voice needs microphone access on HTTPS.'));
     for(const stream of micLeases)if(!stream.getAudioTracks().some(track=>track.readyState==='live'))micLeases.delete(stream);
     // Clone a healthy capture for handoff. Opening another device stream can interrupt Safari's first capture.
-    const source=[session?.stream,captureSource,...micLeases].find(usable);
+    const source=!force && [session?.stream,captureSource,...micLeases].find(stream=>usable(stream) && (!inputDevice || stream.getAudioTracks()[0].getSettings?.().deviceId===inputDevice));
     if(source)return Promise.resolve(lease(source));
+    if(capturePending && captureDevice!==inputDevice)return Promise.reject(new Error('A microphone is already opening. Wait a moment, then choose your input again.'));
     if(!capturePending){
-      for(const stream of micLeases)stopStream(stream);micLeases.clear();
+      captureDevice=inputDevice;
+      for(const stream of micLeases)if(stream!==session?.stream){stopStream(stream);micLeases.delete(stream)}
       let expired=false,timer;
       const capture=constraints=>{try{return Promise.resolve(navigator.mediaDevices.getUserMedia(constraints))}catch(error){return Promise.reject(error)}};
-      const raw=capture({audio:{echoCancellation:true,noiseSuppression:true},video:false}).catch(error=>{
+      const raw=capture({audio:{echoCancellation:true,noiseSuppression:true,...(inputDevice?{deviceId:{exact:inputDevice}}:{})},video:false}).catch(error=>{
+        if(inputDevice)throw new Error('The selected microphone could not open. Choose another input in Voice & devices.');
         if(!['OverconstrainedError','ConstraintNotSatisfiedError','NotReadableError','AbortError'].includes(error.name))throw error;
         return capture({audio:true,video:false});
       });
@@ -90,10 +95,10 @@
       const meter=$('voice-mic-level');if(meter)meter.value=level;activity(s,s.id,level,s.muted || state!=='ready');
     },250);
   }
-  async function repairMic(){
+  async function repairMic({force=false}={}){
     const s=session;if(!live(s) || s.repairing)return;s.repairing=true;render();let old;
     try{
-      const stream=await prepare();if(!live(s)){stopStream(stream);return}
+      const stream=await prepare({force});if(!live(s)){stopStream(stream);return}
       const track=stream.getAudioTracks()[0];track.enabled=!s.muted;
       old=s.stream;s.repairPrevious=old;s.stream=stream;bindMic(s);
       await Promise.all([...s.calls.values()].map(async entry=>{
@@ -103,7 +108,8 @@
           await timeout(sender.replaceTrack(track),5000,'Audio replacement timed out.');
         }catch(error){if(live(s))retryCall(s,entry)}
       }));
-    }catch(error){if(live(s))UI.notify(failure(error),'error')}
+      return true;
+    }catch(error){if(live(s))UI.notify(failure(error),'error');return false}
     finally{stopStream(old);s.repairPrevious=null;if(live(s)){s.repairing=false;render()}}
   }
   function getSession(){
@@ -412,5 +418,10 @@
   $('voice-enable-effects')?.addEventListener('click',async()=>{await enableSounds();sound('join');render()});
   $('voice-test-sound')?.addEventListener('click',async()=>{await enableSounds();sound('join')});
   setInterval(renderDirectory,5000);
-  window.LyriaVoice={join,leave,setRoom,prepare,repairMic,toggleAudio,getSession,startRinging,stopRinging,enableSounds,soundReady:()=>soundEnabled && audioContext?.state==='running',refreshDirectory:watchDirectory,refreshConnection,leaveRoom:room=>{if(session?.room===room)leave()}};
+  async function setInputDevice(id){
+    const previous=inputDevice;inputDevice=typeof id==='string'?id:'';
+    try{localStorage.setItem('lyria-voice-input',inputDevice)}catch{}
+    if(live(session) && await repairMic({force:inputDevice!==previous})===false){inputDevice=previous;try{localStorage.setItem('lyria-voice-input',previous)}catch{};throw new Error('The microphone could not be changed. Your previous input is still selected.')}
+  }
+  window.LyriaVoice={getInputDevice:()=>inputDevice,setInputDevice,join,leave,setRoom,prepare,repairMic,toggleAudio,getSession,startRinging,stopRinging,enableSounds,soundReady:()=>soundEnabled && audioContext?.state==='running',refreshDirectory:watchDirectory,refreshConnection,leaveRoom:room=>{if(session?.room===room)leave()}};
 })();

@@ -46,11 +46,11 @@
     ]).catch(error=>console.warn('Call reply could not be delivered',error));
   }
   async function roomFor(uid,name){
-    const user=current();const [mine,theirs]=await Promise.all([API.read('users/'+user.uid),API.read('users/'+uid)]);
-    if(!mine.data()?.friends?.includes(uid) || !theirs.data()?.friends?.includes(user.uid))throw new Error('Add each other as friends before calling.');
+    const user=current();const mine=await API.read('users/'+user.uid);
+    if(!mine.data()?.friends?.includes(uid))throw new Error('Add each other as friends before calling.');
     const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode([user.uid,uid].sort().join('\0')));
     const room='call-'+Array.from(new Uint8Array(digest),v=>v.toString(16).padStart(2,'0')).join('');
-    let doc=await API.read('channels/'+room);
+    let doc;try{doc=await API.read('channels/'+room)}catch(error){if(error.code!=='permission-denied')throw error;doc={exists:false}}
     if(!doc.exists){
       try{await API.commit([{update:{name:API.name('channels/'+room),fields:API.fields({id:room,name:'Call · '+(mine.data().displayName || 'Member')+' & '+name,createdBy:user.uid,members:[user.uid,uid],isPublic:false,isDirectCall:true})},currentDocument:{exists:false}}])}
       catch(error){doc=await API.read('channels/'+room);if(!doc.exists)throw error}

@@ -1,6 +1,6 @@
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js';
-import {initializeFirestore,doc,onSnapshot,getDoc,collection,addDoc,query,orderBy,getDocs,limit,startAfter,runTransaction} from 'https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js';
-import {getAuth,onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js';
+import {connectFirestoreEmulator,initializeFirestore,doc,onSnapshot,getDoc,collection,addDoc,query,orderBy,getDocs,limit,startAfter,runTransaction} from 'https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js';
+import {connectAuthEmulator,getAuth,onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js';
 import {archiveStories} from './news-archive.js?v=b51710d80e8ae71e';
 import {categories,categoryOf,dateValue,readingMinutes,excerptOf,safeImage,normalizeStory,newestFirst} from './news-model.js?v=7671fc6656542c4b';
         // Load environment variables for security
@@ -25,9 +25,12 @@ import {categories,categoryOf,dateValue,readingMinutes,excerptOf,safeImage,norma
         };
 
         // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
+        const runtime=window.LYRIA_RUNTIME;
+        if(runtime?.origin && location.origin!==runtime.origin)throw new Error('This build is configured for a different site.');
+        const app = initializeApp(runtime?.firebase || firebaseConfig);
         const db = initializeFirestore(app, {experimentalForceLongPolling:true,useFetchStreams:false});
         const auth = getAuth(app);
+        if(runtime?.emulators){connectFirestoreEmulator(db,runtime.emulators.host,runtime.emulators.firestorePort);connectAuthEmulator(auth,'http://'+runtime.emulators.host+':'+runtime.emulators.authPort,{disableWarnings:true})}
         const newsAuthReady = new Promise(resolve => {
             let unsubscribe = () => {};
             unsubscribe = onAuthStateChanged(auth, user => {

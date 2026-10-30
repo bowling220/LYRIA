@@ -19,10 +19,9 @@
         list.innerHTML='<li class="empty-state"><span class="empty-icon">'+UI.icon('users')+'</span><h3>Good company starts here.</h3><p>Open someone’s profile in a conversation to send a friend request.</p></li>';
         return;
       }
-      const friends=await Promise.all(ids.map(id=>window.LyriaDataAPI.read('users/'+id)));
+      const friends=await Promise.all(ids.map(id=>window.LyriaDataAPI.read('profiles/'+id)));
       friends.forEach((doc,index)=>{
-        if(!doc.exists)return;
-        const friend=doc.data();
+        const friend=doc.exists?doc.data():{displayName:'LYRIA member'};
         const li=document.createElement('li');
         const avatar=document.createElement('img');avatar.src=window.LyriaMedia.profileSource(friend);avatar.alt='';avatar.className='friend-avatar';
         const name=document.createElement('span');name.className='friend-name';name.textContent=friend.displayName || 'LYRIA member';

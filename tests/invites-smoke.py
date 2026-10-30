@@ -30,7 +30,7 @@ with sync_playwright() as p:
   page.close()
  # New membership and the original join-code dialog both use the shared join operation.
  page=make_page(browser,ROOT)
- page.add_init_script("__testData.set('channels/new-room',{name:'New friends',joinCode:'NEW123',members:['maya']})")
+ page.add_init_script("__testData.set('channels/new-room',{name:'New friends',createdBy:'maya',activeInvite:'NEW123',members:['maya']});__testData.set('channelInvites/NEW123',{channelId:'new-room',name:'New friends',createdBy:'maya',expiresAt:null,revoked:false})")
  page.goto('http://localhost:8124/invite.html?code=NEW123')
  page.wait_for_function("document.getElementById('accept-invite').textContent==='Accept invitation'")
  assert page.evaluate("__testData.get('channels/new-room').members.length")==1

@@ -81,5 +81,34 @@ with sync_playwright() as p:
     page.locator('#gif-button').click();page.evaluate("Object.defineProperty(visualViewport,'height',{configurable:true,value:360});visualViewport.dispatchEvent(new Event('resize'))")
     page.wait_for_timeout(100);page.locator('#gif-search').fill('thanks');page.locator('.gif-library-tile').first.click();page.wait_for_function("!document.getElementById('gif-picker-action').disabled");page.locator('#gif-picker-action').click()
     page.wait_for_function("document.querySelectorAll('.chat-gif').length===1")
+    page.close()
+    # Paginated provider discovery is isolated from production and uses no real key.
+    page=make_page(browser,ROOT)
+    page.add_init_script("window.LYRIA_GIPHY_API_KEY='test-browser-key'")
+    from urllib.parse import urlparse,parse_qs
+    requests=[]
+    def provider(route):
+        args=parse_qs(urlparse(route.request.url).query);requests.append(args)
+        offset=int(args.get('offset',['0'])[0]);query=args.get('q',[''])[0]
+        if query=='failure':route.fulfill(status=429,body='');return
+        prefix='Search' if query else 'Trending'
+        data=[{'id':prefix+str(i),'title':prefix+' GIF '+str(i),'images':{'fixed_width':{'width':'200','height':'150'}}} for i in range(offset,min(offset+24,55))]
+        import json
+        route.fulfill(content_type='application/json',body=json.dumps({'data':data,'pagination':{'total_count':55}}))
+    page.route('https://api.giphy.com/**',provider)
+    page.goto('http://localhost:8124/home.html?channel=community',wait_until='load');ready(page)
+    page.locator('#gif-button').click();page.wait_for_function("document.querySelectorAll('.gif-library-tile').length===24")
+    more=page.get_by_role('button',name='Load more GIFs',exact=True)
+    more.click();page.wait_for_function("document.querySelectorAll('.gif-library-tile').length===48")
+    more.click();page.wait_for_function("document.querySelectorAll('.gif-library-tile').length===55")
+    assert more.is_hidden()
+    page.locator('#gif-search').fill('cats');page.wait_for_function("document.querySelector('[data-gif-id=\"giphy-Search0\"]')")
+    assert requests[-1]['offset']==['0'] and requests[-1]['q']==['cats']
+    page.locator('[data-gif-id="giphy-Search0"]').click();page.wait_for_function("!document.getElementById('gif-picker-action').disabled")
+    page.locator('#gif-picker-action').click();page.wait_for_function("document.querySelector('.chat-gif')")
+    assert page.evaluate("[...__testData.values()].find(v=>v.type==='gif').gif.providerId")=='Search0'
+    page.locator('#gif-button').click();page.locator('#gif-search').fill('failure')
+    page.wait_for_function("document.getElementById('gif-picker-feedback').dataset.state==='error'")
+    assert page.get_by_role('button',name='Retry loading GIFs').is_enabled()
     page.close();browser.close()
 print('PASS: library-only selection, search, chat GIF rendering/motion/retry, avatar and banner GIF persistence, original animated uploads, upload limits, and phone keyboard layout.')

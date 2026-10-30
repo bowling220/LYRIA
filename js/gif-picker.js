@@ -12,11 +12,10 @@
     image.onerror=()=>{previewReady=false;$('gif-picker-action').disabled=true;feedback('Preview couldn’t load. Choose another GIF or try again.','error');};
     image.src=item.previewUrl;feedback('Loading GIF preview…');
   }
-  function render(){
-    const items=library.search($('gif-search').value,modal.dataset.category || 'All');
-    const grid=$('gif-results');grid.replaceChildren();
-    $('gif-results-count').textContent=items.length+' GIF'+(items.length===1?'':'s');
-    $('gif-no-results').hidden=Boolean(items.length);
+  function renderItems(items,append=false){
+    const grid=$('gif-results');if(!append)grid.replaceChildren();
+    $('gif-results-count').textContent=(append?grid.children.length+items.length:items.length)+' GIFs';
+    $('gif-no-results').hidden=Boolean(items.length || (append && grid.children.length));
     for(const item of items){
       const button=document.createElement('button');button.type='button';button.className='gif-library-tile';button.dataset.gifId=item.id;
       button.setAttribute('aria-label','Select '+item.title+' GIF');button.setAttribute('aria-pressed',String(selected?.id===item.id));
@@ -31,20 +30,40 @@
       button.addEventListener('click',()=>{if(!busy)select(item)});grid.append(button);
     }
   }
+  let request,searchTimer,nextOffset=null,loading=false,generation=0,pendingSelection=null;
+  const more=document.createElement('button');more.type='button';more.className='secondary-action gif-load-more';more.textContent='Load more GIFs';more.hidden=true;
+  $('gif-results').parentElement.append(more);
+  async function loadPage(append=false){
+    const current=generation;loading=true;more.disabled=true;more.hidden=false;more.textContent='Loading GIFs…';
+    request=new AbortController();
+    try{
+      const result=await library.browse($('gif-search').value,modal.dataset.category || 'All',append?nextOffset:0,request.signal);
+      if(current!==generation)return;
+      const unique=result.items.filter(item=>!append || !Array.from($('gif-results').children).some(el=>el.dataset.gifId===item.id));
+      renderItems(unique,append);if(pendingSelection && library.get(pendingSelection)){select(library.get(pendingSelection));pendingSelection=null;}nextOffset=result.next;more.hidden=nextOffset===null;more.textContent='Load more GIFs';feedback('');
+    }catch(error){if(current!==generation || error.name==='AbortError')return;feedback(error.message,'error');more.hidden=false;more.textContent='Retry loading GIFs';}
+    finally{if(current===generation){loading=false;more.disabled=false;}}
+  }
+  function render(){
+    clearTimeout(searchTimer);request?.abort();generation++;nextOffset=null;loading=false;
+    if(!library.online()){more.hidden=true;renderItems(library.search($('gif-search').value,modal.dataset.category || 'All'));return;}
+    $('gif-results').replaceChildren();$('gif-no-results').hidden=true;$('gif-results-count').textContent='Searching GIPHY…';loadPage();
+  }
+  more.addEventListener('click',()=>{if(!loading)loadPage(nextOffset!==null)});
   function compact(){const height=window.visualViewport?.height || window.innerHeight;modal.classList.toggle('gif-compact',height<620);modal.classList.toggle('gif-extra-compact',height<420);}
   window.visualViewport?.addEventListener('resize',compact);window.addEventListener('resize',compact);
   function open(next){
     compact();
-    version++;options=next;selected=null;previewReady=false;busy=false;
+    version++;pendingSelection=null;options=next;selected=null;previewReady=false;busy=false;
     modal.dataset.category='All';$('gif-search').value='';$('gif-selection').hidden=true;$('gif-selection-idle').hidden=false;$('gif-picker-action').disabled=true;
     $('gif-modal-title').textContent=next.title || 'Find the right GIF';$('gif-picker-action').textContent=next.action || 'Send GIF';
-    $('gif-picker-description').textContent=next.description || 'Search the built-in library, choose a GIF, then send it.';
-    $('gif-library-source').textContent='Built-in library · '+library.count+' GIFs · Media hosted by GIPHY';
+    $('gif-picker-description').textContent=next.description || 'Search GIFs, choose one, then send it.';
+    $('gif-library-source').textContent=library.online()?'Powered by GIPHY · Search and browse more GIFs':'Built-in collection · Full GIPHY search is not configured';
     $('gif-categories').querySelectorAll('button').forEach(el=>el.setAttribute('aria-pressed',String(el.dataset.category==='All')));
     feedback('');render();UI.openModal(modal);
   }
   for(const category of library.categories){const button=document.createElement('button');button.type='button';button.textContent=category;button.dataset.category=category;button.setAttribute('aria-pressed',String(category==='All'));button.addEventListener('click',()=>{if(busy)return;modal.dataset.category=category;for(const chip of $('gif-categories').children)chip.setAttribute('aria-pressed',String(chip===button));render()});$('gif-categories').append(button);}
-  $('gif-search').addEventListener('input',()=>{if(!busy)render()});
+  $('gif-search').addEventListener('input',()=>{if(busy)return;request?.abort();generation++;clearTimeout(searchTimer);if(library.online())searchTimer=setTimeout(render,300);else render()});
   $('gif-picker-action').addEventListener('click',async()=>{
     if(busy || !selected || !previewReady)return;
     const current=version,action=options.onSelect,item=library.get(selected.id);
@@ -55,7 +74,7 @@
   });
   new MutationObserver(()=>{
     const visible=modal.style.display==='flex';
-    if(wasOpen && !visible){version++;busy=false;modal.removeAttribute('aria-busy');const onClose=options?.onClose;options=null;const image=$('gif-selection-image');image.onload=null;image.onerror=null;image.removeAttribute('src');onClose?.();}
+    if(wasOpen && !visible){request?.abort();generation++;clearTimeout(searchTimer);version++;busy=false;modal.removeAttribute('aria-busy');const onClose=options?.onClose;options=null;const image=$('gif-selection-image');image.onload=null;image.onerror=null;image.removeAttribute('src');onClose?.();}
     wasOpen=visible;
   }).observe(modal,{attributes:true,attributeFilter:['style']});
   $('gif-button').addEventListener('click',()=>open({title:'Say it with a GIF',action:'Send GIF',onSelect:async item=>{
@@ -69,7 +88,7 @@
     $('gif-search').value=typeof data.search==='string'?data.search.slice(0,160):'';
     modal.dataset.category=library.categories.includes(data.category)?data.category:'All';
     for(const chip of $('gif-categories').children)chip.setAttribute('aria-pressed',String(chip.dataset.category===modal.dataset.category));
-    render();const item=typeof data.selected==='string'?library.get(data.selected):null;if(item)select(item);
+    render();const item=typeof data.selected==='string'?library.get(data.selected):null;if(item)select(item);else pendingSelection=typeof data.selected==='string'?data.selected:null;
   }
   window.LyriaGifPicker={open,capture,restore};
 })();

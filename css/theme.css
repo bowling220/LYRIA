@@ -264,6 +264,24 @@ html[data-appearance] .call-stage{background:radial-gradient(ellipse at 50% 0%,c
 .invite-orbit [data-icon]:nth-child(2) { color: var(--accent); transform: translateY(-8px); }
 @media(max-width:480px) { .invite-main { padding: 28px 16px; } .invite-card { padding: 28px 22px; border-radius: 24px; } }
 
+.channel-unread { margin-left:auto;min-width:22px;border-radius:8px;background:var(--accent);color:var(--accent-ink);font-size:11px;font-weight:800;padding:2px 6px; }
+.unread-actions { display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 20px;background:var(--surface-raised);border-bottom:1px solid var(--line); }
+.unread-actions[hidden],.mention-suggestions[hidden],#invite-owner-controls[hidden] { display:none; }
+.unread-actions button { min-height:36px;font-size:12px;padding:6px 10px; }
+.first-unread-marker { border-top:1px solid var(--accent);color:var(--accent);font-size:11px;margin:14px 0;padding-top:6px; }
+.message-mentioned { background:color-mix(in srgb,var(--accent) 8%,transparent);border-left:3px solid var(--accent);padding-left:12px;border-radius:8px; }
+.mention-label { color:var(--accent);font-size:11px; }
+.mention-suggestions { position:absolute;z-index:30;bottom:90px;left:16px;right:16px;max-height:240px;overflow:auto;border:1px solid var(--line);border-radius:16px;background:var(--surface);box-shadow:var(--shadow);padding:8px; }
+.mention-suggestions button { display:flex;width:100%;justify-content:flex-start;border:0;background:transparent; }
+.mention-suggestions button[aria-selected=true] { background:var(--surface-hover);color:var(--accent); }
+.voice-device-actions { display:flex;flex-wrap:wrap;gap:8px; }
+#voice-device-level { width:100%; }
+#invite-owner-controls { display:grid;gap:10px;margin-top:18px; }
+
+.unread-actions { flex-wrap:wrap; }
+.unread-actions button { min-height:44px;flex:1 1 auto; }
+.unread-actions button[hidden],.voice-device-actions button[hidden] { display:none; }
+
 /* Conversation home shares the app shell and account session. */
 .chat-area[data-view="hub"] > .chat-header,
 .chat-area[data-view="hub"] > .messages,
@@ -282,6 +300,8 @@ html[data-appearance] .call-stage{background:radial-gradient(ellipse at 50% 0%,c
 .hub-conversations{display:grid;gap:3px}.hub-conversation{display:flex;align-items:center;justify-content:flex-start;gap:14px;padding:16px 12px;text-align:left;border:1px solid transparent;border-radius:14px;background:transparent;color:var(--text);font:inherit;cursor:pointer;width:100%;min-width:0}.hub-conversation:hover,.hub-conversation:focus-visible{background:var(--surface);border-color:var(--line)}.hub-room-icon{display:grid;place-items:center;width:48px;height:48px;border-radius:16px;background:var(--surface-raised);color:var(--aqua);flex-shrink:0}.hub-conversation:first-child .hub-room-icon{background:var(--accent);color:var(--accent-ink)}.hub-room-copy{display:grid;gap:5px;min-width:0}.hub-room-copy strong{font-size:15px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.hub-room-copy>span{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.hub-room-end{margin-left:auto;flex-shrink:0;color:var(--subtle);display:flex;align-items:center}.hub-room-end svg{width:17px;height:17px}.hub-community-tag{font-size:9px;letter-spacing:.07em;border:1px solid var(--line);padding:5px 7px;border-radius:6px;color:var(--muted)}.hub-footnote{margin:30px 12px;color:var(--subtle);font-size:12px;line-height:1.6}.hub-actions :focus-visible,.hub-conversation:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 @media(max-width:600px){.hub-header{padding:24px 20px 18px}.hub-heading-icon{display:none}.hub-heading h1{font-size:23px}.hub-heading p{font-size:12px}.hub-actions{padding:0 16px 14px;gap:4px}.hub-tab{padding:9px 11px;font-size:13px}.hub-content{padding:20px 12px}.hub-search{margin:0 8px}.hub-list-heading{margin:22px 8px 6px}.hub-community-tag{display:none}.hub-conversation{padding:14px 8px;gap:12px}.hub-room-copy>span{font-size:12px}.hub-room-icon{width:46px;height:46px;border-radius:15px}.hub-footnote{margin:24px 8px;max-width:260px}}
 @media(max-width:350px){.hub-heading p{display:none}.hub-inbox span:last-child{display:none}.hub-room-end:not(.hub-community-tag){display:none}}
+
+.chat-area[data-view="hub"] > .unread-actions,.chat-area[data-view="hub"] > .mention-suggestions{display:none!important}
 
 /* The account dock stays outside the independently scrolling conversation pane. */
 .sidebar>.workspace-heading{padding:18px 20px 14px;flex-shrink:0;border-bottom:0}.sidebar>.workspace-heading h2{font-size:17px;margin:0 0 5px}.sidebar>.workspace-heading>span{font-size:9px;letter-spacing:.1em;color:var(--subtle)}
@@ -312,3 +332,5 @@ html[data-appearance] .call-stage{background:radial-gradient(ellipse at 50% 0%,c
 @keyframes release-spin{to{transform:rotate(360deg)}}@keyframes release-breathe{50%{box-shadow:0 0 35px color-mix(in srgb,var(--accent) 24%,transparent)}}
 @media(max-width:600px){.release-art{height:125px}.release-copy{padding:24px 22px 20px}.release-copy>h2{font-size:28px}.release-change{gap:12px}.release-change-type{display:inline-block;margin-top:3px}.release-footer{align-items:stretch;flex-direction:column;gap:12px}.release-footer>span{text-align:center;order:1}.release-footer button{width:100%}.release-summary{margin-bottom:22px}.release-art-label{font-size:7px}}
 @media(prefers-reduced-motion:reduce){.release-modal *{animation:none!important;transition:none!important}}
+
+.gif-load-more{display:block;min-height:44px;margin:16px auto}.gif-load-more[hidden]{display:none}

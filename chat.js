@@ -144,6 +144,7 @@ initializeFirebase().then(() => {
         if(currentChannel)loadMessages(currentChannel);else restoreConversation(currentUser);loadChannels();
         if(currentChannel)listenForTypingStatus(currentChannel);
         window.LyriaVoice?.refreshConnection?.();
+        if(currentUser)window.LyriaReadState?.init(currentUser).then(()=>window.LyriaReadState.refresh(true));
         window.LyriaCommunity?.refreshRequests();
         window.LyriaCalls?.refresh();
         window.LyriaAccount?.reconnect({restartLive:false});
@@ -174,7 +175,7 @@ function showHub(historyMode='push'){
     if(currentChannel)setTypingStatus(false);
     unsubscribeFromMessages?.();unsubscribeFromMessages=null;
     unsubscribeTyping?.();unsubscribeTyping=null;
-    currentChannel=null;
+    currentChannel=null;window.LyriaReadState?.setActive(null);window.LyriaMentions?.setPeople([]);
     const area=document.querySelector('.chat-area');area.dataset.view='hub';delete area.dataset.selectedChannelId;
     document.getElementById('conversation-hub').hidden=false;
     document.getElementById('leave-channel').disabled=true;
@@ -226,8 +227,9 @@ function restoreConversation(user){
 
         currentUser = user;
         window.LyriaConnection?.ready('startup');
+        window.LyriaConnection?.pending('messages');
         const viewRevision=window.LyriaUI.panelRevision();
-        const selectionReady=restoreConversation(user);
+        const selectionReady=Promise.resolve(window.LyriaReadState.init(user)).then(()=>{if(currentUser?.uid===user.uid && !currentChannel)return restoreConversation(user)});
         // Wait for page listeners and room validation; restoration never submits an action.
         const restoreViews=()=>Promise.resolve(selectionReady).then(()=>{
             if(currentUser?.uid!==user.uid)return;
@@ -241,9 +243,9 @@ function restoreConversation(user){
                     const trigger={create:'add-channel',join:'join-channel',leave:'leave-channel'}[data.mode];if(!trigger || (data.mode==='leave' && !currentChannel))return;
                     click(trigger);const input=document.getElementById('channel-action-input');if(typeof data.value==='string')input.value=data.value.slice(0,input.maxLength);
                 }},
-                'share-invite-modal':{capture:()=>({link:document.getElementById('share-invite-link').value}),open:data=>{
-                    const code=window.LyriaInvites.parse(data.link);if(!code)return;
-                    document.getElementById('share-invite-link').value=window.LyriaInvites.url(code);window.LyriaUI.openModal(document.getElementById('share-invite-modal'));
+                'share-invite-modal':{capture:()=>({link:document.getElementById('share-invite-link').value,id:document.getElementById('share-invite-modal').dataset.channelId}),open:async data=>{
+                    if(typeof data.id!=='string' || data.id!==currentChannel)return;const invitation=await window.LyriaInvites.current(db,user,data.id);
+                    const modal=document.getElementById('share-invite-modal');modal.dataset.channelId=data.id;document.getElementById('share-invite-link').value=invitation.link;document.getElementById('invite-owner-controls').hidden=!invitation.owner;window.LyriaUI.openModal(modal);
                 }},
                 'gif-modal':{capture:()=>window.LyriaGifPicker.capture(),open:data=>window.LyriaGifPicker.restore(data)}
             },viewRevision);
@@ -256,7 +258,7 @@ function restoreConversation(user){
             const ref = db.collection('channels').doc(personalChannelId);
             const doc = await ref.get();
             if (!doc.exists) {
-                await ref.set({name:'My personal channel',id:personalChannelId,createdBy:user.uid,joinCode:generateJoinCode(),members:[user.uid],isPublic:false});
+                await ref.set({name:'My personal channel',id:personalChannelId,createdBy:user.uid,members:[user.uid],isPublic:false});
             } else if (!(doc.data().members || []).includes(user.uid)) {
                 await ref.update({members:firebase.firestore.FieldValue.arrayUnion(user.uid)});
             }
@@ -374,6 +376,7 @@ function setupUIEventListeners() {
         (isLeave ? channelActionSubmit : channelActionInput).focus();
     };
 
+    window.LyriaReadState.setNavigation({first:()=>currentChannel && loadMessages(currentChannel,{unreadOnly:true}),latest:()=>currentChannel && loadMessages(currentChannel)});
     document.getElementById('add-channel').addEventListener('click', () => openChannelActionModal('create'));
     document.getElementById('join-channel').addEventListener('click', () => openChannelActionModal('join'));
     document.getElementById('leave-channel').addEventListener('click', () => openChannelActionModal('leave'));
@@ -410,7 +413,6 @@ function setupUIEventListeners() {
                     name: value,
                     id: channelId,
                     createdBy: currentUser.uid,
-                    joinCode: generateJoinCode(),
                     members: [currentUser.uid],
                     isPublic: false,
                     favorite: false
@@ -465,13 +467,31 @@ function setupUIEventListeners() {
         }
     });
 
+    document.getElementById('copy-invite-link').addEventListener('click',async()=>{
+        try{await navigator.clipboard.writeText(document.getElementById('share-invite-link').value);window.LyriaUI.notify('Invite link copied.','success')}
+        catch{document.getElementById('share-invite-link').focus();document.getElementById('share-invite-link').select()}
+    });
+    for(const action of ['replace','revoke'])document.getElementById(action+'-invite').addEventListener('click',async event=>{
+        const id=document.getElementById('share-invite-modal').dataset.channelId;if(!id)return;
+        const button=event.currentTarget;button.disabled=true;const status=document.getElementById('invite-control-status');status.textContent='Confirming invitation change…';
+        try{
+            if(action==='replace'){
+                const result=await window.LyriaInvites.replace(db,currentUser,id,Number(document.getElementById('invite-expiry').value));
+                document.getElementById('share-invite-link').value=result.link;status.textContent='New link ready. The previous link no longer accepts joins.';
+            }else{await window.LyriaInvites.revoke(db,currentUser,id);document.getElementById('share-invite-link').value='';status.textContent='Invitation revoked. Existing members keep their access.'}
+        }catch(error){status.textContent=window.LyriaInvites.errorMessage(error)}finally{button.disabled=false}
+    });
     document.getElementById('copy-join-code').addEventListener('click', async () => {
         if (!currentChannel || !db) return;
         try {
             const selected=currentChannel;
-            const code=selected===COMMUNITY_CHANNEL_ID?'EVERYONE':(await window.LyriaInvites.bounded(db.collection('channels').doc(selected).get({source:'server'}))).data()?.joinCode;
-            if (!code) { window.LyriaUI.notify('This conversation does not have an invitation yet.'); return; }
-            const link=window.LyriaInvites.url(code);
+            const invitation=await window.LyriaInvites.current(db,currentUser,selected);
+            const link=invitation.link;
+            const share=document.getElementById('share-invite-modal');share.dataset.channelId=selected;
+            document.getElementById('share-invite-link').value=link;
+            document.getElementById('invite-owner-controls').hidden=!invitation.owner;
+            document.getElementById('invite-control-status').textContent=invitation.expiresAt?'Expires '+new Date(invitation.expiresAt.toMillis?.() || invitation.expiresAt).toLocaleString():'This link stays active until the owner revokes it.';
+            if(invitation.owner)window.LyriaUI.openModal(share);
             try {
                 await navigator.clipboard.writeText(link);
                 window.LyriaUI.notify('Invite link copied. Share it with your people.', 'success');
@@ -505,6 +525,7 @@ async function sendMessage(messageText, isCode = false) {
             message: messageText.trim(),
             sender: document.getElementById('user-name').textContent || currentUser.displayName || 'LYRIA member',
             senderId: currentUser.uid,
+            mentions: window.LyriaMentions.ids(messageText),
             senderPhotoURL: document.getElementById('user-avatar').src || 'assets/avatar.svg'
         })},updateTransforms:[{fieldPath:'timestamp',setToServerValue:'REQUEST_TIME'}],currentDocument:{exists:false}}]);
         if(currentChannel===channelId)unsubscribeFromMessages?.refresh?.();
@@ -667,6 +688,7 @@ function loadChannels() {
                     channelElement.appendChild(channelContainer);
                     channelsList.appendChild(channelElement);
                 });
+                window.LyriaReadState.setRooms(channels);
         })
         .catch(error => {
             if(version!==channelLoadVersion)return;
@@ -676,11 +698,12 @@ function loadChannels() {
         });
 }
 
-function generateJoinCode() {
-    return Math.random().toString(36).substring(2, 8).toUpperCase();
-}
 
-function loadMessages(channelId) {
+function loadMessages(channelId,{unreadOnly=false}={}) {
+    const readFrom=window.LyriaReadState.lastRead(channelId);
+    try{const url=new URL(location.href);if(unreadOnly)url.searchParams.set('view','unread');else url.searchParams.delete('view');history.replaceState(null,'',url)}catch{}
+    document.getElementById('back-to-latest').hidden=!unreadOnly;
+
     const version=++messageLoadVersion;
     window.LyriaConnection?.pending('messages');
     unsubscribeFromMessages?.();
@@ -696,13 +719,15 @@ function loadMessages(channelId) {
         if(version===messageLoadVersion && currentChannel===channelId && doc.exists)rememberChannelName(channelId,doc.data().name);
     }).catch(error=>console.warn('Channel details unavailable',error));
     unsubscribeFromMessages = window.LyriaDataAPI.watch(
-        db.collection('channels').doc(channelId).collection('messages').orderBy('timestamp').limitToLast(100),
-        'messages',{parent:'channels/'+channelId,orderBy:[{field:{fieldPath:'timestamp'},direction:'DESCENDING'}],limit:100,reverse:true,onHealthy:()=>window.LyriaConnection?.ready('messages')},snapshot => {
+        (unreadOnly?db.collection('channels').doc(channelId).collection('messages').where('timestamp','>',new Date(readFrom)).orderBy('timestamp').limit(100):db.collection('channels').doc(channelId).collection('messages').orderBy('timestamp').limitToLast(100)),
+        'messages',{parent:'channels/'+channelId,...(unreadOnly?{where:{fieldFilter:{field:{fieldPath:'timestamp'},op:'GREATER_THAN',value:{timestampValue:new Date(readFrom).toISOString()}}}}:{}),orderBy:[{field:{fieldPath:'timestamp'},direction:unreadOnly?'ASCENDING':'DESCENDING'}],limit:100,reverse:!unreadOnly,onHealthy:()=>window.LyriaConnection?.ready('messages')},snapshot => {
         if (currentChannel !== channelId || version!==messageLoadVersion) return;
         if(snapshot.metadata?.fromCache){window.LyriaConnection?.pending('messages')}else window.LyriaConnection?.ready('messages');
         const nearBottom = firstSnapshot || container.scrollHeight - container.scrollTop - container.clientHeight < 100;
         const previousTop = container.scrollTop;
         const users = new Map();
+        const readAt=window.LyriaReadState.lastRead(channelId);let firstUnread=null;
+        window.LyriaMentions.setPeople(snapshot.docs.map(doc=>doc.data()));
         container.replaceChildren();
         if (snapshot.empty) {
             container.innerHTML = '<div class="empty-state"><span class="empty-icon">'+window.LyriaUI.icon('chat')+'</span><h2>A fresh conversation.</h2><p>Say hello, share an idea, or invite your people. This space is yours.</p></div>';
@@ -723,7 +748,7 @@ function loadMessages(channelId) {
             sender.append(time);
             if(data.senderId){
                 const inlineBadges=document.createElement('span');inlineBadges.className='message-badges';inlineBadges.dataset.userId=data.senderId;sender.append(inlineBadges);
-                if(!users.has(data.senderId))users.set(data.senderId,window.LyriaDataAPI.read('users/'+data.senderId));
+                if(!users.has(data.senderId))users.set(data.senderId,window.LyriaDataAPI.read((data.senderId===currentUser.uid?'users/':'profiles/')+data.senderId));
                 users.get(data.senderId).then(user=>{
                     if(!message.isConnected || !user.exists)return;
                     avatar.src=window.LyriaMedia.profileSource(user.data());
@@ -737,11 +762,17 @@ function loadMessages(channelId) {
             if(data.type==='gif'){
                 window.LyriaMedia.renderGif(content,data,{onLoad:()=>{if(nearBottom && container.scrollHeight-container.scrollTop-container.clientHeight<140)container.scrollTop=container.scrollHeight}});
             }else{content.textContent=data.message || data.content || ''}
+            const at=data.timestamp?.toMillis?.() || data.timestamp?.toDate?.().getTime() || 0;
+            if(!firstUnread && at>readAt && data.senderId!==currentUser.uid){firstUnread=document.createElement('div');firstUnread.id='first-unread-marker';firstUnread.className='first-unread-marker';firstUnread.textContent='New since your last read';container.append(firstUnread)}
+            if(Array.isArray(data.mentions) && data.mentions.includes(currentUser.uid)){message.classList.add('message-mentioned');const label=document.createElement('span');label.className='mention-label';label.textContent='Mentioned you';sender.append(label)}
             message.append(sender,content);
             window.LyriaReactions?.mount(message,data,channelId,doc.id,()=>unsubscribeFromMessages?.refresh?.());
             container.append(message);
         });
         container.scrollTop=nearBottom?container.scrollHeight:previousTop;
+        if(firstSnapshot && firstUnread)container.scrollTop=firstUnread.offsetTop-container.offsetTop;
+        document.getElementById('unread-actions').hidden=!firstUnread && !unreadOnly;
+        window.LyriaReadState.rendered(channelId,snapshot.docs,unreadOnly);
         firstSnapshot=false;
     },error=>{
         if(currentChannel!==channelId || version!==messageLoadVersion)return;
@@ -777,17 +808,20 @@ function logout() {
 
 // Function to switch channels
 function switchChannel(channelId,name,historyMode='push') {
+    const restoreUnread=historyMode==='replace' && new URLSearchParams(location.search).get('view')==='unread';
     document.querySelector('.chat-area').dataset.view='chat';
     document.getElementById('conversation-hub').hidden=true;
     document.getElementById('open-hub').setAttribute('aria-current','false');
     ++channelSelectionVersion;
     const savedName=name || channelNames.get(channelId) || (channelId===`personal-${currentUser?.uid}`?'My personal channel':'Conversation');
     try{if(currentUser)localStorage.setItem('lyria:last-conversation:'+currentUser.uid,JSON.stringify({id:channelId,name:savedName}))}catch{}
-    try{const url=new URL(location.href);url.searchParams.delete('view');url.searchParams.set('channel',channelId);if(url.href!==location.href)history[historyMode+'State'](null,'',url)}catch{}
+    try{const url=new URL(location.href);if(!restoreUnread)url.searchParams.delete('view');url.searchParams.set('channel',channelId);if(url.href!==location.href)history[historyMode+'State'](null,'',url)}catch{}
 
     if(currentChannel && currentChannel!==channelId)window.LyriaVoiceView?.showChat();
     if (currentChannel && currentChannel !== channelId) setTypingStatus(false);
     currentChannel = channelId;
+    window.LyriaReadState?.setActive(channelId);
+    window.LyriaMentions?.setPeople([]);
     rememberChannelName(channelId,name);
     const leaveButton = document.getElementById('leave-channel');
     if (leaveButton && currentUser) {
@@ -801,7 +835,7 @@ function switchChannel(channelId,name,historyMode='push') {
         const active = button.dataset.channelId === channelId;
         button.classList.toggle('active-channel', active); button.setAttribute('aria-current', String(active));
     });
-    loadMessages(channelId);     // Load messages for the new channel
+    loadMessages(channelId,{unreadOnly:restoreUnread});     // Load messages for the new channel
     listenForTypingStatus(channelId); // Listen for typing status changes
     const voiceButton = document.getElementById('make-voice-call');
     voiceButton.disabled = false; voiceButton.title = 'Join voice (up to 6 people)';
@@ -849,7 +883,7 @@ function showUserProfileModal(uid,{canOpen=()=>true}={}) {
     const viewer=currentUser?.uid;
     profileUserId = uid; // Set the profileUserId to the ID of the user being viewed
 
-    return window.LyriaDataAPI.read('users/'+uid).then(doc => {
+    return window.LyriaDataAPI.read((uid===currentUser?.uid?'users/':'profiles/')+uid).then(doc => {
         if(profileUserId!==uid || firebase.auth().currentUser?.uid!==viewer || !canOpen())return;
         if (doc.exists) {
             const userData = doc.data();
@@ -899,74 +933,6 @@ document.getElementById('send-friend-request').addEventListener('click', async (
     catch(error){console.warn('Sending friend request failed',error);window.LyriaUI.notify(error.message || 'Couldn’t confirm the friend request. Reconnect and try again.','error')}
     finally{button.disabled=false}
 });
-
-// Add a global variable to store the list of users
-let usersList = [];
-
-// Fetch users from Firestore and store them in usersList
-function fetchUsers() {
-    db.collection('users').get().then(snapshot => {
-        usersList = snapshot.docs.map(doc => ({
-            id: doc.id,
-            displayName: doc.data().displayName || 'User'
-        }));
-    }).catch(error => {
-        console.error("Error fetching users:", error);
-    });
-}
-
-// Call fetchUsers when the app initializes
-fetchUsers();
-
-// Add event listener for input to handle tagging
-const tagMessageInput = document.getElementById('message-input');
-const suggestionsContainer = document.createElement('div');
-suggestionsContainer.className = 'suggestions-container';
-suggestionsContainer.setAttribute('aria-label', 'Mention a member');
-document.body.appendChild(suggestionsContainer); // Append to body or a specific container
-
-tagMessageInput.addEventListener('input', (e) => {
-    const value = e.target.value;
-    const atIndex = value.lastIndexOf('@');
-
-    if (atIndex !== -1) {
-        const query = value.substring(atIndex + 1).toLowerCase();
-        const filteredUsers = usersList.filter(user => (user.displayName || '').toLowerCase().includes(query));
-
-        // Clear previous suggestions
-        suggestionsContainer.innerHTML = '';
-
-        // Show suggestions
-        filteredUsers.slice(0, 8).forEach(user => {
-            const suggestionItem = document.createElement('button');
-            suggestionItem.type = 'button';
-            suggestionItem.textContent = user.displayName;
-            suggestionItem.className = 'suggestion-item';
-            suggestionItem.onclick = () => {
-                // Replace the @username with the selected username
-                const newMessage = value.substring(0, atIndex + 1) + user.displayName + ' ';
-                tagMessageInput.value = newMessage;
-                suggestionsContainer.innerHTML = ''; // Clear suggestions
-                tagMessageInput.focus(); // Refocus on input
-            };
-            suggestionsContainer.appendChild(suggestionItem);
-        });
-
-        // Position the suggestions container above the message input
-        suggestionsContainer.style.display = filteredUsers.length ? 'grid' : 'none';
-        const rect = tagMessageInput.getBoundingClientRect();
-        suggestionsContainer.style.top = `${rect.top - suggestionsContainer.offsetHeight - 5}px`; // Position above with a small gap
-        suggestionsContainer.style.left = `${rect.left}px`;
-        suggestionsContainer.style.width = `${rect.width}px`;
-
-
-        suggestionsContainer.style.display = filteredUsers.length ? 'grid' : 'none';
-    } else {
-        suggestionsContainer.replaceChildren();
-        suggestionsContainer.style.display = 'none';
-    }
-});
-
 
 function toggleFavoriteChannel(channelId, isFavorite) {
     const userDocRef = db.collection('users').doc(currentUser.uid); // Reference to the current user's document

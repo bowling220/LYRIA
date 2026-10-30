@@ -12,7 +12,7 @@ with sync_playwright() as p:
  page.wait_for_function('[...document.images].every(i=>i.complete && i.naturalWidth>0)');page.screenshot(path=str(ROOT/'test-artifacts/badge-family.png'),full_page=True);page.close()
  for width in [320,390,768,1440]:
   page=make_page(browser,ROOT,width,900);errors=[];page.on('pageerror',lambda error:errors.append(str(error)))
-  page.add_init_script("__testData.get('users/test-member').badges=['Admin','admin','Mod','moderator','DevBadge','developer','Beta','beta','EarlyAccess','early-access','feature','featured','VIP','unknown'];__testData.get('users/maya').badges=['Mod','Beta'];")
+  page.add_init_script("__testData.get('users/test-member').badges=['Admin','admin','Mod','moderator','DevBadge','developer','Beta','beta','EarlyAccess','early-access','feature','featured','VIP','unknown'];__testData.get('users/maya').badges=['Mod','Beta'];__testData.get('profiles/maya').badges=['Mod','Beta'];")
   page.goto('http://localhost:8124/home.html?channel=community');page.wait_for_function("document.getElementById('account-load-status').dataset.state==='ready'")
   page.wait_for_function("document.querySelector('.message-badges[data-user-id=\"test-member\"]')?.children.length===6")
   assert page.locator('.message-badges img').first.evaluate('el=>el.width')==20

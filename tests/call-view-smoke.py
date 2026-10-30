@@ -40,7 +40,7 @@ with sync_playwright() as p:
   box=page.locator('.call-dock').bounding_box();assert box['y']+box['height']<=height+1
   page.screenshot(path=str(ROOT/f'test-artifacts/call-stage-six-{width}.png'))
   # Animated profile images do not reload on every ordinary session update.
-  page.evaluate("()=>{__testData.set('users/maya-gif',{displayName:'Maya Chen',photoURL:'https://media.giphy.com/media/xT9IgG50Fb7Mi0prBC/giphy.gif'});__viewSession.participants[1].userId='maya-gif';__updateView()}")
+  page.evaluate("()=>{__testData.set('profiles/maya-gif',{displayName:'Maya Chen',photoURL:'https://media.giphy.com/media/xT9IgG50Fb7Mi0prBC/giphy.gif'});__viewSession.participants[1].userId='maya-gif';__updateView()}")
   page.wait_for_function("document.querySelector('.call-person[data-self=false] img').getAttribute('src')?.includes('giphy.gif')")
   page.evaluate("()=>{window.__avatarChanges=0;new MutationObserver(records=>{__avatarChanges+=records.filter(r=>r.attributeName==='src').length}).observe(document.querySelector('.call-person[data-self=false] img'),{attributes:true});__updateView();__updateView()}")
   assert page.evaluate('__avatarChanges')==0

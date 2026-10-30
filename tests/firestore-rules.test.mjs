@@ -108,7 +108,7 @@ test('GIF avatar metadata and original animated banner bytes persist under the e
   const gif={id:'wave',provider:'giphy',width:200,height:100,url:'https://media.giphy.com/media/xT9IgG50Fb7Mi0prBC/giphy.gif'};
   const data=await window.LyriaAccountAPI.save(user,{photoURL:gif.url,avatarGif:gif,bannerURL:'data:image/gif;base64,'+original,bannerGif:{provider:'upload',animated:true}});
   assert.equal(data.data.avatarGif.width,200);assert.equal(data.data.bannerGif.animated,true);
-  const viewed=await assertSucceeds(getDoc(doc(member('gif-bob'),'users/gif-alice')));
+  const viewed=await assertSucceeds(getDoc(doc(member('gif-bob'),'profiles/gif-alice')));
   assert.equal(viewed.data().photoURL,gif.url);assert.equal(viewed.data().bannerURL,'data:image/gif;base64,'+original);
 });
 
@@ -155,6 +155,7 @@ test('call invitations, replies, and cancellations use existing inbox permission
   runInNewContext(await readFile(new URL('../js/data-api.js',import.meta.url),'utf8'),{window,AbortController,setTimeout,clearTimeout,fetch:(url,options)=>fetch(url.replace('https://firestore.googleapis.com','http://127.0.0.1:8085'),options)});
   const API=window.LyriaDataAPI;
   const create=(id,data)=>API.commit([{update:{name:API.name('inbox/'+id),fields:API.fields(data)},updateTransforms:[{fieldPath:'timestamp',setToServerValue:'REQUEST_TIME'}],currentDocument:{exists:false}}]);
+  await setDoc(doc(member('alice'),'users/alice'),{friends:['bob']});await setDoc(doc(member('bob'),'users/bob'),{friends:['alice']});
   await API.commit([{update:{name:API.name('channels/call-test'),fields:API.fields({createdBy:'alice',members:['alice','bob'],isDirectCall:true,isPublic:false})},currentDocument:{exists:false}}]);
   await create('invite',{senderId:'alice',recipientId:'bob',type:'callInvite',status:'pending',room:'call-test',sessionId:'v'+'a'.repeat(32)});
   await assert.rejects(API.read('inbox/invite'),e=>e.code==='permission-denied');
@@ -212,13 +213,14 @@ test('profile HTTPS edits preserve ignored legacy membership fields and unrelate
  runInNewContext(await readFile(new URL('../js/account-api.js',import.meta.url),'utf8'),{window,AbortController,URLSearchParams,setTimeout,clearTimeout,fetch:(url,options)=>fetch(url.replace('https://firestore.googleapis.com','http://127.0.0.1:8085'),options)});
  for(const [index,value]of [false,true,{unexpected:true}].entries()){
   const uid='legacy-'+index,ref=doc(member(uid),'users/'+uid);
-  await setDoc(ref,{displayName:'Member',isPremium:value,premiumTier:'retired',subscriptionStatus:'old',badges:['premium','Beta'],friends:['friend'],unrelated:{keep:true}});
+  await env.withSecurityRulesDisabled(async context=>setDoc(doc(context.firestore(),'users/'+uid),{displayName:'Member',email:'keep@example.test',isPremium:value,premiumTier:'retired',subscriptionStatus:'old',badges:['premium','Beta'],friends:['friend'],unrelated:{keep:true}}));
   const now=Math.floor(Date.now()/1000),token=Buffer.from(JSON.stringify({alg:'none',typ:'JWT'})).toString('base64url')+'.'+Buffer.from(JSON.stringify({aud:'demo-lyria',iss:'https://securetoken.google.com/demo-lyria',sub:uid,user_id:uid,iat:now,exp:now+3600,auth_time:now,firebase:{sign_in_provider:'google.com'}})).toString('base64url')+'.';
   const user={uid,getIdToken:async()=>token};
   await window.LyriaAccountAPI.save(user,{bio:'Saved normally',photoURL:'assets/avatar.svg',bannerURL:'',appearance:{mode:'dark',hue:225,accent:'#acb5ff'}});
   const saved=(await getDoc(ref)).data();
   assert.deepEqual(saved.isPremium,value);assert.equal(saved.premiumTier,'retired');assert.equal(saved.subscriptionStatus,'old');
   assert.deepEqual(saved.badges,['premium','Beta']);assert.deepEqual(saved.friends,['friend']);assert.deepEqual(saved.unrelated,{keep:true});assert.equal(saved.bio,'Saved normally');
+  const published=(await getDoc(doc(member(uid),'profiles/'+uid))).data();for(const field of ['email','friends','unrelated','isPremium','premiumTier','subscriptionStatus'])assert.equal(field in published,false);assert.equal(saved.email,'keep@example.test');
  }
 });
 

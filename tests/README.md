@@ -200,3 +200,12 @@ and desktop, explicit Everyone selection, and rejection of deleted/inaccessible 
 `python3 tests/panel-restore-smoke.py` verifies account/tab-scoped settings, profiles,
 friends, draft dialogs, and GIF-library restoration. Closed panels stay closed; reload
 does not submit drafts, send GIFs, place calls, or repeat friend actions.
+
+## Community hardening
+
+`npm run test:rules` now includes negative membership/friendship boundaries, bearer
+invitation revocation/expiration, private read markers, public/private profiles, staff
+badge integrity, and one-use acceptance proofs. `tests/unread-smoke.py` checks actual
+UI counts/mentions/jumping/persistence; `tests/voice-devices-smoke.py` checks explicit
+diagnostics and no automatic capture. Activation requires the matching rules and
+indexes (docs/ACTIVATION.md). Tests do not publish production rules.

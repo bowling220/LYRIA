@@ -17,3 +17,10 @@ updates:
       actions:
         patterns: ["*"]
 # Updates require maintainer review. No automatic approval, merge, or deployment.
+
+  - package-ecosystem: pip
+    directory: /tests
+    schedule: {interval: weekly}
+    groups:
+      python-tests:
+        patterns: ["*"]

@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Alert } from 'react-native';
 import { db, auth } from '../firebaseConfig'; // Import the initialized Firestore and Auth
-import { collection, addDoc, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { collection, addDoc, onSnapshot, query, orderBy, limitToLast, serverTimestamp } from 'firebase/firestore';
 import { Timestamp } from 'firebase/firestore'; // Import Timestamp
 
 const ChatScreen = ({ route, navigation }) => {
@@ -17,7 +17,7 @@ const ChatScreen = ({ route, navigation }) => {
         }
 
         // Subscribe to messages collection for the specific channel
-        const q = query(collection(db, 'channels', channelId, 'messages'), orderBy('timestamp', 'asc'));
+        const q = query(collection(db, 'channels', channelId, 'messages'), orderBy('timestamp', 'asc'),limitToLast(100));
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const messageData = [];
             snapshot.forEach((doc) => {
@@ -44,13 +44,14 @@ const ChatScreen = ({ route, navigation }) => {
             return; // Exit if user is not authenticated
         }
 
-        if (newMessage.trim()) {
+        if (newMessage.trim() && newMessage.length<=4000) {
             try {
                 // Add the message to the Firestore collection for the specific channel
                 await addDoc(collection(db, 'channels', channelId, 'messages'), {
                     message: newMessage, // Use the correct field name for the message
-                    sender: user.displayName || 'Anonymous', // Use the display name as sender
-                    timestamp: Timestamp.now() // Use Firestore's Timestamp
+                    sender: user.displayName || 'Anonymous',
+                    senderId:user.uid, // Use the display name as sender
+                    timestamp: serverTimestamp() // Use Firestore's Timestamp
                 });
                 setNewMessage(''); // Clear the input field after sending
             } catch (error) {
@@ -91,7 +92,7 @@ const ChatScreen = ({ route, navigation }) => {
                     style={styles.input}
                     value={newMessage}
                     onChangeText={setNewMessage}
-                    placeholder="Type a message..."
+                    maxLength={4000} placeholder="Type a message..."
                     placeholderTextColor="#999"
                 />
                 <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>

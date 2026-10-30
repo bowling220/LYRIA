@@ -33,7 +33,7 @@
     const cached=profiles.get(person.userId);paintProfile(tile,person,own || cached?.value || {});
     if(person.self || !person.userId || loading.has(person.userId) || (cached && cached.until>Date.now()) || !window.LyriaDataAPI)return;
     loading.add(person.userId);const sessionId=state?.id;
-    window.LyriaDataAPI.read('users/'+person.userId).then(doc=>{
+    window.LyriaDataAPI.read('profiles/'+person.userId).then(doc=>{
       const value=doc.exists?doc.data():{};profiles.set(person.userId,{value,until:Date.now()+300000});
       if(state?.id===sessionId)paintProfile(tile,person,value);
     }).catch(()=>{profiles.set(person.userId,{value:cached?.value || {},until:Date.now()+30000})}).finally(()=>loading.delete(person.userId));

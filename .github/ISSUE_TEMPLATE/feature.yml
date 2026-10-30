@@ -1,0 +1,28 @@
+name: Feature request
+description: Discuss an idea before building a larger change.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: Proposed behavior
+      description: Describe who benefits and how the feature fits LYRIA.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives, UI sketches, and tradeoffs
+      description: Include mobile, accessibility, data, and infrastructure implications when relevant.
+  - type: checkboxes
+    id: contribute
+    attributes:
+      label: Contribution
+      options:
+        - label: I would like to help implement this after discussing the approach.

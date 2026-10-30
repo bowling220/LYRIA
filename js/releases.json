@@ -2,6 +2,32 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "id": "2026-10-30-community",
+      "date": "2026-10-30",
+      "title": "Your community, better connected.",
+      "summary": "Safer sharing, clearer unread activity, and more control over voice.",
+      "changes": [
+        {
+          "type": "Improved",
+          "icon": "shield",
+          "title": "Safer account and community access",
+          "description": "Private account data stays private while public profiles remain visible to your community."
+        },
+        {
+          "type": "New",
+          "icon": "link",
+          "title": "Invites you control",
+          "description": "Create, replace, or revoke invitation links for your conversations. Existing memberships stay intact."
+        },
+        {
+          "type": "New",
+          "icon": "mic",
+          "title": "Voice and activity controls",
+          "description": "Choose your microphone, check voice connectivity, and keep track of unread messages and mentions."
+        }
+      ]
+    },
+    {
       "id": "2026-10-30-security",
       "date": "2026-10-30",
       "title": "A safer foundation for your community.",
@@ -31,7 +57,7 @@
           "type": "New",
           "icon": "news",
           "title": "Your own community publication",
-          "description": "Featured stories, categories, and a cleaner way to browse what’s happening around LYRIA."
+          "description": "Featured stories, categories, and a cleaner way to browse what\u2019s happening around LYRIA."
         },
         {
           "type": "Improved",
@@ -43,7 +69,7 @@
           "type": "New",
           "icon": "sparkles",
           "title": "A welcome with every update",
-          "description": "See what changed once per release, then get back to your space. Reopen What’s new beside your profile whenever you like."
+          "description": "See what changed once per release, then get back to your space. Reopen What\u2019s new beside your profile whenever you like."
         }
       ]
     },

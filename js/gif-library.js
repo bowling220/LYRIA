@@ -1,4 +1,4 @@
-/* A curated, searchable library. GIF media stays hosted by its credited source. */
+/* Shared catalog and paginated GIPHY discovery. Saved media remains provider-hosted. */
 (() => {
   const items = [
   {
@@ -544,5 +544,27 @@
     return items.filter(item=>(category==='All'||item.category===category)&&words.every(word=>(item.title+' '+item.tags.join(' ')).toLowerCase().includes(word)));
   };
   const metadata=id=>{const item=get(id);if(!item)throw new Error('Choose a GIF from the library.');return {id:item.id,provider:item.provider,providerId:item.providerId,title:item.title,url:item.url,previewUrl:item.previewUrl,stillUrl:item.stillUrl,sourceUrl:item.sourceUrl,width:item.width,height:item.height};};
-  window.LyriaGifLibrary=Object.freeze({get,search,metadata,categories:Object.freeze(['All','Reactions','Celebrate','Animals','Vibes']),count:items.length});
+  const online=()=>Boolean(window.LYRIA_GIPHY_API_KEY);
+  async function browse(query='',category='All',offset=0,signal){
+    if(!online())return {items:search(query,category),next:null};
+    const term=[category==='All'?'':category,query.trim()].filter(Boolean).join(' ');
+    const url=new URL('https://api.giphy.com/v1/gifs/'+(term?'search':'trending'));
+    url.search=new URLSearchParams({api_key:window.LYRIA_GIPHY_API_KEY,limit:'24',offset:String(offset),rating:'pg-13',lang:'en',...(term?{q:term}:{})});
+    const response=await fetch(url,{signal,credentials:'omit',referrerPolicy:'strict-origin-when-cross-origin'});
+    if(!response.ok)throw new Error(response.status===429?'GIPHY is busy. Wait a moment and try again.':'GIPHY could not load. Please try again.');
+    const result=await response.json();
+    if(!Array.isArray(result.data))throw new Error('GIPHY returned an invalid response.');
+    const page=[];
+    for(const gif of result.data){
+      if(!/^[a-zA-Z0-9]+$/.test(gif.id))continue;
+      const id='giphy-'+gif.id;
+      const item=Object.freeze({id,provider:'giphy',providerId:gif.id,title:String(gif.title || 'GIPHY animation').slice(0,160),
+        url:'https://media.giphy.com/media/'+gif.id+'/giphy.gif',previewUrl:'https://media.giphy.com/media/'+gif.id+'/200w.gif',stillUrl:'https://media.giphy.com/media/'+gif.id+'/200w_s.gif',sourceUrl:'https://giphy.com/gifs/'+gif.id,
+        width:Math.min(9999,Math.max(1,Number(gif.images?.fixed_width?.width)||200)),height:Math.min(9999,Math.max(1,Number(gif.images?.fixed_width?.height)||200))});
+      lookup.set(id,item);page.push(item);
+    }
+    const next=offset+result.data.length,total=Number(result.pagination?.total_count);
+    return {items:page,next:result.data.length && (!Number.isFinite(total)||next<total)?next:null};
+  }
+  window.LyriaGifLibrary=Object.freeze({get,search,metadata,online,browse,categories:Object.freeze(['All','Reactions','Celebrate','Animals','Vibes']),count:items.length});
 })();

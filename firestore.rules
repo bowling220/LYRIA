@@ -16,24 +16,126 @@ service cloud.firestore {
           || request.auth.uid in get(/databases/$(database)/documents/channels/$(channelId)).data.members);
     }
 
-    match /users/{uid} {
+    function friendAcceptance(uid) {
+      let approval = getAfter(/databases/$(database)/documents/friendshipApprovals/$(uid)/recipients/$(request.auth.uid)).data;
+      let before = get(/databases/$(database)/documents/friendRequests/$(approval.requestId)).data;
+      let after = getAfter(/databases/$(database)/documents/friendRequests/$(approval.requestId)).data;
+      return before.from == uid && before.to == request.auth.uid
+        && before.get('status', 'pending') == 'pending'
+        && after.status == 'accepted' && after.to == 'accepted_' + uid;
+    }
+    function friendChange(uid) {
+      let old = resource.data.get('friends', []);
+      let next = request.resource.data.get('friends', []);
+      return signedIn() && next is list && old is list
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['friends', 'updatedAt'])
+        && ((request.auth.uid in old && next == old.removeAll([request.auth.uid]))
+          || (next.size() == old.size() + 1 && next.hasAll(old)
+            && next.toSet().difference(old.toSet()) == [request.auth.uid].toSet()
+            && friendAcceptance(uid)));
+    }
+    function invitedJoin(channelId) {
+      let code = request.resource.data.get('joinInvite', '');
+      let invite = get(/databases/$(database)/documents/channelInvites/$(code)).data;
+      return !(request.auth.uid in resource.data.members)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members', 'joinInvite'])
+        && request.resource.data.members.size() == resource.data.members.size() + 1
+        && request.resource.data.members.hasAll(resource.data.members)
+        && request.resource.data.members.toSet().difference(resource.data.members.toSet()) == [request.auth.uid].toSet()
+        && invite.channelId == channelId && invite.revoked == false
+        && (invite.expiresAt == null || invite.expiresAt > request.time);
+    }
+    function mutualFriends(members) {
+      return members.size() == 2 && request.auth.uid in members
+        && members[0] != members[1]
+        && members[0] in get(/databases/$(database)/documents/users/$(members[1])).data.get('friends', [])
+        && members[1] in get(/databases/$(database)/documents/users/$(members[0])).data.get('friends', []);
+    }
+    match /channelInvites/{code} {
+      allow get: if signedIn();
+      allow list: if false;
+      allow create: if signedIn() && code.matches('[A-F0-9]{32}')
+        && request.resource.data.keys().hasOnly(['channelId','name','createdBy','createdAt','expiresAt','revoked'])
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.revoked == false
+        && request.resource.data.name is string && request.resource.data.name.size() <= 100
+        && (request.resource.data.expiresAt == null || request.resource.data.expiresAt > request.time)
+        && get(/databases/$(database)/documents/channels/$(request.resource.data.channelId)).data.createdBy == request.auth.uid
+        && channelMember(request.resource.data.channelId);
+      allow update: if signedIn() && channelMember(resource.data.channelId)
+        && get(/databases/$(database)/documents/channels/$(resource.data.channelId)).data.createdBy == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['revoked'])
+        && request.resource.data.revoked == true;
+      allow delete: if false;
+    }
+    match /friendshipApprovals/{sender}/recipients/{recipient} {
+      allow get: if signedIn() && request.auth.uid in [sender, recipient];
+      allow list: if false;
+      allow create, update: if isSelf(recipient)
+        && request.resource.data.keys().hasOnly(['requestId'])
+        && get(/databases/$(database)/documents/friendRequests/$(request.resource.data.requestId)).data.from == sender
+        && get(/databases/$(database)/documents/friendRequests/$(request.resource.data.requestId)).data.to == recipient
+        && getAfter(/databases/$(database)/documents/friendRequests/$(request.resource.data.requestId)).data.status == 'accepted';
+      allow delete: if false;
+    }
+    match /profiles/{uid} {
       allow read: if signedIn();
-      allow create, delete: if isSelf(uid);
-      allow update: if isSelf(uid)
-        || (signedIn()
-          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['friends', 'updatedAt']));
+      allow create, update: if isSelf(uid)
+        && request.resource.data.keys().hasOnly(['displayName','photoURL','avatarGif','bannerURL','bannerGif','bio','status','showBadges','badges','appearance','updatedAt'])
+        && request.resource.data.get('badges', []) == getAfter(/databases/$(database)/documents/users/$(uid)).data.get('badges', []);
+      allow delete: if isSelf(uid);
+    }
+    match /users/{uid} {
+      allow read: if isSelf(uid);
+      allow create: if isSelf(uid) && request.resource.data.get('badges', []) == []
+        && request.resource.data.get('role', 'user') in ['user','guest'];
+      allow delete: if isSelf(uid);
+      allow update: if (isSelf(uid) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['badges','role']))
+        || friendChange(uid);
     }
 
-    match /channels/{channelId} {
-      // Invite-code lookup requires signed-in users to read channel metadata.
-      allow read: if signedIn();
-      allow create: if channelId != 'community' && signedIn()
+    match /users/{uid}/readState/{channelId} {
+      allow read, delete: if isSelf(uid);
+      allow create, update: if isSelf(uid)
+        && request.resource.data.keys().hasOnly(['at'])
+        && request.resource.data.at is number && request.resource.data.at >= 0
+        && request.resource.data.at <= request.time.toMillis() + 60000;
+    }
+    // Parent deletion must leave an immutable tombstone so old messages cannot be
+    // claimed by recreating a deleted channel ID. Leaving a conversation is unchanged.
+    match /channelTombstones/{channelId} {
+      allow read, update, delete: if false;
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['createdBy','deletedAt'])
         && request.resource.data.createdBy == request.auth.uid
-        && request.auth.uid in request.resource.data.members;
+        && request.resource.data.deletedAt == request.time
+        && get(/databases/$(database)/documents/channels/$(channelId)).data.createdBy == request.auth.uid
+        && !existsAfter(/databases/$(database)/documents/channels/$(channelId));
+    }
+    match /channels/{channelId} {
+      allow get: if signedIn() && (channelId == 'community' || channelId == 'personal-' + request.auth.uid || request.auth.uid in resource.data.members);
+      allow list: if signedIn() && request.auth.uid in resource.data.members;
+      allow create: if channelId != 'community' && signedIn()
+        && !exists(/databases/$(database)/documents/channelTombstones/$(channelId))
+        && (!channelId.matches('personal-.*') || channelId == 'personal-' + request.auth.uid)
+        && request.resource.data.createdBy == request.auth.uid
+        && (request.resource.data.members == [request.auth.uid]
+          || (request.resource.data.get('isDirectCall', false) == true && mutualFriends(request.resource.data.members)));
       allow update: if channelId != 'community' && signedIn()
-        && (request.auth.uid in resource.data.members
-          || request.auth.uid in request.resource.data.members);
-      allow delete: if channelId != 'community' && signedIn() && resource.data.createdBy == request.auth.uid;
+        && ((request.auth.uid in resource.data.members
+          && ((request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members'])
+              && request.resource.data.members == resource.data.members.removeAll([request.auth.uid]))
+            || (resource.data.createdBy == request.auth.uid
+              && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'activeInvite', 'updatedAt']))))
+          || (channelId == 'personal-' + request.auth.uid && resource.data.createdBy == request.auth.uid
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members'])
+            && request.resource.data.members.size() == resource.data.members.size() + 1
+            && request.resource.data.members.hasAll(resource.data.members)
+            && request.resource.data.members.toSet().difference(resource.data.members.toSet()) == [request.auth.uid].toSet())
+          || invitedJoin(channelId));
+      allow delete: if channelId != 'community' && signedIn() && resource.data.createdBy == request.auth.uid
+        && getAfter(/databases/$(database)/documents/channelTombstones/$(channelId)).data.createdBy == request.auth.uid
+        && getAfter(/databases/$(database)/documents/channelTombstones/$(channelId)).data.deletedAt == request.time;
 
       match /messages/{messageId} {
         allow read: if channelMember(channelId);
@@ -56,14 +158,19 @@ service cloud.firestore {
     match /friendRequests/{requestId} {
       allow create: if signedIn()
         && request.resource.data.from == request.auth.uid
-        && request.resource.data.to is string
+        && request.resource.data.to is string && request.resource.data.to != request.auth.uid
         && request.resource.data.status == 'pending';
       allow read: if signedIn()
         && (resource.data.from == request.auth.uid
           || resource.data.to == request.auth.uid
           || resource.data.to == 'accepted_' + request.auth.uid);
-      allow update, delete: if signedIn()
-        && resource.data.to == request.auth.uid;
+      allow update: if signedIn() && resource.data.to == request.auth.uid
+        && resource.data.get('status', 'pending') == 'pending'
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['to','status','acceptedByName','acceptedAt'])
+        && request.resource.data.status == 'accepted'
+        && request.resource.data.to == 'accepted_' + resource.data.from;
+      allow delete: if signedIn() && (resource.data.to == request.auth.uid
+        || (resource.data.status == 'accepted' && resource.data.to == 'accepted_' + request.auth.uid));
     }
 
     match /inbox/{messageId} {

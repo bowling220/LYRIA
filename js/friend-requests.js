@@ -14,7 +14,7 @@
     const doc=await API.read('friendRequests/'+id),request=doc.data();
     if(!doc.exists || request.to!==user.uid || (request.status && request.status!=='pending'))throw new Error('This request has already been handled. Refresh the list.');
     const writes=[];
-    if(action==='accept')writes.push(transform(user.uid,request.from),transform(request.from,user.uid));
+    if(action==='accept')writes.push(transform(user.uid,request.from),transform(request.from,user.uid),{update:{name:API.name('friendshipApprovals/'+request.from+'/recipients/'+user.uid),fields:API.fields({requestId:id})}});
     if(action==='decline')writes.push({delete:API.name('friendRequests/'+id),currentDocument:{exists:true}});
     else writes.push({update:{name:API.name('friendRequests/'+id),fields:API.fields({to:'accepted_'+request.from,status:'accepted',acceptedByName:window.LyriaAccount?.getProfile()?.displayName || user.displayName || 'A member'})},updateMask:{fieldPaths:['to','status','acceptedByName']},updateTransforms:[{fieldPath:'acceptedAt',setToServerValue:'REQUEST_TIME'}],currentDocument:{exists:true}});
     await API.commit(writes);

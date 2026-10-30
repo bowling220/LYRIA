@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Alert, Share } from 'react-native';
+import {shareInvitation,acceptInvitation} from '../invitations';
 import { db } from '../firebaseConfig';
-import { collection, addDoc, query, onSnapshot, doc, updateDoc } from 'firebase/firestore';
+import { collection, addDoc, query, onSnapshot, doc, updateDoc, setDoc, getDoc, where, writeBatch, arrayUnion } from 'firebase/firestore';
 import { auth } from '../firebaseConfig'; // Import auth to get the current user
 
 const ChannelManagementScreen = ({ navigation }) => {
@@ -11,7 +12,7 @@ const ChannelManagementScreen = ({ navigation }) => {
     const [displayName, setDisplayName] = useState(''); // State for display name
 
     useEffect(() => {
-        const q = query(collection(db, 'channels'));
+        const q = query(collection(db, 'channels'),where('members','array-contains',auth.currentUser.uid));
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const channelData = [];
             snapshot.forEach((doc) => {
@@ -30,28 +31,20 @@ const ChannelManagementScreen = ({ navigation }) => {
             return;
         }
 
-        const code = Math.random().toString(36).substring(2, 8).toUpperCase();
         try {
-            await addDoc(collection(db, 'channels'), {
-                name: channelName,
-                joinCode: code,
-            });
+            const user=auth.currentUser;if(!user)throw new Error('Sign in first.');
+            const ref=doc(collection(db,'channels')),batch=writeBatch(db);
+            batch.set(ref,{name:channelName.trim().slice(0,48),createdBy:user.uid,members:[user.uid],isPublic:false});batch.set(doc(db,'users',user.uid),{channels:arrayUnion(ref.id)},{merge:true});await batch.commit();
             setChannelName('');
-            Alert.alert('Success', `Channel created! Code: ${code}`);
+            Alert.alert('Conversation created', 'Use Share invite to invite your people.');
         } catch (error) {
             console.error('Error creating channel:', error);
         }
     };
 
     const joinChannel = async (code) => {
-        const normalizedCode = code.toUpperCase();
-        const channel = channels.find(channel => channel.joinCode.toUpperCase() === normalizedCode);
-
-        if (channel) {
-            navigation.navigate('Chat', { channelId: channel.id, channelName: channel.name });
-        } else {
-            Alert.alert('Error', 'Channel not found. Please check the code.');
-        }
+        try{const channel=await acceptInvitation(code);setChannelCode('');navigation.navigate('Chat',{channelId:channel.id,channelName:channel.name})}
+        catch(error){Alert.alert('Could not join',error.message)}
     };
 
     const updateDisplayName = async () => {
@@ -68,9 +61,8 @@ const ChannelManagementScreen = ({ navigation }) => {
 
         try {
             const userRef = doc(db, 'users', user.uid); // Reference to the user's document
-            await updateDoc(userRef, {
-                sender: displayName, // Update the sender field
-            });
+            const own=await getDoc(userRef),profile=own.data() || {},name=displayName.trim().slice(0,48),keys=['photoURL','avatarGif','bannerURL','bannerGif','bio','status','showBadges','badges','appearance'];
+            const batch=writeBatch(db);batch.set(userRef,{displayName:name},{merge:true});batch.set(doc(db,'profiles',user.uid),{displayName:name,...Object.fromEntries(Object.entries(profile).filter(([key])=>keys.includes(key)))});await batch.commit();
             Alert.alert('Success', 'Display name updated successfully!');
             setDisplayName(''); // Clear the input field after updating
         } catch (error) {
@@ -114,7 +106,8 @@ const ChannelManagementScreen = ({ navigation }) => {
                 renderItem={({ item }) => (
                     <View style={styles.channelItem}>
                         <Text style={styles.channelName}>{item.name}</Text>
-                        <Text style={styles.channelCode}>Code: {item.joinCode}</Text>
+                        <TouchableOpacity onPress={()=>navigation.navigate('Chat',{channelId:item.id,channelName:item.name})}><Text style={styles.channelCode}>Open conversation</Text></TouchableOpacity>
+                        <TouchableOpacity onPress={async()=>{try{await Share.share({message:await shareInvitation(item.id)})}catch(error){Alert.alert('Could not share',error.message)}}}><Text style={styles.channelCode}>Share invite</Text></TouchableOpacity>
                     </View>
                 )}
                 keyExtractor={(item) => item.id}

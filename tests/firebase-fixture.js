@@ -4,19 +4,29 @@
  const user={uid:'test-member',displayName:'Alex Morgan',photoURL:'assets/avatar.svg',email:'alex@example.test',isAnonymous:false,getIdToken:async()=>{if(window.__stallAuthToken)return new Promise(()=>{});return 'fixture-token'},updateProfile:async data=>{if(window.__failAuthProfile)throw new Error('Simulated Auth profile failure');Object.assign(user,data)}};
  const data=new Map([
   ['users/test-member',{displayName:'Alex Morgan',photoURL:'assets/avatar.svg',channels:['personal-test-member','studio'],friends:['maya'],badges:[],bio:'Making room for good conversations.',status:'available'}],
+  ['channelInvites/STUDIO',{channelId:'studio',name:'The creative studio',createdBy:'maya',expiresAt:null,revoked:false}],
+  ['channelInvites/ALEX01',{channelId:'personal-test-member',name:'My personal channel',createdBy:'test-member',expiresAt:null,revoked:false}],
   ['users/maya',{displayName:'Maya Chen',photoURL:'assets/avatar.svg',badges:[],bio:'Design, music, and the occasional very good idea.',friends:[],status:'available'}],
-  ['channels/personal-test-member',{name:'My personal channel',id:'personal-test-member',members:['test-member'],joinCode:'ALEX01'}],
-  ['channels/studio',{name:'The creative studio',id:'studio',members:['test-member','maya'],joinCode:'STUDIO',activeCallMembers:[]}],
+  ['channels/personal-test-member',{name:'My personal channel',id:'personal-test-member',members:['test-member'],createdBy:'test-member',activeInvite:'ALEX01',joinCode:'ALEX01'}],
+  ['channels/studio',{name:'The creative studio',id:'studio',members:['test-member','maya'],createdBy:'maya',activeInvite:'STUDIO',joinCode:'STUDIO',activeCallMembers:[]}],
   ['channels/personal-test-member/messages/one',{sender:'Maya Chen',senderId:'maya',message:'Hey Alex! Welcome to your little corner of LYRIA.',timestamp:stamp}],
   ['channels/personal-test-member/messages/two',{sender:'Alex Morgan',senderId:'test-member',message:'Already feels like home. What’s everyone working on?',timestamp:stamp}],
   ['channels/personal-test-member/messages/three',{sender:'Maya Chen',senderId:'maya',message:'A new playlist and a few ideas for the weekend. Come say hello in the studio!',timestamp:stamp}],
   ['friendRequests/invite',{from:'maya',to:'test-member',fromName:'Maya Chen',status:'pending'}],
  ]);
+ for(const [path,profile]of [...data])if(path.startsWith('users/'))data.set(path.replace('users/','profiles/'),{displayName:profile.displayName,photoURL:profile.photoURL,bio:profile.bio || '',status:profile.status || 'available',badges:profile.badges || []});
  const persisted=sessionStorage.getItem('lyria-test-profile');if(persisted)data.set('users/test-member',JSON.parse(persisted));
  const shared=[...data].filter(([path])=>path.includes('/personal-test-member/messages/'));shared.forEach(([path,value])=>data.set(path.replace('/personal-test-member/','/community/'),value));
  const watchers=new Set();let index=0;
  const docSnapshot=path=>({id:path.split('/').at(-1),exists:data.has(path),metadata:{hasPendingWrites:false,fromCache:false},data:()=>data.get(path)});
- const querySnapshot=ref=>{let docs=[...data.keys()].filter(p=>p.startsWith(ref.path+'/') && p.split('/').length===ref.path.split('/').length+1).filter(p=>ref.filters.every(([field,op,val])=>{const v=data.get(p)[field];return op==='array-contains'?v?.includes(val):op==='in'?val.includes(v):v===val})).map(docSnapshot);if(ref.moduleOrder){const {field,direction}=ref.moduleOrder;const val=s=>s.data()[field]?.toDate?.().getTime() || Date.parse(s.data()[field]) || s.data()[field] || 0;docs.sort((a,b)=>(val(a)>val(b)?1:val(a)<val(b)?-1:0)*(direction==='desc'?-1:1))}if(ref.moduleAfter){const index=docs.findIndex(s=>s.id===ref.moduleAfter);if(index>=0)docs=docs.slice(index+1)}if(ref.moduleLimit)docs=docs.slice(0,ref.moduleLimit);return{docs,empty:!docs.length,size:docs.length,forEach:fn=>docs.forEach(fn)}};
+ const querySnapshot=ref=>{
+  const number=v=>v?.toMillis?.() ?? v?.toDate?.().getTime() ?? (v instanceof Date?v.getTime():v);
+  let docs=[...data.keys()].filter(p=>p.startsWith(ref.path+'/') && p.split('/').length===ref.path.split('/').length+1).filter(p=>ref.filters.every(([field,op,val])=>{const v=data.get(p)[field];return op==='array-contains'?v?.includes(val):op==='in'?val.includes(v):op==='>'?number(v)>number(val):v===val})).map(docSnapshot);
+  if(ref.sort)docs.sort((a,b)=>{const x=number(a.data()[ref.sort]),y=number(b.data()[ref.sort]);return (x>y?1:x<y?-1:0)*(ref.direction==='desc'?-1:1)});
+  if(ref.take)docs=ref.tail?docs.slice(-ref.take):docs.slice(0,ref.take);
+  if(ref.moduleOrder){const {field,direction}=ref.moduleOrder;const value=s=>s.data()[field]?.toDate?.().getTime() || Date.parse(s.data()[field]) || s.data()[field] || 0;docs.sort((a,b)=>(value(a)>value(b)?1:value(a)<value(b)?-1:0)*(direction==='desc'?-1:1))}if(ref.moduleAfter){const index=docs.findIndex(s=>s.id===ref.moduleAfter);if(index>=0)docs=docs.slice(index+1)}if(ref.moduleLimit)docs=docs.slice(0,ref.moduleLimit);
+  return {docs,empty:!docs.length,size:docs.length,forEach:fn=>docs.forEach(fn)};
+ };
  const emit=()=>watchers.forEach(w=>w.fn(w.ref.document?docSnapshot(w.ref.path):querySnapshot(w.ref)));
  const stable=value=>JSON.stringify(value,(_,item)=>item && typeof item==='object' && !Array.isArray(item)?Object.fromEntries(Object.entries(item).sort(([a],[b])=>a.localeCompare(b))):item);
  const mutate=(path,values)=>{const target={...(data.get(path)||{})};for(const [field,val]of Object.entries(values)){const parts=field.split('.'),key=parts.pop();let node=target;for(const part of parts){node[part]={...(node[part]||{})};node=node[part]}if(val?.op==='union')node[key]=[...(node[key]||[]),...val.values.filter(value=>!(node[key]||[]).some(existing=>stable(existing)===stable(value)))];else if(val?.op==='remove')node[key]=(node[key]||[]).filter(x=>!val.values.includes(x));else if(val?.op==='increment')node[key]=(node[key]||0)+val.value;else node[key]=val}data.set(path,target);emit()};
@@ -25,9 +35,9 @@
   collection(name){return new Ref(this.path+'/'+name)}
   doc(id){return new Ref(this.path+'/'+(id||'new-'+(++index)),true)}
   where(...filter){return new Ref(this.path,false,[...this.filters,filter])}
-  orderBy(){return this}
-  limit(){return this}
-  limitToLast(){return this}
+  orderBy(field,direction='asc'){this.sort=field;this.direction=direction;return this}
+  limit(n){this.take=n;this.tail=false;return this}
+  limitToLast(n){this.take=n;this.tail=true;return this}
   async get(){if(window.__stallChannelMetadata && this.document && this.path.startsWith('channels/') && this.path.split('/').length===2 && !this.path.includes('/personal-'))return new Promise(()=>{});if(window.__stallProfileRead && this.path.startsWith('users/'))return new Promise(()=>{});if(window.__stallChannels && this.path==='channels' && !this.document)return new Promise(()=>{});return this.document?docSnapshot(this.path):querySnapshot(this)}
   async set(value){
    if(window.__failNextProfileSave && this.path==='users/test-member'){window.__failNextProfileSave=false;throw Object.assign(new Error('Simulated permission denied'),{code:'permission-denied'})}
@@ -46,7 +56,7 @@
  const authFn=()=>auth;authFn.GoogleAuthProvider=class{};
  window.firebase={apps:[],initializeApp:options=>{const app={options};window.firebase.apps.push(app);return app},app:()=>window.firebase.apps[0],auth:authFn,firestore};
  const toModuleSnapshot=s=>({...s,exists:()=>s.exists});
- window.__firebaseModule={runTransaction:async(db,fn)=>{const writes=[];const result=await fn({get:async ref=>toModuleSnapshot(await ref.get()),set:(ref,value,options)=>writes.push([ref,value,options])});if(window.__failNewsReaction)throw Error('Simulated reaction failure');for(const [ref,value,options]of writes)await ref.set(value,options);return result},initializeApp:()=>({}),getFirestore:()=>db,initializeFirestore:(app,settings)=>{db.settings(settings);return db},limit:count=>({type:'limit',count}),startAfter:snap=>({type:'after',id:snap.id}),getAuth:()=>auth,onAuthStateChanged:(a,fn)=>a.onAuthStateChanged(fn),doc:(db,...path)=>new Ref(path.join('/'),true),collection:(db,...path)=>new Ref(path.join('/')),query:(ref,...constraints)=>{const next=new Ref(ref.path,ref.document,ref.filters);for(const c of constraints){if(c?.type==='order')next.moduleOrder=c;if(c?.type==='limit')next.moduleLimit=c.count;if(c?.type==='after')next.moduleAfter=c.id}return next},orderBy:(field,direction)=>({type:'order',field,direction}),increment:value=>({op:'increment',value}),getDoc:async ref=>toModuleSnapshot(await ref.get()),setDoc:(ref,val)=>ref.set(val),addDoc:(ref,val)=>window.__failNewsWrite?Promise.reject(Error('Simulated write failure')):ref.add(val),getDocs:ref=>ref.get(),onSnapshot:(ref,fn,error)=>{if((window.__failNewsFeed && ref.path==='userArticles') || (window.__failNewsComments && ref.path.includes('/comments'))){queueMicrotask(()=>error?.(Error('Simulated News stream failure')));return()=>{}}return ref.onSnapshot(s=>fn(ref.document?toModuleSnapshot(s):s))}};
+ window.__firebaseModule={connectAuthEmulator:()=>{},connectFirestoreEmulator:()=>{},runTransaction:async(db,fn)=>{const writes=[];const result=await fn({get:async ref=>toModuleSnapshot(await ref.get()),set:(ref,value,options)=>writes.push([ref,value,options])});if(window.__failNewsReaction)throw Error('Simulated reaction failure');for(const [ref,value,options]of writes)await ref.set(value,options);return result},initializeApp:()=>({}),getFirestore:()=>db,initializeFirestore:(app,settings)=>{db.settings(settings);return db},limit:count=>({type:'limit',count}),startAfter:snap=>({type:'after',id:snap.id}),getAuth:()=>auth,onAuthStateChanged:(a,fn)=>a.onAuthStateChanged(fn),doc:(db,...path)=>new Ref(path.join('/'),true),collection:(db,...path)=>new Ref(path.join('/')),query:(ref,...constraints)=>{const next=new Ref(ref.path,ref.document,ref.filters);for(const c of constraints){if(c?.type==='order')next.moduleOrder=c;if(c?.type==='limit')next.moduleLimit=c.count;if(c?.type==='after')next.moduleAfter=c.id}return next},orderBy:(field,direction)=>({type:'order',field,direction}),increment:value=>({op:'increment',value}),getDoc:async ref=>toModuleSnapshot(await ref.get()),setDoc:(ref,val)=>ref.set(val),addDoc:(ref,val)=>window.__failNewsWrite?Promise.reject(Error('Simulated write failure')):ref.add(val),getDocs:ref=>ref.get(),onSnapshot:(ref,fn,error)=>{if((window.__failNewsFeed && ref.path==='userArticles') || (window.__failNewsComments && ref.path.includes('/comments'))){queueMicrotask(()=>error?.(Error('Simulated News stream failure')));return()=>{}}return ref.onSnapshot(s=>fn(ref.document?toModuleSnapshot(s):s))}};
 
  // Exercise the real profile HTTPS adapter without touching a production account.
  const originalFetch=window.fetch.bind(window);
@@ -54,33 +64,40 @@
  const encodeFields=data=>Object.fromEntries(Object.entries(data).sort(([a],[b])=>a.localeCompare(b)).map(([k,v])=>[k,encode(v)]));
  const decode=value=>'timestampValue'in value?{toDate:()=>new Date(value.timestampValue),toMillis:()=>Date.parse(value.timestampValue)}:'stringValue'in value?value.stringValue:'booleanValue'in value?value.booleanValue:'integerValue'in value?Number(value.integerValue):'doubleValue'in value?value.doubleValue:'nullValue'in value?null:'arrayValue'in value?(value.arrayValue.values||[]).map(decode):Object.fromEntries(Object.entries(value.mapValue.fields).map(([k,v])=>[k,decode(v)]));
  window.fetch=async(input,options={})=>{
-   if(!String(input).startsWith('https://firestore.googleapis.com/v1/projects/'))return originalFetch(input,options);
+   if(!/^https?:\/\/(firestore\.googleapis\.com|127\.0\.0\.1:8085)\/v1\/projects\//.test(String(input)))return originalFetch(input,options);
    if(window.__offlineAccount)throw new TypeError('Simulated offline request');
    if(window.__stallAccount)await new Promise((resolve,reject)=>options.signal.addEventListener('abort',()=>reject(new DOMException('Aborted','AbortError')),{once:true}));
    const url=new URL(input),method=options.method||'GET';
    const documentPath=decodeURIComponent(url.pathname.split('/documents/')[1] || '');
    const block=()=>new Promise((resolve,reject)=>options.signal.addEventListener('abort',()=>reject(new DOMException('Aborted','AbortError')),{once:true}));
    const json=(value,status=200)=>new Response(JSON.stringify(value),{status});
-   if(url.pathname.endsWith(':runQuery')){
+   if(url.pathname.endsWith(':runQuery') || url.pathname.endsWith(':runAggregationQuery')){
      if(window.__stallRestQueries)return block();
      if(window.__failRestQueries)return json({error:{message:'Simulated query failure'}},503);
-     const query=JSON.parse(options.body).structuredQuery;
-     const parent=decodeURIComponent(url.pathname.split('/documents')[1].replace(':runQuery','').replace(/^\//,''));
+     const body=JSON.parse(options.body),query=body.structuredAggregationQuery?.structuredQuery || body.structuredQuery;
+     const parent=decodeURIComponent(url.pathname.split('/documents')[1].replace(':runQuery','').replace(':runAggregationQuery','').replace(/^\//,''));
      const collection=[parent,query.from[0].collectionId].filter(Boolean).join('/');
      if(window.__denyCommunity && collection==='channels/community/messages')return json({error:{message:'Simulated permission denied'}},403);
-     const matches=(entry,where)=>!where?true:where.compositeFilter?where.compositeFilter.filters.every(w=>matches(entry,w)):(()=>{const f=where.fieldFilter,v=entry[f.field.fieldPath],wanted=decode(f.value);return f.op==='IN'?wanted.includes(v):f.op==='ARRAY_CONTAINS'?v?.includes(wanted):v===wanted})();
+     const matches=(entry,where)=>!where?true:where.compositeFilter?where.compositeFilter.filters.every(w=>matches(entry,w)):(()=>{const f=where.fieldFilter,v=entry[f.field.fieldPath],wanted=decode(f.value);const number=x=>x?.toMillis?.() ?? x?.toDate?.().getTime() ?? x;return f.op==='GREATER_THAN'?number(v)>number(wanted):f.op==='IN'?wanted.includes(v):f.op==='ARRAY_CONTAINS'?v?.includes(wanted):v===wanted})();
      let docs=[...data].filter(([path,value])=>path.startsWith(collection+'/') && path.split('/').length===collection.split('/').length+1 && matches(value,query.where));
      if(query.orderBy){const order=query.orderBy[0],field=order.field.fieldPath;docs=docs.filter(([,v])=>v[field]!==undefined).sort((a,b)=>{const val=v=>v[field]?.toDate?.().getTime() || v[field];return (val(a[1])>val(b[1])?1:val(a[1])<val(b[1])?-1:0)*(order.direction==='DESCENDING'?-1:1)})}
      if(query.limit)docs=docs.slice(0,query.limit);
+     if(body.structuredAggregationQuery)return json([{result:{aggregateFields:{total:{integerValue:String(docs.length)}}}}]);
      return json(docs.map(([path,value])=>({document:{name:'projects/fixture/databases/(default)/documents/'+path,fields:encodeFields(value)}})));
    }
    if(url.pathname.endsWith(':commit')){
      if(window.__failCommit)return json({error:{message:'Simulated commit failure'}},503);
      if(window.__stallCommit)return block();
      const writes=JSON.parse(options.body).writes;
+     const profileSave=writes.some(w=>w.update?.name.endsWith('/users/test-member'));
+     if(profileSave && window.__failNextProfileSave){window.__failNextProfileSave=false;return json({error:{message:'Simulated permission denied'}},403)}
+     if(profileSave && window.__delayProfileSave)await new Promise(resolve=>window.__finishProfileSave=resolve);
+
      if(window.__failNextMessage && writes.some(w=>w.update?.name.includes('/messages/'))){window.__failNextMessage=false;return json({error:{message:'Simulated send failure'}},503)}
      for(const write of writes){
+       if(write.verify)continue;
        const name=write.delete || write.update?.name || write.transform?.document,path=decodeURIComponent(name.split('/documents/')[1]);
+       if(write.currentDocument?.exists===false && data.has(path))return json({error:{message:'Already exists'}},409);
        if(write.currentDocument?.exists===true && !data.has(path))return json({error:{message:'Missing document'}},404);
        if(write.delete){data.delete(path);continue}
        const values=write.update?Object.fromEntries(Object.entries(write.update.fields||{}).map(([k,v])=>[k,decode(v)])):{};
@@ -88,11 +105,12 @@
        mutate(path,values);
        if(path==='users/test-member')sessionStorage.setItem('lyria-test-profile',JSON.stringify(data.get(path)));
      }
+     if(profileSave)sessionStorage.setItem('lyria-test-profile',JSON.stringify(data.get('users/test-member')));
      if(window.__loseFeedbackAck && writes.some(w=>w.transform?.fieldTransforms?.some(t=>t.fieldPath==='feedbackSubmissions'))){window.__loseFeedbackAck=false;return json({error:{message:'Simulated lost feedback acknowledgement'}},503)}
      return json({writeResults:writes.map(()=>({updateTime:'2026-10-29T10:30:00Z'}))});
    }
    if(method==='GET' && window.__stallProfileUid && documentPath==='users/'+window.__stallProfileUid)return block();
-   if(method==='GET' && documentPath && !documentPath.startsWith('users/'))return data.has(documentPath)?json({name:documentPath,fields:encodeFields(data.get(documentPath))}):json({error:{message:'Not found'}},404);
+   if(method==='GET' && documentPath && (!documentPath.startsWith('users/') || documentPath.split('/').length>2))return data.has(documentPath)?json({name:documentPath,fields:encodeFields(data.get(documentPath))}):json({error:{message:'Not found'}},404);
    const uid=method==='POST'?url.searchParams.get('documentId'):decodeURIComponent(url.pathname.split('/').at(-1));
    const path='users/'+uid;
    if(method==='GET'&&!data.has(path))return new Response(JSON.stringify({error:{message:'Not found'}}),{status:404});

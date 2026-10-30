@@ -12,10 +12,11 @@
   <script src="https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore-compat.js"></script>
 
   <!-- Utility Scripts -->
-  <script src="js/config.js?v=e668e661704b7783"></script>
+  <script src="js/runtime-config.js?v=2d5215ca595a64fe"></script>
+        <script src="js/config.js?v=0c88e1ace284ae8f"></script>
   <script src="js/utils.js?v=35ef4bfc11346489"></script>
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
-  <link rel="stylesheet" href="css/theme.css?v=fdbbb3e74f136c21">
+  <link rel="stylesheet" href="css/theme.css?v=7e81039451b3c8f0">
   <script src="js/ui.js?v=68d81812cba5f6c2"></script>
   <script src="js/appearance.js?v=f2b3fb9699b59da3"></script>
 </head>
@@ -28,7 +29,7 @@
     <div id="notification">Guest accounts are temporary. Sign in with Google to keep your account across devices.</div>
   </div></main>
 
-  <script src="js/invites.js?v=69288a4922f5c3bd"></script>
+  <script src="js/invites.js?v=23abf220b9d0b3bd"></script>
   <script>
     // Load environment variables for security
     // In production, these should be loaded from a secure source
@@ -66,7 +67,7 @@
             appId: window.env.VITE_FIREBASE_APP_ID,
             measurementId: window.env.VITE_FIREBASE_MEASUREMENT_ID
         };
-        firebase.initializeApp(fallbackConfig);
+        firebase.initializeApp(window.LYRIA_RUNTIME?.firebase || fallbackConfig);
         return firebase.auth();
     }
 

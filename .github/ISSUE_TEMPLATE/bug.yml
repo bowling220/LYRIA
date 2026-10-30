@@ -1,0 +1,42 @@
+name: Bug report
+description: Report a reproducible problem with LYRIA.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: "Security problem or exposed credential? Stop and use SECURITY.md. Do not paste tokens, passwords, or private user data here."
+  - type: input
+    id: summary
+    attributes:
+      label: What went wrong?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Include expected and actual behavior, using test accounts.
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Browser/device and LYRIA version or commit
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Affected area
+      options: [Web UI, Mobile, Chat or friends, Voice, Firebase or authentication, Build or CI, Performance, Other]
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Screenshots or sanitized logs
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Before submitting
+      options:
+        - label: This public report contains no credentials, private data, or vulnerability details.
+          required: true

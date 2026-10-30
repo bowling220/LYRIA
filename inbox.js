@@ -25,7 +25,7 @@
           });
         }
         // This lookup never delays rendering the request or its controls.
-        window.LyriaDataAPI.read('users/'+request.from).then(profile=>{if(current===version && row.isConnected && profile.exists)message.textContent=(profile.data().displayName || request.fromName || 'A member')+' sent you a friend request!'}).catch(()=>{});
+        window.LyriaDataAPI.read('profiles/'+request.from).then(profile=>{if(current===version && row.isConnected && profile.exists)message.textContent=(profile.data().displayName || request.fromName || 'A member')+' sent you a friend request!'}).catch(()=>{});
       }
     },error=>{if(current!==version)return;console.warn('Request loading failed',error);window.LyriaConnection.fail('requests','Friend requests couldn’t load. Try reconnecting.')});
   }

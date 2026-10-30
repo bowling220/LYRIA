@@ -25,9 +25,9 @@
   const fromFields = object => Object.fromEntries(Object.entries(object || {}).map(([key,value])=>[key,decode(value)]));
   const baseUrl = () => {
     const project=window.firebaseConfig.getApp().options.projectId;
-    return 'https://firestore.googleapis.com/v1/projects/'+encodeURIComponent(project)+'/databases/(default)/documents/users';
+    return (window.LYRIA_RUNTIME?.emulators?'http://'+window.LYRIA_RUNTIME.emulators.host+':'+window.LYRIA_RUNTIME.emulators.firestorePort:'https://firestore.googleapis.com')+'/v1/projects/'+encodeURIComponent(project)+'/databases/(default)/documents/users';
   };
-  async function request(user, method, suffix, data, retry=true) {
+  async function request(user, method, suffix, data, retry=true, commit=false) {
     const controller=new AbortController();
     const timer=setTimeout(()=>controller.abort(),timeoutMs);
     try {
@@ -36,18 +36,18 @@
         user.getIdToken(!retry),
         new Promise((_,reject)=>controller.signal.addEventListener('abort',()=>reject(Object.assign(new Error('Connection timed out'),{code:'deadline-exceeded'})),{once:true}))
       ]);
-      const response=await fetch(baseUrl()+suffix,{
+      const response=await fetch(commit?baseUrl().replace(/\/users$/,'')+':commit':baseUrl()+suffix,{
         method,signal:controller.signal,cache:'no-store',
         headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},
-        ...(data?{body:JSON.stringify({fields:fields(data)})}:{})
+        ...(data?{body:JSON.stringify(commit?data:{fields:fields(data)})}:{})
       });
-      if(response.status===401 && retry){clearTimeout(timer);return request(user,method,suffix,data,false)}
+      if(response.status===401 && retry){clearTimeout(timer);return request(user,method,suffix,data,false,commit)}
       const body=await response.json();
       if(!response.ok){
         const code=({401:'unauthenticated',403:'permission-denied',404:'not-found',409:'already-exists',429:'resource-exhausted'})[response.status] || 'unavailable';
         throw Object.assign(new Error(body.error?.message || 'Account request failed'),{code});
       }
-      return {exists:true,data:fromFields(body.fields)};
+      return {exists:true,data:fromFields(body.fields),version:body.updateTime};
     } catch(error) {
       if(error.name==='AbortError')throw Object.assign(new Error('Account connection timed out'),{code:'deadline-exceeded'});
       if(error instanceof TypeError)throw Object.assign(new Error('Account server could not be reached'),{code:'unavailable'});
@@ -58,7 +58,19 @@
     try {return await request(user,'GET','/'+encodeURIComponent(user.uid));}
     catch(error){if(error.code==='not-found')return {exists:false,data:{}};throw error}
   }
-  const save=(user,patch)=>request(user,'PATCH','/'+encodeURIComponent(user.uid)+'?'+new URLSearchParams(Object.keys(patch).map(key=>['updateMask.fieldPaths',key])),patch);
-  const create=(user,data)=>request(user,'POST','?documentId='+encodeURIComponent(user.uid),data);
-  window.LyriaAccountAPI={read,save,create};
+  const publicKeys=['displayName','photoURL','avatarGif','bannerURL','bannerGif','bio','status','showBadges','badges','appearance','updatedAt'];
+  async function write(user,patch,createOnly=false){
+    const current=await read(user),merged={...current.data,...patch};
+    const publicData={displayName:user.displayName || 'LYRIA member',photoURL:user.photoURL || 'assets/avatar.svg',...Object.fromEntries(Object.entries(merged).filter(([key])=>publicKeys.includes(key)))};
+    const root='projects/'+window.firebaseConfig.getApp().options.projectId+'/databases/(default)/documents/';
+    await request(user,'POST','',{writes:[
+      ...(Object.keys(patch).length?[{update:{name:root+'users/'+user.uid,fields:fields(patch)},updateMask:{fieldPaths:Object.keys(patch)},...(createOnly?{currentDocument:{exists:false}}:current.version?{currentDocument:{updateTime:current.version}}:{})}]:current.version?[{verify:root+'users/'+user.uid,currentDocument:{updateTime:current.version}}]:[]),
+      {update:{name:root+'profiles/'+user.uid,fields:fields(publicData)}}
+    ]},true,true);
+    return read(user);
+  }
+  const save=(user,patch)=>write(user,patch);
+  const create=(user,data)=>write(user,data,true);
+  async function publish(user){const own=await read(user);if(!own.exists)return own;return save(user,{})}
+  window.LyriaAccountAPI={read,save,create,publish};
 })();

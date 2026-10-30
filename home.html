@@ -21,7 +21,8 @@
         <script src="https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore-compat.js"></script>
 
         <!-- Utility Scripts -->
-        <script src="js/config.js?v=e668e661704b7783"></script>
+        <script src="js/runtime-config.js?v=2d5215ca595a64fe"></script>
+        <script src="js/config.js?v=0c88e1ace284ae8f"></script>
         <script src="js/utils.js?v=35ef4bfc11346489"></script>
         <script src="js/performance.js?v=b75533a7c9e9fa36"></script>
 
@@ -29,11 +30,11 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.5/peerjs.min.js"></script>
         <script src="js/mobile.js?v=630bcfe83bf75bf8" defer></script>
       <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
-  <link rel="stylesheet" href="css/theme.css?v=fdbbb3e74f136c21">
+  <link rel="stylesheet" href="css/theme.css?v=7e81039451b3c8f0">
   <script src="js/ui.js?v=68d81812cba5f6c2"></script>
-  <script src="js/gif-library.js?v=0f7b242343ed6889"></script>
+  <script src="js/gif-library.js?v=790b9c41821e7073"></script>
   <script src="js/badges.js?v=40763ed5718c4e15"></script>
-  <script src="js/media.js?v=ae4494917a6c242a"></script>
+  <script src="js/media.js?v=ab019dd96150b5d4"></script>
   <script src="js/appearance.js?v=f2b3fb9699b59da3"></script>
 </head>
 <body class="app-page">
@@ -62,7 +63,7 @@
             </nav>
             <div class="sidebar-scroll" tabindex="0" aria-label="Conversations and voice channels">
                 <div class="channels">
-                    <h3>Conversations</h3>
+                    <h3>Conversations</h3><p id="read-state-status" class="save-status" role="status"></p>
                     <button id="open-hub" class="channel-btn" type="button"><span data-icon="chat" aria-hidden="true"></span>All conversations</button><ul class="channels-list" id="channels-list"></ul>
                     <div class="channel-actions" aria-label="Channel actions">
                         <button class="add-channel-btn" id="add-channel"><span data-icon="plus" aria-hidden="true"></span> New</button>
@@ -128,9 +129,11 @@
                 </footer>
             </section>
             <p id="community-notice" class="chat-room-notice" hidden>Everyone signed in can read this room · Latest 100 messages</p>
+            <div id="unread-actions" class="unread-actions" hidden><button id="jump-first-unread" type="button">Jump to first unread</button><button id="back-to-latest" type="button" hidden>Back to latest</button><button id="mark-room-read" type="button">Mark as read</button></div>
             <div class="messages" id="messages" role="log" aria-label="Conversation messages" aria-live="polite"><div class="empty-state"><span class="empty-icon"><span data-icon="chat" aria-hidden="true"></span></span><h2>Getting your space ready.</h2><p>Your conversations will appear here in a moment.</p></div></div>
             <!-- Typing Status Indicator -->
             <div id="typing-status" class="typing-status" style="display: none;"></div>
+            <div id="mention-suggestions" class="mention-suggestions" role="listbox" aria-label="Mention a member" hidden></div>
             <div class="message-input">
                 <textarea id="message-input" aria-label="Message" placeholder="Write a message…" rows="1" maxlength="4000"></textarea>
                 <button id="gif-button" class="gif-btn" type="button" aria-label="Share a GIF" title="Share a GIF"><span data-icon="image" aria-hidden="true"></span><span class="button-label">GIF</span></button>
@@ -199,12 +202,12 @@
     <div class="modal-content gif-picker">
         <button id="close-gif-modal" class="close-button" aria-label="Close GIF library"><span data-icon="close" aria-hidden="true"></span></button>
         <p class="modal-eyebrow">The GIF library</p><h2 id="gif-modal-title">Say it with a GIF</h2>
-        <p id="gif-picker-description">Search the built-in library, choose a GIF, then send it.</p>
+        <p id="gif-picker-description">Search GIFs, choose one, then send it.</p>
         <label class="sr-only" for="gif-search">Search GIFs</label>
         <div class="gif-search-wrap"><span data-icon="search" aria-hidden="true"></span><input id="gif-search" type="search" placeholder="Search hello, happy, cats…" autocomplete="off"></div>
         <div id="gif-categories" class="gif-categories" role="group" aria-label="GIF categories"></div>
         <div class="gif-results-heading"><span id="gif-results-count" role="status"></span><span>Choose a GIF to preview</span></div>
-        <div class="gif-grid-scroll"><div id="gif-results" class="gif-results" aria-label="GIF results"></div><p id="gif-no-results" class="gif-empty" hidden>No matches in this library. Try another word or category.</p></div>
+        <div class="gif-grid-scroll"><div id="gif-results" class="gif-results" aria-label="GIF results"></div><p id="gif-no-results" class="gif-empty" hidden>No GIFs found. Try another word or category.</p></div>
         <div class="gif-picker-footer">
             <div class="gif-footer-main"><span id="gif-selection-idle">Choose a GIF to preview</span><div id="gif-selection" class="gif-selection" hidden><img id="gif-selection-image" alt="Selected GIF preview" data-managed-media="true"><span id="gif-selection-title"></span></div><button id="gif-picker-action" class="primary-action" type="button" disabled>Send GIF</button></div>
             <p id="gif-picker-feedback" class="save-status" role="status" aria-live="polite"></p><span id="gif-library-source"></span>
@@ -243,6 +246,13 @@
             <p id="contrast-save-status" class="save-status" role="status" aria-live="polite"></p>
         </div>
 
+        <section id="voice-device-settings" class="modal-section" aria-labelledby="voice-device-title">
+          <h3 id="voice-device-title">Voice &amp; devices</h3>
+          <label for="voice-input-device">Microphone</label><select id="voice-input-device"><option value="">System default microphone</option></select>
+          <div class="voice-device-actions"><button id="voice-test-input" type="button">Test microphone</button><button id="voice-stop-test" type="button" hidden>Stop test</button><button id="voice-test-connection" type="button">Check connection</button></div>
+          <meter id="voice-device-level" min="0" max="1" value="0" aria-label="Microphone test level"></meter>
+          <p id="voice-device-status" role="status" aria-live="polite">Tests start only when you choose them. No audio is sent to another person.</p>
+        </section>
         <section class="modal-section appearance-editor" aria-label="Profile appearance">
             <h3>Your look</h3><p>Make it yours with an image or an animated GIF.</p>
             <div class="appearance-preview"><img id="appearance-banner" class="appearance-banner" alt="Your profile banner" hidden><img id="appearance-avatar" class="appearance-avatar" src="assets/avatar.svg" alt="Your profile picture"><span>Profile preview</span></div>
@@ -308,22 +318,40 @@
     </div>
 </div>
 
+<div id="share-invite-modal" class="modal" aria-hidden="true" inert role="dialog" aria-labelledby="share-invite-title">
+  <div class="modal-content compact-modal">
+    <button class="close-button" type="button" aria-label="Close invite link"><span data-icon="close" aria-hidden="true"></span></button>
+    <h2 id="share-invite-title">Invite your people</h2>
+    <p>Share this link with your people. Only the owner can replace or revoke it.</p>
+    <label class="modal-label" for="share-invite-link">Invitation link</label>
+    <input id="share-invite-link" class="modal-input" type="text" readonly autocomplete="off">
+    <button id="copy-invite-link" type="button" class="primary-action">Copy link</button>
+    <section id="invite-owner-controls" hidden aria-label="Owner invitation controls">
+      <label for="invite-expiry">New link expires</label><select id="invite-expiry"><option value="0">When I revoke it</option><option value="1">After 1 hour</option><option value="24">After 1 day</option><option value="168">After 7 days</option></select>
+      <button id="replace-invite" type="button">Replace link</button><button id="revoke-invite" class="danger-action" type="button">Revoke link</button>
+    </section><p id="invite-control-status" role="status" aria-live="polite"></p>
+  </div>
+</div>
+
     <!-- Include voiceCall.js before chat.js -->
-    <script src="js/account-api.js?v=cddf4de2ed3d25fe"></script>
-    <script src="js/account.js?v=2531b08fc04eb7e8"></script>
-    <script src="js/data-api.js?v=9cecfda8659c38e0"></script>
-    <script src="js/friend-requests.js?v=165990bf120b126d"></script>
+    <script src="js/account-api.js?v=a7db35e0aedb12b0"></script>
+    <script src="js/account.js?v=3cf0f191d647d99a"></script>
+    <script src="js/data-api.js?v=df40e6ffb171de94"></script>
+    <script src="js/read-state.js?v=3cec2199d8a7cda9"></script>
+    <script src="js/mentions.js?v=e94175b6db7380f0"></script>
+    <script src="js/friend-requests.js?v=edcf30faf56c9030"></script>
     <script src="js/voice-config.js?v=119a5da781b271fd"></script>
-    <script src="js/voice-transport.js?v=0a2391e8a4477901"></script>
+    <script src="js/voice-transport.js?v=fa2ca1547533d069"></script>
     <script src="js/voice-presence.js?v=3bab77acb0644b2b"></script>
-    <script src="voiceCall.js?v=75029404e8c6e868"></script>
-    <script src="js/voice-view.js?v=62cb1fc8d3c3c407"></script>
+    <script src="voiceCall.js?v=5a9d4dd8462a54f5"></script>
+    <script src="js/voice-devices.js?v=bcc60610780043c3"></script>
+    <script src="js/voice-view.js?v=9a6f2e727cbda043"></script>
     <script src="js/reactions.js?v=2ed845847fa3f200"></script>
-    <script src="js/invites.js?v=69288a4922f5c3bd"></script>
-    <script src="chat.js?v=07705138b4e8e1de"></script>
-    <script src="js/call-invites.js?v=bf9ab596f6bb87c8"></script>
-    <script src="js/community.js?v=aee345ecff13d71e"></script>
-    <script src="js/gif-picker.js?v=f9c05c3fd59f2481"></script>
+    <script src="js/invites.js?v=23abf220b9d0b3bd"></script>
+    <script src="chat.js?v=2c078cbaf0353196"></script>
+    <script src="js/call-invites.js?v=7fa101a84eecac1e"></script>
+    <script src="js/community.js?v=76e1a5acda0d84b9"></script>
+    <script src="js/gif-picker.js?v=2f93889319945d25"></script>
     <script src="js/profile-media.js?v=fe26a608f0a61b46"></script>
 
     <!-- Firebase initialization check -->
@@ -346,15 +374,6 @@
     </div>
 
 
-<div id="share-invite-modal" class="modal" aria-hidden="true" inert role="dialog" aria-labelledby="share-invite-title">
-  <div class="modal-content compact-modal">
-    <button class="close-button" type="button" aria-label="Close invite link"><span data-icon="close" aria-hidden="true"></span></button>
-    <h2 id="share-invite-title">Invite your people</h2>
-    <p>Your browser couldn’t copy automatically. Select and copy this link.</p>
-    <label class="modal-label" for="share-invite-link">Invitation link</label>
-    <input id="share-invite-link" class="modal-input" type="text" readonly autocomplete="off">
-  </div>
-</div>
 <script src="js/feedback.js?v=752e3790207d8004" defer></script>
 <script src="js/releases-ui.js?v=d97926b2797986b2" defer></script>
 </body>

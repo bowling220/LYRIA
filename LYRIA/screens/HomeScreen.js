@@ -28,10 +28,9 @@ const HomeScreen = ({ navigation }) => {
 
         setLoading(true);
 
-
         try {
             // Attempt to sign in the user
-            const userCredential = await signInWithEmailAndPassword(auth, email.trim(), password.trim());
+            const userCredential = await signInWithEmailAndPassword(auth, email.trim(), password);
             const user = userCredential.user;
 
             // Handle user authentication and Firestore document creation
@@ -48,7 +47,7 @@ const HomeScreen = ({ navigation }) => {
                 console.log('User not found, attempting to create a new account...'); // Log for debugging
                 try {
                     // Create a new user account
-                    const userCredential = await createUserWithEmailAndPassword(auth, email.trim(), password.trim());
+                    const userCredential = await createUserWithEmailAndPassword(auth, email.trim(), password);
                     const user = userCredential.user;
 
                     // Create a new user document in Firestore
@@ -78,10 +77,12 @@ const HomeScreen = ({ navigation }) => {
         if (!userDoc.exists()) {
             // Create a new user document if it doesn't exist
             await setDoc(userRef, {
-                sender: user.displayName || 'Anonymous', // Set initial sender name
+                displayName: user.displayName || 'LYRIA member',
                 channels: [], // Initialize with an empty array or add default channels
             });
         }
+        const saved=(await getDoc(userRef)).data();const keys=['displayName','photoURL','avatarGif','bannerURL','bannerGif','bio','status','showBadges','badges','appearance'];
+        await setDoc(doc(db,'profiles',user.uid),{displayName:user.displayName || 'LYRIA member',...Object.fromEntries(Object.entries(saved || {}).filter(([key])=>keys.includes(key)))});
     };
 
     useEffect(() => {
@@ -93,14 +94,14 @@ const HomeScreen = ({ navigation }) => {
 
                 if (userDoc.exists()) {
                     const userData = userDoc.data();
-                    const userChannels = userData.channels; // Assuming channels is an array of channel IDs
+                    const userChannels = Array.isArray(userData.channels)?userData.channels:[]; // Assuming channels is an array of channel IDs
 
                     if (userChannels.length > 0) {
                         // Navigate to the first channel the user is a member of
-                        navigation.navigate('Chat', { channelId: userChannels[0], channelName: 'Your Channel Name' });
+                        try{const room=await getDoc(doc(db,'channels',userChannels[0]));if(room.exists() && room.data().members?.includes(user.uid))navigation.navigate('Chat',{channelId:room.id,channelName:room.data().name || 'Conversation'});else navigation.navigate('Chat',{channelId:'community',channelName:'Everyone'})}catch{navigation.navigate('Chat',{channelId:'community',channelName:'Everyone'})}
                     } else {
                         // Navigate to a default channel if no channels are found
-                        navigation.navigate('Chat', { channelId: 'your-default-channel-id', channelName: 'Default Channel' });
+                        navigation.navigate('Chat', { channelId: 'community', channelName: 'Everyone' });
                     }
                 }
             }

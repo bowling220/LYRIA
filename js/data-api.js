@@ -12,7 +12,7 @@
     const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),12000);
     try{
       const token=await Promise.race([user.getIdToken(!retry),new Promise((_,reject)=>controller.signal.addEventListener('abort',()=>reject(Object.assign(new Error('Connection timed out.'),{code:'deadline-exceeded'})),{once:true}))]);
-      const response=await fetch('https://firestore.googleapis.com/v1/'+root()+suffix,{method:body?'POST':'GET',cache:'no-store',signal:controller.signal,headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},...(body?{body:JSON.stringify(body)}:{})});
+      const response=await fetch((window.LYRIA_RUNTIME?.emulators?'http://'+window.LYRIA_RUNTIME.emulators.host+':'+window.LYRIA_RUNTIME.emulators.firestorePort:'https://firestore.googleapis.com')+'/v1/'+root()+suffix,{method:body?'POST':'GET',cache:'no-store',signal:controller.signal,headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},...(body?{body:JSON.stringify(body)}:{})});
       if(response.status===401 && retry){clearTimeout(timer);return request(suffix,body,false)}
       const value=await response.json();if(!response.ok)throw Object.assign(new Error(value.error?.message || 'Request failed.'),{code:['ABORTED','FAILED_PRECONDITION'].includes(value.error?.status)?'aborted':({401:'unauthenticated',403:'permission-denied',404:'not-found'})[response.status] || 'unavailable'});
       if(window.firebaseConfig.getAuth().currentUser?.uid!==user.uid)throw Object.assign(new Error('Account changed. Retry after signing in.'),{code:'unauthenticated'});
@@ -23,7 +23,11 @@
   async function query(collectionId,{parent='',where,orderBy,limit,reverse=false}={}){
     const result=await request((parent?'/'+parent:'')+':runQuery',{structuredQuery:{from:[{collectionId}],...(where?{where}:{}),...(orderBy?{orderBy}:{}),...(limit?{limit}:{} )}});
     const docs=result.filter(row=>row.document).map(row=>snapshot(row.document));if(reverse)docs.reverse();
-    return {docs,empty:!docs.length,metadata:{fromCache:false},forEach:fn=>docs.forEach(fn)};
+    return {docs,empty:!docs.length,readTime:result.find(row=>row.readTime)?.readTime,metadata:{fromCache:false},forEach:fn=>docs.forEach(fn)};
+  }
+  async function count(collectionId,{parent='',where}={}){
+    const result=await request((parent?'/'+parent:'')+':runAggregationQuery',{structuredAggregationQuery:{structuredQuery:{from:[{collectionId}],...(where?{where}:{})},aggregations:[{alias:'total',count:{}}]}});
+    return Number(result.find(row=>row.result)?.result.aggregateFields.total.integerValue || 0);
   }
   async function read(path){try{return snapshot(await request('/'+path.split('/').map(encodeURIComponent).join('/')))}catch(error){if(error.code==='not-found')return {exists:false,data:()=>null};throw error}}
   const equal=(field,value,op='EQUAL')=>({fieldFilter:{field:{fieldPath:field},op,value:encode(value)}});
@@ -49,5 +53,5 @@
     const stop=()=>{stopped=true;generation++;off?.();clearInterval(interval);window.removeEventListener('online',resume);document.removeEventListener('visibilitychange',resume)};
     stop.refresh=()=>poll(true);return stop;
   }
-  window.LyriaDataAPI={query,read,watch,equal,name,fields,commit:writes=>request(':commit',{writes})};
+  window.LyriaDataAPI={query,count,read,watch,equal,name,fields,commit:writes=>request(':commit',{writes})};
 })();

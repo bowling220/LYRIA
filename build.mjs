@@ -1,7 +1,10 @@
 import { cp, mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { extname, join } from 'node:path';
 import { versionAssets } from './scripts/version-assets.mjs';
+import { configureRuntime } from './scripts/configure-runtime.mjs';
 import { configureVoice } from './scripts/configure-voice.mjs';
+
+import { configureGifs } from './scripts/configure-gifs.mjs';
 
 const root = process.cwd();
 const dist = join(root, 'dist');
@@ -20,7 +23,11 @@ for (const directory of ['assets', 'css', 'js']) {
   await cp(join(root, directory), join(client, directory), { recursive: true });
 }
 
+if(process.env.LYRIA_ENV)await configureRuntime(client);
 await configureVoice(client);
+await configureGifs(client);
+// Render currently publishes the root; keep its browser-scoped TURN configuration in sync.
+if(process.env.RENDER==='true'){await configureVoice(root);await configureGifs(root);await versionAssets(root);}
 await versionAssets(client);
 
 await mkdir(join(dist, 'server'), { recursive: true });

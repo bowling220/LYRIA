@@ -11,7 +11,7 @@
     const gif=profile[target==='avatar'?'avatarGif':'bannerGif'];
     const item=window.LyriaGifLibrary.get(gif?.id);
     const stored=safeUrl(profile[target==='avatar'?'photoURL':'bannerURL']);
-    return reduced() && item?item.stillUrl:stored || (target==='avatar'?'assets/avatar.svg':'');
+    return reduced() && safeUrl(item?.stillUrl || gif?.stillUrl)?safeUrl(item?.stillUrl || gif?.stillUrl):stored || (target==='avatar'?'assets/avatar.svg':'');
   }
   function image(img,url,fallback=''){
     img.dataset.managedMedia='true';img.referrerPolicy='no-referrer';
