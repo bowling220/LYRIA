@@ -35,18 +35,22 @@ with sync_playwright() as p:
   page.evaluate("LyriaConnection.ready('startup')")
   assert not errors,errors
   page.close()
- # The initial message view is a loading screen, but navigation and drafts work.
+ # Normal returning-user loads use the full screen even if update notes fail.
  page=make_page(browser,ROOT,390,844)
  page.add_init_script('window.__stallMessages=true;window.__stallRestQueries=true')
+ page.route('**/js/releases.json',lambda route:route.fulfill(status=503,body='Unavailable'))
  page.goto('http://localhost:8124/home.html?channel=community')
+ page.wait_for_selector('#app-loading-modal[data-ui-open=true] [data-loading-part=messages]')
+ assert page.locator('#release-modal[data-ui-open=true]').count()==0
+ page.get_by_role('button',name='Keep browsing',exact=True).click()
  page.wait_for_selector('#messages [data-loading-part=messages]')
- assert page.locator('#app-loading-modal').is_hidden()
  page.locator('#message-input').fill('Keep this while waiting')
  page.screenshot(path=str(OUT/'loading-conversation-mobile.png'))
  page.evaluate("LyriaConnection.fail('messages','Your conversation couldn’t load. Try again.')")
- assert page.locator('#messages .app-loading-retry').is_visible()
+ page.wait_for_selector('#messages .app-loading-retry',state='visible')
  page.evaluate('window.__stallMessages=false;window.__stallRestQueries=false')
  page.locator('#messages .app-loading-retry').click();page.wait_for_selector('.message')
+ page.wait_for_function("document.getElementById('app-loading-modal').style.display==='none'")
  assert page.locator('#messages [data-loading-part]').count()==0
  assert page.locator('#message-input').input_value()=='Keep this while waiting'
  assert page.evaluate('__networkRestarts')==1
@@ -55,15 +59,28 @@ with sync_playwright() as p:
  page.wait_for_timeout(750)
  assert page.locator('.message').count()>0
  assert page.locator('#messages [data-loading-part]').count()==0
- page.evaluate("LyriaConnection.ready('messages')");page.close()
+ page.evaluate("LyriaConnection.ready('messages')")
+ # A later conversation navigation opens a new loading screen in the same visit.
+ page.evaluate('window.__stallMessages=true;window.__stallRestQueries=true')
+ page.locator('#header-menu-toggle').click();page.locator('[data-channel-id=studio]').click()
+ page.wait_for_selector('#app-loading-modal[data-ui-open=true] [data-loading-part=messages]')
+ assert 'channel=studio' in page.url
+ page.keyboard.press('Escape')
+ assert page.locator('#app-loading-modal').is_hidden()
+ page.evaluate('window.__stallMessages=false;window.__stallRestQueries=false;LyriaConnection.retry()')
+ page.wait_for_function("LyriaConnection.isReady('messages') && !LyriaLoading.isBlocking()")
+ assert page.locator('#channel-title').inner_text()=='The creative studio'
+ page.close()
  # Inbox requests use the same feedback without a version/update dependency.
  page=make_page(browser,ROOT,390,844)
  page.add_init_script('window.__stallRequests=true;window.__stallRestQueries=true')
  page.goto('http://localhost:8124/inbox.html')
+ page.wait_for_selector('#app-loading-modal[data-ui-open=true] [data-loading-part=requests]')
+ page.get_by_role('button',name='Keep browsing',exact=True).click()
  page.wait_for_selector('#inbox-messages [data-loading-part=requests]')
  page.evaluate('window.__stallRequests=false;window.__stallRestQueries=false')
  page.locator('#retry-connection').evaluate('el=>el.click()')
- page.wait_for_selector('.inbox-message')
+ page.wait_for_selector('.inbox-message');page.wait_for_function("!LyriaLoading.isBlocking()")
  assert page.locator('#inbox-messages [data-loading-part]').count()==0
  page.close();browser.close()
-print('PASS: returning-user startup screen at three sizes; automatic readiness, skip, retained drafts, inline slow messages/inbox, shared retry, and unobstructed loaded conversations.')
+print('PASS: full-screen returning-user startup/messages/inbox and later conversation loads, independent of failed update notes; readiness, dismissal, retained drafts, shared retry and usable background conversations.')

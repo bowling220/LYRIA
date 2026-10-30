@@ -57,6 +57,7 @@ with sync_playwright() as p:
  page.add_init_script("""sessionStorage.setItem('lyria:panels:/home.html:test-member',JSON.stringify([{id:'settings-modal'}]));let api;Object.defineProperty(window,'LyriaDataAPI',{configurable:true,get:()=>api,set:value=>{api=value;const read=value.read;value.read=path=>path==='channels/studio'?new Promise(resolve=>{window.__finishRoom=()=>read(path).then(resolve)}):read(path)}});""")
  page.goto('http://localhost:8124/home.html?channel=studio')
  page.wait_for_function("typeof __finishRoom==='function' && document.querySelector('[data-channel-id=community]')")
+ page.locator('#app-loading-modal[data-ui-open=true] .app-loading-skip').click()
  page.locator('[data-channel-id=community]').click();page.evaluate('__finishRoom()')
  page.wait_for_timeout(100)
  assert page.locator('#channel-title').inner_text()=='Everyone'

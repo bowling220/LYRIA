@@ -602,9 +602,11 @@ Run `npm test` and `python tests/news-smoke.py` for model/legacy-compatibility a
 ### Update welcome and changelog
 
 Slow startup now has a dedicated LYRIA loading screen on every visit, independent
-of update notes. It appears after 650 ms and closes when authentication is ready;
-Keep browsing and Escape dismiss it. Slow conversations, channel lists and inbox
-requests show matching loading views using the existing connection lifecycle.
+of update notes. It stays through authentication, conversation discovery and the
+initial message load, and returns when an unloaded conversation or inbox opens.
+It follows actual pending work with no fixed display duration; Keep browsing and
+Escape dismiss the current load. Matching inline feedback remains when dismissed.
+Already-visible conversations and calls remain usable during background refreshes.
 Failures and offline states expose the shared reconnect action without discarding
 drafts, restarting a microphone, covering loaded messages, or forcing navigation.
 Reduced-motion preferences are respected; progress is indeterminate, never fake.

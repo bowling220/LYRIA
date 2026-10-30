@@ -45,9 +45,15 @@ with sync_playwright() as p:
   page.keyboard.press('Escape');page.wait_for_selector('#release-modal[data-ui-open=false]',state='attached')
   assert not errors,errors
   page.close()
- # Loading follows the real channel request; timeout shows notes and permits entry without claiming connectivity.
+ # The normal loading screen owns slow app data, even with an unseen update.
  page=make_page(browser,ROOT,390,844,release_seen=False);page.add_init_script('window.__stallRestQueries=true')
- page.goto('http://localhost:8124/home.html?view=hub');page.wait_for_selector('#release-loading',state='visible');page.clock.install();page.clock.fast_forward(8500);page.wait_for_selector('#release-changes',state='visible')
+ page.goto('http://localhost:8124/home.html?view=hub');page.wait_for_selector('#app-loading-modal[data-ui-open=true]')
+ page.clock.install();page.clock.fast_forward(8500)
+ assert page.locator('#release-modal[data-ui-open=true]').count()==0
+ assert page.locator('#app-loading-modal').is_visible()
+ page.get_by_role('button',name='Keep browsing',exact=True).click()
+ if not page.locator('[data-open-release]').is_visible():page.locator('#header-menu-toggle').click()
+ page.locator('[data-open-release]').click();page.wait_for_selector('#release-changes',state='visible')
  assert 'still connecting' in page.locator('#release-footer-note').inner_text()
  page.locator('#release-continue').click();assert page.locator('#community-sidebar').is_visible();page.close()
  # Existing restored panels take precedence over an announcement.
