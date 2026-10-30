@@ -5,10 +5,11 @@ chat site, with a separate Expo mobile project in `LYRIA/`. Keep those architect
 and the shared UI, media, badge, profile-save, connection, and Firebase helpers.
 There are no paid feature tiers.
 
-**Publication is not approved yet:** the owner still needs to choose a root license
-and complete the release blockers in `docs/OPEN_SOURCE_READINESS.md`. The mobile
-package's 0BSD field does not establish a repository-wide license or asset rights.
-Until a root license is published, ask the owner before redistributing this work.
+LYRIA's original code is licensed under the [MIT License](LICENSE). Contributions
+are submitted under that same license. Keep third-party license notices intact;
+separately licensed dependencies and bundled Unicode data retain their own terms.
+The owner must still verify the release controls in
+[the readiness checklist](docs/OPEN_SOURCE_READINESS.md) before making the repository public.
 
 ## The contribution path
 

@@ -1,4 +1,4 @@
-> Update — 30 October 2026: all three dependency audits now report zero, including development dependencies. See [the current dependency report](SECURITY-DEPENDENCIES.md). Earlier audit numbers below are historical validation records; the independent license, key-revocation, infrastructure/settings and Firebase-activation actions still apply.
+> Update — 30 October 2026: all three dependency audits now report zero, including development dependencies. See [the current dependency report](SECURITY-DEPENDENCIES.md). Earlier audit numbers below are historical validation records; the historical actions below require the later updates to be taken into account. The owner has now selected MIT; the root LICENSE and package metadata agree. Third-party artwork/archived installer provenance still needs review.
 
 # Community hardening and release readiness
 
@@ -89,8 +89,8 @@ reverse-engineered or cleared for redistribution by a source scan.
    promise calls across cellular networks. Existing provider technical quotas remain.
 3. Confirm revocation/history disposition of the historical GIPHY key. No secret was
    rotated on the owner's behalf and no broad scanner suppression was added.
-4. Choose a project-wide license and confirm artwork/archived installer provenance.
-   The mobile package's 0BSD field does not establish repository-wide licensing.
+4. MIT is now selected and published in the root LICENSE. Confirm third-party
+   artwork/archived installer provenance; retain all separate upstream notices.
 5. Resolve the remaining upstream High advisories through compatible parent updates
    or a separately reviewed compatible migration. Do not disable audit gates.
 6. Enable and verify required owner/Code Owner review, CI, conversation resolution,

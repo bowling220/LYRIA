@@ -63,7 +63,7 @@ restricted direct pushes/bypasses, and fork workflow approval. CI has no deploym
 authority or production secrets. Keep automatic PR previews off; previews require
 separate Firebase staging and owner review. No auto-merge is enabled.
 
-Choose a root license; no license has been selected on your behalf. Confirm revocation
+The owner selected MIT; the root LICENSE and package metadata now reflect it. Confirm revocation
 of the historical GIPHY key privately; the key is not reproduced in this repository.
 Full-history scanning remains a failing release gate until the real exposure is
 resolved. The 2026-10-30 dependency update resolves the audited upstream advisories; root, tests and mobile audits report zero findings.

@@ -553,8 +553,9 @@ view never submits a form, sends a GIF, places a call, or grants room membership
 Fork LYRIA, build a focused feature or fix, test it, and submit a pull request.
 Community changes require maintainer review; acceptance and production deployment
 are never automatic. Read [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md).
-A project-wide license still needs the owner's decision, so this is preparation for
-an open-source release, not a claim that redistribution rights are settled.
+LYRIA's original code uses the [MIT License](LICENSE). Third-party dependencies
+and separately licensed assets retain their own license notices. Publication still
+requires verification of the controls in [the readiness checklist](docs/OPEN_SOURCE_READINESS.md).
 
 ## Community security and navigation
 

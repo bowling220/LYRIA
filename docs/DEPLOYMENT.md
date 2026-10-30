@@ -15,7 +15,7 @@ enforce GitHub/Render account settings; the following setup is mandatory.
 
 ## GitHub settings — owner checklist
 
-1. Keep the repository private while release blockers remain. Choose a root license.
+1. Keep the repository private while release blockers remain. MIT is selected; retain third-party notices.
    Private-repo rulesets returned a plan restriction; branch protection returned
    integration permission denied. This connection cannot enable or verify them.
 2. Settings → Collaborators: do not grant outside contributors Write/Maintain/Admin.
