@@ -110,5 +110,5 @@ Malicious JavaScript can hardcode public production Firebase identifiers. Produc
 security therefore still depends on fixing backend authorization gaps and controlling
 Auth/App Check/quotas as appropriate; hiding a public Firebase API key is not a fix.
 
-No GitHub Actions or Render credential is required by any fork PR. Real deployment
-and native signed builds remain owner-operated actions, separate from CI exports.
+No GitHub Actions or Render credential is required by any fork PR. Production deployment remains owner-operated or triggered only by approved main
+changes after CI. The retired native app has no build or deployment job.

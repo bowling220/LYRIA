@@ -4,7 +4,6 @@
 /firestore.rules @bowling220
 /js/config.js @bowling220
 /js/account*.js @bowling220
-/LYRIA/firebaseConfig.js @bowling220
 /**/package.json @bowling220
 /**/package-lock.json @bowling220
 /SECURITY.md @bowling220

@@ -13,7 +13,6 @@ concurrency:
 env:
   CI: 'true'
   LYRIA_ENV: development
-  EXPO_NO_TELEMETRY: '1'
 jobs:
   web:
     name: Website and browser tests
@@ -64,26 +63,6 @@ jobs:
           java-version: '21'
       - run: npm ci --prefix tests
       - run: npm run test:rules
-  mobile:
-    name: Expo compatibility and exports
-    runs-on: ubuntu-24.04
-    timeout-minutes: 20
-    defaults:
-      run:
-        working-directory: LYRIA
-    steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
-        with:
-          persist-credentials: false
-      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
-        with:
-          node-version: '24'
-          package-manager-cache: false
-      - run: npm ci
-      - run: npm run check:expo
-      - run: npm run doctor
-      - run: npm run build:check
-      - run: npm run build:web
   dependencies:
     name: Dependency audit (${{ matrix.directory }})
     runs-on: ubuntu-24.04
@@ -91,7 +70,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        directory: ['.', tests, LYRIA]
+        directory: ['.', tests]
     defaults:
       run:
         working-directory: ${{ matrix.directory }}
@@ -128,7 +107,7 @@ jobs:
   result:
     name: CI result
     if: always()
-    needs: [web, firestore, mobile, dependencies, security]
+    needs: [web, firestore, dependencies, security]
     runs-on: ubuntu-24.04
     timeout-minutes: 2
     steps:

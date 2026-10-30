@@ -1,3 +1,11 @@
+> Scope update — 30 October 2026: the repository is now public (owner action).
+> The separate Expo app, its lockfile, adapter, CI jobs, and update checks are
+> removed in this change; mobile website features remain. Historical mobile audit
+> and export evidence below applies to the retired app, not current CI.
+> Protect main is Active, but at inspection it targets all branches, requires the
+> obsolete `Dependency audit (LYRIA)` check, and has Code Owner review disabled.
+> Correct the target to main, require `CI result`, and enable Code Owner review.
+
 # Public-release readiness — 30 October 2026
 
 **NOT READY TO MAKE PUBLIC.** Source and CI checks pass, but production settings
@@ -119,3 +127,14 @@ scan/audit is evidence, not a claim that LYRIA has no security risks.
   needed. The same checks also passed in GitHub CI.
 - Main's successful CI includes all 27 browser suites and actual relayed WebRTC
   coverage. This documentation-only pass did not rerun the entire browser suite.
+
+## Website-only retirement validation
+
+Removing the separate native project leaves the responsive website intact. Website
+source validation/build, 31 Node tests, 2 retained tooling-compatibility tests,
+27 Firestore authorization tests, and the community browser suite at 11 viewport
+sizes passed. Both remaining npm audits report zero vulnerabilities; actionlint
+and CI-isolation checks pass. Six adapter/Expo-only compatibility tests were retired
+with their implementation; tooling compatibility tests remain active. Local test
+packages were installed with `--ignore-scripts` to avoid this workspace's stalled
+RE2 binary download; real rule tests still passed. CI retains normal clean installs.
