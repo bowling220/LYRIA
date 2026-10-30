@@ -16,6 +16,13 @@ GIFs, friends, channels, and voice. Universal technical safeguards still apply.
 - **Mobile Responsive**: Works seamlessly on desktop and mobile devices
 - **Personal Appearance**: Shared design with presets, custom colors, light/dark modes, spacing, and contrast controls
 
+## Website on desktop and mobile
+
+LYRIA is maintained as a responsive website. The separate Expo mobile app and
+legacy desktop installers have been retired; their source remains in Git history.
+Contributors do not need Expo, React Native, Xcode, or Android build tools.
+Mobile browser navigation, chat, profiles, GIFs, and voice remain supported.
+
 ## 📁 Project Structure
 
 ```

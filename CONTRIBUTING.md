@@ -1,7 +1,7 @@
 # Have an idea for LYRIA? Build it.
 
 Thanks for wanting to help. LYRIA is a vanilla JavaScript/Firebase community and
-chat site, with a separate Expo mobile project in `LYRIA/`. Keep those architectures
+chat website. The separate Expo app is retired; preserve the responsive website
 and the shared UI, media, badge, profile-save, connection, and Firebase helpers.
 There are no paid feature tiers.
 
@@ -26,8 +26,7 @@ vulnerabilities privately using SECURITY.md instead of opening an ordinary issue
 ## Local setup
 
 Use Node 24 (or the supported Node 22.13+ release), npm, Python 3.12+, Java 21 for
-Firestore tests, and coturn for relayed voice tests. Native device builds need the
-usual Expo/Xcode/Android tools; CI exports bundles but does not sign release apps.
+Firestore tests, and coturn for relayed voice tests. No native app toolchain is needed.
 
 ```sh
 npm ci
@@ -48,21 +47,6 @@ Never use live LYRIA accounts to test a fork. If you serve source directly, the 
 runtime config still defaults to emulators. Serve `dist/client`, not the repository
 root, when publishing a static build.
 
-For mobile:
-
-```sh
-cd LYRIA
-npm ci
-# Copy only the EXPO_PUBLIC_* example settings to LYRIA/.env if needed.
-npm run start
-```
-
-A phone's emulator host must be your development computer's LAN IP, not the phone's
-127.0.0.1. Use only synthetic local data. The Android emulator often uses 10.0.2.2.
-The application uses Firebase's JavaScript SDK; unused native Firebase/Google SDK
-dependencies were removed. SDK 58 uses the new architecture by default and configures
-the splash image through the Expo splash-screen plugin.
-
 ## Branches, code, and commits
 
 Use names such as `fix/chat-reconnect`, `feature/channel-search`, or `docs/setup`.
@@ -74,7 +58,7 @@ second version of a shared subsystem. See docs/BADGES.md for badge design change
 
 Do not commit credentials, .env files, signing keys, Firebase admin/service-account
 JSON, deploy hooks, access tokens, passwords, real user data, dependency directories,
-compiled exports, or local logs. All EXPO_PUBLIC_* and PUBLIC_FIREBASE_* values are
+compiled exports, or local logs. All PUBLIC_FIREBASE_* values are
 public client data; no private server credential belongs there. Never add password
 logging. See docs/OPEN_SOURCE_READINESS.md for the latest reviewed credential findings.
 
@@ -88,12 +72,6 @@ npm run test:rules
 npm run test:browser
 npm audit --audit-level=high
 npm audit --prefix tests --audit-level=high
-npm audit --prefix LYRIA --audit-level=high
-cd LYRIA
-npm run check:expo
-npm run doctor
-npm run build:check
-npm run build:web
 ```
 
 The complete browser set includes responsive UI, GIF profiles, badges, appearance,
@@ -105,8 +83,8 @@ Current main passes the security gates. If a proposed change fails, do not delet
 tests, relax rules, ignore vulnerabilities, or use forced dependency overrides just
 to obtain green CI. Describe the results and consult the maintainer.
 Use compatible parent-package updates and regenerate the corresponding lockfile.
-Expo/React/React Native and native modules must stay within the SDK compatibility
-matrix; run Expo checks and native/web exports after changes.
+The mobile browser experience is part of the website: test touch navigation,
+small layouts, authentication, and voice after changes.
 
 ## Pull requests
 

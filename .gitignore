@@ -122,8 +122,9 @@ firebase-adminsdk*.json
 **/dist-web/
 **/dist-security/
 # Reviewed project-only install settings and placeholder client configuration.
-!/LYRIA/.npmrc
-!/LYRIA/.env.example
 
 # Retired desktop installer distribution (website/mobile source remain maintained).
 /LYRIA/downloads/
+
+# Retired native app: ignore leftover local dependencies and exports.
+/LYRIA/

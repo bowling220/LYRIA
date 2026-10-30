@@ -1,3 +1,7 @@
+> Current scope: the owner retired the separate Expo app on 30 October 2026.
+> Native dependency/export details below are historical; only the responsive
+> website and its test tooling remain maintained. Mobile web features are retained.
+
 # Universal access audit
 
 LYRIA has no paid feature tier. This refactor keeps the vanilla JavaScript/Firebase

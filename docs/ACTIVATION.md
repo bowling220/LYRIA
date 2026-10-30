@@ -1,3 +1,7 @@
+> Current scope: the owner retired the separate Expo app on 30 October 2026.
+> Native dependency/export details below are historical; only the responsive
+> website and its test tooling remain maintained. Mobile web features are retained.
+
 > Current status: the owner confirmed rules published and index enabled; the matching
 > frontend is deployed. The historical activation steps below are reference material.
 > MIT is selected and current main has passing dependency/security CI. The historical
