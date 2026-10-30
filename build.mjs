@@ -33,8 +33,10 @@ const buildInfo=JSON.stringify({commit:/^[a-f0-9]{40}$/.test(commit)?commit:'unk
 await writeFile(join(client,'js/build-info.json'),buildInfo+'\n');
 console.log('GIF search configuration: '+(process.env.PUBLIC_GIPHY_API_KEY?.trim()?'included':'not configured (PUBLIC_GIPHY_API_KEY missing)'));
 if(process.env.RENDER==='true')await writeFile(join(root,'js/build-info.json'),buildInfo+'\n');
-// Render currently publishes the root; keep its browser-scoped TURN configuration in sync.
-if(process.env.RENDER==='true'){await configureVoice(root);await configureGifs(root);await versionAssets(root);}
+// Render publishes the root. CI also versions it so reload/cache tests verify the
+// same browser entry points that production serves instead of stale query hashes.
+if(process.env.RENDER==='true'){await configureVoice(root);await configureGifs(root);}
+if(process.env.RENDER==='true' || process.env.CI==='true')await versionAssets(root);
 await versionAssets(client);
 
 await mkdir(join(dist, 'server'), { recursive: true });
