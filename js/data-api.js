@@ -8,6 +8,7 @@
   const name=path=>root()+'/'+path.split('/').map(encodeURIComponent).join('/');
   const snapshot=document=>({id:document.name.split('/').at(-1),exists:true,updateTime:document.updateTime,data:()=>fromFields(document.fields)});
   const errorDetail=error=>({code:error?.code || 'unknown',message:error?.message || String(error)});
+  const networkError=error=>['unavailable','deadline-exceeded','aborted','internal','unknown','resource-exhausted'].includes(error?.code);
   async function request(suffix,body,retry=true){
     const user=window.firebaseConfig.getAuth().currentUser;if(!user)throw Object.assign(new Error('Sign in to continue.'),{code:'unauthenticated'});
     const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),12000);
@@ -30,14 +31,26 @@
     const db=window.firebaseConfig.getFirestore?.();
     if(!db)throw restError;
     console.warn('Firestore REST conversation query failed; trying Firebase SDK fallback.',errorDetail(restError));
+    let ref=db.collection('channels').where('members','array-contains',filter.value.stringValue);
+    if(options.limit)ref=ref.limit(options.limit);
     try{
-      let ref=db.collection('channels').where('members','array-contains',filter.value.stringValue);
-      if(options.limit)ref=ref.limit(options.limit);
       const result=await ref.get();
       const docs=[...result.docs];if(options.reverse)docs.reverse();
       console.info('Conversation list recovered with Firebase SDK fallback.');
       return {docs,empty:!docs.length,metadata:result.metadata || {fromCache:false},forEach:fn=>docs.forEach(fn)};
     }catch(sdkError){
+      if(networkError(sdkError)){
+        try{
+          const cached=await ref.get({source:'cache'});
+          const docs=[...cached.docs];if(options.reverse)docs.reverse();
+          if(docs.length){
+            console.warn('Conversation list recovered from Firestore cache after network transports failed.',{rest:errorDetail(restError),sdk:errorDetail(sdkError)});
+            return {docs,empty:false,metadata:{...(cached.metadata || {}),fromCache:true},forEach:fn=>docs.forEach(fn)};
+          }
+        }catch(cacheError){
+          console.warn('Firestore conversation cache was unavailable.',errorDetail(cacheError));
+        }
+      }
       console.error('Conversation list failed through both Firestore REST and Firebase SDK.',{rest:errorDetail(restError),sdk:errorDetail(sdkError)});
       throw sdkError;
     }

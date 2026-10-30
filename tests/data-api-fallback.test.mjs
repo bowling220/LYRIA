@@ -5,7 +5,7 @@ import { runInNewContext } from 'node:vm';
 
 const source = await readFile(new URL('../js/data-api.js', import.meta.url), 'utf8');
 
-function makeContext({ sdkFails = false } = {}) {
+function makeContext({ sdkErrorCode = null, cacheDocs = null } = {}) {
   const warnings = [];
   const errors = [];
   let sdkCalls = 0;
@@ -17,9 +17,13 @@ function makeContext({ sdkFails = false } = {}) {
         where(field, op, value) {
           assert.deepEqual([field, op, value], ['members', 'array-contains', 'alice']);
           return {
-            async get() {
+            async get(options) {
               sdkCalls += 1;
-              if (sdkFails) throw Object.assign(new Error('SDK denied'), { code: 'permission-denied' });
+              if (options?.source === 'cache') {
+                if (cacheDocs === null) throw Object.assign(new Error('Cache unavailable'), { code: 'unavailable' });
+                return { docs: cacheDocs ? [sdkDoc] : [], empty: !cacheDocs, metadata: { fromCache: true } };
+              }
+              if (sdkErrorCode) throw Object.assign(new Error('SDK failed'), { code: sdkErrorCode });
               return { docs: [sdkDoc], empty: false, metadata: { fromCache: false } };
             }
           };
@@ -66,8 +70,18 @@ test('conversation list falls back to the Firebase SDK when the REST query fails
   assert.equal(errors.length, 0);
 });
 
-test('a failure in both conversation transports surfaces the SDK error and records both causes', async () => {
-  const { API, errors, getSdkCalls } = makeContext({ sdkFails: true });
+test('network failure in both transports can recover a previously cached conversation list', async () => {
+  const { API, warnings, errors, getSdkCalls } = makeContext({ sdkErrorCode: 'unavailable', cacheDocs: true });
+  const result = await API.query('channels', { where: API.equal('members', 'alice', 'ARRAY_CONTAINS') });
+  assert.equal(result.docs.length, 1);
+  assert.equal(result.metadata.fromCache, true);
+  assert.equal(getSdkCalls(), 2);
+  assert.equal(warnings.some(entry => String(entry[0]).includes('recovered from Firestore cache')), true);
+  assert.equal(errors.length, 0);
+});
+
+test('permission failures never fall back to cached conversations', async () => {
+  const { API, errors, getSdkCalls } = makeContext({ sdkErrorCode: 'permission-denied', cacheDocs: true });
   await assert.rejects(
     API.query('channels', { where: API.equal('members', 'alice', 'ARRAY_CONTAINS') }),
     error => error.code === 'permission-denied'
@@ -76,6 +90,16 @@ test('a failure in both conversation transports surfaces the SDK error and recor
   assert.equal(errors.length, 1);
   assert.equal(errors[0][1].rest.code, 'unavailable');
   assert.equal(errors[0][1].sdk.code, 'permission-denied');
+});
+
+test('network failure with no useful cache still surfaces the SDK error', async () => {
+  const { API, errors, getSdkCalls } = makeContext({ sdkErrorCode: 'deadline-exceeded', cacheDocs: false });
+  await assert.rejects(
+    API.query('channels', { where: API.equal('members', 'alice', 'ARRAY_CONTAINS') }),
+    error => error.code === 'deadline-exceeded'
+  );
+  assert.equal(getSdkCalls(), 2);
+  assert.equal(errors.length, 1);
 });
 
 test('unrelated REST queries do not use the conversation-specific SDK fallback', async () => {
