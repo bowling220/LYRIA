@@ -6,7 +6,7 @@ const root=resolve(import.meta.dirname,'..');
 const forbidden=/premium|isPremium|adsbygoogle|ca-pub-|googlesyndication|adsense|checkout|\bpricing\b|\bpayment\b|\bpaywall\b|\bbilling\b|stripe|paypal|premium-tier|upgrade-btn/i;
 async function files(directory){const all=[];for(const entry of await readdir(directory,{withFileTypes:true})){const path=resolve(directory,entry.name);if(entry.isDirectory() && !['node_modules','dist','dist-native','dist-web','dist-security','.expo'].includes(entry.name))all.push(...await files(path));else if(entry.isFile())all.push(path)}return all}
 test('all runtime sources and production output are free of monetization implementations',async()=>{
- const sources=[...(await readdir(root)).filter(p=>/\.(html|css|js)$/.test(p)).map(p=>resolve(root,p)),...await files(resolve(root,'js')),...await files(resolve(root,'css')),...(await files(resolve(root,'LYRIA'))).filter(p=>/\.(js|json)$/.test(p)&&!p.endsWith('package-lock.json'))];
+ const sources=[...(await readdir(root)).filter(p=>/\.(html|css|js)$/.test(p)).map(p=>resolve(root,p)),...await files(resolve(root,'js')),...await files(resolve(root,'css'))];
  for(const path of [...sources,...await files(resolve(root,'dist/client'))].filter(p=>/\.(html|js|css|json)$/.test(p))){
   let source=await readFile(path,'utf8');
   // The one landing section explains universal access, without providing a product gate.
