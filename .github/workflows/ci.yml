@@ -43,7 +43,7 @@ jobs:
         if: failure()
         with:
           name: browser-screenshots
-          path: test-artifacts/*.png
+          path: test-artifacts/**/*.png
           retention-days: 5
           if-no-files-found: ignore
   firestore:
@@ -121,7 +121,10 @@ jobs:
       - run: python scripts/install-ci-tools.py
       - run: .ci-tools/actionlint -color
       - run: python scripts/check-ci-safety.py
-      - run: .ci-tools/gitleaks git . --log-opts=--all --redact --no-banner
+      - run: .ci-tools/gitleaks git . --log-opts=--all --redact --no-banner --report-format json --report-path .ci-tools/secret-findings.json
+      - name: Summarize secret scan without exposing matched values
+        if: always()
+        run: python scripts/report-secret-findings.py .ci-tools/secret-findings.json
   result:
     name: CI result
     if: always()

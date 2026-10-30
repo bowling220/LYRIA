@@ -7,7 +7,7 @@
     "test:rules": "node tests/run-rules.mjs",
     "dev": "npm run build && python3 -m http.server 8000 --bind 127.0.0.1 --directory dist/client",
     "check": "node scripts/check-source.mjs",
-    "test": "node --test tests/badges.test.mjs tests/product-access.test.mjs tests/voice-config.test.mjs tests/runtime-config.test.mjs tests/invite-client.test.mjs tests/auth-persistence.test.mjs tests/news.test.mjs tests/releases.test.mjs tests/gif-library.test.mjs",
+    "test": "node --test tests/badges.test.mjs tests/product-access.test.mjs tests/voice-config.test.mjs tests/runtime-config.test.mjs tests/invite-client.test.mjs tests/auth-persistence.test.mjs tests/news.test.mjs tests/releases.test.mjs tests/gif-library.test.mjs tests/security-report.test.mjs",
     "test:browser": "python3 tests/run-browser-tests.py",
     "emulators": "tests/node_modules/.bin/firebase emulators:start --config firebase.emulator.json --project demo-lyria --only auth,firestore",
     "test:dependencies": "node --test tests/dependency-compat.test.mjs"

@@ -28,3 +28,6 @@ a20da8171e1e7a5129641c422f0d97a0abdcf294:login.html:gcp-api-key:117
 c7fb51d3a9c946e9195689fc023b540548ccaea5:chat.js:gcp-api-key:5
 cc0ed8e64dd8ac6756ef7170138bf92e6aa46e0b:inbox.html:gcp-api-key:151
 e8a33f148ade1ae18156894b6dead0ff9ff64744:LYRIA/firebaseConfig.js:gcp-api-key:6
+9f912b3b426722b2282b3108152d478daed0d9aa:LYRIA/firebaseConfig.js:gcp-api-key:7
+d798687d6391a5393bf0b4a89d988ae9ceb88bd5:js/news.js:gcp-api-key:8
+6069b833a37793d54cc1ee3b82645ff69bf50fdc:js/news.js:gcp-api-key:8

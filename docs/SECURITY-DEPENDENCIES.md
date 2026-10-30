@@ -85,3 +85,25 @@ are not rebuilt or certified by npm dependency upgrades. Branch protection, requ
 CODEOWNER review, private reporting and production-host controls require repository/
 host settings; source policy files do not automatically enable them. These are
 reasons not to claim that all security risk has been eliminated.
+
+## CI follow-up: 2026-10-30
+
+A clean GitHub runner exposed a missing parent directory in the new community
+screenshot suite. It now creates its complete output path; the workflow also
+collects nested PNG artifacts. This was reproduced and verified in a fresh source
+export with no pre-existing test-artifacts directory.
+
+The actual GitHub main history scan reported three additional occurrences of
+the existing public Firebase initializeApp key. Each value was compared against
+the active public client configuration before adding only its exact commit/path/
+rule/line fingerprint to the existing .gitleaksignore. No broad rule, path or
+active credential exception was added. CI prints finding metadata without
+matched values or source lines to make future failures diagnosable safely.
+
+A separate finding remains: the historical GIPHY key in commit
+095e96e4f7a258f32d5259787886052d99b79df6, home.html line 510. Read-only GIPHY
+search and trending verification returned HTTP 200 on 2026-10-30, so it is still
+active. The owner must revoke it (updating Render first if necessary). It remains
+a failing security gate; no active key is allowlisted or reproduced in this report.
+GitHub fork CI intentionally receives no production GIPHY key and builds in
+development mode; that test-build log is separate from Render's configuration.

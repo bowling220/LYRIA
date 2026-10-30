@@ -4,7 +4,7 @@ from playwright.sync_api import sync_playwright
 from browser_executable import CHROMIUM
 from browser_fixture import make_page
 root=Path(__file__).resolve().parents[1]
-out=root/'test-artifacts'/'community-shell';out.mkdir(exist_ok=True)
+out=root/'test-artifacts'/'community-shell';out.mkdir(parents=True,exist_ok=True)
 with sync_playwright() as p:
  b=p.chromium.launch(executable_path=CHROMIUM,args=['--no-sandbox'])
  for w,h in [(1920,1080),(1440,1000),(1280,960),(1024,768),(820,1180),(768,1024),(430,932),(390,844),(375,812),(320,568),(667,375)]:
