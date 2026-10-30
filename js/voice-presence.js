@@ -27,8 +27,27 @@
 
   function watch(room,next,error,onHealthy){
     const ref=collection(room);
-    // LyriaDataAPI.watch already prefers this SDK listener, then polls if it drops.
-    return API.watch(ref,'typingStatus',{parent:'channels/'+room,pollIntervalMs:3000,onHealthy},next,error);
+    let stopped=false,serverLive=false,busy=false,queued=false,off,interval;
+    const deliver=snapshot=>{if(stopped)return;onHealthy?.();next(snapshot)};
+    async function poll(){
+      if(stopped || document.hidden || !navigator.onLine)return;
+      if(busy){queued=true;return}
+      busy=true;
+      try{deliver(await list(room))}
+      catch(problem){if(!stopped)error(problem)}
+      finally{busy=false;if(queued){queued=false;poll()}}
+    }
+    try{
+      off=ref.onSnapshot(snapshot=>{
+        if(stopped)return;
+        if(snapshot.metadata?.fromCache){if(!serverLive)poll();return}
+        serverLive=true;deliver(snapshot);
+      },()=>{if(stopped)return;serverLive=false;poll()});
+    }catch{poll()}
+    interval=setInterval(()=>{if(!serverLive)poll()},3000);
+    const resume=()=>{if(!document.hidden){serverLive=false;poll()}};
+    window.addEventListener('online',resume);document.addEventListener('visibilitychange',resume);
+    return ()=>{stopped=true;off?.();clearInterval(interval);window.removeEventListener('online',resume);document.removeEventListener('visibilitychange',resume)};
   }
 
   function restRegister(s){
@@ -46,7 +65,7 @@
     for(let attempt=0;attempt<3;attempt++){
       const doc=await API.read(path(s));if(!doc.exists || doc.data().voice?.sessionId!==s.id)return false;
       const write={update:{name:API.name(path(s)),fields:remove?{}:API.fields({voice:patch})},updateMask:fieldMask(remove?['voice']:Object.keys(patch).map(k=>'voice.'+k)),...(remove?{}:{updateTransforms:[{fieldPath:'voice.updatedAt',setToServerValue:'REQUEST_TIME'}]}),currentDocument:doc.updateTime?{updateTime:doc.updateTime}:{exists:true}};
-      try{await API.commit([write]);return true}catch(error){if(error.code!=='aborted' || attempt===2)throw error}
+      try{await API.commit([write]);return true}catch(problem){if(problem.code!=='aborted' || attempt===2)throw problem}
     }
     return false;
   }
