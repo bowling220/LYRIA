@@ -5,11 +5,13 @@ import { runInNewContext } from 'node:vm';
 
 const source = await readFile(new URL('../js/data-api.js', import.meta.url), 'utf8');
 
-function makeContext({ sdkErrorCode = null, cacheDocs = null } = {}) {
+function makeContext({ sdkErrorCode = null, cacheDocs = null, documentSdkErrorCode = null } = {}) {
   const warnings = [];
   const errors = [];
   let sdkCalls = 0;
+  let documentSdkCalls = 0;
   const sdkDoc = { id: 'personal-alice', data: () => ({ name: 'My personal channel', members: ['alice'] }) };
+  const profileDoc = { id: 'alice', exists: true, data: () => ({ displayName: 'Alice', bio: 'Hello' }), metadata: { fromCache: false } };
   const db = {
     collection(name) {
       assert.equal(name, 'channels');
@@ -27,6 +29,17 @@ function makeContext({ sdkErrorCode = null, cacheDocs = null } = {}) {
               return { docs: [sdkDoc], empty: false, metadata: { fromCache: false } };
             }
           };
+        }
+      };
+    },
+    doc(path) {
+      assert.equal(path, 'users/alice');
+      return {
+        async get(options) {
+          documentSdkCalls += 1;
+          if (options?.source === 'cache') return { ...profileDoc, metadata: { fromCache: true } };
+          if (documentSdkErrorCode) throw Object.assign(new Error('Document SDK failed'), { code: documentSdkErrorCode });
+          return profileDoc;
         }
       };
     }
@@ -56,7 +69,7 @@ function makeContext({ sdkErrorCode = null, cacheDocs = null } = {}) {
     }
   };
   runInNewContext(source, context);
-  return { API: window.LyriaDataAPI, warnings, errors, getSdkCalls: () => sdkCalls };
+  return { API: window.LyriaDataAPI, warnings, errors, getSdkCalls: () => sdkCalls, getDocumentSdkCalls: () => documentSdkCalls };
 }
 
 test('conversation list falls back to the Firebase SDK when the REST query fails', async () => {
@@ -100,6 +113,23 @@ test('network failure with no useful cache still surfaces the SDK error', async 
   );
   assert.equal(getSdkCalls(), 2);
   assert.equal(errors.length, 1);
+});
+
+test('ordinary document reads fall back to the Firebase SDK when REST is unavailable', async () => {
+  const { API, errors, getDocumentSdkCalls } = makeContext();
+  const result = await API.read('users/alice');
+  assert.equal(result.exists, true);
+  assert.equal(result.data().displayName, 'Alice');
+  assert.equal(getDocumentSdkCalls(), 1);
+  assert.equal(errors.length, 0);
+});
+
+test('ordinary document reads can use local cache after both network paths fail', async () => {
+  const { API, getDocumentSdkCalls } = makeContext({ documentSdkErrorCode: 'unavailable' });
+  const result = await API.read('users/alice');
+  assert.equal(result.exists, true);
+  assert.equal(result.metadata.fromCache, true);
+  assert.equal(getDocumentSdkCalls(), 2);
 });
 
 test('unrelated REST queries do not use the conversation-specific SDK fallback', async () => {
