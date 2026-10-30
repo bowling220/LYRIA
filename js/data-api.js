@@ -7,6 +7,7 @@
   const root=()=>`projects/${window.firebaseConfig.getApp().options.projectId}/databases/(default)/documents`;
   const name=path=>root()+'/'+path.split('/').map(encodeURIComponent).join('/');
   const snapshot=document=>({id:document.name.split('/').at(-1),exists:true,updateTime:document.updateTime,data:()=>fromFields(document.fields)});
+  const errorDetail=error=>({code:error?.code || 'unknown',message:error?.message || String(error)});
   async function request(suffix,body,retry=true){
     const user=window.firebaseConfig.getAuth().currentUser;if(!user)throw Object.assign(new Error('Sign in to continue.'),{code:'unauthenticated'});
     const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),12000);
@@ -20,10 +21,34 @@
     }catch(error){if(error.name==='AbortError')throw Object.assign(new Error('Connection timed out.'),{code:'deadline-exceeded'});throw error}
     finally{clearTimeout(timer)}
   }
+  async function channelSdkFallback(collectionId,options,restError){
+    const filter=options.where?.fieldFilter;
+    const canFallback=collectionId==='channels' && !options.parent
+      && filter?.field?.fieldPath==='members' && filter.op==='ARRAY_CONTAINS'
+      && typeof filter.value?.stringValue==='string' && !options.orderBy;
+    if(!canFallback)throw restError;
+    const db=window.firebaseConfig.getFirestore?.();
+    if(!db)throw restError;
+    console.warn('Firestore REST conversation query failed; trying Firebase SDK fallback.',errorDetail(restError));
+    try{
+      let ref=db.collection('channels').where('members','array-contains',filter.value.stringValue);
+      if(options.limit)ref=ref.limit(options.limit);
+      const result=await ref.get();
+      const docs=[...result.docs];if(options.reverse)docs.reverse();
+      console.info('Conversation list recovered with Firebase SDK fallback.');
+      return {docs,empty:!docs.length,metadata:result.metadata || {fromCache:false},forEach:fn=>docs.forEach(fn)};
+    }catch(sdkError){
+      console.error('Conversation list failed through both Firestore REST and Firebase SDK.',{rest:errorDetail(restError),sdk:errorDetail(sdkError)});
+      throw sdkError;
+    }
+  }
   async function query(collectionId,{parent='',where,orderBy,limit,reverse=false}={}){
-    const result=await request((parent?'/'+parent:'')+':runQuery',{structuredQuery:{from:[{collectionId}],...(where?{where}:{}),...(orderBy?{orderBy}:{}),...(limit?{limit}:{} )}});
-    const docs=result.filter(row=>row.document).map(row=>snapshot(row.document));if(reverse)docs.reverse();
-    return {docs,empty:!docs.length,readTime:result.find(row=>row.readTime)?.readTime,metadata:{fromCache:false},forEach:fn=>docs.forEach(fn)};
+    const options={parent,where,orderBy,limit,reverse};
+    try{
+      const result=await request((parent?'/'+parent:'')+':runQuery',{structuredQuery:{from:[{collectionId}],...(where?{where}:{}),...(orderBy?{orderBy}:{}),...(limit?{limit}:{} )}});
+      const docs=result.filter(row=>row.document).map(row=>snapshot(row.document));if(reverse)docs.reverse();
+      return {docs,empty:!docs.length,readTime:result.find(row=>row.readTime)?.readTime,metadata:{fromCache:false},forEach:fn=>docs.forEach(fn)};
+    }catch(error){return channelSdkFallback(collectionId,options,error)}
   }
   async function count(collectionId,{parent='',where}={}){
     const result=await request((parent?'/'+parent:'')+':runAggregationQuery',{structuredAggregationQuery:{structuredQuery:{from:[{collectionId}],...(where?{where}:{})},aggregations:[{alias:'total',count:{}}]}});
