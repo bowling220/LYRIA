@@ -2,6 +2,32 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "id": "2026-10-30-conversation-design",
+      "date": "2026-10-30",
+      "title": "A new corner of LYRIA.",
+      "summary": "More space for your people, your conversations, and the moments you share.",
+      "changes": [
+        {
+          "type": "New",
+          "icon": "chat",
+          "title": "Conversations with a little more room",
+          "description": "A compact navigation rail, visual conversation cards, and a softer message layout bring your community together."
+        },
+        {
+          "type": "New",
+          "icon": "users",
+          "title": "The people behind the conversation",
+          "description": "Open conversation details to see real members, shared media, invitations, and owner controls."
+        },
+        {
+          "type": "Improved",
+          "icon": "star",
+          "title": "Your space, on every screen",
+          "description": "Search, favorites, and device-local pins help you find your people. Mobile gets a dedicated list and chat view, with voice close at hand."
+        }
+      ]
+    },
+    {
       "id": "2026-10-30-build-status",
       "date": "2026-10-30",
       "title": "Know what\u2019s running.",

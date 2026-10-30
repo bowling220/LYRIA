@@ -31,18 +31,27 @@
         <script src="js/mobile.js?v=630bcfe83bf75bf8" defer></script>
       <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
   <link rel="stylesheet" href="css/theme.css?v=048502b490da3a26">
-  <script src="js/ui.js?v=68d81812cba5f6c2"></script>
+  <link rel="stylesheet" href="css/community-shell.css?v=776bc7c118933b0d">
+  <script src="js/ui.js?v=0dd5247d333da3f7"></script>
   <script src="js/gif-library.js?v=790b9c41821e7073"></script>
   <script src="js/badges.js?v=40763ed5718c4e15"></script>
   <script src="js/media.js?v=ab019dd96150b5d4"></script>
   <script src="js/appearance.js?v=f2b3fb9699b59da3"></script>
 </head>
-<body class="app-page">
+<body class="app-page lyria-community">
 
 
     <header class="top-header"><button class="menu-toggle" id="header-menu-toggle" aria-label="Open community menu" aria-expanded="false" aria-controls="community-sidebar"><span data-icon="menu" aria-hidden="true"></span></button><a class="brand" href="home.html?view=hub" aria-label="LYRIA home"><span class="brand-mark"><span data-icon="chat" aria-hidden="true"></span></span><span>LYRIA</span></a><span class="header-divider"></span><span class="header-location">Your community</span><nav class="header-nav" aria-label="Main navigation"><a class="" href="home.html?view=hub" aria-current="page">Community</a><a class="news-link" href="News.html">News</a></nav></header>
-    <div class="app-container">
-        <aside class="sidebar" id="community-sidebar" aria-label="Community navigation">
+    <div class="app-container lyria-shell">
+        <nav class="app-rail" aria-label="LYRIA navigation"><a class="rail-brand" href="home.html?view=hub" aria-label="LYRIA conversations"><img src="assets/favicon.svg" width="38" height="38" alt=""><strong>LYRIA</strong></a><div class="rail-destinations"><button id="rail-chats" class="rail-destination is-active" aria-current="page" type="button"><span data-icon="chat" aria-hidden="true"></span><span>Chats</span></button><button id="rail-discover" class="rail-destination" type="button"><span data-icon="news" aria-hidden="true"></span><span>Discover</span></button><button id="rail-activity" class="rail-destination" type="button"><span data-icon="inbox" aria-hidden="true"></span><span>Activity</span></button><button id="rail-settings" class="rail-destination" type="button"><span data-icon="settings" aria-hidden="true"></span><span>Settings</span></button></div>            <div class="user-profile">
+                <button class="user-profile-trigger" id="user-profile-trigger" type="button" aria-label="Open your profile">
+                    <img class="avatar" id="user-avatar" src="assets/avatar.svg" alt="User avatar" width="40" height="40">
+                    <span class="username" id="user-name">User</span>
+                </button>
+                <button class="settings-btn release-trigger" type="button" data-open-release aria-label="What’s new" title="What’s new"><span data-icon="sparkles" aria-hidden="true"></span><span class="release-unread" hidden></span></button>
+                <button class="settings-btn" id="settings-btn" aria-label="Open settings" title="Settings"><span data-icon="more" aria-hidden="true"></span></button>
+            </div></nav>
+        <aside class="sidebar conversation-panel" id="community-sidebar" aria-label="Community navigation">
             <div class="sidebar-mobile-header">
                 <div class="sidebar-mobile-title">
                     <span>LYRIA</span>
@@ -50,7 +59,7 @@
                 </div>
                 <button id="close-mobile-menu" class="close-mobile-menu" type="button" aria-label="Close community menu"><span data-icon="close" aria-hidden="true"></span></button>
             </div>
-            <div class="workspace-heading"><h2>Your space</h2><span>CONVERSATIONS &amp; COMMUNITY</span></div>
+            <div class="conversation-panel-heading"><div><h1>Conversations</h1><p>Your people. Your corner of LYRIA.</p></div><button id="panel-create" type="button" aria-label="Create a conversation"><span data-icon="edit" aria-hidden="true"></span></button></div><label class="conversation-search"><span data-icon="search" aria-hidden="true"></span><input id="conversation-search" type="search" placeholder="Search conversations…" aria-label="Search conversations" maxlength="180"></label><nav class="conversation-filters" aria-label="Filter conversations"><button type="button" data-filter="all" aria-pressed="true">All</button><button type="button" data-filter="unread" aria-pressed="false">Unread</button><button type="button" data-filter="favorites" aria-pressed="false">Favorites</button><button type="button" data-filter="pinned" aria-pressed="false">Pinned</button></nav><p id="conversation-filter-empty" class="conversation-filter-empty" hidden>No conversations in this view.</p>
             <nav class="sidebar-nav" aria-label="Community links">
                 <button class="sidebar-nav-item" id="news-feed-button" onclick="window.location.href='News.html'">
                     <span data-icon="news" aria-hidden="true"></span>
@@ -71,28 +80,21 @@
                         <button class="leave-channel-btn" id="leave-channel" disabled>Personal channel</button>
                     </div>
                 </div>
-                <section class="voice-directory" aria-labelledby="voice-directory-title">
-                    <h3 id="voice-directory-title">Voice channels</h3>
+                <details class="voice-directory"><summary><span data-icon="mic" aria-hidden="true"></span>Voice rooms</summary><div aria-labelledby="voice-directory-title">
+                    <h3 id="voice-directory-title">Choose your voice room</h3>
                     <p id="voice-directory-label">Everyone’s voice channels</p>
                     <ul id="voice-channels" class="voice-channel-list"></ul>
                     <p id="voice-directory-status" role="status">Choose a channel to join · up to 6 people each</p>
                     <label class="voice-effects-setting"><input id="voice-sound-effects" type="checkbox" checked> Voice sound effects</label><button id="voice-test-sound" class="voice-sound-test" type="button">Test call sound</button>
-                </section>
+                </div></details>
 
             </div>
             <button id="open-suggestions-modal" class="sidebar-feedback" type="button"><span data-icon="chat" aria-hidden="true"></span><span>Ideas &amp; feedback</span><span data-icon="arrow" aria-hidden="true"></span></button>
 
-            <div class="user-profile">
-                <button class="user-profile-trigger" id="user-profile-trigger" type="button" aria-label="Open your profile">
-                    <img class="avatar" id="user-avatar" src="assets/avatar.svg" alt="User avatar" width="40" height="40">
-                    <span class="username" id="user-name">User</span>
-                </button>
-                <button class="settings-btn release-trigger" type="button" data-open-release aria-label="What’s new" title="What’s new"><span data-icon="sparkles" aria-hidden="true"></span><span class="release-unread" hidden></span></button>
-                <button class="settings-btn" id="settings-btn" aria-label="Open settings" title="Settings"><span data-icon="settings" aria-hidden="true"></span></button>
-            </div>
+
 
         </aside>
-        <main class="chat-area" data-view="hub">
+        <main class="chat-area chat-panel" data-view="hub">
             <section id="conversation-hub" aria-labelledby="hub-title">
                 <header class="hub-header"><div class="hub-heading"><span class="hub-heading-icon" data-icon="chat" aria-hidden="true"></span><div><h1 id="hub-title">Conversations</h1><p>Your people. Your corner of LYRIA.</p></div></div><button id="hub-create" class="hub-new" type="button" aria-label="New conversation"><span data-icon="plus" aria-hidden="true"></span><span>New</span></button></header>
                 <nav class="hub-actions" aria-label="Community shortcuts"><button class="hub-tab hub-tab-current" type="button" aria-current="page"><span data-icon="chat" aria-hidden="true"></span>Messages</button><button id="hub-friends" class="hub-tab" type="button"><span data-icon="users" aria-hidden="true"></span>Friends</button><a class="hub-tab hub-inbox" href="inbox.html" aria-label="Friend requests" title="Friend requests"><span data-icon="inbox" aria-hidden="true"></span><span>Requests</span></a></nav>
@@ -103,7 +105,7 @@
             </section>
             <header class="chat-header"><button id="back-to-hub" type="button" aria-label="Back to conversations"><span data-icon="back" aria-hidden="true"></span></button>
                 <div class="chat-title-group"><span class="channel-symbol" aria-hidden="true"><span data-icon="hash" aria-hidden="true"></span></span><div><h2 id="channel-title">Everyone</h2><p class="chat-subtitle">A little space to stay connected.</p></div></div>
-                <button id="make-voice-call" class="voice-call-btn" type="button" aria-label="Join voice call" title="Join voice"><span data-icon="mic" aria-hidden="true"></span><span class="button-label">Join voice</span></button>
+                <button id="conversation-favorite" type="button" aria-label="Favorite conversation" aria-pressed="false"><span data-icon="star" aria-hidden="true"></span></button><button id="conversation-details-toggle" type="button" aria-label="Conversation details"><span data-icon="more" aria-hidden="true"></span></button><button id="make-voice-call" class="voice-call-btn" type="button" aria-label="Join voice call" title="Join voice"><span data-icon="mic" aria-hidden="true"></span><span class="button-label">Join voice</span></button>
                 <button id="end-call" class="voice-call-btn voice-call-end" type="button" aria-label="Leave voice call" title="Leave voice" style="display:none"><span data-icon="phoneOff" aria-hidden="true"></span><span class="button-label">Leave voice</span></button>
                 <button id="copy-join-code" class="copy-join-code-btn" aria-label="Copy channel invite link" title="Copy invite link"><span data-icon="link" aria-hidden="true"></span><span class="button-label">Invite</span></button>
                 <button id="inbox-btn" aria-label="Open friend requests" title="Friend requests" onclick="window.location.href='inbox.html'"><span data-icon="inbox" aria-hidden="true"></span><span id="friend-request-count" class="count-badge" style="display:none">0</span></button>
@@ -134,14 +136,16 @@
             <!-- Typing Status Indicator -->
             <div id="typing-status" class="typing-status" style="display: none;"></div>
             <div id="mention-suggestions" class="mention-suggestions" role="listbox" aria-label="Mention a member" hidden></div>
-            <div class="message-input">
+            <div class="message-input message-composer"><button id="composer-tools" type="button" aria-label="Conversation tools"><span data-icon="plus" aria-hidden="true"></span></button>
                 <textarea id="message-input" aria-label="Message" placeholder="Write a message…" rows="1" maxlength="4000"></textarea>
-                <button id="gif-button" class="gif-btn" type="button" aria-label="Share a GIF" title="Share a GIF"><span data-icon="image" aria-hidden="true"></span><span class="button-label">GIF</span></button>
+                <button id="composer-image" type="button" aria-label="Choose an image from the GIF library"><span data-icon="image" aria-hidden="true"></span></button><button id="composer-emoji" type="button" aria-label="Insert emoji"><span data-icon="smile" aria-hidden="true"></span></button><button id="gif-button" class="gif-btn" type="button" aria-label="Share a GIF" title="Share a GIF"><span data-icon="image" aria-hidden="true"></span><span class="button-label">GIF</span></button>
                 <button id="send-button" class="send-btn" type="button" aria-label="Send message"><span data-icon="send" aria-hidden="true"></span><span class="button-label">Send</span></button>
             </div><p class="composer-hint">Enter to send · Shift + Enter for a new line</p>
         </main>
+<aside id="conversation-details" class="details-panel" aria-label="Conversation details"><button id="close-conversation-details" class="details-close" type="button" aria-label="Close conversation details"><span data-icon="close" aria-hidden="true"></span></button><div class="details-cover"><span class="details-cover-symbol" data-icon="chat" aria-hidden="true"></span><h2 id="details-title">Your corner of LYRIA</h2><p id="details-description">Choose a conversation to see its people and shared moments.</p></div><div class="details-actions"><button id="details-invite" type="button"><span data-icon="users" aria-hidden="true"></span>Invite</button><button id="details-settings" type="button" hidden><span data-icon="settings" aria-hidden="true"></span>Settings</button></div><section class="details-card"><div class="details-card-heading"><h3>Members <span id="details-member-count"></span></h3></div><p id="details-member-status" class="details-empty">Select a conversation first.</p><ul id="details-members"></ul><button id="details-invite-people" type="button"><span data-icon="plus" aria-hidden="true"></span>Invite people</button></section><section class="details-card"><div class="details-card-heading"><h3>Shared media</h3><button id="details-media-all" type="button" hidden>See all</button></div><div id="details-media" class="details-media"></div><p id="details-media-empty" class="details-empty">No media shared in the loaded messages.</p></section><section class="details-card"><h3><span data-icon="news" aria-hidden="true"></span>About</h3><p id="details-about">A little room for good conversations.</p><p id="details-created" class="details-empty"></p><button id="details-pin" type="button" aria-pressed="false">Pin on this device</button></section></aside>
     </div>
 
+<div id="conversation-details-dialog" class="modal details-dialog" inert aria-labelledby="details-title"><div id="details-drawer-host" class="modal-content"></div></div><div id="conversation-settings-modal" class="modal" inert aria-labelledby="conversation-settings-title"><div class="modal-content compact-modal"><button class="close-button" id="close-conversation-settings" type="button" aria-label="Close conversation settings"><span data-icon="close" aria-hidden="true"></span></button><h2 id="conversation-settings-title">Conversation settings</h2><p>Manage how people join this conversation.</p><div class="composer-tools-grid"><button id="settings-manage-invite" type="button">Manage invitation</button><button id="settings-leave-conversation" type="button">Leave conversation</button></div><p class="details-empty">Invitation controls let you replace, expire, or revoke a private link. Existing memberships stay intact.</p></div></div><div id="composer-tools-modal" class="modal" inert aria-labelledby="composer-tools-title"><div class="modal-content compact-modal"><button class="close-button" id="close-composer-tools" type="button" aria-label="Close conversation tools"><span data-icon="close" aria-hidden="true"></span></button><h2 id="composer-tools-title">Make it a little more you.</h2><div class="composer-tools-grid"><button id="tools-gif" type="button">Choose a GIF</button><button id="tools-mention" type="button">Mention someone</button><button id="tools-invite" type="button">Invite people</button><button id="tools-voice" type="button">Join voice</button></div><h3>Quick reactions</h3><div id="composer-emojis" class="composer-emojis"></div></div></div>
     <!-- Friends Modal (kept outside <aside class="sidebar"> deliberately: the sidebar is
          translateX()'d off-screen on mobile, and CSS transforms create a new containing
          block for position:fixed descendants, which trapped this modal off-screen too) -->
@@ -348,7 +352,8 @@
     <script src="js/voice-view.js?v=9a6f2e727cbda043"></script>
     <script src="js/reactions.js?v=2ed845847fa3f200"></script>
     <script src="js/invites.js?v=23abf220b9d0b3bd"></script>
-    <script src="chat.js?v=2c078cbaf0353196"></script>
+    <script src="js/community-shell.js?v=63ae19abce0a4f09"></script>
+    <script src="chat.js?v=7a1c26790a328e84"></script>
     <script src="js/call-invites.js?v=7fa101a84eecac1e"></script>
     <script src="js/community.js?v=76e1a5acda0d84b9"></script>
     <script src="js/gif-picker.js?v=2f93889319945d25"></script>

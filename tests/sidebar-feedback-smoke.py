@@ -13,9 +13,10 @@ with sync_playwright() as p:
   if width<=768:page.locator('#header-menu-toggle').click()
   dock=page.locator('.user-profile');before=dock.bounding_box()
   assert before['y']>=0 and before['y']+before['height']<=height+1,(width,height,before)
-  page.locator('.sidebar-scroll').evaluate('(el)=>el.scrollTop=el.scrollHeight');page.wait_for_timeout(100)
+  scroller='.sidebar' if height<460 else '.sidebar-scroll'
+  page.locator(scroller).evaluate('(el)=>el.scrollTop=el.scrollHeight');page.wait_for_timeout(100)
   after=dock.bounding_box();assert abs(after['y']-before['y'])<1
-  assert page.locator('.sidebar-scroll').evaluate('(el)=>el.scrollTop>0')
+  assert page.locator(scroller).evaluate('(el)=>el.scrollTop>0')
   assert page.locator('#settings-btn').is_visible()
   page.screenshot(path='/tmp/sidebar-'+str(width)+'.png')
   page.locator('#open-suggestions-modal').click();page.wait_for_function("document.getElementById('feedback-status').dataset.state==='ready'")
@@ -34,7 +35,7 @@ with sync_playwright() as p:
   assert page.locator('.feedback-record').count()==1
   page.screenshot(path='/tmp/feedback-'+str(width)+'.png')
   page.keyboard.press('Escape')
-  page.reload();page.wait_for_selector('.hub-conversation')
+  page.reload();page.wait_for_selector('#channels-list .channel-btn')
   if width<=768:page.locator('#header-menu-toggle').click()
   page.locator('#open-suggestions-modal').click();page.wait_for_function("document.getElementById('feedback-status').dataset.state==='ready'")
   assert page.locator('.feedback-record').count()==1

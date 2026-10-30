@@ -74,7 +74,7 @@ with sync_playwright() as p:
     page.locator('#logout-btn').focus();page.keyboard.press('Tab');assert page.locator('#close-modal').evaluate('el=>el===document.activeElement')
     page.keyboard.press('Escape');page.wait_for_timeout(60)
     assert page.locator('#settings-modal').get_attribute('aria-hidden')=='true'
-    assert page.locator('#header-menu-toggle').evaluate('el=>el===document.activeElement')
+    assert page.locator('#settings-btn').evaluate('el=>el===document.activeElement')
     page.locator('#message-input').fill('A message with <script>literal text</script>')
     page.locator('#send-button').click();page.wait_for_timeout(150)
     assert page.locator('.message').count()==4
@@ -91,7 +91,7 @@ with sync_playwright() as p:
     page.locator('#add-channel').click();page.wait_for_timeout(50)
     page.locator('#channel-action-input').fill('Design notes');page.locator('#submit-channel-action').click();page.wait_for_timeout(150)
     assert page.locator('#channel-title').inner_text()=='Design notes'
-    assert page.locator('.channel-btn.active-channel').inner_text()=='Design notes'
+    assert page.locator('.channel-btn.active-channel .channel-name').inner_text()=='Design notes'
     page.locator('#settings-btn').click();page.wait_for_timeout(50);page.locator('#toggle-dark-mode').click();page.wait_for_function("document.body.classList.contains('contrast-mode')");assert page.locator('#contrast-save-status').inner_text()=='Saved to your account.'
     page.keyboard.press('Escape');page.wait_for_timeout(50)
     page.locator('#open-friends-modal').click();page.wait_for_timeout(100);assert 'Maya Chen' in page.locator('#friends-list').inner_text()

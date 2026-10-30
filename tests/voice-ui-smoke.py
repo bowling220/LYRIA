@@ -17,6 +17,7 @@ with sync_playwright() as p:
    __testData.set('channels/community/typingStatus/kai',{voice:voice('b','lounge','Kai')});__emitFixture();
   }""")
   if width<=768:page.locator('#header-menu-toggle').click()
+  page.locator('.voice-directory summary').click()
   page.locator('#voice-channels').scroll_into_view_if_needed()
   assert 'Maya Chen · muted' in page.locator('#voice-channels').inner_text()
   assert page.locator('[data-voice-channel=gaming]').inner_text().endswith('1/6')

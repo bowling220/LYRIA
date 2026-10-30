@@ -26,6 +26,7 @@ const initializeFirebase = async () => {
 
 let currentUser;
 let currentChannel;
+let hubChannels=[];
 const channelNames=new Map([[COMMUNITY_CHANNEL_ID,'Everyone']]);
 let channelSelectionVersion=0;
 
@@ -40,6 +41,7 @@ function renderChannelIdentity(id){
     document.querySelector('.chat-area').dataset.selectedChannelId=id;
     document.getElementById('message-input').placeholder=id===COMMUNITY_CHANNEL_ID?'Message everyone…':'Message #'+name;
     window.setupCallListeners?.(id,name);
+    window.LyriaShell?.select(id,name,currentUser,hubChannels);
 }
 let lastMessageTimestamp = null;
 let unsubscribeFromMessages = null;
@@ -64,8 +66,9 @@ function setMobileMenuOpen(isOpen) {
     sidebar.classList.toggle('open', shouldOpen);
     headerToggle.setAttribute('aria-expanded', shouldOpen.toString());
     headerToggle.setAttribute('aria-label', shouldOpen ? 'Close community menu' : 'Open community menu');
-    sidebar.setAttribute('aria-hidden', (isMobile && !shouldOpen).toString());
-    sidebar.toggleAttribute('inert', isMobile && !shouldOpen);
+    const hubVisible=isMobile && document.querySelector('.chat-area')?.dataset.view==='hub';
+    sidebar.setAttribute('aria-hidden', (isMobile && !shouldOpen && !hubVisible).toString());
+    sidebar.toggleAttribute('inert', isMobile && !shouldOpen && !hubVisible);
 
 }
 
@@ -150,7 +153,6 @@ initializeFirebase().then(() => {
         window.LyriaAccount?.reconnect({restartLive:false});
     });
 
-let hubChannels=[];
 function renderHub(){
     const list=document.getElementById('hub-conversations');
     const search=document.getElementById('hub-search').value.trim().toLowerCase();
@@ -167,6 +169,7 @@ function renderHub(){
         else end.innerHTML=window.LyriaUI.icon(room.favorite?'star':'arrow');
         end.setAttribute('aria-hidden','true');button.append(end);button.addEventListener('click',()=>switchChannel(room.id,room.name));list.append(button);
     }
+    window.LyriaShell?.rooms(hubChannels,currentUser);
     if(!rooms.length){const empty=document.createElement('p');empty.textContent='No conversations match your search.';list.append(empty)}
 }
 function showHub(historyMode='push'){
@@ -184,7 +187,7 @@ function showHub(historyMode='push'){
     document.getElementById('open-hub').setAttribute('aria-current','page');
     window.LyriaVoiceView?.showChat();window.LyriaVoice?.setRoom(null);
     try{const url=new URL(location.href);url.searchParams.delete('channel');url.searchParams.set('view','hub');if(url.href!==location.href)history[historyMode+'State'](null,'',url)}catch{}
-    setMobileMenuOpen(false);renderHub();
+    setMobileMenuOpen(false);renderHub();window.LyriaShell?.hub();
 }
 document.getElementById('open-hub').addEventListener('click',()=>showHub());
 document.getElementById('back-to-hub').addEventListener('click',()=>showHub());
@@ -235,6 +238,8 @@ function restoreConversation(user){
             if(currentUser?.uid!==user.uid)return;
             const click=id=>document.getElementById(id)?.click();
             return window.LyriaUI.restorePanels(user,{
+                'conversation-details-dialog':{capture:()=>({id:currentChannel}),open:data=>{if(data.id && data.id===currentChannel)click('conversation-details-toggle')}},
+                'composer-tools-modal':{capture:()=>({id:currentChannel}),open:data=>{if(data.id && data.id===currentChannel)click('composer-tools')}},
                 'settings-modal':{open:()=>click('settings-btn')},
                 'friends-modal':{open:()=>window.LyriaCommunity.openFriends()},
                 'profile-modal':{capture:modal=>({uid:modal.dataset.userId}),open:(data,canOpen)=>typeof data.uid==='string' && data.uid.length<=128?showUserProfileModal(data.uid,{canOpen}):undefined},
@@ -291,7 +296,7 @@ function setupUIEventListeners() {
         if (event.target === profileModal) closeProfileModal();
     });
     profileModal.addEventListener('keydown', event => {
-        if (event.key === 'Escape') closeProfileModal();
+        if (event.key === 'Escape') {event.preventDefault();event.stopPropagation();closeProfileModal();}
     });
 
     // Logout button event listener
@@ -734,7 +739,7 @@ function loadMessages(channelId,{unreadOnly=false}={}) {
         }
         snapshot.forEach(doc => {
             const data = doc.data();
-            const message = document.createElement('article'); message.className = 'message';
+            const message = document.createElement('article'); message.className = 'message';message.dataset.senderId=data.senderId || '';if(data.type==='system' || !data.senderId)message.classList.add('system-message');
             const sender = document.createElement('div'); sender.className = 'sender';
             const profile = document.createElement(data.senderId ? 'button' : 'span');profile.className='sender-profile';
             const avatar = document.createElement('img');avatar.className='sender-avatar';avatar.src=data.senderPhotoURL || 'assets/avatar.svg';avatar.alt='';avatar.width=34;avatar.height=34;
@@ -877,6 +882,8 @@ window.addEventListener('lyria:profile-updated',event=>{
     if(document.getElementById('profile-modal')?.dataset.userId===uid)renderProfileBadges(profile,uid);
 });
 
+window.addEventListener('lyria:open-member-profile',event=>{const uid=event.detail?.uid;if(typeof uid==='string' && uid.length<=128)showUserProfileModal(uid)});
+
 // One registry supplies profile and inline badge artwork and descriptions.
 function showUserProfileModal(uid,{canOpen=()=>true}={}) {
     if (!uid || !db) return;
@@ -914,10 +921,7 @@ function showUserProfileModal(uid,{canOpen=()=>true}={}) {
 
             const profileModal = document.getElementById('profile-modal');
             setMobileMenuOpen(false);
-            profileModal.removeAttribute('inert');
-            profileModal.setAttribute('aria-hidden', 'false');
-            profileModal.style.display = 'flex';
-            document.getElementById('close-profile-modal').focus();
+            window.LyriaUI.openModal(profileModal);
         }
     }).catch(error => {
         console.error("Error fetching user data:", error);

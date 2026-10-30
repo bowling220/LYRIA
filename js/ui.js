@@ -40,6 +40,7 @@
     pin: '<path d="m9 3 6 6M8 8l8 8M6 10l8-8 6 6-8 8M9 15l-5 5"/>',
     mention: '<circle cx="12" cy="12" r="4"/><path d="M16 12v1.5a2.5 2.5 0 0 0 5 0V12a9 9 0 1 0-3 6.7"/>',
     file: '<path d="M6 3h7l5 5v13H6z"/><path d="M13 3v5h5"/>',
+    smile: '<circle cx="12" cy="12" r="9"/><path d="M8 14a4 4 0 0 0 8 0"/><path d="M8 9h.01M16 9h.01"/>',
     more: '<circle cx="5" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1" fill="currentColor" stroke="none"/>',
     copy: '<rect x="8" y="8" width="11" height="11" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/>',
     userPlus: '<circle cx="9" cy="8" r="3.25"/><path d="M3.5 20v-1.5A4.5 4.5 0 0 1 8 14h2a4.5 4.5 0 0 1 4.2 2.9M18 10v6M15 13h6"/>'
