@@ -1,3 +1,10 @@
+> Current status: the owner confirmed rules published and index enabled; the matching
+> frontend is deployed. The historical activation steps below are reference material.
+> MIT is selected and current main has passing dependency/security CI. The historical
+> GIPHY browser key is classified public client configuration, not a private-secret
+> revocation gate. Use [OPEN_SOURCE_READINESS.md](OPEN_SOURCE_READINESS.md) for current
+> publication blockers and [DEPLOYMENT.md](DEPLOYMENT.md) for owner settings.
+
 # Activate the community hardening update
 
 This change couples new authorization rules with updated web/native clients. Do not
@@ -63,9 +70,7 @@ restricted direct pushes/bypasses, and fork workflow approval. CI has no deploym
 authority or production secrets. Keep automatic PR previews off; previews require
 separate Firebase staging and owner review. No auto-merge is enabled.
 
-The owner selected MIT; the root LICENSE and package metadata now reflect it. Confirm revocation
-of the historical GIPHY key privately; the key is not reproduced in this repository.
-Full-history scanning remains a failing release gate until the real exposure is
-resolved. The 2026-10-30 dependency update resolves the audited upstream advisories; root, tests and mobile audits report zero findings.
+The owner selected MIT; the root LICENSE and package metadata now reflect it. The historical GIPHY browser key is reviewed public client configuration;
+its exact scanner fingerprint is narrowly classified, with no broad suppression. The 2026-10-30 dependency update resolves the audited upstream advisories; root, tests and mobile audits report zero findings.
 The repository must remain private until these blockers are resolved and controls
 are verified. Do not turn off these gates just to obtain a green badge.

@@ -32,6 +32,7 @@ usual Expo/Xcode/Android tools; CI exports bundles but does not sign release app
 ```sh
 npm ci
 npm ci --prefix tests
+# Ubuntu/Debian: sudo apt-get install coturn (needed by voice browser tests).
 python3 -m pip install -r tests/requirements.txt
 python3 -m playwright install --with-deps chromium
 cp .env.example .env
@@ -75,7 +76,7 @@ Do not commit credentials, .env files, signing keys, Firebase admin/service-acco
 JSON, deploy hooks, access tokens, passwords, real user data, dependency directories,
 compiled exports, or local logs. All EXPO_PUBLIC_* and PUBLIC_FIREBASE_* values are
 public client data; no private server credential belongs there. Never add password
-logging. Known historical credential exposure remains an owner action item.
+logging. See docs/OPEN_SOURCE_READINESS.md for the latest reviewed credential findings.
 
 ## Validation
 
@@ -100,9 +101,9 @@ chat/friends, reload recovery, invitations, call view, and actual local TURN/Web
 Set LYRIA_CHROMIUM to override the browser path; otherwise system Chromium or the
 pinned Playwright browser is used. See tests/README.md for test details.
 
-Some security gates intentionally remain red for documented pre-existing issues;
-do not delete tests, relax rules, ignore vulnerabilities, or use forced dependency
-overrides just to obtain green CI. Describe the results and consult the maintainer.
+Current main passes the security gates. If a proposed change fails, do not delete
+tests, relax rules, ignore vulnerabilities, or use forced dependency overrides just
+to obtain green CI. Describe the results and consult the maintainer.
 Use compatible parent-package updates and regenerate the corresponding lockfile.
 Expo/React/React Native and native modules must stay within the SDK compatibility
 matrix; run Expo checks and native/web exports after changes.
