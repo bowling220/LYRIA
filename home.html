@@ -31,12 +31,13 @@
         <script src="js/mobile.js?v=7bc57fa148e5fe28" defer></script>
       <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
   <link rel="stylesheet" href="css/theme.css?v=048502b490da3a26">
-  <link rel="stylesheet" href="css/community-shell.css?v=eeeba43f64179f89">
+  <link rel="stylesheet" href="css/community-shell.css?v=865c747a3c16af1c">
   <script src="js/ui.js?v=0dd5247d333da3f7"></script>
-  <script src="js/gif-library.js?v=790b9c41821e7073"></script>
+  <script src="js/gif-library.js?v=e044e9068584ea6b"></script>
   <script src="js/badges.js?v=40763ed5718c4e15"></script>
   <script src="js/media.js?v=ab019dd96150b5d4"></script>
   <script src="js/appearance.js?v=f2b3fb9699b59da3"></script>
+<link rel="stylesheet" href="css/emoji-picker.css?v=b6f78b2f59cd7c0f">
 </head>
 <body class="app-page lyria-community">
 
@@ -138,14 +139,14 @@
             <div id="mention-suggestions" class="mention-suggestions" role="listbox" aria-label="Mention a member" hidden></div>
             <div class="message-input message-composer"><button id="composer-tools" type="button" aria-label="Conversation tools"><span data-icon="plus" aria-hidden="true"></span></button>
                 <textarea id="message-input" aria-label="Message" placeholder="Write a message…" rows="1" maxlength="4000"></textarea>
-                <button id="composer-image" type="button" aria-label="Choose an image from the GIF library"><span data-icon="image" aria-hidden="true"></span></button><button id="composer-emoji" type="button" aria-label="Insert emoji"><span data-icon="smile" aria-hidden="true"></span></button><button id="gif-button" class="gif-btn" type="button" aria-label="Share a GIF" title="Share a GIF"><span data-icon="image" aria-hidden="true"></span><span class="button-label">GIF</span></button>
+                <button id="composer-emoji" type="button" aria-label="Choose an emoji" title="Choose an emoji" aria-haspopup="dialog"><span data-icon="smile" aria-hidden="true"></span></button><button id="gif-button" class="gif-btn" type="button" aria-label="Choose a GIF" title="Choose a GIF" aria-haspopup="dialog"><span class="composer-gif-label" aria-hidden="true">GIF</span></button>
                 <button id="send-button" class="send-btn" type="button" aria-label="Send message"><span data-icon="send" aria-hidden="true"></span><span class="button-label">Send</span></button>
             </div><p class="composer-hint">Enter to send · Shift + Enter for a new line</p>
         </main>
 <aside id="conversation-details" class="details-panel" aria-label="Conversation details"><button id="close-conversation-details" class="details-close" type="button" aria-label="Close conversation details"><span data-icon="close" aria-hidden="true"></span></button><div class="details-cover"><span class="details-cover-symbol" data-icon="chat" aria-hidden="true"></span><h2 id="details-title">Your corner of LYRIA</h2><p id="details-description">Choose a conversation to see its people and shared moments.</p></div><div class="details-actions"><button id="details-invite" type="button"><span data-icon="users" aria-hidden="true"></span>Invite</button><button id="details-settings" type="button" hidden><span data-icon="settings" aria-hidden="true"></span>Settings</button></div><section class="details-card"><div class="details-card-heading"><h3>Members <span id="details-member-count"></span></h3></div><p id="details-member-status" class="details-empty">Select a conversation first.</p><ul id="details-members"></ul><button id="details-invite-people" type="button"><span data-icon="plus" aria-hidden="true"></span>Invite people</button></section><section class="details-card"><div class="details-card-heading"><h3>Shared media</h3><button id="details-media-all" type="button" hidden>See all</button></div><div id="details-media" class="details-media"></div><p id="details-media-empty" class="details-empty">No media shared in the loaded messages.</p></section><section class="details-card"><h3><span data-icon="news" aria-hidden="true"></span>About</h3><p id="details-about">A little room for good conversations.</p><p id="details-created" class="details-empty"></p><button id="details-pin" type="button" aria-pressed="false">Pin on this device</button></section></aside>
     </div>
 
-<div id="conversation-details-dialog" class="modal details-dialog" inert aria-labelledby="details-title"><div id="details-drawer-host" class="modal-content"></div></div><div id="conversation-settings-modal" class="modal" inert aria-labelledby="conversation-settings-title"><div class="modal-content compact-modal"><button class="close-button" id="close-conversation-settings" type="button" aria-label="Close conversation settings"><span data-icon="close" aria-hidden="true"></span></button><h2 id="conversation-settings-title">Conversation settings</h2><p>Manage how people join this conversation.</p><div class="composer-tools-grid"><button id="settings-manage-invite" type="button">Manage invitation</button><button id="settings-leave-conversation" type="button">Leave conversation</button></div><p class="details-empty">Invitation controls let you replace, expire, or revoke a private link. Existing memberships stay intact.</p></div></div><div id="composer-tools-modal" class="modal" inert aria-labelledby="composer-tools-title"><div class="modal-content compact-modal"><button class="close-button" id="close-composer-tools" type="button" aria-label="Close conversation tools"><span data-icon="close" aria-hidden="true"></span></button><h2 id="composer-tools-title">Make it a little more you.</h2><div class="composer-tools-grid"><button id="tools-gif" type="button">Choose a GIF</button><button id="tools-mention" type="button">Mention someone</button><button id="tools-invite" type="button">Invite people</button><button id="tools-voice" type="button">Join voice</button></div><h3>Quick reactions</h3><div id="composer-emojis" class="composer-emojis"></div></div></div>
+<div id="conversation-details-dialog" class="modal details-dialog" inert aria-labelledby="details-title"><div id="details-drawer-host" class="modal-content"></div></div><div id="conversation-settings-modal" class="modal" inert aria-labelledby="conversation-settings-title"><div class="modal-content compact-modal"><button class="close-button" id="close-conversation-settings" type="button" aria-label="Close conversation settings"><span data-icon="close" aria-hidden="true"></span></button><h2 id="conversation-settings-title">Conversation settings</h2><p>Manage how people join this conversation.</p><div class="composer-tools-grid"><button id="settings-manage-invite" type="button">Manage invitation</button><button id="settings-leave-conversation" type="button">Leave conversation</button></div><p class="details-empty">Invitation controls let you replace, expire, or revoke a private link. Existing memberships stay intact.</p></div></div><div id="composer-tools-modal" class="modal" inert aria-labelledby="composer-tools-title"><div class="modal-content compact-modal"><button class="close-button" id="close-composer-tools" type="button" aria-label="Close conversation tools"><span data-icon="close" aria-hidden="true"></span></button><h2 id="composer-tools-title">Make it a little more you.</h2><div class="composer-tools-grid"><button id="tools-gif" type="button">Choose a GIF</button><button id="tools-mention" type="button">Mention someone</button><button id="tools-invite" type="button">Invite people</button><button id="tools-voice" type="button">Join voice</button></div><button id="tools-emojis" class="secondary-action" type="button">Browse all emojis</button></div></div>
     <!-- Friends Modal (kept outside <aside class="sidebar"> deliberately: the sidebar is
          translateX()'d off-screen on mobile, and CSS transforms create a new containing
          block for position:fixed descendants, which trapped this modal off-screen too) -->
@@ -202,6 +203,17 @@
             </div>
         </div>
     </div>
+<div id="emoji-modal" class="modal emoji-modal" aria-hidden="true" inert role="dialog" aria-labelledby="emoji-title">
+    <div class="modal-content emoji-picker">
+        <header class="emoji-picker-heading"><div><p class="modal-eyebrow">A little expression</p><h2 id="emoji-title">Find your emoji.</h2></div><button type="button" class="close-button" aria-label="Close emoji picker"><span data-icon="close" aria-hidden="true"></span></button></header>
+        <label class="emoji-search-label" for="emoji-search">Search emojis</label><input id="emoji-search" type="search" maxlength="80" autocomplete="off" placeholder="Search smile, heart, cat…" aria-controls="emoji-results">
+        <nav id="emoji-categories" class="emoji-categories" aria-label="Emoji categories"></nav>
+        <p id="emoji-status" class="emoji-status" role="status" aria-live="polite"></p>
+        <div class="emoji-scroll"><div id="emoji-results" class="emoji-results" role="group" aria-label="Emoji results"></div><button id="emoji-more" class="secondary-action" type="button" hidden>Show more emojis</button><button id="emoji-retry" class="secondary-action" type="button" hidden>Try loading emojis again</button></div>
+        <p class="emoji-picker-hint">Choose an emoji to add it to your message.</p>
+    </div>
+</div>
+
 <div id="gif-modal" class="modal" aria-hidden="true" inert role="dialog" aria-labelledby="gif-modal-title">
     <div class="modal-content gif-picker">
         <button id="close-gif-modal" class="close-button" aria-label="Close GIF library"><span data-icon="close" aria-hidden="true"></span></button>
@@ -352,11 +364,12 @@
     <script src="js/voice-view.js?v=9a6f2e727cbda043"></script>
     <script src="js/reactions.js?v=2ed845847fa3f200"></script>
     <script src="js/invites.js?v=23abf220b9d0b3bd"></script>
-    <script src="js/community-shell.js?v=e51a50196025e833"></script>
+    <script src="js/community-shell.js?v=ff4d0ea94aedf284"></script>
     <script src="chat.js?v=7a1c26790a328e84"></script>
     <script src="js/call-invites.js?v=7fa101a84eecac1e"></script>
     <script src="js/community.js?v=76e1a5acda0d84b9"></script>
-    <script src="js/gif-picker.js?v=2f93889319945d25"></script>
+    <script src="js/emoji-picker.js?v=86892b067973e1b6"></script>
+    <script src="js/gif-picker.js?v=3fe0c5214cacac5d"></script>
     <script src="js/profile-media.js?v=fe26a608f0a61b46"></script>
 
     <!-- Firebase initialization check -->

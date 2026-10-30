@@ -520,12 +520,19 @@
   border: 0;
   background: transparent;
 }
-.lyria-community .message-composer .gif-btn .button-label {
-  display: block;
-  font-size: 9px;
+.lyria-community .composer-gif-label {
+  display: inline-flex;
+  border: 1.5px solid currentColor;
+  border-radius: 5px;
+  padding: 2px 3px;
+  font-size: 10px;
+  line-height: 1.2;
+  font-weight: 800;
+  letter-spacing: .02em;
 }
-.lyria-community .gif-btn .icon {
-  display: none;
+.lyria-community .message-composer > button:hover {
+  background: var(--surface-raised);
+  color: var(--accent);
 }
 .lyria-community .message-composer .send-btn {
   background: var(--accent) !important;
@@ -549,16 +556,6 @@
   grid-template-columns: 1fr 1fr;
   gap: 10px;
   margin-bottom: 24px;
-}
-.composer-emojis {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-top: 12px;
-}
-.composer-emojis button {
-  font-size: 22px;
-  padding: 8px;
 }
 .lyria-community .details-panel {
   padding: 14px;
@@ -1112,18 +1109,15 @@
     line-height: 24px;
   }
   .lyria-community .message-composer > button {
-    width: 30px;
-    min-width: 30px;
-    padding: 5px;
+    width: 40px;
+    min-width: 40px;
+    min-height: 44px;
+    padding: 7px;
   }
   .lyria-community .message-composer .send-btn {
     width: 40px;
     min-width: 40px;
     min-height: 44px;
-  }
-  .lyria-community #composer-emoji,
-  .lyria-community #composer-image {
-    display: none;
   }
   .lyria-community .composer-hint {
     display: none;

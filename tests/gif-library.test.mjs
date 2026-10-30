@@ -12,7 +12,7 @@ test('GIPHY discovery paginates, encodes queries, validates IDs and retains sele
   vm.runInNewContext(source,{window,URL,URLSearchParams,fetch:async url=>{urls.push(url);return {ok:true,json:async()=>({data:[{id:'Safe123',title:'A GIF',images:{fixed_width:{width:'200',height:'150'}}},{id:'../unsafe'}],pagination:{total_count:100}})}}});
   const lib=window.LyriaGifLibrary;
   const page=await lib.browse('cats & dogs','All',24);
-  assert.equal(urls[0].searchParams.get('q'),'cats & dogs');assert.equal(urls[0].searchParams.get('offset'),'24');
+  assert.equal(urls[0].searchParams.get('q'),'cats & dogs');assert.equal(urls[0].searchParams.get('offset'),'24');assert.equal(urls[0].searchParams.get('limit'),'50');
   assert.equal(page.items.length,1);assert.equal(page.next,26);
   assert.equal(lib.metadata('giphy-Safe123').url,'https://media.giphy.com/media/Safe123/giphy.gif');
   assert.throws(()=>lib.metadata('https://example.com/pasted.gif'));
@@ -52,4 +52,13 @@ test('install generates deployment assets on Render only and propagates build er
   assert.equal(calls,0);
   assert.equal(await prepareRender({RENDER:'true'},build),true);assert.equal(calls,1);
   await assert.rejects(prepareRender({RENDER:'true'},async()=>{throw new Error('build failed')}),/build failed/);
+});
+
+test('bundled Unicode emoji catalog is complete, unique and attributed',async()=>{
+  const data=JSON.parse(await readFile(new URL('../assets/emoji/emoji-16.0.json',import.meta.url),'utf8'));
+  assert.equal(data.version,'16.0');assert.equal(data.emojis.length,3781);
+  assert.equal(new Set(data.emojis.map(item=>item.emoji)).size,data.emojis.length);
+  for(const item of data.emojis){assert.ok(item.name);assert.ok(data.groups.includes(item.group));}
+  for(const emoji of ['🌿','😊','👍🏽','🇺🇸'])assert.ok(data.emojis.some(item=>item.emoji===emoji));
+  assert.match(await readFile(new URL('../assets/emoji/LICENSE.txt',import.meta.url),'utf8'),/UNICODE LICENSE/);
 });

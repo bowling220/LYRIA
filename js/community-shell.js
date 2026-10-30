@@ -353,7 +353,6 @@
   }
   const forward = (id, target) =>
     $(id).addEventListener("click", () => $(target).click());
-  forward("composer-image", "gif-button");
   forward("panel-create", "add-channel");
   forward("rail-chats", "open-hub");
   forward("rail-discover", "news-feed-button");
@@ -432,10 +431,6 @@
   }).observe(dialog, { attributes: true, attributeFilter: ["data-ui-open"] });
   const tools = $("composer-tools-modal");
   $("composer-tools").addEventListener("click", () => UI.openModal(tools));
-  $("composer-emoji").addEventListener("click", () => {
-    UI.openModal(tools);
-    $("composer-emojis").querySelector("button")?.focus();
-  });
   $("close-composer-tools").addEventListener("click", () =>
     UI.closeModal(tools),
   );
@@ -457,14 +452,6 @@
     input.dispatchEvent(new Event("input", { bubbles: true }));
   }
   $("tools-mention").addEventListener("click", () => insert("@"));
-  for (const emoji of ["😊", "💚", "🎉", "🙌", "🌿", "✨", "👍", "❤️"]) {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.textContent = emoji;
-    button.setAttribute("aria-label", "Insert " + emoji);
-    button.addEventListener("click", () => insert(emoji));
-    $("composer-emojis").append(button);
-  }
   let paintScheduled = false;
   new MutationObserver(() => {
     if (paintScheduled) return;

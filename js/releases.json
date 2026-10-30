@@ -2,6 +2,26 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "id": "2026-10-30-expression-library",
+      "date": "2026-10-30",
+      "title": "More ways to say it.",
+      "summary": "A bigger GIF library and an emoji for every moment, in a cleaner message bar.",
+      "changes": [
+        {
+          "type": "Improved",
+          "icon": "chat",
+          "title": "100 GIFs to get started",
+          "description": "Browse up to 100 GIFs when you open the library, search for your moment, and keep loading more. Results stay available if a later page needs a retry."
+        },
+        {
+          "type": "New",
+          "icon": "smile",
+          "title": "All the expression, less clutter",
+          "description": "One clear GIF button replaces the duplicate image control. The smiley opens 3,781 emojis, with search, categories, and recent choices—even on mobile."
+        }
+      ]
+    },
+    {
       "id": "2026-10-30-conversation-design",
       "date": "2026-10-30",
       "title": "A new corner of LYRIA.",
@@ -30,7 +50,7 @@
     {
       "id": "2026-10-30-build-status",
       "date": "2026-10-30",
-      "title": "Know what\u2019s running.",
+      "title": "Know what’s running.",
       "summary": "A clearer version check and update notes that fit your screen.",
       "changes": [
         {
@@ -103,7 +123,7 @@
           "type": "New",
           "icon": "news",
           "title": "Your own community publication",
-          "description": "Featured stories, categories, and a cleaner way to browse what\u2019s happening around LYRIA."
+          "description": "Featured stories, categories, and a cleaner way to browse what’s happening around LYRIA."
         },
         {
           "type": "Improved",
@@ -115,7 +135,7 @@
           "type": "New",
           "icon": "sparkles",
           "title": "A welcome with every update",
-          "description": "See what changed once per release, then get back to your space. Reopen What\u2019s new beside your profile whenever you like."
+          "description": "See what changed once per release, then get back to your space. Reopen What’s new beside your profile whenever you like."
         }
       ]
     },

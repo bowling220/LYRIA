@@ -1,8 +1,10 @@
 # GIPHY discovery
 
 The shared picker supports GIPHY trending and search, including avatar and banner
-selection. It loads 24 results per request with **Load more GIFs**, not a fixed
-catalog cap. Provider availability, rating policy (PG-13), API quotas and provider
+selection. It initially fills up to 100 results using provider-sized pages of at most 50,
+then offers **Load more GIFs** for additional batches. There is no fixed catalog
+cap. Each page appears immediately; a later-page failure retains the loaded
+results and offers retry. Provider availability, rating policy (PG-13), API quotas and provider
 pagination limits still apply. Requests are debounced and cancelled when stale.
 
 Create a new GIPHY Web API app at https://developers.giphy.com/. Use a browser API key, never a management secret. Set `PUBLIC_GIPHY_API_KEY` in Render's environment and

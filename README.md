@@ -353,11 +353,15 @@ stream event alone does not prove that audio is flowing. Set
 
 ## GIF library and profile appearance
 
-The composer GIF button opens a searchable, curated 31-GIF library with reaction,
-celebration, animal, and vibe categories. GIFs are previewed before sending, and
-media remains hosted by its credited GIPHY source. This is a built-in catalog, not
-a full GIPHY/Tenor search integration; it needs no provider API key. The catalog is
-in `js/gif-library.js`, and `js/gif-picker.js` handles chat/avatar/banner selection.
+The composer has one clearly labeled GIF button and a separate emoji button.
+With a configured public GIPHY API key, the shared GIF picker initially fills up
+to 100 results using provider-sized pages, with search and further batches through
+**Load more GIFs**. A curated 31-GIF collection remains available without a key.
+GIFs are previewed before sending and remain hosted by their credited GIPHY source.
+`js/gif-library.js` resolves media metadata; `js/gif-picker.js` handles chat/avatar/banner selection.
+The smiley opens 3,781 bundled Unicode emojis with search, categories and local
+recent choices; it inserts at the cursor without sending the message. The dataset
+loads only when needed. See [emoji maintenance and attribution](docs/EMOJIS.md).
 There is no URL-paste input. `sendLibraryGif(id)` resolves a catalog ID to trusted
 metadata; it rejects pasted URLs and unknown IDs. Older GIF messages still render
 through the shared media component. Chat GIFs reserve their aspect ratio, have

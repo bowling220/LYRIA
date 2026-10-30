@@ -37,10 +37,21 @@
     const current=generation;loading=true;more.disabled=true;more.hidden=false;more.textContent='Loading GIFs…';
     request=new AbortController();
     try{
-      const result=await library.browse($('gif-search').value,modal.dataset.category || 'All',append?nextOffset:0,request.signal);
-      if(current!==generation)return;
-      const unique=result.items.filter(item=>!append || !Array.from($('gif-results').children).some(el=>el.dataset.gifId===item.id));
-      renderItems(unique,append);if(pendingSelection && library.get(pendingSelection)){select(library.get(pendingSelection));pendingSelection=null;}nextOffset=result.next;more.hidden=nextOffset===null;more.textContent='Load more GIFs';feedback('');
+      // Fill a generous initial batch using provider-sized pages, painting each
+      // page immediately. Smaller provider responses can still reach 100 results.
+      let cursor=append?nextOffset:0,received=0,pages=0;
+      const seen=new Set(append?Array.from($('gif-results').children,el=>el.dataset.gifId):[]);
+      while(cursor!==null && received<100 && pages++<8){
+        const result=await library.browse($('gif-search').value,modal.dataset.category || 'All',cursor,request.signal);
+        if(current!==generation)return;
+        const unique=result.items.filter(item=>{if(seen.has(item.id))return false;seen.add(item.id);return true});
+        renderItems(unique,append || pages>1);received+=unique.length;
+        if(pendingSelection && library.get(pendingSelection)){select(library.get(pendingSelection));pendingSelection=null;}
+        // A non-advancing provider cursor must never cause an infinite request loop.
+        nextOffset=result.next!==null && result.next>cursor?result.next:null;
+        cursor=nextOffset;
+      }
+      more.hidden=nextOffset===null;more.textContent='Load more GIFs';feedback('');
     }catch(error){if(current!==generation || error.name==='AbortError')return;feedback(error.message,'error');more.hidden=false;more.textContent='Retry loading GIFs';}
     finally{if(current===generation){loading=false;more.disabled=false;}}
   }

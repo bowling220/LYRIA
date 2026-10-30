@@ -549,7 +549,7 @@
     if(!online())return {items:search(query,category),next:null};
     const term=[category==='All'?'':category,query.trim()].filter(Boolean).join(' ');
     const url=new URL('https://api.giphy.com/v1/gifs/'+(term?'search':'trending'));
-    url.search=new URLSearchParams({api_key:window.LYRIA_GIPHY_API_KEY,limit:'24',offset:String(offset),rating:'pg-13',lang:'en',...(term?{q:term}:{})});
+    url.search=new URLSearchParams({api_key:window.LYRIA_GIPHY_API_KEY,limit:'50',offset:String(offset),rating:'pg-13',lang:'en',...(term?{q:term}:{})});
     const response=await fetch(url,{signal,credentials:'omit',referrerPolicy:'strict-origin-when-cross-origin'});
     if(!response.ok)throw new Error(response.status===429?'GIPHY is busy. Wait a moment and try again.':'GIPHY could not load. Please try again.');
     const result=await response.json();
