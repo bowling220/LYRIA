@@ -5,6 +5,7 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import vm from 'node:vm';
 import {configureGifs} from '../scripts/configure-gifs.mjs';
+import {prepareRender} from '../scripts/prepare-render.mjs';
 const source=await readFile(new URL('../js/gif-library.js',import.meta.url),'utf8');
 test('GIPHY discovery paginates, encodes queries, validates IDs and retains selected metadata',async()=>{
   const urls=[];const window={LYRIA_GIPHY_API_KEY:'public-test-key'};
@@ -27,4 +28,28 @@ test('GIPHY build configuration is optional, public, validated and safely serial
     await configureGifs(dir,{PUBLIC_GIPHY_API_KEY:'public-test-key'});
     assert.match(await readFile(path,'utf8'),/window.LYRIA_GIPHY_API_KEY="public-test-key"/);
   }finally{await rm(dir,{recursive:true,force:true})}
+});
+
+test('repeated Render builds replace stale GIF keys and missing configuration clears generated keys',async()=>{
+  const dir=await mkdtemp(join(tmpdir(),'lyria-gifs-'));
+  try{
+    await mkdir(join(dir,'js'));const path=join(dir,'js/gif-library.js');await writeFile(path,source);
+    await configureGifs(dir,{PUBLIC_GIPHY_API_KEY:'public-first-key'});
+    await configureGifs(dir,{PUBLIC_GIPHY_API_KEY:'public-replacement-key'});
+    await configureGifs(dir,{PUBLIC_GIPHY_API_KEY:'public-replacement-key'});
+    const configured=await readFile(path,'utf8');
+    assert.equal(configured.split('window.LYRIA_GIPHY_API_KEY=').length-1,1);
+    assert.ok(!configured.includes('public-first-key'));
+    const window={};vm.runInNewContext(configured,{window,URL,URLSearchParams});
+    assert.equal(window.LYRIA_GIPHY_API_KEY,'public-replacement-key');
+    await configureGifs(dir,{});assert.equal(await readFile(path,'utf8'),source);
+  }finally{await rm(dir,{recursive:true,force:true})}
+});
+test('install generates deployment assets on Render only and propagates build errors',async()=>{
+  let calls=0;const build=async()=>{calls++};
+  assert.equal(await prepareRender({},build),false);
+  assert.equal(await prepareRender({CI:'true',LYRIA_ENV:'development'},build),false);
+  assert.equal(calls,0);
+  assert.equal(await prepareRender({RENDER:'true'},build),true);assert.equal(calls,1);
+  await assert.rejects(prepareRender({RENDER:'true'},async()=>{throw new Error('build failed')}),/build failed/);
 });

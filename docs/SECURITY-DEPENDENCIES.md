@@ -100,10 +100,20 @@ rule/line fingerprint to the existing .gitleaksignore. No broad rule, path or
 active credential exception was added. CI prints finding metadata without
 matched values or source lines to make future failures diagnosable safely.
 
-A separate finding remains: the historical GIPHY key in commit
-095e96e4f7a258f32d5259787886052d99b79df6, home.html line 510. Read-only GIPHY
-search and trending verification returned HTTP 200 on 2026-10-30, so it is still
-active. The owner must revoke it (updating Render first if necessary). It remains
-a failing security gate; no active key is allowlisted or reproduced in this report.
+The historical GIPHY occurrence in commit
+095e96e4f7a258f32d5259787886052d99b79df6, home.html line 510, is a browser API
+key that was intentionally delivered to visitors, not a private server credential.
+The earlier decision to require revocation as a blocking secret finding was too
+broad for this client-side integration. The owner requested its correction; only
+that exact historical fingerprint is now classified as public client configuration.
+No key is restored to source, no rotation is claimed, and new findings still fail.
+The public key bears provider quota: apply GIPHY restrictions and monitor usage;
+replacement/revocation remains available to the owner. The replacement stays in
+Render's PUBLIC_GIPHY_API_KEY and is emitted only into deployment assets.
 GitHub fork CI intentionally receives no production GIPHY key and builds in
 development mode; that test-build log is separate from Render's configuration.
+
+The product-access browser test now closes Friends before reload through its real
+close button. Previously its saved open state correctly restored behind Profile;
+a later Send click was blocked by that still-open dialog. Panel restoration itself
+is preserved and separately tested.

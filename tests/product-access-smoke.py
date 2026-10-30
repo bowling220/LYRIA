@@ -37,6 +37,10 @@ with sync_playwright() as p:
    for key,value in legacy.items():assert stored[key]==value,(key,stored[key])
    assert stored['unrelated']=={'keep':'yes'}
    assert stored['friends']==['maya'] and stored['channels']==['personal-test-member','studio']
+   # Close Friends through the actual UI before reloading; otherwise panel persistence
+   # correctly restores it underneath the profile and blocks the later Send click.
+   page.locator('#close-friends-modal').click()
+   page.wait_for_function("document.getElementById('friends-modal').getAttribute('aria-hidden')==='true'")
    page.reload();page.wait_for_function("document.getElementById('account-load-status').dataset.state==='ready'")
    page.locator('#user-profile-trigger').evaluate('(el)=>el.click()')
    page.wait_for_function("document.getElementById('profile-modal').style.display==='flex'")

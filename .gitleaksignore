@@ -1,5 +1,5 @@
-# Exact findings reviewed as public Firebase initializeApp client configuration.
-# No real credential, GIPHY key, broad path, or future finding is ignored.
+# Exact findings reviewed as public browser client configuration.
+# No server credential, broad path, rule, or future finding is ignored.
 01dda2f2d7a567426c34fb31c949222a345eee45:js/config.js:gcp-api-key:25
 1126c89ccb509e070bcf297c1026e097d9334c29:home.html:gcp-api-key:47
 2a1f7e032efce1df80fb84a98909ddaabcfc1920:home.html:gcp-api-key:94
@@ -31,3 +31,7 @@ e8a33f148ade1ae18156894b6dead0ff9ff64744:LYRIA/firebaseConfig.js:gcp-api-key:6
 9f912b3b426722b2282b3108152d478daed0d9aa:LYRIA/firebaseConfig.js:gcp-api-key:7
 d798687d6391a5393bf0b4a89d988ae9ceb88bd5:js/news.js:gcp-api-key:8
 6069b833a37793d54cc1ee3b82645ff69bf50fdc:js/news.js:gcp-api-key:8
+
+# Historical GIPHY browser API key, intentionally client-visible (quota-bearing).
+# Owner requested correction of this false secret-blocker; no key is restored.
+095e96e4f7a258f32d5259787886052d99b79df6:home.html:generic-api-key:510

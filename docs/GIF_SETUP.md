@@ -5,8 +5,7 @@ selection. It loads 24 results per request with **Load more GIFs**, not a fixed
 catalog cap. Provider availability, rating policy (PG-13), API quotas and provider
 pagination limits still apply. Requests are debounced and cancelled when stale.
 
-Create a new GIPHY Web API app at https://developers.giphy.com/. Do not reuse the
-historically exposed key. Set `PUBLIC_GIPHY_API_KEY` in Render's environment and
+Create a new GIPHY Web API app at https://developers.giphy.com/. Use a browser API key, never a management secret. Set `PUBLIC_GIPHY_API_KEY` in Render's environment and
 rebuild the site. This is a public browser app key included in the browser bundle;
 never put a management secret here. Configure provider app restrictions and request
 production approval/quota as required by GIPHY. Search queries are sent to GIPHY.
@@ -25,3 +24,16 @@ included, inspect that commit's Render build log for `GIF search configuration:`
 Confirm the build runs `npm ci && npm run build`, and the environment variable
 belongs to that same service. `configured` confirms presence, not provider quota
 or GIPHY production approval. A request failure appears in the GIF picker with Retry.
+
+## Render install compatibility
+
+The root package's `prepare` lifecycle generates deployment assets when Render sets
+`RENDER=true`, including when an older service uses only `npm install` or `npm ci`
+as its build command. The recommended explicit build remains `npm ci && npm run
+build` with `dist/client` as the publish directory. Generation is idempotent:
+repeated builds replace the previous emitted GIF key instead of accumulating it.
+Local and fork-CI installs skip this Render-only lifecycle. Installs with
+`--ignore-scripts` must explicitly run the build. Saving a dashboard variable alone
+cannot alter already-deployed static files: a new build must complete successfully.
+No repository code can change a Render account's service settings or retrieve its
+environment without authorized Render access.
