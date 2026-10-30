@@ -1,7 +1,8 @@
 /* Shared connection feedback and recovery. Never resumes a microphone automatically. */
 (() => {
-  const states=new Map(),timers=new Map(),completed=new Set();let retryHandler,busy=false,lastRetry=0,autoRetryTimer;
+  const states=new Map(),timers=new Map(),completed=new Set();let retryHandler,busy=false,lastRetry=0,autoRetryTimer,revision=0;
   function render(){
+    window.dispatchEvent(new Event('lyria:connection-state'));
     const panel=document.getElementById('connection-notice');if(!panel)return;
     const failed=[...states.values()].find(value=>value.error);
     panel.hidden=navigator.onLine && !failed && !busy;
@@ -11,11 +12,11 @@
   }
   function pending(part){
     completed.delete(part);
-    clearTimeout(timers.get(part));states.set(part,{error:false});
-    timers.set(part,setTimeout(()=>{states.set(part,{error:true,message:'LYRIA is taking too long to connect. Your drafts are still here. Try reconnecting.'});render()},12000));render();
+    clearTimeout(timers.get(part));states.set(part,{error:false,revision:++revision});
+    timers.set(part,setTimeout(()=>{states.set(part,{...states.get(part),error:true,message:'LYRIA is taking too long to connect. Your drafts are still here. Try reconnecting.'});render()},12000));render();
   }
-  function ready(part){clearTimeout(timers.get(part));timers.delete(part);states.delete(part);completed.add(part);render();window.dispatchEvent(new Event('lyria:connection-state'))}
-  function fail(part,message){clearTimeout(timers.get(part));timers.delete(part);states.set(part,{error:true,message});render()}
+  function ready(part){clearTimeout(timers.get(part));timers.delete(part);states.delete(part);completed.add(part);render()}
+  function fail(part,message){clearTimeout(timers.get(part));timers.delete(part);states.set(part,{revision:states.get(part)?.revision || ++revision,error:true,message});render()}
   async function retry(automatic=false){
     if(!navigator.onLine)return;
     if(automatic && (busy || Date.now()-lastRetry<3000)){
@@ -37,6 +38,6 @@
   window.addEventListener('pageshow',event=>{if(event.persisted)retry(true)});
   document.addEventListener('visibilitychange',()=>{if(!document.hidden && [...states.values()].some(value=>value.error))retry(true)});
   document.addEventListener('DOMContentLoaded',()=>{document.getElementById('retry-connection')?.addEventListener('click',()=>retry());render()});
-  window.LyriaConnection={pending,ready,fail,isReady:part=>completed.has(part),setRetry:handler=>{retryHandler=handler}};
+  window.LyriaConnection={pending,ready,fail,retry,snapshot:()=>({online:navigator.onLine,reconnecting:busy,parts:[...states].map(([part,state])=>({part,...state}))}),isReady:part=>completed.has(part),setRetry:handler=>{retryHandler=handler}};
   pending('startup');
 })();

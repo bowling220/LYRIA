@@ -60,7 +60,7 @@
   if(attempted || !data || !storage || !document.body.classList.contains('app-page') || seen()===data.releases[0].id || !window.LyriaConnection?.isReady('startup'))return;
   attempted=true;
   // Preserve an open/restored panel instead of putting an announcement above it.
-  if(restoredPanels() || document.querySelector('.modal[data-ui-open="true"]'))return;
+  if(restoredPanels() || document.querySelector('.modal:not(#app-loading-modal)[data-ui-open="true"]'))return;
   show(true);
  }
  async function load(){

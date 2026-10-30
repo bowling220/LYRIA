@@ -601,6 +601,14 @@ Run `npm test` and `python tests/news-smoke.py` for model/legacy-compatibility a
 
 ### Update welcome and changelog
 
+Slow startup now has a dedicated LYRIA loading screen on every visit, independent
+of update notes. It appears after 650 ms and closes when authentication is ready;
+Keep browsing and Escape dismiss it. Slow conversations, channel lists and inbox
+requests show matching loading views using the existing connection lifecycle.
+Failures and offline states expose the shared reconnect action without discarding
+drafts, restarting a microphone, covering loaded messages, or forcing navigation.
+Reduced-motion preferences are respected; progress is indeterminate, never fake.
+
 An unseen release gets a LYRIA welcome with actual startup feedback and a changelog. It is dismissible, shown once per browser release, and preserves the selected page/room and restored panels. **What’s new** beside your profile (and on News/Inbox) reopens current and earlier notes. See [release publishing](docs/RELEASES.md) to add the next update.
 
 ### Security and dependency maintenance
