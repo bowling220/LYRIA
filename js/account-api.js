@@ -23,6 +23,12 @@
     return null;
   };
   const fromFields = object => Object.fromEntries(Object.entries(object || {}).map(([key,value])=>[key,decode(value)]));
+  const errorCode=error=>{
+    const raw=String(error?.code || 'unknown').replace(/^firestore\//,'').replace(/^auth\//,'');
+    return raw==='network-request-failed'?'unavailable':raw;
+  };
+  const errorDetail=error=>({code:errorCode(error),message:error?.message || String(error)});
+  const networkError=error=>['unavailable','deadline-exceeded','aborted','internal','unknown','resource-exhausted'].includes(errorCode(error));
   const baseUrl = () => {
     const project=window.firebaseConfig.getApp().options.projectId;
     return (window.LYRIA_RUNTIME?.emulators?'http://'+window.LYRIA_RUNTIME.emulators.host+':'+window.LYRIA_RUNTIME.emulators.firestorePort:'https://firestore.googleapis.com')+'/v1/projects/'+encodeURIComponent(project)+'/databases/(default)/documents/users';
@@ -47,27 +53,81 @@
         const code=({401:'unauthenticated',403:'permission-denied',404:'not-found',409:'already-exists',429:'resource-exhausted'})[response.status] || 'unavailable';
         throw Object.assign(new Error(body.error?.message || 'Account request failed'),{code});
       }
-      return {exists:true,data:fromFields(body.fields),version:body.updateTime};
+      return {exists:true,data:fromFields(body.fields),version:body.updateTime,transport:'rest'};
     } catch(error) {
       if(error.name==='AbortError')throw Object.assign(new Error('Account connection timed out'),{code:'deadline-exceeded'});
-      if(error instanceof TypeError)throw Object.assign(new Error('Account server could not be reached'),{code:'unavailable'});
+      if(error instanceof TypeError || errorCode(error)==='unavailable')throw Object.assign(new Error(error.message || 'Account server could not be reached'),{code:'unavailable'});
       throw error;
     } finally {clearTimeout(timer)}
   }
+  async function sdkRead(user,restError){
+    const db=window.firebaseConfig.getFirestore?.();
+    if(!db)throw restError;
+    const ref=db.collection('users').doc(user.uid);
+    console.warn('Account REST read failed; trying Firebase SDK fallback.',errorDetail(restError));
+    try{
+      const doc=await ref.get({source:'server'});
+      console.info('Account read recovered with Firebase SDK fallback.');
+      return {exists:doc.exists,data:doc.exists?doc.data():{},transport:'sdk'};
+    }catch(sdkError){
+      if(networkError(sdkError)){
+        try{
+          const cached=await ref.get({source:'cache'});
+          if(cached.exists){
+            console.warn('Account read recovered from local Firestore cache.',{rest:errorDetail(restError),sdk:errorDetail(sdkError)});
+            return {exists:true,data:cached.data(),transport:'cache'};
+          }
+        }catch(cacheError){console.warn('Account cache unavailable.',errorDetail(cacheError))}
+      }
+      console.error('Account read failed through REST and Firebase SDK.',{rest:errorDetail(restError),sdk:errorDetail(sdkError)});
+      throw sdkError;
+    }
+  }
   async function read(user) {
     try {return await request(user,'GET','/'+encodeURIComponent(user.uid));}
-    catch(error){if(error.code==='not-found')return {exists:false,data:{}};throw error}
+    catch(error){if(errorCode(error)==='not-found')return {exists:false,data:{},transport:'rest'};return sdkRead(user,error)}
   }
   const publicKeys=['displayName','photoURL','avatarGif','bannerURL','bannerGif','bio','status','showBadges','badges','appearance','updatedAt'];
+  function publicProfile(user,merged){
+    return {displayName:user.displayName || 'LYRIA member',photoURL:user.photoURL || 'assets/avatar.svg',...Object.fromEntries(Object.entries(merged).filter(([key])=>publicKeys.includes(key)))};
+  }
+  async function sdkWrite(user,patch,createOnly,restError){
+    const db=window.firebaseConfig.getFirestore?.();
+    if(!db?.runTransaction)throw restError;
+    const userRef=db.collection('users').doc(user.uid),profileRef=db.collection('profiles').doc(user.uid);
+    console.warn('Account REST save failed; trying Firebase SDK transaction.',errorDetail(restError));
+    try{
+      const result=await db.runTransaction(async transaction=>{
+        const current=await transaction.get(userRef);
+        if(createOnly && current.exists)throw Object.assign(new Error('Account already exists'),{code:'already-exists'});
+        const merged={...(current.exists?current.data():{}),...patch};
+        if(Object.keys(patch).length)transaction.set(userRef,patch,{merge:true});
+        transaction.set(profileRef,publicProfile(user,merged));
+        return {exists:true,data:merged,transport:'sdk'};
+      });
+      console.info('Account save recovered with Firebase SDK transaction.');
+      return result;
+    }catch(sdkError){
+      const code=errorCode(sdkError);
+      if(code!==sdkError?.code && sdkError && typeof sdkError==='object')sdkError.code=code;
+      console.error('Account save failed through REST and Firebase SDK.',{rest:errorDetail(restError),sdk:errorDetail(sdkError)});
+      throw sdkError;
+    }
+  }
   async function write(user,patch,createOnly=false){
     const current=await read(user),merged={...current.data,...patch};
-    const publicData={displayName:user.displayName || 'LYRIA member',photoURL:user.photoURL || 'assets/avatar.svg',...Object.fromEntries(Object.entries(merged).filter(([key])=>publicKeys.includes(key)))};
+    const publicData=publicProfile(user,merged);
     const root='projects/'+window.firebaseConfig.getApp().options.projectId+'/databases/(default)/documents/';
-    await request(user,'POST','',{writes:[
-      ...(Object.keys(patch).length?[{update:{name:root+'users/'+user.uid,fields:fields(patch)},updateMask:{fieldPaths:Object.keys(patch)},...(createOnly?{currentDocument:{exists:false}}:current.version?{currentDocument:{updateTime:current.version}}:{})}]:current.version?[{verify:root+'users/'+user.uid,currentDocument:{updateTime:current.version}}]:[]),
-      {update:{name:root+'profiles/'+user.uid,fields:fields(publicData)}}
-    ]},true,true);
-    return read(user);
+    try{
+      await request(user,'POST','',{writes:[
+        ...(Object.keys(patch).length?[{update:{name:root+'users/'+user.uid,fields:fields(patch)},updateMask:{fieldPaths:Object.keys(patch)},...(createOnly?{currentDocument:{exists:false}}:current.version?{currentDocument:{updateTime:current.version}}:{})}]:current.version?[{verify:root+'users/'+user.uid,currentDocument:{updateTime:current.version}}]:[]),
+        {update:{name:root+'profiles/'+user.uid,fields:fields(publicData)}}
+      ]},true,true);
+      return read(user);
+    }catch(error){
+      if(errorCode(error)==='already-exists')throw error;
+      return sdkWrite(user,patch,createOnly,error);
+    }
   }
   const save=(user,patch)=>write(user,patch);
   const create=(user,data)=>write(user,data,true);
