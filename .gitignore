@@ -113,3 +113,14 @@ security-reports/
 *.apk
 *.aab
 *.dSYM/
+
+# Local credentials and native build output
+.env.*
+firebase-adminsdk*.json
+**/.expo/
+**/dist-native/
+**/dist-web/
+**/dist-security/
+# Reviewed project-only install settings and placeholder client configuration.
+!/LYRIA/.npmrc
+!/LYRIA/.env.example

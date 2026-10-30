@@ -6,5 +6,16 @@
     "firebase": "13.1.0",
     "firebase-tools": "15.34.2",
     "peer": "1.0.2"
+  },
+  "overrides": {
+    "@firebase/firestore": {
+      "@grpc/grpc-js": "1.14.7"
+    },
+    "@google-cloud/pubsub": {
+      "@opentelemetry/core": "2.8.0"
+    },
+    "gaxios@6.7.1": {
+      "uuid": "11.1.1"
+    }
   }
 }

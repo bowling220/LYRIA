@@ -1,19 +1,10 @@
-# Enforced only when main requires Code Owner review in repository settings.
+# Enable required code-owner review in main's branch protection/ruleset.
 * @bowling220
 /.github/ @bowling220
 /firestore.rules @bowling220
-/firestore.indexes.json @bowling220
-/firebase*.json @bowling220
-/.firebaserc @bowling220
 /js/config.js @bowling220
-/js/runtime-config.js @bowling220
 /js/account*.js @bowling220
-/js/data-api.js @bowling220
 /LYRIA/firebaseConfig.js @bowling220
-/scripts/ @bowling220
-/build.mjs @bowling220
-/package*.json @bowling220
-/tests/package*.json @bowling220
-/LYRIA/package*.json @bowling220
-/.env.example @bowling220
+/**/package.json @bowling220
+/**/package-lock.json @bowling220
 /SECURITY.md @bowling220

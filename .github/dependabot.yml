@@ -1,36 +1,26 @@
 version: 2
 updates:
   - package-ecosystem: npm
+    directories: ["/", "/tests", "/LYRIA", "/LYRIA/vendor/expo-merge-adapter"]
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      compatible-updates:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+  - package-ecosystem: github-actions
     directory: /
-    schedule: {interval: weekly}
-    open-pull-requests-limit: 3
+    schedule:
+      interval: weekly
     groups:
-      web-tooling:
+      actions:
         patterns: ["*"]
-  - package-ecosystem: npm
-    directory: /tests
-    schedule: {interval: weekly}
-    open-pull-requests-limit: 3
-    groups:
-      test-platform:
-        patterns: ["*"]
-  - package-ecosystem: npm
-    directory: /LYRIA
-    schedule: {interval: weekly}
-    open-pull-requests-limit: 3
-    groups:
-      mobile-platform:
-        patterns: ["*"]
+# Updates require maintainer review. No automatic approval, merge, or deployment.
+
   - package-ecosystem: pip
     directory: /tests
     schedule: {interval: weekly}
     groups:
       python-tests:
         patterns: ["*"]
-  - package-ecosystem: github-actions
-    directory: /
-    schedule: {interval: weekly}
-    groups:
-      actions:
-        patterns: ["*"]
-# Updates are proposals. No auto-merge, approval, or deployment is configured.

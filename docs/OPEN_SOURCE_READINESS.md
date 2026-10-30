@@ -1,3 +1,5 @@
+> Update — 30 October 2026: all three dependency audits now report zero, including development dependencies. See [the current dependency report](SECURITY-DEPENDENCIES.md). Earlier audit numbers below are historical validation records; the independent license, key-revocation, infrastructure/settings and Firebase-activation actions still apply.
+
 # Community hardening and release readiness
 
 **NOT READY TO MAKE PUBLIC.** Implementation is prepared on `feature/community-hardening`
