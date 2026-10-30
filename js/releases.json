@@ -2,6 +2,26 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "id": "2026-10-30-build-status",
+      "date": "2026-10-30",
+      "title": "Know what\u2019s running.",
+      "summary": "A clearer version check and update notes that fit your screen.",
+      "changes": [
+        {
+          "type": "New",
+          "icon": "info",
+          "title": "Your installed version, at a glance",
+          "description": "Find the release, build ID, and GIF search configuration at the bottom of these notes. No API keys are displayed."
+        },
+        {
+          "type": "Improved",
+          "icon": "sparkles",
+          "title": "Update notes without the scrolling",
+          "description": "Browse one change at a time, or open an earlier update, without losing your place in LYRIA."
+        }
+      ]
+    },
+    {
       "id": "2026-10-30-community",
       "date": "2026-10-30",
       "title": "Your community, better connected.",
