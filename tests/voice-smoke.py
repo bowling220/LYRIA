@@ -25,7 +25,8 @@ CALL_STAGE=HOME[HOME.index('            <section id="call-stage"'):HOME.index(' 
 HTML=HTML.replace('<body>','<body><main class="chat-area">').replace('<button id="voice-mute">','<button id="voice-open-view">View call</button><button id="voice-mute">').replace('<script src="/fixture.js">',CALL_STAGE+'</main><script src="/fixture.js">').replace('<script>LyriaVoice.setRoom', '<script src="/js/voice-view.js"></script><script>LyriaVoice.setRoom')
 FIXTURE=r'''
 const uid=new URL(location.href).searchParams.get('user');window.__notices=[];window.__rtc=[];
-const NativeRTC=window.RTCPeerConnection;window.RTCPeerConnection=class extends NativeRTC{constructor(...args){super(...args);window.__rtc.push(this)}};
+// The fixture must require TURN, even when both peers share a runner's loopback network.
+const NativeRTC=window.RTCPeerConnection;window.RTCPeerConnection=class extends NativeRTC{constructor(config,...args){super({...config,iceTransportPolicy:'relay'},...args);window.__rtc.push(this)}};
 window.__tones=[];const NativeAudio=window.AudioContext;window.AudioContext=class extends NativeAudio{createOscillator(){const o=super.createOscillator(),start=o.start.bind(o);o.start=(...args)=>{__tones.push(o.frequency.value);return start(...args)};return o}};
 window.LyriaUI={icon:()=>'',notify:(message)=>__notices.push(message)};
 window.LYRIA_VOICE_CONFIG={signaling:{host:'127.0.0.1',port:SIGNAL_PORT,path:'/voice',secure:false},iceServers:[{urls:'turn:127.0.0.1:TURN_PORT?transport=tcp',username:'fixture',credential:'local-only'}]};
@@ -144,7 +145,7 @@ try:
   alice.wait_for_timeout(300)
   assert alice.locator('audio').count()==1,'A call from another room was accepted'
   bob.evaluate('window.__roguePeer.destroy()')
-  for page in [alice,bob]:assert page.evaluate("async()=>{for(const pc of __rtc){const stats=await pc.getStats();for(const pair of stats.values()){if(pair.type==='candidate-pair'&&pair.state==='succeeded'&&stats.get(pair.localCandidateId)?.candidateType==='relay')return true}}return false}"),'No relayed audio connection was verified'
+  for page in [alice,bob]:page.wait_for_function("async()=>{for(const pc of __rtc){const stats=await pc.getStats();for(const pair of stats.values()){if(pair.type==='candidate-pair'&&pair.state==='succeeded'&&stats.get(pair.localCandidateId)?.candidateType==='relay')return true}}return false}",timeout=15000)
   alice.wait_for_function("document.getElementById('voice-participants').textContent.includes('bob')")
   assert alice.locator('#voice-channels').inner_text().count('/6')==3
   alice.locator('#voice-mute').click();assert not alice.evaluate('__localStream.getAudioTracks()[0].enabled')
