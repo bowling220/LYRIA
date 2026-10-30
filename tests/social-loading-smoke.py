@@ -1,10 +1,11 @@
 """Chats and friend requests remain usable when Firestore streams never open."""
 from pathlib import Path
+from browser_executable import CHROMIUM
 from playwright.sync_api import sync_playwright
 from browser_fixture import make_page
 ROOT=Path(__file__).resolve().parents[1]
 with sync_playwright() as p:
- browser=p.chromium.launch(executable_path='/usr/bin/chromium',headless=True,args=['--no-sandbox'])
+ browser=p.chromium.launch(executable_path=CHROMIUM,headless=True,args=['--no-sandbox'])
  for width,height in [(390,844),(1440,1000)]:
   page=make_page(browser,ROOT,width,height);errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
   page.add_init_script('window.__stallMessages=true;window.__stallRequests=true;window.__stallChannels=true;window.__stallProfileRead=true;')

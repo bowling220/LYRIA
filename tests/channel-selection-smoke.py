@@ -1,10 +1,11 @@
 """Selected room, heading, messages, sending, and voice agree even when SDK metadata hangs."""
 from pathlib import Path
+from browser_executable import CHROMIUM
 from playwright.sync_api import sync_playwright
 from browser_fixture import make_page
 ROOT=Path(__file__).resolve().parents[1]
 with sync_playwright() as p:
- browser=p.chromium.launch(executable_path='/usr/bin/chromium',headless=True,args=['--no-sandbox'])
+ browser=p.chromium.launch(executable_path=CHROMIUM,headless=True,args=['--no-sandbox'])
  for width,height in [(390,844),(1280,960)]:
   page=make_page(browser,ROOT,width,height);errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
   page.add_init_script("""window.__stallChannelMetadata=true;__testData.get('channels/studio').name='Test';__testData.set('channels/studio/messages/private',{sender:'Maya',senderId:'maya',message:'Only in Test',timestamp:{toDate:()=>new Date('2026-10-29T10:30:00Z')}});""")

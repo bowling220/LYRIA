@@ -1,9 +1,10 @@
 from pathlib import Path
+from browser_executable import CHROMIUM
 from playwright.sync_api import sync_playwright
 from browser_fixture import make_page
 ROOT=Path(__file__).resolve().parents[1]
 with sync_playwright() as p:
- b=p.chromium.launch(executable_path='/usr/bin/chromium',args=['--no-sandbox']);page=make_page(b,ROOT,390,900);errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
+ b=p.chromium.launch(executable_path=CHROMIUM,args=['--no-sandbox']);page=make_page(b,ROOT,390,900);errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
  page.goto('http://localhost:8124/home.html');page.wait_for_selector('[data-channel-id=personal-test-member]')
  page.locator('#header-menu-toggle').click();page.locator('[data-channel-id=personal-test-member]').click()
  page.evaluate("Object.defineProperty(navigator,'clipboard',{value:{writeText:async value=>window.__copied=value},configurable:true})")

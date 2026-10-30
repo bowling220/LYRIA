@@ -1,11 +1,12 @@
 """Release welcome, real readiness, durable dismissal and existing panel/navigation state."""
 from pathlib import Path
 import json
+from browser_executable import CHROMIUM
 from playwright.sync_api import sync_playwright
 from browser_fixture import make_page
 ROOT=Path(__file__).resolve().parents[1];release=json.loads((ROOT/'js/releases.json').read_text())['releases'][0]['id']
 with sync_playwright() as p:
- browser=p.chromium.launch(executable_path='/usr/bin/chromium',args=['--no-sandbox'])
+ browser=p.chromium.launch(executable_path=CHROMIUM,args=['--no-sandbox'])
  for width,height in [(320,568),(390,844),(768,1024),(1440,1000)]:
   page=make_page(browser,ROOT,width,height,release_seen=False);errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
   page.goto('http://localhost:8124/home.html?channel=studio');page.wait_for_selector('#release-modal[data-ui-open=true]');page.wait_for_selector('#release-changes',state='visible')

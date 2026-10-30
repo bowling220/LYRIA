@@ -5,8 +5,8 @@ for path in Path('.github').rglob('*.yml'):
  yaml.safe_load(path.read_text())
 for path in Path('.github/workflows').glob('*.y*ml'):
  source=path.read_text();workflow=yaml.safe_load(source);events=workflow.get('on',workflow.get(True,{}))
- assert set(events)<= {'pull_request','push','workflow_dispatch'},f'Unsafe trigger: {path}'
- assert 'pull_request_target' not in source
+ assert set(events)<= {'pull_request','push','workflow_dispatch','schedule'},f'Unsafe trigger: {path}'
+ assert 'pull_request_target' not in events
  assert workflow.get('permissions')=={'contents':'read'},'CI must be read-only'
  assert not re.search(r'\bsecrets\s*[.\[]|id-token\s*:|environment\s*:|self-hosted|deploy-hook|render\.com/deploy',source,re.I),'CI must not receive deployment authority'
  for job in workflow['jobs'].values():

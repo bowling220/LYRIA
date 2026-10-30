@@ -4,6 +4,7 @@ All backend SDKs are replaced by an in-memory fixture. Production is never touch
 from pathlib import Path
 from html.parser import HTMLParser
 import json, mimetypes, subprocess, re
+from browser_executable import CHROMIUM
 from playwright.sync_api import sync_playwright
 ROOT = Path(__file__).resolve().parents[1]
 PAGES = ['index.html','home.html','login.html','News.html','inbox.html']
@@ -27,7 +28,7 @@ for name in PAGES:
         assert checked.returncode==0,(name,checked.stderr)
 
 with sync_playwright() as p:
-    browser=p.chromium.launch(executable_path='/usr/bin/chromium',headless=True,args=['--no-sandbox'])
+    browser=p.chromium.launch(executable_path=CHROMIUM,headless=True,args=['--no-sandbox'])
     def make_page(width=390,height=844,touch=True):
         page=browser.new_page(viewport={'width':width,'height':height},has_touch=touch)
         page.add_init_script(path=str(ROOT/'tests/firebase-fixture.js'))

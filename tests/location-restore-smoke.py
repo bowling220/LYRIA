@@ -1,10 +1,11 @@
 """Reload preserves the current page and selected room without granting membership."""
 from pathlib import Path
+from browser_executable import CHROMIUM
 from playwright.sync_api import sync_playwright
 from browser_fixture import make_page
 ROOT=Path(__file__).resolve().parents[1]
 with sync_playwright() as p:
- browser=p.chromium.launch(executable_path='/usr/bin/chromium',args=['--no-sandbox'])
+ browser=p.chromium.launch(executable_path=CHROMIUM,args=['--no-sandbox'])
  for width in [390,1280]:
   page=make_page(browser,ROOT,width,900);errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
   page.add_init_script("window.__stallChannelMetadata=true;__testData.get('channels/studio').name='Test';")

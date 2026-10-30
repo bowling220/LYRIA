@@ -1,11 +1,12 @@
 """Badge artwork, alias rendering, accessible descriptions and profile-specific visibility."""
 from pathlib import Path
+from browser_executable import CHROMIUM
 from playwright.sync_api import sync_playwright
 from browser_fixture import make_page
 ROOT=Path(__file__).resolve().parents[1]
 IDS=['admin','moderator','developer','beta','early-access','featured']
 with sync_playwright() as p:
- browser=p.chromium.launch(executable_path='/usr/bin/chromium',args=['--no-sandbox'])
+ browser=p.chromium.launch(executable_path=CHROMIUM,args=['--no-sandbox'])
  # Artwork contact sheet is rendered at production, 64, 32 and 24 pixels.
  page=make_page(browser,ROOT,1200,1000);page.goto('http://localhost:8124/index.html')
  page.set_content('<html><body style="margin:0;background:#101b17;color:#edf3e9;font:14px system-ui;padding:24px"><h1>LYRIA badge family</h1>'+''.join('<section style="display:flex;gap:24px;align-items:center;margin:20px 0"><b style="width:70px">'+str(size)+'px</b>'+''.join('<div style="text-align:center;width:150px"><img width="'+str(size)+'" height="'+str(size)+'" src="http://localhost:8124/assets/badges/'+id+'.svg"><p>'+id+'</p></div>' for id in IDS)+'</section>' for size in [128,64,32,24])+'</body></html>')

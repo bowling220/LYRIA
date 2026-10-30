@@ -1,11 +1,12 @@
 """Editorial News, legacy engagement, publishing, security, pagination and responsive reading."""
 from pathlib import Path
+from browser_executable import CHROMIUM
 from playwright.sync_api import sync_playwright
 from browser_fixture import make_page
 ROOT=Path(__file__).resolve().parents[1]
 ART=ROOT/'test-artifacts'/'journal';ART.mkdir(parents=True,exist_ok=True)
 with sync_playwright() as p:
- browser=p.chromium.launch(executable_path='/usr/bin/chromium',args=['--no-sandbox'])
+ browser=p.chromium.launch(executable_path=CHROMIUM,args=['--no-sandbox'])
  for width in [375,390,430,1280,1440,1920]:
   page=make_page(browser,ROOT,width,950 if width>700 else 844);errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
   page.add_init_script("__testData.set('userArticles/real-demo',{title:'A community story for the journal',body:'A real conversation starts with listening.\\n\\n## A little room for ideas\\n\\n- Share something useful\\n- Make people welcome',authorName:'Maya Chen',timestamp:'2026-10-29T10:00:00Z',category:'community',imageURL:'https://missing.example.test/image.png',tags:['community']});")

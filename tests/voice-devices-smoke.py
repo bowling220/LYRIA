@@ -1,9 +1,10 @@
 from pathlib import Path
+from browser_executable import CHROMIUM
 from playwright.sync_api import sync_playwright
 from browser_fixture import make_page
 ROOT=Path(__file__).resolve().parents[1]
 with sync_playwright() as p:
- browser=p.chromium.launch(executable_path='/usr/bin/chromium',args=['--no-sandbox','--use-fake-ui-for-media-stream','--use-fake-device-for-media-stream'])
+ browser=p.chromium.launch(executable_path=CHROMIUM,args=['--no-sandbox','--use-fake-ui-for-media-stream','--use-fake-device-for-media-stream'])
  page=make_page(browser,ROOT,390,900);errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
  page.add_init_script("const capture=navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);window.__captures=0;navigator.mediaDevices.getUserMedia=async c=>{__captures++;return capture(c)}")
  page.goto('http://localhost:8124/home.html');page.wait_for_function("document.getElementById('account-load-status').dataset.state==='ready'")

@@ -2,6 +2,7 @@
 from http.server import BaseHTTPRequestHandler,ThreadingHTTPServer
 from threading import Thread
 from pathlib import Path
+from browser_executable import CHROMIUM
 from playwright.sync_api import sync_playwright
 ROOT=Path(__file__).resolve().parents[1]
 HTML='''<!doctype html><title>Local auth security check</title>
@@ -19,7 +20,7 @@ class Handler(BaseHTTPRequestHandler):
 server=ThreadingHTTPServer(('127.0.0.1',0),Handler);Thread(target=server.serve_forever,daemon=True).start()
 try:
  with sync_playwright() as p:
-  browser=p.chromium.launch(executable_path='/usr/bin/chromium',args=['--no-sandbox']);page=browser.new_page();errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
+  browser=p.chromium.launch(executable_path=CHROMIUM,args=['--no-sandbox']);page=browser.new_page();errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
   base='http://127.0.0.1:'+str(server.server_port)
   page.goto(base+'?sdk=11.10.0');page.wait_for_function('window.authRestored===true',timeout=30000)
   assert page.evaluate('firebaseConfig.getApp().options.projectId')=='demo-lyria'

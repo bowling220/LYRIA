@@ -4,6 +4,7 @@ joining/presence and uses the production invitation controller and Web Audio cue
 """
 from pathlib import Path
 import json,time
+from browser_executable import CHROMIUM
 from playwright.sync_api import sync_playwright
 ROOT=Path(__file__).resolve().parents[1]
 STORE={'users/alice':{'displayName':'Alice','friends':['bob']},'users/bob':{'displayName':'Bob','friends':['alice']}}
@@ -43,7 +44,7 @@ window.LyriaVoice={...actual,prepare,getSession:()=>active,join:(channel,room,la
 },leave:()=>{if(!active)return;const old=active;active=null;old.stream?.getTracks().forEach(t=>t.stop());LyriaDataAPI.commit([{delete:'channels/'+old.room+'/typingStatus/'+uid}]);window.dispatchEvent(new CustomEvent('lyria:voice-state',{detail:null}))}};
 '''
 with sync_playwright() as p:
- browser=p.chromium.launch(executable_path='/usr/bin/chromium',headless=True,args=['--no-sandbox','--use-fake-device-for-media-stream','--use-fake-ui-for-media-stream'])
+ browser=p.chromium.launch(executable_path=CHROMIUM,headless=True,args=['--no-sandbox','--use-fake-device-for-media-stream','--use-fake-ui-for-media-stream'])
  def make(uid,width):
   context=browser.new_context(viewport={'width':width,'height':844},permissions=['microphone']);page=context.new_page();page.expose_function('__backend',backend)
   def route(r):
