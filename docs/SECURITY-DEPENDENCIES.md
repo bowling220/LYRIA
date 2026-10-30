@@ -117,3 +117,9 @@ The product-access browser test now closes Friends before reload through its rea
 close button. Previously its saved open state correctly restored behind Profile;
 a later Send click was blocked by that still-open dialog. Panel restoration itself
 is preserved and separately tested.
+
+## Retired desktop downloads
+
+The owner requested removal of both legacy desktop installers on 30 October 2026.
+They are no longer tracked in current source; earlier Git revisions retain them.
+This does not certify those historical binaries or change the maintained Expo project.

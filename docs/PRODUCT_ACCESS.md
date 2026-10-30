@@ -67,8 +67,8 @@ Expected remaining terms have these meanings:
   and stays unchanged to preserve dependency integrity.
 
 The native scaffold has no monetization implementation and is not used by the
-web build. Existing archived desktop installers are not rebuilt by this web
-refactor. No new framework, native package, or backend is introduced.
+web build. Legacy desktop installers were subsequently removed at the owner's
+request; historical Git revisions still contain them. No new framework, native package, or backend is introduced.
 
 ## Verification
 

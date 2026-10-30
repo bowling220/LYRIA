@@ -1,7 +1,7 @@
 # Public-release readiness — 30 October 2026
 
 **NOT READY TO MAKE PUBLIC.** Source and CI checks pass, but production settings
-and redistribution provenance have not all been verified. This assessment covers
+have not all been verified. Retired installers are removed from current source. This assessment covers
 actual GitHub main `0fd089097cc0822b13b07ff430dd5ffbf4447de0`, not unmerged PRs.
 Nothing in this review changes repository visibility, account settings, or infrastructure.
 
@@ -68,17 +68,22 @@ Pass** only once approval protection is enforceable. See DEPLOYMENT.md for exact
 Optional previews must use a separate owner-controlled service and staging Firebase;
 no previews are claimed enabled. Preview availability is optional, isolation is mandatory.
 
-### 3. Rights and provenance for archived material
+## Artwork and retired installers
 
-Tracked `LYRIA/downloads/LyriaWebBrowser1.0.0.exe` and
-`LYRIA/downloads/LyriaWebBrowser-1.0.0-arm64.dmg` are opaque legacy installers.
-Their authorship, bundled licenses, signing, safety, and redistribution rights have
-not been established by source dependency tests. Confirm their provenance/rights,
-or explicitly exclude them from distribution and resolve their historical copies
-before publication. Do not assume the new MIT license relicenses third-party material.
-Likewise confirm rights for existing PNG/JPG/AVIF artwork; the repository does not
-provide complete provenance records. Original LYRIA SVG assets and separately licensed
-Unicode data already have clearer source/license context.
+The owner confirmed on 30 October 2026 that LYRIA's artwork was AI-generated.
+This records the owner's stated provenance; no specific generation service or
+independent legal determination is claimed. Third-party notices, including the
+Unicode data license, remain unchanged.
+
+At the owner's request both legacy desktop installers were removed from current
+source: `LYRIA/downloads/LyriaWebBrowser1.0.0.exe` and
+`LYRIA/downloads/LyriaWebBrowser-1.0.0-arm64.dmg`. No active download links were found
+in website source. The retired download directory is ignored to prevent accidental
+reintroduction. The Expo mobile project is retained.
+
+Deleting the current files does not erase their earlier Git commits. Old revisions
+will remain accessible if the repository is made public. No history rewrite, force
+push, or claim that the old binaries have been security-reviewed is made here.
 
 ## Owner settings to finish
 

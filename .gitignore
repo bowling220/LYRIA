@@ -124,3 +124,6 @@ firebase-adminsdk*.json
 # Reviewed project-only install settings and placeholder client configuration.
 !/LYRIA/.npmrc
 !/LYRIA/.env.example
+
+# Retired desktop installer distribution (website/mobile source remain maintained).
+/LYRIA/downloads/
