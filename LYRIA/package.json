@@ -14,7 +14,7 @@
     "build:web": "expo export --platform web --output-dir dist-web"
   },
   "dependencies": {
-    "@react-native-async-storage/async-storage": "2.2.0",
+    "@react-native-async-storage/async-storage": "3.1.1",
     "@react-navigation/native": "7.5.1",
     "@react-navigation/stack": "7.12.1",
     "expo": "58.0.21",
