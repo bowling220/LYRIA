@@ -130,7 +130,12 @@
       if (open) {
         const trigger = document.activeElement === document.body ? lastTrigger : document.activeElement;
         previousFocus.set(modal, trigger?.closest('[inert]') ? document.getElementById('header-menu-toggle') : trigger);
-        requestAnimationFrame(()=>modal.querySelector('input:not([disabled]), textarea:not([disabled]), button:not([disabled]), a[href]')?.focus());
+        requestAnimationFrame(()=>{
+          // Honor focus explicitly placed inside the dialog before this frame,
+          // and never focus a dialog that closed while its frame was pending.
+          if(modal.dataset.uiOpen==='true' && !modal.contains(document.activeElement))
+            modal.querySelector('input:not([disabled]), textarea:not([disabled]), button:not([disabled]), a[href]')?.focus();
+        });
       } else if (previousFocus.has(modal)) {
         let target = previousFocus.get(modal);
         if (target?.closest('[inert]')) target = document.getElementById('header-menu-toggle');

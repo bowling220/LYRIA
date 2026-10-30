@@ -14,8 +14,9 @@ with sync_playwright() as p:
   # Keep a private room selected underneath each panel.
   if width<769:page.locator('#header-menu-toggle').click()
   page.locator('[data-channel-id=studio]').click()
-  page.locator('#settings-btn').evaluate('(el)=>el.click()')
-  page.locator('#bio-input').focus();page.wait_for_timeout(80)
+  # Explicit field focus before the dialog's first animation frame must win.
+  page.locator('#settings-btn').evaluate("el=>{el.click();queueMicrotask(()=>document.getElementById('bio-input').focus())}")
+  page.wait_for_timeout(80)
   page.reload();page.wait_for_selector('#settings-modal[data-ui-open=true]')
   page.wait_for_function("document.activeElement.id==='bio-input'")
   assert page.locator('#channel-title').inner_text()=='The creative studio'
