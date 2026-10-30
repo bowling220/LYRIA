@@ -122,26 +122,27 @@
   box-shadow: none;
 }
 .conversation-panel-heading {
-  padding: 24px 20px 16px;
+  padding: 16px 16px 10px;
   display: flex;
   gap: 12px;
   align-items: flex-start;
 }
 .conversation-panel-heading h1 {
-  font-size: 21px;
+  font-size: 19px;
   letter-spacing: -0.04em;
 }
 .conversation-panel-heading p {
   font-size: 11px;
   color: var(--muted);
-  margin-top: 7px;
+  margin-top: 4px;
   line-height: 1.6;
 }
 .conversation-panel-heading > button {
   margin-left: auto;
-  width: 42px;
-  min-width: 42px;
-  padding: 10px;
+  width: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  padding: 8px;
   background: var(--accent);
   color: var(--accent-ink);
   border: 0;
@@ -149,7 +150,7 @@
 .conversation-search {
   display: flex;
   align-items: center;
-  margin: 0 16px 14px;
+  margin: 0 12px 8px;
   border: 1px solid var(--line);
   border-radius: 14px;
   padding-left: 12px;
@@ -166,7 +167,7 @@
 .conversation-filters {
   display: flex;
   gap: 3px;
-  padding: 0 16px 16px;
+  padding: 0 12px 8px;
 }
 .conversation-filters button {
   font-size: 10px;
@@ -213,7 +214,7 @@
 .lyria-community #open-hub {
   font-size: 11px;
   padding: 8px 12px;
-  margin-bottom: 10px;
+  margin-bottom: 4px;
   background: none;
   min-height: 36px;
   color: var(--muted);
@@ -221,7 +222,7 @@
 .lyria-community .channels-list {
   padding: 0;
   display: grid;
-  gap: 10px;
+  gap: 6px;
   margin: 0;
 }
 .lyria-community .channels-list > li {
@@ -235,11 +236,11 @@
   display: block;
 }
 .lyria-community .channel-btn[data-channel-id] {
-  min-height: 88px;
+  min-height: 60px;
   width: 100%;
   display: flex;
-  gap: 12px;
-  padding: 14px 36px 14px 12px;
+  gap: 10px;
+  padding: 9px 38px 9px 10px;
   text-align: left;
   background: linear-gradient(
     120deg,
@@ -247,26 +248,26 @@
     color-mix(in srgb, var(--bg) 65%, transparent)
   );
   border: 1px solid var(--line);
-  border-radius: 17px;
+  border-radius: 13px;
   transition:
     transform 0.18s,
     border-color 0.18s,
     background 0.18s;
 }
 .lyria-community .channel-btn[data-channel-id] > .icon {
-  width: 24px;
-  height: 24px;
-  padding: 11px;
+  width: 20px;
+  height: 20px;
+  padding: 7px;
   box-sizing: content-box;
   background: color-mix(in srgb, var(--accent) 9%, var(--surface));
-  border-radius: 16px;
+  border-radius: 11px;
   color: var(--aqua);
   flex-shrink: 0;
 }
 .conversation-card-copy {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 2px;
   min-width: 0;
 }
 .lyria-community .channel-name {
@@ -298,8 +299,9 @@
 }
 .lyria-community .favorite-btn {
   position: absolute;
-  right: 6px;
-  top: 6px;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
   min-width: 26px;
   width: 26px;
   min-height: 26px;
@@ -320,7 +322,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin: 14px 0;
+  margin: 10px 0;
 }
 .lyria-community .channel-actions button {
   flex: 1;
@@ -824,7 +826,7 @@
     font-size: 18px;
   }
   .conversation-panel-heading {
-    padding: 20px 12px 14px;
+    padding: 16px 12px 10px;
     gap: 6px;
   }
   .conversation-panel-heading p {
@@ -841,11 +843,11 @@
     font-size: 9px;
   }
   .lyria-community .channel-btn[data-channel-id] {
-    padding: 12px 28px 12px 9px;
+    padding: 9px 34px 9px 9px;
     gap: 8px;
   }
   .lyria-community .channel-btn[data-channel-id] > .icon {
-    padding: 9px;
+    padding: 7px;
     width: 18px;
     height: 18px;
   }
@@ -1020,10 +1022,10 @@
     padding: 5px;
   }
   .conversation-panel-heading {
-    padding: 20px 18px 14px;
+    padding: 16px 18px 10px;
   }
   .conversation-panel-heading h1 {
-    font-size: 24px;
+    font-size: 22px;
   }
   .conversation-panel-heading p {
     font-size: 12px;
@@ -1261,8 +1263,8 @@ html[data-roundness="square"]
   border-radius: 9px;
 }
 html[data-density="compact"] .lyria-community .channel-btn[data-channel-id] {
-  min-height: 70px;
-  padding-block: 10px;
+  min-height: 52px;
+  padding-block: 6px;
 }
 html[data-density="compact"] .lyria-community .message {
   margin-bottom: 2px;
@@ -1452,9 +1454,12 @@ html[data-density="compact"] .lyria-community .message {
   overflow: hidden;
   overflow-wrap: anywhere;
 }
-.lyria-community .chat-subtitle,
-.lyria-community .conversation-card-description {
+.lyria-community .chat-subtitle {
   -webkit-line-clamp: 2;
+}
+/* A single preview line keeps the list scannable; full details remain in About. */
+.lyria-community .conversation-card-description {
+  -webkit-line-clamp: 1;
 }
 .lyria-community .details-cover p {
   -webkit-line-clamp: 3;

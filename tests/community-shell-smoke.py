@@ -15,6 +15,9 @@ with sync_playwright() as p:
   page.goto('http://localhost:8124/home.html?view=hub');page.wait_for_selector('#channels-list .channel-btn[data-channel-id=studio]')
   page.wait_for_function("document.getElementById('account-load-status').dataset.state==='ready'")
   assert page.locator('.app-rail').is_visible()
+  card=page.locator('#channels-list .channel-btn[data-channel-id=studio]')
+  assert card.bounding_box()['height']<=72,(w,'Conversation card should stay compact')
+  assert card.locator('.icon').first.bounding_box()['width']<=36,(w,'Oversized conversation icon')
   if w<=768:assert page.locator('.conversation-panel').is_visible() and page.locator('.chat-panel').is_hidden()
   page.locator('#conversation-search').fill('creative');assert page.locator('#channels-list li:visible').count()==1
   page.locator('#conversation-search').fill('');page.locator('#channels-list [data-channel-id=studio]').click()
