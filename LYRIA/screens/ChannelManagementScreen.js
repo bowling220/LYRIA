@@ -18,7 +18,7 @@ const ChannelManagementScreen = ({ navigation }) => {
                 channelData.push({ id: doc.id, ...doc.data() });
             });
             setChannels(channelData);
-            console.log('Channels fetched:', channelData);
+
         });
 
         return () => unsubscribe();

@@ -565,3 +565,11 @@ Run `npm test` and `python tests/news-smoke.py` for model/legacy-compatibility a
 ### Update welcome and changelog
 
 An unseen release gets a LYRIA welcome with actual startup feedback and a changelog. It is dismissible, shown once per browser release, and preserves the selected page/room and restored panels. **What’s new** beside your profile (and on News/Inbox) reopens current and earlier notes. See [release publishing](docs/RELEASES.md) to add the next update.
+
+### Security and dependency maintenance
+
+Report vulnerabilities privately as described in [SECURITY.md](SECURITY.md). The
+website, test tools, and mobile dependency trees are audited independently, including
+development dependencies. See [dependency fixes and compatibility checks](docs/SECURITY-DEPENDENCIES.md)
+for the supported SDK migration, reviewed overrides, and remaining owner actions.
+Run `npm run test:dependencies` after clean installs in both `tests` and `LYRIA`.

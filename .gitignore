@@ -80,3 +80,15 @@ test-artifacts/
 # Python test cache
 __pycache__/
 *.pyc
+
+# Local credentials and native build output
+.env.*
+!.env.example
+*.pem
+*.key
+*service-account*.json
+firebase-adminsdk*.json
+**/.expo/
+**/dist-native/
+**/dist-web/
+**/dist-security/

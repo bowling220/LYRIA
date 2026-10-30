@@ -1,0 +1,50 @@
+name: Dependency security
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: dependency-security-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  audit-and-compatibility:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      CI: 'true'
+      EXPO_NO_TELEMETRY: '1'
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: npm ci
+      - run: npm ci --prefix tests
+      - run: npm ci --prefix LYRIA
+      - name: Audit every dependency tree, including development dependencies
+        run: |
+          npm audit --audit-level=low
+          npm audit --prefix tests --audit-level=low
+          npm audit --prefix LYRIA --audit-level=low
+      - run: npm run build
+      - run: npm test
+      - run: npm run test:dependencies
+      - run: npm run test:rules
+      - run: npm run check:expo --prefix LYRIA
+      - run: npm run doctor --prefix LYRIA
+      - name: Validate mobile bundles
+        working-directory: LYRIA
+        run: npx expo export --platform ios --platform android --platform web --output-dir dist-security --max-workers 2
+# No pull_request_target, secrets, deploy hooks, write token, or production deployment.

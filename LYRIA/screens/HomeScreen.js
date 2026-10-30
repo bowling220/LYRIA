@@ -28,8 +28,6 @@ const HomeScreen = ({ navigation }) => {
 
         setLoading(true);
 
-        // Log the email and password for debugging
-        console.log('Attempting to log in with:', { email, password });
 
         try {
             // Attempt to sign in the user
@@ -43,7 +41,7 @@ const HomeScreen = ({ navigation }) => {
             navigation.navigate('Chat', { user: { id: user.uid, name: user.displayName || email.split('@')[0] } });
 
         } catch (error) {
-            console.error('Login Error:', error); // Log the error for debugging
+            console.warn('Login failed:', error.code || 'unknown'); // Log the error for debugging
 
             // If the error is that the user does not exist, create a new account
             if (error.code === 'auth/user-not-found') {
@@ -59,7 +57,7 @@ const HomeScreen = ({ navigation }) => {
                     // Navigate to the chat after account creation
                     navigation.navigate('Chat', { user: { id: user.uid, name: user.displayName || email.split('@')[0] } });
                 } catch (createError) {
-                    console.error('Account Creation Error:', createError); // Log the error for debugging
+                    console.warn('Account creation failed:', createError.code || 'unknown'); // Log the error for debugging
                     Alert.alert('Error', createError.message);
                 }
             } else {
