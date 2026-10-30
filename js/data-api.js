@@ -7,8 +7,12 @@
   const root=()=>`projects/${window.firebaseConfig.getApp().options.projectId}/databases/(default)/documents`;
   const name=path=>root()+'/'+path.split('/').map(encodeURIComponent).join('/');
   const snapshot=document=>({id:document.name.split('/').at(-1),exists:true,updateTime:document.updateTime,data:()=>fromFields(document.fields)});
-  const errorDetail=error=>({code:error?.code || 'unknown',message:error?.message || String(error)});
-  const networkError=error=>['unavailable','deadline-exceeded','aborted','internal','unknown','resource-exhausted'].includes(error?.code);
+  const errorCode=error=>{
+    const raw=String(error?.code || 'unknown').replace(/^firestore\//,'').replace(/^auth\//,'');
+    return raw==='network-request-failed'?'unavailable':raw;
+  };
+  const errorDetail=error=>({code:errorCode(error),message:error?.message || String(error)});
+  const networkError=error=>['unavailable','deadline-exceeded','aborted','internal','unknown','resource-exhausted'].includes(errorCode(error));
   async function request(suffix,body,retry=true){
     const user=window.firebaseConfig.getAuth().currentUser;if(!user)throw Object.assign(new Error('Sign in to continue.'),{code:'unauthenticated'});
     const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),12000);
@@ -19,7 +23,11 @@
       const value=await response.json();if(!response.ok)throw Object.assign(new Error(value.error?.message || 'Request failed.'),{code:['ABORTED','FAILED_PRECONDITION'].includes(value.error?.status)?'aborted':({401:'unauthenticated',403:'permission-denied',404:'not-found'})[response.status] || 'unavailable'});
       if(window.firebaseConfig.getAuth().currentUser?.uid!==user.uid)throw Object.assign(new Error('Account changed. Retry after signing in.'),{code:'unauthenticated'});
       return value;
-    }catch(error){if(error.name==='AbortError')throw Object.assign(new Error('Connection timed out.'),{code:'deadline-exceeded'});throw error}
+    }catch(error){
+      if(error.name==='AbortError')throw Object.assign(new Error('Connection timed out.'),{code:'deadline-exceeded'});
+      if(errorCode(error)==='unavailable' && error?.code!=='unavailable')throw Object.assign(new Error(error.message || 'Connection unavailable.'),{code:'unavailable'});
+      throw error;
+    }
     finally{clearTimeout(timer)}
   }
   async function channelSdkFallback(collectionId,options,restError){
@@ -67,7 +75,33 @@
     const result=await request((parent?'/'+parent:'')+':runAggregationQuery',{structuredAggregationQuery:{structuredQuery:{from:[{collectionId}],...(where?{where}:{})},aggregations:[{alias:'total',count:{}}]}});
     return Number(result.find(row=>row.result)?.result.aggregateFields.total.integerValue || 0);
   }
-  async function read(path){try{return snapshot(await request('/'+path.split('/').map(encodeURIComponent).join('/')))}catch(error){if(error.code==='not-found')return {exists:false,data:()=>null};throw error}}
+  async function sdkReadFallback(path,restError){
+    const db=window.firebaseConfig.getFirestore?.();
+    if(!db?.doc)throw restError;
+    const ref=db.doc(path);
+    console.warn('Firestore REST document read failed; trying Firebase SDK fallback.',{path,rest:errorDetail(restError)});
+    try{
+      const doc=await ref.get({source:'server'});
+      console.info('Firestore document read recovered with Firebase SDK fallback.',path);
+      return doc.exists?doc:{id:path.split('/').at(-1),exists:false,data:()=>null,metadata:doc.metadata || {fromCache:false}};
+    }catch(sdkError){
+      if(networkError(sdkError)){
+        try{
+          const cached=await ref.get({source:'cache'});
+          if(cached.exists){
+            console.warn('Firestore document read recovered from local cache.',{path,rest:errorDetail(restError),sdk:errorDetail(sdkError)});
+            return cached;
+          }
+        }catch(cacheError){console.warn('Firestore document cache was unavailable.',{path,cache:errorDetail(cacheError)})}
+      }
+      console.error('Firestore document read failed through REST and SDK.',{path,rest:errorDetail(restError),sdk:errorDetail(sdkError)});
+      throw sdkError;
+    }
+  }
+  async function read(path){
+    try{return snapshot(await request('/'+path.split('/').map(encodeURIComponent).join('/')))}
+    catch(error){if(errorCode(error)==='not-found')return {id:path.split('/').at(-1),exists:false,data:()=>null};return sdkReadFallback(path,error)}
+  }
   const equal=(field,value,op='EQUAL')=>({fieldFilter:{field:{fieldPath:field},op,value:encode(value)}});
   const canonical=v=>v?.toMillis? v.toMillis():Array.isArray(v)?v.map(canonical):v && typeof v==='object'?Object.fromEntries(Object.keys(v).sort().map(k=>[k,canonical(v[k])])):v;
   function watch(ref,collectionId,options,next,error){
