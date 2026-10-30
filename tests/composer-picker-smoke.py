@@ -20,7 +20,9 @@ with sync_playwright() as p:
   assert page.locator('#gif-button [data-icon=image]').count()==0
   assert page.locator('#composer-emoji').is_visible()
   assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1')
-  field=page.locator('#message-input');field.fill('hello friend');field.focus()
+  field=page.locator('#message-input')
+  assert field.evaluate('el=>{const s=getComputedStyle(el);return el.scrollHeight<=Math.ceil(parseFloat(s.paddingTop)+parseFloat(s.paddingBottom)+parseFloat(s.lineHeight))+1}'),(width,'empty placeholder wraps and clips')
+  field.fill('hello friend');field.focus()
   field.evaluate('el=>{el.setSelectionRange(6,12);el.dispatchEvent(new Event("select"))}')
   page.locator('#composer-emoji').click();page.wait_for_selector('#emoji-results button')
   assert '3,781' in page.locator('#emoji-status').inner_text()

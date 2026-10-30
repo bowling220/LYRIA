@@ -3,7 +3,7 @@
   const $ = id => document.getElementById(id), UI = window.LyriaUI;
   const modal = $('emoji-modal'), input = $('message-input'), grid = $('emoji-results');
   const dataURL = new URL('../assets/emoji/emoji-16.0.json', document.currentScript.src);
-  const labels = {'Smileys & Emotion':'Smileys','People & Body':'People','Component':'Skin tones','Animals & Nature':'Nature','Food & Drink':'Food','Travel & Places':'Travel'};
+  const labels = {'Smileys & Emotion':'Smileys','People & Body':'People','Component':'Tones & hair','Animals & Nature':'Nature','Food & Drink':'Food','Travel & Places':'Travel'};
   let data, loading, category = 'All', shown = 120, matches = [], selection;
   let recent = [];
   try { const saved = JSON.parse(localStorage.getItem('lyria:recent-emojis')); if (Array.isArray(saved)) recent = saved.filter(x => typeof x === 'string').slice(0,24); } catch {}

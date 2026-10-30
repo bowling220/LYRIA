@@ -512,6 +512,13 @@
   font-size: 13px;
   border: 1px solid var(--line);
 }
+/* Keep long conversation placeholders from wrapping into a clipped second row.
+   Actual message text still wraps normally and grows for multiple lines. */
+.lyria-community .message-composer textarea::placeholder {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .lyria-community .message-composer > button {
   padding: 8px;
   min-width: 36px;

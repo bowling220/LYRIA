@@ -98,13 +98,14 @@ with sync_playwright() as p:
         route.fulfill(content_type='application/json',body=json.dumps({'data':data,'pagination':{'total_count':55}}))
     page.route('https://api.giphy.com/**',provider)
     page.goto('http://localhost:8124/home.html?channel=community',wait_until='load');ready(page)
-    page.locator('#gif-button').click();page.wait_for_function("document.querySelectorAll('.gif-library-tile').length===24")
-    more=page.get_by_role('button',name='Load more GIFs',exact=True)
-    more.click();page.wait_for_function("document.querySelectorAll('.gif-library-tile').length===48")
-    more.click();page.wait_for_function("document.querySelectorAll('.gif-library-tile').length===55")
-    assert more.is_hidden()
-    page.locator('#gif-search').fill('cats');page.wait_for_function("document.querySelector('[data-gif-id=\"giphy-Search0\"]')")
-    assert requests[-1]['offset']==['0'] and requests[-1]['q']==['cats']
+    page.locator('#gif-button').click();page.wait_for_function("document.querySelectorAll('.gif-library-tile').length===55 && !document.querySelector('.gif-load-more').disabled")
+    # A provider with smaller pages and fewer than 100 total results should fill
+    # every available result automatically, then stop without an extra click.
+    assert [args['offset'] for args in requests]==[['0'],['24'],['48']]
+    assert all(args['limit']==['50'] for args in requests)
+    assert page.locator('.gif-load-more').is_hidden()
+    page.locator('#gif-search').fill('cats');page.wait_for_function("document.querySelector('[data-gif-id=\"giphy-Search0\"]') && document.querySelectorAll('.gif-library-tile').length===55 && !document.querySelector('.gif-load-more').disabled")
+    assert requests[-3]['offset']==['0'] and requests[-1]['q']==['cats']
     page.locator('[data-gif-id="giphy-Search0"]').click();page.wait_for_function("!document.getElementById('gif-picker-action').disabled")
     page.locator('#gif-picker-action').click();page.wait_for_function("document.querySelector('.chat-gif')")
     assert page.evaluate("[...__testData.values()].find(v=>v.type==='gif').gif.providerId")=='Search0'
