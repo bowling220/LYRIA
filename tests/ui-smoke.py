@@ -94,7 +94,7 @@ with sync_playwright() as p:
     assert page.locator('.channel-btn.active-channel .channel-name').inner_text()=='Design notes'
     page.locator('#settings-btn').click();page.wait_for_timeout(50);page.locator('#toggle-dark-mode').click();page.wait_for_function("document.body.classList.contains('contrast-mode')");assert page.locator('#contrast-save-status').inner_text()=='Saved to your account.'
     page.keyboard.press('Escape');page.wait_for_timeout(50)
-    page.locator('#open-friends-modal').click();page.wait_for_timeout(100);assert 'Maya Chen' in page.locator('#friends-list').inner_text()
+    page.locator('#open-friends-modal').click();page.wait_for_function("document.getElementById('friends-list').textContent.includes('Maya Chen')")
     page.close()
     # Account data is authoritative in Firestore, and save feedback must reflect confirmation.
     page=make_page(1440,1000,False);page.goto('http://localhost:8124/home.html?channel=community',wait_until='load');page.wait_for_timeout(100)

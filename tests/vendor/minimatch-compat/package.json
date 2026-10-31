@@ -1,0 +1,11 @@
+{
+  "name": "@lyria/minimatch-compat",
+  "version": "1.0.0",
+  "private": true,
+  "license": "MIT",
+  "main": "index.cjs",
+  "description": "Callable CommonJS compatibility for Firebase CLI and Superstatic using maintained minimatch.",
+  "dependencies": {
+    "minimatch-modern": "npm:minimatch@11.0.3"
+  }
+}

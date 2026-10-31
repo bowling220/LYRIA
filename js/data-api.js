@@ -13,6 +13,9 @@
   };
   const errorDetail=error=>({code:errorCode(error),message:error?.message || String(error)});
   const networkError=error=>['unavailable','deadline-exceeded','aborted','internal','unknown','resource-exhausted'].includes(errorCode(error));
+  const currentUid=()=>window.firebaseConfig.getAuth().currentUser?.uid;
+  const checkAccount=uid=>{if(!uid || currentUid()!==uid)throw Object.assign(new Error('Account changed. Sign in again.'),{code:'unauthenticated'})};
+  async function bounded(operation){let timer;try{return await Promise.race([operation,new Promise((_,reject)=>timer=setTimeout(()=>reject(Object.assign(new Error('Firebase connection timed out.'),{code:'deadline-exceeded'})),12000))])}finally{clearTimeout(timer)}}
   async function request(suffix,body,retry=true){
     const user=window.firebaseConfig.getAuth().currentUser;if(!user)throw Object.assign(new Error('Sign in to continue.'),{code:'unauthenticated'});
     const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),12000);
@@ -20,7 +23,7 @@
       const token=await Promise.race([user.getIdToken(!retry),new Promise((_,reject)=>controller.signal.addEventListener('abort',()=>reject(Object.assign(new Error('Connection timed out.'),{code:'deadline-exceeded'})),{once:true}))]);
       const response=await fetch((window.LYRIA_RUNTIME?.emulators?'http://'+window.LYRIA_RUNTIME.emulators.host+':'+window.LYRIA_RUNTIME.emulators.firestorePort:'https://firestore.googleapis.com')+'/v1/'+root()+suffix,{method:body?'POST':'GET',cache:'no-store',signal:controller.signal,headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},...(body?{body:JSON.stringify(body)}:{})});
       if(response.status===401 && retry){clearTimeout(timer);return request(suffix,body,false)}
-      const value=await response.json();if(!response.ok)throw Object.assign(new Error(value.error?.message || 'Request failed.'),{code:['ABORTED','FAILED_PRECONDITION'].includes(value.error?.status)?'aborted':({401:'unauthenticated',403:'permission-denied',404:'not-found'})[response.status] || 'unavailable'});
+      const value=await response.json();if(!response.ok)throw Object.assign(new Error(value.error?.message || 'Request failed.'),{code:['ABORTED','FAILED_PRECONDITION'].includes(value.error?.status)?'aborted':({401:'unauthenticated',403:'permission-denied',404:'not-found',409:'already-exists',429:'resource-exhausted'})[response.status] || 'unavailable'});
       if(window.firebaseConfig.getAuth().currentUser?.uid!==user.uid)throw Object.assign(new Error('Account changed. Retry after signing in.'),{code:'unauthenticated'});
       return value;
     }catch(error){
@@ -30,26 +33,33 @@
     }
     finally{clearTimeout(timer)}
   }
-  async function channelSdkFallback(collectionId,options,restError){
-    const filter=options.where?.fieldFilter;
-    const canFallback=collectionId==='channels' && !options.parent
-      && filter?.field?.fieldPath==='members' && filter.op==='ARRAY_CONTAINS'
-      && typeof filter.value?.stringValue==='string' && !options.orderBy;
-    if(!canFallback)throw restError;
+  async function querySdkFallback(collectionId,options,restError){
+    if(!networkError(restError))throw restError;
+    const uid=options.uid;checkAccount(uid);
     const db=window.firebaseConfig.getFirestore?.();
     if(!db)throw restError;
-    console.warn('Firestore REST conversation query failed; trying Firebase SDK fallback.',errorDetail(restError));
-    let ref=db.collection('channels').where('members','array-contains',filter.value.stringValue);
+    const isConversations=collectionId==='channels' && !options.parent;
+    console.warn('Firestore REST query failed; trying Firebase SDK fallback.',errorDetail(restError));
+    let ref=db.collection([options.parent,collectionId].filter(Boolean).join('/'));
+    const operators={EQUAL:'==',ARRAY_CONTAINS:'array-contains',IN:'in',GREATER_THAN:'>',GREATER_THAN_OR_EQUAL:'>=',LESS_THAN:'<',LESS_THAN_OR_EQUAL:'<='};
+    function filter(where){
+      if(!where)return;
+      if(where.compositeFilter){if(where.compositeFilter.op!=='AND')throw restError;where.compositeFilter.filters.forEach(filter);return}
+      const f=where.fieldFilter,operator=operators[f?.op];if(!operator)throw restError;
+      ref=ref.where(f.field.fieldPath,operator,'timestampValue' in f.value?new Date(f.value.timestampValue):decode(f.value));
+    }
+    filter(options.where);
+    for(const order of options.orderBy || [])ref=ref.orderBy(order.field.fieldPath,order.direction==='DESCENDING'?'desc':'asc');
     if(options.limit)ref=ref.limit(options.limit);
     try{
-      const result=await ref.get();
+      const result=await bounded(ref.get({source:'server'}));checkAccount(uid);
       const docs=[...result.docs];if(options.reverse)docs.reverse();
-      console.info('Conversation list recovered with Firebase SDK fallback.');
+      console.info(isConversations?'Conversation list recovered with Firebase SDK fallback.':'Firestore query recovered with Firebase SDK fallback.');
       return {docs,empty:!docs.length,metadata:result.metadata || {fromCache:false},forEach:fn=>docs.forEach(fn)};
     }catch(sdkError){
-      if(networkError(sdkError)){
+      if(networkError(sdkError) && isConversations){
         try{
-          const cached=await ref.get({source:'cache'});
+          const cached=await bounded(ref.get({source:'cache'}));checkAccount(uid);
           const docs=[...cached.docs];if(options.reverse)docs.reverse();
           if(docs.length){
             console.warn('Conversation list recovered from Firestore cache after network transports failed.',{rest:errorDetail(restError),sdk:errorDetail(sdkError)});
@@ -64,30 +74,31 @@
     }
   }
   async function query(collectionId,{parent='',where,orderBy,limit,reverse=false}={}){
-    const options={parent,where,orderBy,limit,reverse};
+    const options={parent,where,orderBy,limit,reverse,uid:currentUid()};
     try{
       const result=await request((parent?'/'+parent:'')+':runQuery',{structuredQuery:{from:[{collectionId}],...(where?{where}:{}),...(orderBy?{orderBy}:{}),...(limit?{limit}:{} )}});
       const docs=result.filter(row=>row.document).map(row=>snapshot(row.document));if(reverse)docs.reverse();
       return {docs,empty:!docs.length,readTime:result.find(row=>row.readTime)?.readTime,metadata:{fromCache:false},forEach:fn=>docs.forEach(fn)};
-    }catch(error){return channelSdkFallback(collectionId,options,error)}
+    }catch(error){return querySdkFallback(collectionId,options,error)}
   }
   async function count(collectionId,{parent='',where}={}){
     const result=await request((parent?'/'+parent:'')+':runAggregationQuery',{structuredAggregationQuery:{structuredQuery:{from:[{collectionId}],...(where?{where}:{})},aggregations:[{alias:'total',count:{}}]}});
     return Number(result.find(row=>row.result)?.result.aggregateFields.total.integerValue || 0);
   }
-  async function sdkReadFallback(path,restError){
+  async function sdkReadFallback(path,restError,uid){
+    if(!networkError(restError))throw restError;checkAccount(uid);
     const db=window.firebaseConfig.getFirestore?.();
     if(!db?.doc)throw restError;
     const ref=db.doc(path);
     console.warn('Firestore REST document read failed; trying Firebase SDK fallback.',{path,rest:errorDetail(restError)});
     try{
-      const doc=await ref.get({source:'server'});
+      const doc=await bounded(ref.get({source:'server'}));checkAccount(uid);
       console.info('Firestore document read recovered with Firebase SDK fallback.',path);
       return doc.exists?doc:{id:path.split('/').at(-1),exists:false,data:()=>null,metadata:doc.metadata || {fromCache:false}};
     }catch(sdkError){
       if(networkError(sdkError)){
         try{
-          const cached=await ref.get({source:'cache'});
+          const cached=await bounded(ref.get({source:'cache'}));checkAccount(uid);
           if(cached.exists){
             console.warn('Firestore document read recovered from local cache.',{path,rest:errorDetail(restError),sdk:errorDetail(sdkError)});
             return cached;
@@ -99,31 +110,117 @@
     }
   }
   async function read(path){
+    const uid=currentUid();
     try{return snapshot(await request('/'+path.split('/').map(encodeURIComponent).join('/')))}
-    catch(error){if(errorCode(error)==='not-found')return {id:path.split('/').at(-1),exists:false,data:()=>null};return sdkReadFallback(path,error)}
+    catch(error){if(errorCode(error)==='not-found')return {id:path.split('/').at(-1),exists:false,data:()=>null};return sdkReadFallback(path,error,uid)}
   }
   const equal=(field,value,op='EQUAL')=>({fieldFilter:{field:{fieldPath:field},op,value:encode(value)}});
   const canonical=v=>v?.toMillis? v.toMillis():Array.isArray(v)?v.map(canonical):v && typeof v==='object'?Object.fromEntries(Object.keys(v).sort().map(k=>[k,canonical(v[k])])):v;
   function watch(ref,collectionId,options,next,error){
     const pollMs=options.pollIntervalMs || 15000;
-    let stopped=false,serverLive=false,inFlight=false,interval,off,last='',generation=0,refreshQueued=false;
+    let stopped=false,serverLive=false,inFlight=false,interval,off,last='',generation=0,refreshQueued=false,lastHealthy=0;
     const deliver=value=>{
-      if(stopped)return;options.onHealthy?.();const signature=JSON.stringify(value.docs.map(d=>[d.id,canonical(d.data())]));
+      if(stopped)return;if(!value.metadata?.fromCache){lastHealthy=Date.now();options.onHealthy?.()}const signature=JSON.stringify(value.docs.map(d=>[d.id,canonical(d.data())]));
       if(signature!==last){last=signature;next(value)}
     };
     async function poll(force=false){
       if(inFlight){if(force)refreshQueued=true;return}
-      if(stopped || (!force && serverLive) || document.hidden || !navigator.onLine)return;
+      if(stopped || (!force && serverLive && Date.now()-lastHealthy<60000) || document.hidden || !navigator.onLine)return;
       inFlight=true;const version=generation;
-      try{const value=await query(collectionId,options);if(!stopped && (force || !serverLive) && version===generation)deliver(value)}
-      catch(e){if(!stopped && !serverLive)error(e)}finally{inFlight=false;if(refreshQueued){refreshQueued=false;poll(true)}}
+      try{const value=await query(collectionId,options);if(!stopped && version===generation)deliver(value)}
+      catch(e){if(!stopped && (!serverLive || Date.now()-lastHealthy>=60000))error(e)}finally{inFlight=false;if(refreshQueued){refreshQueued=false;poll(true)}}
     }
-    try{off=ref.onSnapshot(value=>{if(stopped || value.metadata?.fromCache)return;serverLive=true;generation++;clearInterval(interval);deliver(value)},()=>{if(stopped)return;serverLive=false;clearInterval(interval);interval=setInterval(poll,pollMs);poll()})}catch{}
+    try{off=ref.onSnapshot(value=>{if(stopped || value.metadata?.fromCache)return;serverLive=true;generation++;deliver(value)},()=>{if(stopped)return;serverLive=false;poll()})}catch{}
     // HTTPS does not wait for an SDK stream to open. Poll only while that stream is unavailable.
     interval=setInterval(poll,pollMs);poll();
-    const resume=()=>poll();window.addEventListener('online',resume);document.addEventListener('visibilitychange',resume);
+    const resume=()=>{if(!document.hidden)poll(true)};window.addEventListener('online',resume);document.addEventListener('visibilitychange',resume);
     const stop=()=>{stopped=true;generation++;off?.();clearInterval(interval);window.removeEventListener('online',resume);document.removeEventListener('visibilitychange',resume)};
     stop.refresh=()=>poll(true);return stop;
   }
-  window.LyriaDataAPI={query,count,read,watch,equal,name,fields,commit:writes=>request(':commit',{writes})};
+  function messageCreate(write){return write.currentDocument?.exists===false && /^channels\/[^/]+\/messages\/[^/]+$/.test(write.update?.name?.slice(root().length+1) || '')}
+  async function sdkCommit(writes,restError,uid){
+    checkAccount(uid);
+    const db=window.firebaseConfig.getFirestore?.(),values=window.firebase?.firestore?.FieldValue;
+    if(!db?.runTransaction || !db.doc || !values)throw restError;
+    // A REST updateTime cannot be compared to the compat SDK's public snapshots.
+    // Never silently weaken an explicit optimistic-concurrency precondition.
+    if(writes.some(w=>w.currentDocument?.updateTime))throw restError;
+    const pathOf=write=>{
+      const value=write.update?.name || write.delete || write.transform?.document || write.verify;
+      if(!value?.startsWith(root()+'/'))throw restError;
+      return value.slice(root().length+1).split('/').map(decodeURIComponent).join('/');
+    };
+    const sdkValue=value=>'timestampValue' in value?new Date(value.timestampValue):'arrayValue' in value?(value.arrayValue.values || []).map(sdkValue):'mapValue' in value?Object.fromEntries(Object.entries(value.mapValue.fields || {}).map(([key,item])=>[key,sdkValue(item)])):decode(value);
+    const nested=(object,path,value)=>{const keys=path.split('.');if(keys.some(k=>['__proto__','prototype','constructor'].includes(k)))throw restError;const last=keys.pop();let target=object;for(const key of keys)target=target[key] ??= {};target[last]=value};
+    const at=(object,path)=>path.split('.').reduce((value,key)=>value?.[key],object);
+    const refs=new Map(writes.map(w=>{const path=pathOf(w);return [path,db.doc(path)]}));
+    const apply=(transaction,docs)=>{
+      checkAccount(uid);
+      for(const write of writes){
+        const path=pathOf(write),ref=refs.get(path),doc=docs.get(path),condition=write.currentDocument;
+        if(condition?.exists===false && doc.exists){
+          // An acknowledgement can be lost after REST accepted a create. Reconcile
+          // this exact message ID and payload; never deduplicate by text alone.
+          const expected=Object.fromEntries(Object.entries(write.update?.fields || {}).map(([key,value])=>[key,sdkValue(value)]));
+          if(messageCreate(write) && expected.senderId===uid && Object.entries(expected).every(([key,value])=>JSON.stringify(canonical(doc.data()[key]))===JSON.stringify(canonical(value))))continue;
+          throw Object.assign(new Error('This operation already exists.'),{code:'already-exists'});
+        }
+        if(condition?.exists===true && !doc.exists)throw Object.assign(new Error('This item no longer exists.'),{code:'not-found'});
+        if(write.verify)continue;
+        if(write.delete){transaction.delete(ref);continue}
+        const data=Object.fromEntries(Object.entries(write.update?.fields || {}).map(([key,value])=>[key,sdkValue(value)]));
+        const changes={};
+        if(write.updateMask)for(const key of write.updateMask.fieldPaths){const value=at(data,key);if(value!==undefined)changes[key]=value;else if(doc.exists)changes[key]=values.delete()}
+        else for(const [key,value]of Object.entries(data))changes[key]=value;
+        for(const transform of write.updateTransforms || write.transform?.fieldTransforms || []){
+          const key=transform.fieldPath;
+          if(transform.setToServerValue==='REQUEST_TIME')changes[key]=values.serverTimestamp();
+          else if(transform.appendMissingElements)changes[key]=values.arrayUnion(...transform.appendMissingElements.values.map(sdkValue));
+          else if(transform.removeAllFromArray)changes[key]=values.arrayRemove(...transform.removeAllFromArray.values.map(sdkValue));
+          else throw restError;
+        }
+        if(write.update && !write.updateMask){for(const [key,value]of Object.entries(changes))nested(data,key,value);transaction.set(ref,data)}
+        else if(doc.exists)transaction.update(ref,changes);
+        else{const created={};for(const [key,value]of Object.entries(changes))nested(created,key,value);transaction.set(ref,created)}
+      }
+      checkAccount(uid);
+      return {writeResults:writes.map(()=>({})),transport:'sdk'};
+    };
+    // Friend acceptance deliberately uses blind transforms: private user records
+    // are not readable by friends. Batch.update preserves existence checks.
+    // A pending request's sender cannot update an existing request under the
+    // rules, so this narrowly validated set is create-only without a denied read
+    // of a nonexistent document. All other create-only writes use a transaction.
+    const friendCreate=write=>write.currentDocument?.exists===false
+      && /^friendRequests\/[^/]+$/.test(pathOf(write)) && !write.updateMask
+      && write.update?.fields?.from?.stringValue===uid
+      && typeof write.update.fields.to?.stringValue==='string'
+      && write.update.fields.to.stringValue!==uid && write.update.fields.status?.stringValue==='pending';
+    const blind=writes.every(w=>friendCreate(w) || (!w.currentDocument && w.update && !w.updateMask)
+      || (w.currentDocument?.exists===true && !w.delete && (w.updateMask || w.transform)));
+    if(blind && db.batch){
+      const batch=db.batch(),docs=new Map(writes.map(w=>[pathOf(w),{exists:!friendCreate(w)}]));
+      const result=apply(batch,docs);await bounded(batch.commit());checkAccount(uid);return result;
+    }
+    const result=await bounded(db.runTransaction(async transaction=>{
+      const docs=new Map(await Promise.all([...refs].map(async([path,ref])=>[path,await transaction.get(ref)])));
+      return apply(transaction,docs);
+    }));checkAccount(uid);return result;
+  }
+  async function commit(writes){
+    const uid=currentUid();
+    try{return await request(':commit',{writes})}
+    catch(error){
+      if(errorCode(error)==='already-exists' && writes.every(messageCreate)){
+        const confirmed=await Promise.all(writes.map(async write=>{
+          const doc=await read(write.update.name.slice(root().length+1));checkAccount(uid);
+          return write.update.fields.senderId?.stringValue===uid && doc.exists && !doc.metadata?.fromCache && Object.entries(write.update.fields).every(([key,value])=>JSON.stringify(canonical(doc.data()[key]))===JSON.stringify(canonical(decode(value))));
+        }));
+        if(confirmed.every(Boolean))return {writeResults:writes.map(()=>({})),transport:'reconciled'};
+      }
+      if(!networkError(error) && !(errorCode(error)==='already-exists' && writes.every(messageCreate)))throw error;
+      return sdkCommit(writes,error,uid);
+    }
+  }
+  window.LyriaDataAPI={query,count,read,watch,equal,name,fields,commit};
 })();

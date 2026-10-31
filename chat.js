@@ -223,11 +223,13 @@ function restoreConversation(user){
     // Use one authentication path for user setup, channel setup and UI listeners.
     auth.onAuthStateChanged(async (user) => {
         if (!user) {
+            pendingMessageSends.clear();
             window.LyriaUI.stopPanelRestoration();
             window.location.href = 'login.html';
             return;
         }
 
+        if (currentUser?.uid !== user.uid) pendingMessageSends.clear();
         currentUser = user;
         window.LyriaConnection?.ready('startup');
         window.LyriaConnection?.pending('messages');
@@ -516,6 +518,7 @@ function userDocRefForCurrentUser() {
 }
 
 let isSendingMessage = false;
+const pendingMessageSends = new Map();
 async function sendMessage(messageText, isCode = false) {
     if (isSendingMessage || typeof messageText !== 'string' || !messageText.trim()) return;
     if (!currentUser || !currentChannel || !db) { window.LyriaUI.notify('Wait for your conversation to finish loading.'); return; }
@@ -524,15 +527,22 @@ async function sendMessage(messageText, isCode = false) {
     const button = document.getElementById('send-button');
     const channelId = currentChannel;
     const draft = input.value;
-    isSendingMessage = true; button.disabled = true; button.setAttribute('aria-busy', 'true');
-    try {
-        await window.LyriaDataAPI.commit([{update:{name:window.LyriaDataAPI.name('channels/'+channelId+'/messages/'+crypto.randomUUID()),fields:window.LyriaDataAPI.fields({
+    const pendingKey = JSON.stringify([currentUser.uid, channelId]);
+    let pending = pendingMessageSends.get(pendingKey);
+    if (!pending || pending.message !== messageText.trim()) {
+        pending = {message: messageText.trim(), writes: [{update:{name:window.LyriaDataAPI.name('channels/'+channelId+'/messages/'+crypto.randomUUID()),fields:window.LyriaDataAPI.fields({
             message: messageText.trim(),
             sender: document.getElementById('user-name').textContent || currentUser.displayName || 'LYRIA member',
             senderId: currentUser.uid,
             mentions: window.LyriaMentions.ids(messageText),
             senderPhotoURL: document.getElementById('user-avatar').src || 'assets/avatar.svg'
-        })},updateTransforms:[{fieldPath:'timestamp',setToServerValue:'REQUEST_TIME'}],currentDocument:{exists:false}}]);
+        })},updateTransforms:[{fieldPath:'timestamp',setToServerValue:'REQUEST_TIME'}],currentDocument:{exists:false}}]};
+        pendingMessageSends.set(pendingKey, pending);
+    }
+    isSendingMessage = true; button.disabled = true; button.setAttribute('aria-busy', 'true');
+    try {
+        await window.LyriaDataAPI.commit(pending.writes);
+        if (pendingMessageSends.get(pendingKey) === pending) pendingMessageSends.delete(pendingKey);
         if(currentChannel===channelId)unsubscribeFromMessages?.refresh?.();
         if (input.value === draft && currentChannel === channelId) { input.value = ''; input.style.height = ''; }
         setTypingStatus(false);

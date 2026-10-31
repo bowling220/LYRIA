@@ -38,7 +38,7 @@
   orderBy(field,direction='asc'){this.sort=field;this.direction=direction;return this}
   limit(n){this.take=n;this.tail=false;return this}
   limitToLast(n){this.take=n;this.tail=true;return this}
-  async get(){if(window.__stallChannelMetadata && this.document && this.path.startsWith('channels/') && this.path.split('/').length===2 && !this.path.includes('/personal-'))return new Promise(()=>{});if(window.__stallProfileRead && this.path.startsWith('users/'))return new Promise(()=>{});if(window.__stallChannels && this.path==='channels' && !this.document)return new Promise(()=>{});return this.document?docSnapshot(this.path):querySnapshot(this)}
+  async get(){if(window.__failSdkQueries && !this.document)throw Object.assign(new Error('Simulated SDK query failure'),{code:'unavailable'});if(window.__stallChannelMetadata && this.document && this.path.startsWith('channels/') && this.path.split('/').length===2 && !this.path.includes('/personal-'))return new Promise(()=>{});if(window.__stallProfileRead && this.path.startsWith('users/'))return new Promise(()=>{});if(window.__stallChannels && this.path==='channels' && !this.document)return new Promise(()=>{});return this.document?docSnapshot(this.path):querySnapshot(this)}
   async set(value){
    if(window.__failNextProfileSave && this.path==='users/test-member'){window.__failNextProfileSave=false;throw Object.assign(new Error('Simulated permission denied'),{code:'permission-denied'})}
    if(window.__delayProfileSave && this.path==='users/test-member')await new Promise(resolve=>{window.__finishProfileSave=resolve});

@@ -127,3 +127,22 @@ is preserved and separately tested.
 The owner requested removal of both legacy desktop installers on 30 October 2026.
 They are no longer tracked in current source; earlier Git revisions retain them.
 This does not certify those historical binaries or change the maintained Expo project.
+
+## 31 October 2026 — Firebase CLI glob/matcher compatibility
+
+The separate Dependency security job on PR #26 exposed new Moderate glob/minimatch
+advisories (GHSA-3g3m-2fjr-6pw4 and GHSA-g3hv-75wg-m249). Firebase CLI 15.34.2 was
+already latest; its transitive ranges had no compatible patched parent release.
+The CLI remains at that version. The exact glob 10.5.0 edge uses patched 14.0.3,
+and a local callable CommonJS adapter delegates all matching to minimatch 11.0.3.
+This is a reviewed compatibility change, not an untested transitive major force.
+No vulnerable source is copied, fake upstream version supplied, advisory ignored,
+security gate disabled, or npm audit fix --force used.
+
+Root and test dependency audits are zero after fresh installs. Actual CLI file
+listing/ignore behavior, hosting matches, glob cancellation, Readdir filtering,
+Exegesis controllers, archive generation, and Rimraf cleanup are checked by seven
+tooling tests; emulator authorization/transport coverage remains passing (30 tests).
+`tests/.npmrc` contains only install-links=true to package the local adapter reliably.
+The vendor package is included in Dependabot; it is test-only and never copied into
+the website bundle. See tests/vendor/minimatch-compat/README.md for removal criteria.

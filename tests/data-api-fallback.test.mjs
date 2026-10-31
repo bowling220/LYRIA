@@ -5,7 +5,7 @@ import { runInNewContext } from 'node:vm';
 
 const source = await readFile(new URL('../js/data-api.js', import.meta.url), 'utf8');
 
-function makeContext({ sdkErrorCode = null, cacheDocs = null, documentSdkErrorCode = null } = {}) {
+function makeContext({ sdkErrorCode = null, cacheDocs = null, documentSdkErrorCode = null, queryCollection = 'channels', queryFilter = ['members', 'array-contains', 'alice'] } = {}) {
   const warnings = [];
   const errors = [];
   let sdkCalls = 0;
@@ -14,10 +14,10 @@ function makeContext({ sdkErrorCode = null, cacheDocs = null, documentSdkErrorCo
   const profileDoc = { id: 'alice', exists: true, data: () => ({ displayName: 'Alice', bio: 'Hello' }), metadata: { fromCache: false } };
   const db = {
     collection(name) {
-      assert.equal(name, 'channels');
+      assert.equal(name, queryCollection);
       return {
         where(field, op, value) {
-          assert.deepEqual([field, op, value], ['members', 'array-contains', 'alice']);
+          assert.deepEqual([field, op, value], queryFilter);
           return {
             async get(options) {
               sdkCalls += 1;
@@ -132,8 +132,9 @@ test('ordinary document reads can use local cache after both network paths fail'
   assert.equal(getDocumentSdkCalls(), 2);
 });
 
-test('unrelated REST queries do not use the conversation-specific SDK fallback', async () => {
-  const { API, getSdkCalls } = makeContext();
-  await assert.rejects(API.query('friendRequests', { where: API.equal('to', 'alice') }), error => error.code === 'unavailable');
-  assert.equal(getSdkCalls(), 0);
+test('friend-request queries recover through the same bounded SDK fallback', async () => {
+  const { API, getSdkCalls } = makeContext({queryCollection:'friendRequests',queryFilter:['to','==','alice']});
+  const result=await API.query('friendRequests', {where:API.equal('to','alice')});
+  assert.equal(result.docs.length,1);
+  assert.equal(getSdkCalls(),1);
 });

@@ -4,11 +4,17 @@ No production Firebase, microphone, signaling service, or TURN credentials are u
 from pathlib import Path
 from http.server import ThreadingHTTPServer,BaseHTTPRequestHandler
 from threading import Thread,Lock
-import json, subprocess, socket, time, urllib.request, os, shutil
+import json, subprocess, socket, time, urllib.request, os, shutil, wave, math, struct
 from voice_rpc_fixture import serve
 from browser_executable import CHROMIUM
 from playwright.sync_api import sync_playwright
 ROOT=Path(__file__).resolve().parents[1]
+# Use known non-silent input; Chromium's default fake device differs by platform.
+AUDIO_INPUT=ROOT/'test-artifacts'/'voice-test-input.wav';AUDIO_INPUT.parent.mkdir(exist_ok=True)
+with wave.open(str(AUDIO_INPUT),'wb') as wav:
+ wav.setnchannels(1);wav.setsampwidth(2);wav.setframerate(48000)
+ wav.writeframes(b''.join(struct.pack('<h',int(32767*.25*(.6+.4*math.sin(2*math.pi*3*i/48000))*math.sin(2*math.pi*440*i/48000))) for i in range(48000)))
+
 STATE={};LOCK=Lock()
 PEER=urllib.request.urlopen('https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.5/peerjs.min.js',timeout=20).read()
 with socket.socket() as sock:sock.bind(('127.0.0.1',0));SIGNAL_PORT=sock.getsockname()[1]
@@ -102,7 +108,7 @@ try:
   except OSError:time.sleep(.1)
  else:raise RuntimeError('Local PeerJS server did not start: '+peer.stderr.read().decode())
  with sync_playwright() as p:
-  browser=p.chromium.launch(executable_path=CHROMIUM,headless=True,args=['--no-sandbox','--use-fake-device-for-media-stream','--use-fake-ui-for-media-stream'])
+  browser=p.chromium.launch(executable_path=CHROMIUM,headless=True,args=['--no-sandbox','--use-fake-device-for-media-stream','--use-fake-ui-for-media-stream','--use-file-for-fake-audio-capture='+str(AUDIO_INPUT)])
   a=browser.new_context(permissions=['microphone']);b=browser.new_context(permissions=['microphone'])
   alice=a.new_page();bob=b.new_page();errors=[]
   for page in [alice,bob]:page.on('pageerror',lambda error:errors.append(str(error)))
