@@ -209,3 +209,17 @@ badge integrity, and one-use acceptance proofs. `tests/unread-smoke.py` checks a
 UI counts/mentions/jumping/persistence; `tests/voice-devices-smoke.py` checks explicit
 diagnostics and no automatic capture. Activation requires the matching rules and
 indexes (docs/ACTIVATION.md). Tests do not publish production rules.
+
+## Adverse connection and retry cases
+
+`tests/connection-edge-smoke.py` exercises mobile/desktop operations with REST
+unavailable but SDK healthy, lost message acknowledgements, double Send/Enter,
+expired/revoked invite login returns, and cross-account draft/panel isolation.
+It is included in `npm run test:browser` and uses local fixtures only.
+
+`tests/transport-recovery.test.mjs` covers query translation, identity/permission
+boundaries, create reconciliation, field masks/transforms and stream watchdog/resume.
+`tests/firestore-transport-recovery.test.mjs` runs actual SDK fallback writes and
+friend acceptance under the real emulator rules; both are included in normal runners.
+See [the connection audit](../docs/CONNECTION_RECOVERY.md) for evidence, remaining
+friend-request concurrency work, dependency advisory limitations and TURN setup.

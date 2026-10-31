@@ -28,9 +28,9 @@ with sync_playwright() as p:
  assert page.evaluate('__networkRestarts')==1,'Recovery restarted live networking more than once'
  page.evaluate('window.__stallProfileRead=false')
  # Stream fails, reconnect, then browser back/forward restoration: one send only.
- page.evaluate("window.__failMessages=true;window.__failRestQueries=true;window.dispatchEvent(new PageTransitionEvent('pageshow',{persisted:true}))")
+ page.evaluate("window.__failMessages=true;window.__failRestQueries=true;window.__failSdkQueries=true;window.dispatchEvent(new PageTransitionEvent('pageshow',{persisted:true}))")
  page.wait_for_function("document.getElementById('connection-message').textContent.includes('disconnected')")
- page.evaluate('window.__failMessages=false;window.__failRestQueries=false')
+ page.evaluate('window.__failMessages=false;window.__failRestQueries=false;window.__failSdkQueries=false')
  page.locator('#app-loading-modal[data-ui-open=true] .app-loading-retry, body:not(:has(#app-loading-modal[data-ui-open=true])) #retry-connection').click();page.wait_for_function("document.getElementById('connection-notice').hidden")
  page.locator('#send-button').click()
  page.wait_for_function("[...__testData.values()].filter(v=>v.message==='Keep this unsent message').length===1")
