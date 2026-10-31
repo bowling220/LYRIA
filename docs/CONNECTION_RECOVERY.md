@@ -70,14 +70,24 @@ The owner must configure `METERED_APP_NAME` and the browser-scoped credentials-r
 secretKey or paste credentials into an issue. See [VOICE_SETUP.md](VOICE_SETUP.md).
 Voice-specific SDK presence recovery is tracked separately in PR #21.
 
-## Dependency audit caveat
+## Dependency audit resolution
 
-On this date, root audit is zero and test tooling has 13 Moderate dependency
-findings (zero High/Critical), rooted in newly published glob/minimatch advisories.
-`firebase-tools` 15.34.2 is already the latest available parent; `npm outdated`
-reported no newer test dependencies. No forced downgrade, transitive major override
-or relaxed audit gate is included. The low-severity Dependency security workflow
-can therefore fail independently of this runtime patch; report it honestly.
+The first remote Dependency security job failed on 13 Moderate findings in the
+Firebase CLI test tree, rooted in public glob/minimatch advisories. It did not fail
+on the connection/browser/rules changes. Firebase CLI 15.34.2 is already the latest
+available parent, so no compatible parent upgrade was available.
+
+The follow-up uses patched glob 14.0.3 for the exact old 10.5.0 dependency edge and
+a small local callable-export adapter backed entirely by minimatch 11.0.3. The
+adapter retains the interfaces the installed CLI parents actually use; no old
+matching/parser code or removed regex-builder API is restored. See
+[the adapter rationale](../tests/vendor/minimatch-compat/README.md).
+
+Fresh clean installs now report zero vulnerabilities for both root and tests,
+including development dependencies. Seven tooling compatibility tests exercise
+actual Firebase, Superstatic, Archiver, Exegesis, Readdir and Rimraf callers;
+all 30 emulator tests also pass. No audit gate or severity threshold is relaxed,
+no audit exception is added and no forced Firebase downgrade is used.
 
 ## Validation commands
 

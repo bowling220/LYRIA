@@ -128,3 +128,6 @@ firebase-adminsdk*.json
 
 # Retired native app: ignore leftover local dependencies and exports.
 /LYRIA/
+
+# Reviewed test-tool install option only; never put credentials in this file.
+!/tests/.npmrc
