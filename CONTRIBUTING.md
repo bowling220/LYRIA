@@ -97,3 +97,5 @@ There is no automatic PR deployment or automatic Dependabot merge. Optional prev
 are owner-operated against an isolated Firebase staging project, not live LYRIA.
 
 For a concrete first contribution, follow [the fork-to-reviewed-PR walkthrough](docs/FIRST_CONTRIBUTION.md). Issues marked `good first issue` describe the expected behavior and verification. Maintainer review remains required.
+
+Want to talk through an idea or ask about setup? [Join the public Developers conversation](https://lyria.onrender.com/invite.html?code=DEVELOPERS). Anyone interested in contributing can join with a signed-in or guest account. This gives chat access, not staff badges or repository permissions.

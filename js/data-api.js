@@ -221,10 +221,12 @@
     const limits=window.LyriaWriteLimits?await window.LyriaWriteLimits.plan(writes,window.LyriaDataAPI):[];
     if(limits.length){
       try{return await sdkCommit(writes,Object.assign(new Error('Rate-limited SDK transport unavailable.'),{code:'unavailable'}),uid,limits)}
-      catch(error){if(error.rateLimited || !networkError(error))throw error;
+      catch(error){if(error.rateLimited || (!networkError(error) && errorCode(error)!=='permission-denied'))throw error;
+        // The same authenticated REST commit can recover a stale SDK auth channel.
+        // Identical server rules, quota proof and write preconditions still apply.
         const quotas=await window.LyriaWriteLimits.restWrites(limits,uid,window.LyriaDataAPI);checkAccount(uid);
         try{return await request(':commit',{writes:[...quotas,...writes]})}
-        catch(restError){if(errorCode(restError)!=='already-exists')throw restError;/* Existing message reconciliation below uses the original writes. */}
+        catch(restError){if(errorCode(restError)!=='already-exists'){if(errorCode(error)==='permission-denied' && networkError(restError))throw error;throw restError;}/* Existing message reconciliation below uses the original writes. */}
       }
     }
     try{return await request(':commit',{writes})}

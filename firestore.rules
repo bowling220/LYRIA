@@ -12,7 +12,7 @@ service cloud.firestore {
 
     function channelMember(channelId) {
       return signedIn()
-        && (channelId == 'community'
+        && (channelId in ['community','developers']
           || request.auth.uid in get(/databases/$(database)/documents/channels/$(channelId)).data.members);
     }
 
@@ -222,9 +222,9 @@ service cloud.firestore {
         && !existsAfter(/databases/$(database)/documents/channels/$(channelId));
     }
     match /channels/{channelId} {
-      allow get: if signedIn() && (!exists(/databases/$(database)/documents/channels/$(channelId)) || channelId == 'community' || channelId == 'personal-' + request.auth.uid || request.auth.uid in resource.data.members);
+      allow get: if signedIn() && (!exists(/databases/$(database)/documents/channels/$(channelId)) || channelId in ['community','developers'] || channelId == 'personal-' + request.auth.uid || request.auth.uid in resource.data.members);
       allow list: if signedIn() && request.auth.uid in resource.data.members;
-      allow create: if channelId != 'community' && signedIn()
+      allow create: if !(channelId in ['community','developers']) && signedIn()
         && (channelId == 'personal-' + request.auth.uid || (request.resource.data.get('isDirectCall',false) == true ? rateAllowed('calls',channelId) : rateAllowed('channels',channelId)))
         && textBound(request.resource.data,'name',120)
         && !exists(/databases/$(database)/documents/channelTombstones/$(channelId))
@@ -232,7 +232,7 @@ service cloud.firestore {
         && request.resource.data.createdBy == request.auth.uid
         && (request.resource.data.members == [request.auth.uid]
           || (request.resource.data.get('isDirectCall', false) == true && mutualFriends(request.resource.data.members)));
-      allow update: if channelId != 'community' && signedIn()
+      allow update: if !(channelId in ['community','developers']) && signedIn()
         && ((request.auth.uid in resource.data.members
           && ((request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members'])
               && request.resource.data.members == resource.data.members.removeAll([request.auth.uid]))
@@ -244,7 +244,7 @@ service cloud.firestore {
             && request.resource.data.members.hasAll(resource.data.members)
             && request.resource.data.members.toSet().difference(resource.data.members.toSet()) == [request.auth.uid].toSet())
           || invitedJoin(channelId));
-      allow delete: if channelId != 'community' && signedIn() && resource.data.createdBy == request.auth.uid
+      allow delete: if !(channelId in ['community','developers']) && signedIn() && resource.data.createdBy == request.auth.uid
         && getAfter(/databases/$(database)/documents/channelTombstones/$(channelId)).data.createdBy == request.auth.uid
         && getAfter(/databases/$(database)/documents/channelTombstones/$(channelId)).data.deletedAt == request.time;
 

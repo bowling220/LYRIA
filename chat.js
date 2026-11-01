@@ -27,7 +27,8 @@ const initializeFirebase = async () => {
 let currentUser;
 let currentChannel;
 let hubChannels=[];
-const channelNames=new Map([[COMMUNITY_CHANNEL_ID,'Everyone']]);
+const channelNames=new Map(window.LyriaInvites.publicSpaces.map(room=>[room.id,room.name]));
+const isPublicSpace=id=>Boolean(window.LyriaInvites.publicSpace(id));
 let channelSelectionVersion=0;
 
 function rememberChannelName(id,name){
@@ -155,6 +156,7 @@ initializeFirebase().then(() => {
 
 function renderHub(){
     const list=document.getElementById('hub-conversations');
+    document.getElementById('developer-join-label').textContent=window.LyriaInvites.joined(currentUser).includes('developers')?'Open Developers':'Join Developers';
     const search=document.getElementById('hub-search').value.trim().toLowerCase();
     list.replaceChildren();
     const rooms=[{id:COMMUNITY_CHANNEL_ID,name:'Everyone',shared:true},...hubChannels].filter(room=>window.LyriaSearch.matches(room.name || 'Conversation',search));
@@ -162,7 +164,7 @@ function renderHub(){
         const button=document.createElement('button');button.type='button';button.className='hub-conversation';
         const mark=document.createElement('span');mark.className='hub-room-icon';mark.innerHTML=window.LyriaUI.icon(room.shared?'users':'hash');
         const text=document.createElement('span');const title=document.createElement('strong');title.textContent=room.name || 'Conversation';
-        const detail=document.createElement('span');detail.textContent=room.shared?'The whole community, together':room.id===`personal-${currentUser?.uid}`?'Notes, ideas, and a little space for you':room.favorite?'One of your favorites':'Your shared space to catch up';
+        const detail=document.createElement('span');detail.textContent=room.description || (room.shared?'The whole community, together':room.id===`personal-${currentUser?.uid}`?'Notes, ideas, and a little space for you':room.favorite?'One of your favorites':'Your shared space to catch up');
         text.className='hub-room-copy';text.append(title,detail);button.append(mark,text);
         const end=document.createElement('span');end.className='hub-room-end';
         if(room.shared){end.textContent='COMMUNITY';end.classList.add('hub-community-tag')}
@@ -192,6 +194,7 @@ function showHub(historyMode='push'){
 }
 document.getElementById('open-hub').addEventListener('click',()=>showHub());
 document.getElementById('back-to-hub').addEventListener('click',()=>showHub());
+document.getElementById('join-developers').addEventListener('click',()=>{if(currentUser)switchChannel('developers')});
 document.getElementById('hub-search').addEventListener('input',renderHub);
 document.getElementById('hub-friends').addEventListener('click',()=>window.LyriaCommunity?.openFriends());
 document.getElementById('hub-create').addEventListener('click',()=>document.getElementById('add-channel').click());
@@ -204,7 +207,7 @@ function restoreConversation(user){
     const requested=new URLSearchParams(location.search).get('channel');
     const id=requested;
     if(!id){showHub('replace');return}
-    if(id===COMMUNITY_CHANNEL_ID || !/^[A-Za-z0-9_-]{1,180}$/.test(id)){if(id===COMMUNITY_CHANNEL_ID)switchChannel(id,undefined,'replace');else showHub('replace');return}
+    if(isPublicSpace(id) || !/^[A-Za-z0-9_-]{1,180}$/.test(id)){if(isPublicSpace(id))switchChannel(id,undefined,'replace');else showHub('replace');return}
     document.getElementById('channel-title').textContent=saved?.id===id && typeof saved.name==='string'?saved.name:'Opening conversation…';
     document.getElementById('message-input').placeholder='Opening your conversation…';
     document.getElementById('make-voice-call').disabled=true;
@@ -224,13 +227,13 @@ function restoreConversation(user){
     // Use one authentication path for user setup, channel setup and UI listeners.
     auth.onAuthStateChanged(async (user) => {
         if (!user) {
-            pendingMessageSends.clear();
+            pendingMessageSends.clear();window.LyriaConversations.clear(currentUser?.uid);
             window.LyriaUI.stopPanelRestoration();
-            window.location.href = 'login.html';
+            window.location.href = new URLSearchParams(location.search).get('channel')==='developers'?'login.html?invite=DEVELOPERS':'login.html';
             return;
         }
 
-        if (currentUser?.uid !== user.uid) pendingMessageSends.clear();
+        if (currentUser?.uid !== user.uid) {pendingMessageSends.clear();window.LyriaConversations.clear(currentUser?.uid);}
         currentUser = user;
         window.LyriaConnection?.ready('startup');
         window.LyriaConnection?.pending('messages');
@@ -364,18 +367,20 @@ function setupUIEventListeners() {
 
     const openChannelActionModal = (mode) => {
         const isLeave = mode === 'leave';
-        channelActionModal.dataset.mode = mode;
+        channelActionModal.dataset.mode = mode;document.getElementById('create-public-hint').hidden=mode!=='create';
         channelActionTitle.textContent = mode === 'create' ? 'Start a conversation' : mode === 'join' ? 'Join a conversation' : 'Leave this conversation?';
         channelActionDescription.textContent = mode === 'create'
             ? 'Give your new conversation a short, memorable name.'
             : mode === 'join'
                 ? 'Paste the invite link or code shared by a LYRIA member.'
                 : 'You will need a new invite code to return later.';
+        if(isLeave && currentChannel==='developers'){channelActionTitle.textContent='Hide Developers on this device?';channelActionDescription.textContent='This only removes the public space from your list on this device. You can join again anytime.';}
         channelActionField.hidden = isLeave;
         channelActionLabel.textContent = mode === 'create' ? 'Conversation name' : 'Invite link or code';
         channelActionInput.placeholder = mode === 'create' ? 'e.g. Design club' : 'Paste invite link or code';
         channelActionInput.maxLength = mode === 'create' ? 48 : 2048;
         channelActionSubmit.textContent = mode === 'create' ? 'Create' : mode === 'join' ? 'Join' : 'Leave';
+        if(isLeave && currentChannel==='developers')channelActionSubmit.textContent='Hide on this device';
         channelActionSubmit.classList.toggle('danger-action', isLeave);
         channelActionFeedback.textContent = '';
         channelActionModal.removeAttribute('inert');
@@ -391,6 +396,7 @@ function setupUIEventListeners() {
     document.getElementById('leave-channel').addEventListener('click', () => openChannelActionModal('leave'));
     document.getElementById('close-channel-action-modal').addEventListener('click', closeChannelActionModal);
     document.getElementById('cancel-channel-action').addEventListener('click', closeChannelActionModal);
+    document.getElementById('create-public-developers').addEventListener('click',()=>{closeChannelActionModal();if(currentUser)switchChannel('developers')});
     channelActionModal.addEventListener('click', event => {
         if (event.target === channelActionModal) closeChannelActionModal();
     });
@@ -415,25 +421,9 @@ function setupUIEventListeners() {
 
         try {
             if (mode === 'create') {
-                const channelId = `${Date.now()}-${currentUser.uid}`;
-                const channelRef = db.collection('channels').doc(channelId);
-                const save = async (batch,legacy) => {
-                batch.set(channelRef, {
-                    name: value,
-                    id: channelId,
-                    createdBy: currentUser.uid,
-                    members: [currentUser.uid],
-                    isPublic: false,
-                    favorite: false
-                });
-                batch.set(userDocRefForCurrentUser(), {
-                    channels: firebase.firestore.FieldValue.arrayUnion(channelId)
-                }, { merge: true });
-                if(legacy)await batch.commit();
-                };
-                await window.LyriaWriteLimits.run('channels',channelId,save);
-
-                switchChannel(channelId,value);
+                const created=await window.LyriaConversations.create(value);
+                const channelId=created.id;
+                switchChannel(channelId,created.name);
                 loadChannels();
                 closeChannelActionModal();
 
@@ -449,6 +439,7 @@ function setupUIEventListeners() {
                 const personalChannelId = `personal-${currentUser.uid}`;
                 if (!currentChannel || currentChannel === personalChannelId || currentChannel === COMMUNITY_CHANNEL_ID) return;
                 const leavingChannelId = currentChannel;
+                if(leavingChannelId==='developers'){window.LyriaVoice?.leaveRoom(leavingChannelId);window.LyriaInvites.remember(currentUser,leavingChannelId,false);showHub();loadChannels();closeChannelActionModal();return;}
                 window.LyriaVoice?.leaveRoom(leavingChannelId);
                 const channelRef = db.collection('channels').doc(leavingChannelId);
                 await Promise.all([
@@ -465,7 +456,7 @@ function setupUIEventListeners() {
         } catch (error) {
             console.error(`Channel ${mode} failed:`, error);
             channelActionFeedback.textContent = error.code === 'resource-exhausted' ? error.message : error.code === 'permission-denied'
-                ? 'LYRIA could not save that change. Please sign out, sign back in, and try once more.'
+                ? 'LYRIA couldn’t confirm this change. Check your connection and retry; your creation draft keeps the same ID.'
                 : 'That action could not be completed. Please try again.';
         } finally {
             isSubmittingChannelAction = false;
@@ -496,7 +487,8 @@ function setupUIEventListeners() {
             const share=document.getElementById('share-invite-modal');share.dataset.channelId=selected;
             document.getElementById('share-invite-link').value=link;
             document.getElementById('invite-owner-controls').hidden=!invitation.owner;
-            document.getElementById('invite-control-status').textContent=invitation.expiresAt?'Expires '+new Date(invitation.expiresAt.toMillis?.() || invitation.expiresAt).toLocaleString():'This link stays active until the owner revokes it.';
+            document.getElementById('share-invite-description').textContent=isPublicSpace(selected)?'Anyone signed in can open this public space. No personal invitation is needed.':'Share this link with your people. Only the owner can replace or revoke it.';
+            document.getElementById('invite-control-status').textContent=isPublicSpace(selected)?'Public link · no invitation or staff permissions required.':invitation.expiresAt?'Expires '+new Date(invitation.expiresAt.toMillis?.() || invitation.expiresAt).toLocaleString():'This link stays active until the owner revokes it.';
             if(invitation.owner)window.LyriaUI.openModal(share);
             try {
                 await navigator.clipboard.writeText(link);
@@ -682,12 +674,13 @@ function loadChannels() {
                 const userData = userDoc?.data() || window.LyriaAccount?.getProfile() || {};
                 const favoriteChannels = userData.favoriteChannels || []; // Get user's favorite channels
 
-                const channels = snapshot.docs.filter(doc=>doc.id !== COMMUNITY_CHANNEL_ID).map(doc => ({
+                const channels = snapshot.docs.filter(doc=>!isPublicSpace(doc.id)).map(doc => ({
                     ...doc.data(),
                     id: doc.id,
                     favorite: favoriteChannels.includes(doc.id) // Set favorite based on user's favorites
                 }));
 
+                for(const id of window.LyriaInvites.joined(currentUser))channels.push({...window.LyriaInvites.publicSpace(id),favorite:false});
                 // Sort channels: favorites first
                 channels.sort((a, b) => (b.favorite === a.favorite) ? 0 : (b.favorite ? 1 : -1));
 
@@ -713,7 +706,7 @@ function loadChannels() {
                     };
 
                     const favoriteButton = document.createElement('button');
-                    favoriteButton.className = 'favorite-btn';
+                    favoriteButton.className = 'favorite-btn';favoriteButton.hidden=Boolean(channel.shared);
                     favoriteButton.innerHTML = window.LyriaUI.icon('star');
                     favoriteButton.setAttribute('aria-pressed', String(channel.favorite));
                     favoriteButton.setAttribute('aria-label', (channel.favorite ? 'Unfavorite ' : 'Favorite ') + channel.name);
@@ -751,8 +744,8 @@ function loadMessages(channelId,{unreadOnly=false}={}) {
     let firstSnapshot = true;
     const subtitle=document.querySelector('.chat-subtitle');
     const notice=document.getElementById('community-notice');
-    if(notice)notice.hidden=channelId !== COMMUNITY_CHANNEL_ID;
-    if(subtitle)subtitle.textContent=channelId === COMMUNITY_CHANNEL_ID?'Everyone signed in to LYRIA can read this room.':'A little space to stay connected.';
+    if(notice){notice.hidden=!isPublicSpace(channelId);notice.textContent=(channelId==='developers'?'Developers is public. ':'')+'Everyone signed in to LYRIA can read this room · Latest 100 messages';}
+    if(subtitle)subtitle.textContent=isPublicSpace(channelId)?window.LyriaInvites.publicSpace(channelId).description:'A little space to stay connected.';
     renderChannelIdentity(channelId);
     if(!channelNames.has(channelId))window.LyriaDataAPI.read('channels/'+channelId).then(doc=>{
         if(version===messageLoadVersion && currentChannel===channelId && doc.exists)rememberChannelName(channelId,doc.data().name);
@@ -840,7 +833,7 @@ function logout() {
     const owner=currentUser?.uid;
     window.leaveCurrentCall?.();
     auth.signOut().then(() => {
-        exitingAccount=true;try{for(const key of Object.keys(sessionStorage))if(key.startsWith('lyria:message-draft:'+owner+':') || key.startsWith('lyria:message-retry:'+owner+':'))sessionStorage.removeItem(key)}catch{}
+        exitingAccount=true;window.LyriaConversations.clear(owner);try{for(const key of Object.keys(sessionStorage))if(key.startsWith('lyria:message-draft:'+owner+':') || key.startsWith('lyria:message-retry:'+owner+':'))sessionStorage.removeItem(key)}catch{}
         window.location.href = 'login.html';
     }).catch(error => {
         console.error("Error logging out:", error);
@@ -850,6 +843,7 @@ function logout() {
 
 // Function to switch channels
 function switchChannel(channelId,name,historyMode='push') {
+    if(channelId==='developers' && !window.LyriaInvites.joined(currentUser).includes(channelId)){window.LyriaInvites.remember(currentUser,channelId);loadChannels();}
     const restoreUnread=historyMode==='replace' && new URLSearchParams(location.search).get('view')==='unread';
     document.querySelector('.chat-area').dataset.view='chat';
     document.getElementById('conversation-hub').hidden=true;
@@ -872,7 +866,7 @@ function switchChannel(channelId,name,historyMode='push') {
         const isPersonalChannel = channelId === `personal-${currentUser.uid}`;
         const isCommunity = channelId === COMMUNITY_CHANNEL_ID;
         leaveButton.disabled = isPersonalChannel || isCommunity;
-        leaveButton.textContent = isCommunity ? 'Everyone is always here' : isPersonalChannel ? 'Personal channel' : 'Leave conversation';
+        leaveButton.textContent = channelId==='developers'?'Hide Developers':isCommunity ? 'Everyone is always here' : isPersonalChannel ? 'Personal channel' : 'Leave conversation';
         leaveButton.title = isCommunity ? 'This shared room is open to every signed-in member.' : isPersonalChannel ? 'Your personal channel always stays with your account.' : 'Leave this conversation';
     }
     document.querySelectorAll('.channel-btn').forEach(button => {

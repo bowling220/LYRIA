@@ -83,7 +83,7 @@
   }
   const describe = (room) =>
     room?.description ||
-    (selected === "community"
+    (Boolean(window.LyriaInvites.publicSpace(selected))
       ? "The whole community, together."
       : selected === "personal-" + user?.uid
         ? "Notes, ideas, and a little space for you."
@@ -198,7 +198,7 @@
       ? [...new Set(room.members.filter((id) => typeof id === "string"))]
       : [];
     if (selected === "personal-" + user?.uid && !ids.length) ids = [user.uid];
-    if (selected === "community") {
+    if (Boolean(window.LyriaInvites.publicSpace(selected))) {
       ids = [
         ...new Set(
           [...$("messages").querySelectorAll("[data-sender-id]")]
@@ -209,7 +209,7 @@
       if (user?.uid && !ids.includes(user.uid)) ids.unshift(user.uid);
     }
     $("details-member-count").textContent =
-      selected === "community" ? "" : ids.length || "";
+      Boolean(window.LyriaInvites.publicSpace(selected)) ? "" : ids.length || "";
     if (!ids.length) {
       $("details-member-status").textContent =
         "Member details aren’t available yet.";
@@ -228,9 +228,9 @@
       ),
     );
     $("details-member-status").hidden =
-      selected !== "community" && ids.length <= 20;
+      !window.LyriaInvites.publicSpace(selected) && ids.length <= 20;
     $("details-member-status").textContent =
-      selected === "community"
+      Boolean(window.LyriaInvites.publicSpace(selected))
         ? "People in the loaded conversation."
         : ids.length > 20
           ? "Showing 20 of " + ids.length + " members."
@@ -247,7 +247,7 @@
       (count !== null
         ? count + " " + (count === 1 ? "person" : "people") + " · "
         : "") + description;
-    $("conversation-favorite").disabled = !room || selected === "community";
+    $("conversation-favorite").disabled = !room || Boolean(window.LyriaInvites.publicSpace(selected));
     $("conversation-favorite").setAttribute(
       "aria-pressed",
       String(Boolean(room?.favorite)),
@@ -260,7 +260,7 @@
     const date = room?.createdAt?.toDate?.();
     $("details-created").textContent = date
       ? "Created " + date.toLocaleDateString()
-      : selected === "community"
+      : Boolean(window.LyriaInvites.publicSpace(selected))
         ? "Open to everyone signed in to LYRIA."
         : "";
     $("details-pin").setAttribute(
@@ -285,11 +285,11 @@
       $("details-media-all").hidden = true;
     }
     const run = changed ? ++selectionRun : selectionRun,
-      room = rooms.find((item) => item.id === id);
+      room = rooms.find((item) => item.id === id) || window.LyriaInvites.publicSpace(id);
     identity(room);
     if (changed) {
       members(room, run);
-      if (!room && id !== "community")
+      if (!room && !window.LyriaInvites.publicSpace(id))
         window.LyriaDataAPI.read("channels/" + id)
           .then((doc) => {
             if (run !== selectionRun || !doc.exists) return;
@@ -469,7 +469,7 @@
     mediaTimer = setTimeout(() => {
       if (selected) {
         media();
-        if (selected === "community") members(null, selectionRun);
+        if (Boolean(window.LyriaInvites.publicSpace(selected))) members(null, selectionRun);
       }
     }, 100);
   }).observe($("messages"), { childList: true, subtree: true });

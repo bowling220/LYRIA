@@ -10,3 +10,6 @@ test('replacement creates a cryptographic token and revokes the old link atomica
  const result=await api.replace(db,{uid:'owner'},'room',24);assert.match(result.code,/^[A-F0-9]{32}$/);assert.equal(commits,1);assert.equal(records.get('channelInvites/OLD').revoked,true);assert.equal(records.get('channels/room').activeInvite,result.code);assert.ok(result.expiresAt.getTime()>Date.now());
  await assert.rejects(api.replace(db,{uid:'other'},'room'),/Only/);assert.equal(commits,1);
 });
+test('Developers public entry needs no individual invitation or membership write and grants no role',async()=>{
+ const db={collection(){throw Error('Public entry must not read private channel data')},batch(){throw Error('Public entry must not change memberships')}};const user={uid:'new-contributor'},room=await api.join(db,user,'DEVELOPERS');assert.equal(room.id,'developers');assert.equal(room.name,'Developers');assert.equal(room.shared,true);assert.equal(room.badges,undefined);assert.equal(room.role,undefined);assert.equal(api.joined(user).includes('developers'),true);assert.equal(api.joined({uid:'other-account'}).length,0);api.remember(user,'developers',false);assert.equal(api.joined(user).length,0);assert.equal((await api.current(db,user,'developers')).link,'https://lyria.example/invite.html?code=DEVELOPERS');
+});

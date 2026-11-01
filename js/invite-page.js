@@ -6,15 +6,16 @@
  function ready(label,disabled=false){$('accept-invite').textContent=label;$('accept-invite').disabled=disabled;document.querySelector('.invite-card').setAttribute('aria-busy','false')}
  async function preview(){
   const run=++version;channelReady=false;
-  $('invite-title').textContent='You’re invited.';
+  $('invite-title').textContent=code==='DEVELOPERS'?'Build LYRIA with us.':'You’re invited.';
   $('invite-description').textContent='Conversations, shared moments, and your next favorite people.';
   if(!code){status('This link is incomplete or invalid. Ask for a new invitation.');ready('Invalid invitation',true);return}
-  if(!user){status('Sign in or explore as a guest to see this conversation and accept the invitation.');ready('Continue to your invitation');return}
+  if(!user){status(code==='DEVELOPERS'?'Anyone interested in contributing can join. Sign in or explore as a guest; no personal invitation is needed.':'Sign in or explore as a guest to see this conversation and accept the invitation.');ready(code==='DEVELOPERS'?'Continue to Developers':'Continue to your invitation');return}
   ready('Checking invitation…',true);document.querySelector('.invite-card').setAttribute('aria-busy','true');
   try{
    const channel=await api.lookup(db,code);if(run!==version)return;
    channelReady=true;$('invite-title').textContent=channel.name;
-   $('invite-description').textContent=channel.everyone?'One shared room for the whole LYRIA community.':'A conversation is waiting. Come make yourself at home.';
+   $('invite-description').textContent=channel.description || (channel.everyone?'One shared room for the whole LYRIA community.':'A conversation is waiting. Come make yourself at home.');
+   if(code==='DEVELOPERS'){status('Public space · joining does not grant staff badges or repository permissions.');ready('Join Developers');return}
    status(channel.members?.includes(user.uid)?'You’re already part of this conversation.':'Ready when you are.');ready(channel.members?.includes(user.uid)?'Open conversation':'Accept invitation');
   }catch(error){if(run!==version)return;status(api.errorMessage(error));ready(error.code==='not-found'?'Invitation unavailable':'Retry invitation',error.code==='not-found')}
  }

@@ -11,3 +11,5 @@ Pick a small issue with clear acceptance criteria, or describe a larger idea in 
 7. Push your branch to your fork and open a PR against `main`. Explain the problem, resulting behavior, and tests. Identify schema/rules changes and any limits.
 
 CI runs before review. The maintainer decides whether to accept and merge; approval is not guaranteed. Forks do not receive production secrets. A PR never deploys directly to production. Approved main changes can deploy after the required checks pass. Never commit `.env`, login credentials, tokens, service-account JSON, private messages, or production test data.
+
+You can [join Developers on LYRIA](https://lyria.onrender.com/invite.html?code=DEVELOPERS) without asking the maintainer for an invitation. It is public to signed-in members, including guests; keep security vulnerabilities and credentials out of chat and follow SECURITY.md instead.

@@ -2,6 +2,26 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "id": "2026-11-01-open-developers",
+      "date": "2026-11-01",
+      "title": "Let\u2019s build something together.",
+      "summary": "A place for ideas, questions, and everyone who wants to help.",
+      "changes": [
+        {
+          "type": "New",
+          "icon": "users",
+          "title": "Developers, open to you",
+          "description": "Join from your conversation list or contribution guide. Signed-in members and guests can take part without a personal invitation. This space is public."
+        },
+        {
+          "type": "Improved",
+          "icon": "chat",
+          "title": "A safer way to create",
+          "description": "Private conversations use authenticated connection recovery and stable retry IDs. If confirmation is interrupted, retrying checks the same creation instead of making another room."
+        }
+      ]
+    },
+    {
       "id": "2026-11-01-community-care",
       "date": "2026-11-01",
       "title": "A little more peace of mind.",

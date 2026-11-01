@@ -638,3 +638,5 @@ GIPHY search and trending can be enabled with a new public browser app key; see 
 LYRIA can stay on Firebase Spark. See [Free-tier safeguards](docs/FREE_TIER_GUARDS.md) for equal action budgets, reduced background reads/writes, payload limits, activation steps, and the remaining abuse risks. These safeguards do not require paid services and cannot guarantee that free quotas will never be exhausted.
 
 For everyday connection, microphone, and privacy questions, see the website’s [help guide](help.html). Contributors can start with [their first contribution](docs/FIRST_CONTRIBUTION.md); maintainers can review the [community safety design](docs/COMMUNITY_SAFETY.md).
+
+Interested in building LYRIA? [Join the public Developers conversation](https://lyria.onrender.com/invite.html?code=DEVELOPERS). Signed-in members and guests can join without an individual invitation. Chat access does not grant staff badges or repository permissions.
