@@ -24,8 +24,22 @@
     const [existing,profile]=await Promise.all([API.query('friendRequests',{where:{compositeFilter:{op:'AND',filters:[API.equal('from',user.uid),API.equal('to',to)]}}}),API.read('users/'+user.uid)]);
     if(profile.data()?.friends?.includes(to))throw new Error('You are already friends with this member.');
     if(existing.docs.some(d=>!d.data().status || d.data().status==='pending'))throw new Error('You already sent this person a friend request.');
+    // A fixed per-recipient slot serializes new request lifecycles. Older rules
+    // deny this probe; keep the old path working until matching rules are published.
+    const slot='friendRequestSlots/'+user.uid+'/recipients/'+to;
+    let guarded=true;
+    try{await API.read(slot)}catch(error){if(error.code==='permission-denied')guarded=false;else throw error}
+    if(current()?.uid!==user.uid)throw new Error('Your account changed. Sign in again.');
     const id=crypto.randomUUID();
-    await API.commit([{update:{name:API.name('friendRequests/'+id),fields:API.fields({from:user.uid,to,status:'pending',fromName:window.LyriaAccount?.getProfile()?.displayName || user.displayName || 'LYRIA member'})},updateTransforms:[{fieldPath:'timestamp',setToServerValue:'REQUEST_TIME'}],currentDocument:{exists:false}}]);
+    try{await API.commit([...(guarded?[{update:{name:API.name(slot),fields:API.fields({requestId:id})}}]:[]),{update:{name:API.name('friendRequests/'+id),fields:API.fields({from:user.uid,to,status:'pending',fromName:window.LyriaAccount?.getProfile()?.displayName || user.displayName || 'LYRIA member'})},updateTransforms:[{fieldPath:'timestamp',setToServerValue:'REQUEST_TIME'}],currentDocument:{exists:false}}])}catch(error){
+      // A competing tab/device may have claimed the slot after our initial query.
+      // Do not report success or mask unrelated permission/connection failures.
+      if(guarded && ['permission-denied','already-exists','aborted'].includes(error.code)){
+        const pending=await API.query('friendRequests',{where:{compositeFilter:{op:'AND',filters:[API.equal('from',user.uid),API.equal('to',to)]}}});
+        if(pending.docs.some(d=>!d.data().status || d.data().status==='pending'))throw new Error('You already sent this person a friend request.');
+      }
+      throw error;
+    }
   }
   window.LyriaFriendRequests={watch,respond,send};
 })();

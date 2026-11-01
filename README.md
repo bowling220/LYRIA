@@ -630,3 +630,7 @@ for the supported SDK migration, reviewed overrides, and remaining owner actions
 Run `npm run test:dependencies` after clean installs in both `tests` and `LYRIA`.
 
 GIPHY search and trending can be enabled with a new public browser app key; see [GIF setup](docs/GIF_SETUP.md). Saved GIF messages and animated profiles continue to work without search credentials.
+
+### Free-tier safeguards
+
+LYRIA can stay on Firebase Spark. See [Free-tier safeguards](docs/FREE_TIER_GUARDS.md) for equal action budgets, reduced background reads/writes, payload limits, activation steps, and the remaining abuse risks. These safeguards do not require paid services and cannot guarantee that free quotas will never be exhausted.

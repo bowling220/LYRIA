@@ -1,5 +1,5 @@
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js';
-import {connectFirestoreEmulator,initializeFirestore,doc,onSnapshot,getDoc,collection,addDoc,query,orderBy,getDocs,limit,startAfter,runTransaction} from 'https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js';
+import {connectFirestoreEmulator,initializeFirestore,doc,onSnapshot,getDoc,collection,addDoc,query,orderBy,getDocs,limit,startAfter,runTransaction,serverTimestamp,writeBatch} from 'https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js';
 import {connectAuthEmulator,getAuth,onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js';
 import {archiveStories} from './news-archive.js?v=b51710d80e8ae71e';
 import {categories,categoryOf,dateValue,readingMinutes,excerptOf,safeImage,normalizeStory,newestFirst} from './news-model.js?v=7671fc6656542c4b';
@@ -30,6 +30,15 @@ import {categories,categoryOf,dateValue,readingMinutes,excerptOf,safeImage,norma
         const app = initializeApp(runtime?.firebase || firebaseConfig);
         const db = initializeFirestore(app, {experimentalForceLongPolling:true,useFetchStreams:false});
         const auth = getAuth(app);
+        const quotaRef=path=>({get native(){return doc(db,path)},collection:key=>quotaRef(path+'/'+key),doc:key=>quotaRef(path+'/'+key),get:async()=>{const value=await getDoc(doc(db,path));return {exists:value.exists(),data:()=>value.data()}}});
+        const quotaWriter=writer=>({get:async ref=>{const value=await writer.get(ref.native || ref);return {exists:value.exists(),data:()=>value.data()}},set:(ref,value,options)=>writer.set(ref.native || ref,value,...(options?[options]:[]))});
+        window.LyriaWriteLimits.configure({auth,serverTimestamp,db:{collection:path=>quotaRef(path),runTransaction:fn=>runTransaction(db,tx=>fn(quotaWriter(tx))),batch:()=>{const batch=writeBatch(db);return {...quotaWriter(batch),commit:()=>batch.commit()}}}});
+        async function limitedAdd(action,path,payload){
+          if(!await window.LyriaWriteLimits.enabled())return addDoc(collection(db,...path),payload);
+          const id=crypto.randomUUID(),ref={native:doc(db,...path,id)};
+          return window.LyriaWriteLimits.run(action,id,async(writer,legacy)=>{writer.set(ref,payload);if(legacy)await writer.commit();return {id}});
+        }
+
         if(runtime?.emulators){connectFirestoreEmulator(db,runtime.emulators.host,runtime.emulators.firestorePort);connectAuthEmulator(auth,'http://'+runtime.emulators.host+':'+runtime.emulators.authPort,{disableWarnings:true})}
         const newsAuthReady = new Promise(resolve => {
             let unsubscribe = () => {};
@@ -124,7 +133,7 @@ $('journal-more').addEventListener('click',async()=>{
 function paintLike(button,liked){button.replaceChildren(icon('heart'),document.createTextNode(liked?'Liked':'Like this story'));button.classList.toggle('liked',liked);button.setAttribute('aria-pressed',String(liked))}
 async function toggleLike(story,button){
  if(button.disabled)return;button.disabled=true;
- try{const user=await getNewsUser(true);if(!user)return;const id=story.postId || story.commentId,like=doc(db,'userLikes',user.uid,'likes',id),post=doc(db,'posts',id);const liked=await runTransaction(db,async transaction=>{const [mine,total]=await Promise.all([transaction.get(like),transaction.get(post)]);const wasLiked=Boolean(mine.data()?.liked);const current=Math.max(0,Number(total.data()?.likes)||0);transaction.set(post,{likes:Math.max(0,current+(wasLiked?-1:1))},{merge:true});transaction.set(like,{liked:!wasLiked});return !wasLiked});if(button.isConnected)paintLike(button,liked);
+ try{const user=await getNewsUser(true);if(!user)return;const id=story.postId || story.commentId,like=doc(db,'userLikes',user.uid,'likes',id),post=doc(db,'posts',id);const react=async transaction=>{const [mine,total]=await Promise.all([transaction.get(like),transaction.get(post)]);const wasLiked=Boolean(mine.data()?.liked);const current=Math.max(0,Number(total.data()?.likes)||0);transaction.set(post,{likes:Math.max(0,current+(wasLiked?-1:1))},{merge:true});transaction.set(like,{liked:!wasLiked});return !wasLiked};const liked=await window.LyriaWriteLimits.enabled()?await window.LyriaWriteLimits.run('reactions',id,react):await runTransaction(db,react);if(button.isConnected)paintLike(button,liked);
  }catch{UI.notify('Could not save your reaction. Please try again.','error')}finally{button.disabled=false}
 }
 function inlineText(parent,text){
@@ -159,7 +168,7 @@ function comments(story){
   if(snapshot.docs.length===100)list.append(el('p','journal-muted','Showing the latest 100 comments.'));
  },()=>{const retry=el('button','','Retry comments');retry.type='button';retry.addEventListener('click',()=>{const draft=input.value;route().then(()=>{const next=$('comment-input-'+story.commentId);if(next)next.value=draft})});list.replaceChildren(el('p','journal-muted','Comments couldn’t load. Please try again.'),retry)});engagementOff.push(off);
  form.addEventListener('submit',async event=>{event.preventDefault();const text=input.value.trim();if(!text || button.disabled)return;button.disabled=true;
-  try{const user=await getNewsUser(true);if(!user){status.textContent='Sign in to post your comment.';return}await addDoc(collection(db,'articles',story.commentId,'comments'),{text,timestamp:new Date().toISOString(),userId:user.uid,username:user.displayName || (user.isAnonymous?'Guest':'LYRIA member')});input.value='';status.textContent='Comment posted.'}
+  try{const user=await getNewsUser(true);if(!user){status.textContent='Sign in to post your comment.';return}await limitedAdd('comments',['articles',story.commentId,'comments'],{text,timestamp:new Date().toISOString(),userId:user.uid,username:user.displayName || (user.isAnonymous?'Guest':'LYRIA member')});input.value='';status.textContent='Comment posted.'}
   catch{status.textContent='Your comment was not posted. Please try again.'}finally{button.disabled=false}
  });return section;
 }
@@ -206,7 +215,7 @@ $('article-form').addEventListener('submit',async event=>{
  if(!title || !body || title.length>160 || body.length>30000 || (image && !safeImage(image))){$('article-publish-status').textContent='Add a headline and story, and use a valid HTTPS cover image.';return}
  publishBusy=true;const button=$('article-form').querySelector('[type=submit]');button.disabled=true;$('article-publish-status').textContent='Publishing your story…';
  const payload={authorName:$('article-author').value.trim() || user.displayName || 'LYRIA member',authorId:user.uid,authorPhotoURL:safeImage(writerProfile?.photoURL || user.photoURL),title,body,category:$('article-category').value,excerpt:$('article-excerpt').value.trim(),imageURL:safeImage(image),tags:$('article-tags').value.split(',').map(t=>t.trim()).filter(Boolean).slice(0,10),readingMinutes:readingMinutes(body),timestamp:new Date().toISOString()};
- try{const result=await addDoc(collection(db,'userArticles'),payload);const story=normalizeStory(result.id,payload);members.set(story.id,story);$('article-form').reset();UI.closeModal($('user-article-section'));$('article-publish-status').textContent='';history.pushState({scrollY:0},'',storyUrl(story.id));route({focus:true});window.scrollTo(0,0);UI.notify('Your story is published.')}
+ try{const result=await limitedAdd('articles',['userArticles'],payload);const story=normalizeStory(result.id,payload);members.set(story.id,story);$('article-form').reset();UI.closeModal($('user-article-section'));$('article-publish-status').textContent='';history.pushState({scrollY:0},'',storyUrl(story.id));route({focus:true});window.scrollTo(0,0);UI.notify('Your story is published.')}
  catch{$('article-publish-status').textContent='Your story wasn’t published. Your draft is still here; please try again.'}finally{publishBusy=false;button.disabled=false}
 });
 window.addEventListener('pagehide',()=>{feedOff?.();clearEngagement()});

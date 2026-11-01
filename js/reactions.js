@@ -12,7 +12,7 @@
    if(!uid || button.disabled)return;const selected=Array.isArray(data.reactions?.[key]) && data.reactions[key].includes(uid);
    button.disabled=true;picker.open=false;
    try{const API=window.LyriaDataAPI;await API.commit([{transform:{document:API.name('channels/'+channel+'/messages/'+id),fieldTransforms:[{fieldPath:'reactions.'+key,[selected?'removeAllFromArray':'appendMissingElements']:{values:[{stringValue:uid}]}}]},currentDocument:{exists:true}}]);refresh?.()}
-   catch(error){window.LyriaUI.notify('Reaction wasn’t saved. Check your connection and try again.','error')}
+   catch(error){window.LyriaUI.notify(error.code==='resource-exhausted'?error.message:'Reaction wasn’t saved. Check your connection and try again.','error')}
    finally{button.disabled=false}
   }
   for(const [key,emoji,label]of choices){

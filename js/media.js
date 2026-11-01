@@ -49,6 +49,7 @@
     if(url)show();else{img.hidden=true;error.hidden=false;retry.hidden=true;toggle.hidden=true;}
     return card;
   }
+  const messageAvatar=value=>{const url=safeUrl(value);return url && !url.startsWith('data:') && url.length<=4096?url:'assets/avatar.svg'};
   const profileBadges=(profile,uid)=>(window.LyriaBadges?.forProfile(profile,uid) || []).map(badge=>badge.id);
-  window.LyriaMedia={profileBadges,safeUrl,profileSource,profileBanner,image,renderGif,reduced};
+  window.LyriaMedia={messageAvatar,profileBadges,safeUrl,profileSource,profileBanner,image,renderGif,reduced};
 })();

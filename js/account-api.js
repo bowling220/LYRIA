@@ -118,6 +118,9 @@
     const current=await read(user),merged={...current.data,...patch};
     const publicData=publicProfile(user,merged);
     const root='projects/'+window.firebaseConfig.getApp().options.projectId+'/databases/(default)/documents/';
+    if(window.LyriaWriteLimits && await window.LyriaWriteLimits.enabled()){
+      const API=window.LyriaDataAPI;await API.commit([...(Object.keys(patch).length?[{update:{name:root+'users/'+user.uid,fields:fields(patch)},updateMask:{fieldPaths:Object.keys(patch)},...(createOnly?{currentDocument:{exists:false}}:current.version?{currentDocument:{updateTime:current.version}}:{})}]:current.version?[{verify:root+'users/'+user.uid,currentDocument:{updateTime:current.version}}]:[]),{update:{name:root+'profiles/'+user.uid,fields:fields(publicData)}}]);return read(user);
+    }
     try{
       await request(user,'POST','',{writes:[
         ...(Object.keys(patch).length?[{update:{name:root+'users/'+user.uid,fields:fields(patch)},updateMask:{fieldPaths:Object.keys(patch)},...(createOnly?{currentDocument:{exists:false}}:current.version?{currentDocument:{updateTime:current.version}}:{})}]:current.version?[{verify:root+'users/'+user.uid,currentDocument:{updateTime:current.version}}]:[]),
@@ -131,6 +134,13 @@
   }
   const save=(user,patch)=>write(user,patch);
   const create=(user,data)=>write(user,data,true);
-  async function publish(user){const own=await read(user);if(!own.exists)return own;return save(user,{})}
+  async function publish(user){
+    const own=await read(user);if(!own.exists)return own;
+    if(window.LyriaDataAPI && own.transport!=='cache'){
+      const stable=value=>value?.toDate?value.toDate().toISOString():Array.isArray(value)?value.map(stable):value && typeof value==='object'?Object.fromEntries(Object.keys(value).sort().map(key=>[key,stable(value[key])])):value;
+      try{const existing=await window.LyriaDataAPI.read('profiles/'+user.uid);if(existing.exists && !existing.metadata?.fromCache && JSON.stringify(stable(existing.data()))===JSON.stringify(stable(publicProfile(user,own.data))))return own}catch{/* The existing confirmed save path below still handles publication/recovery. */}
+    }
+    return save(user,{});
+  }
   window.LyriaAccountAPI={read,save,create,publish};
 })();

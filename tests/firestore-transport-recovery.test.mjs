@@ -3,10 +3,11 @@ import {before,after,beforeEach,test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {runInNewContext} from 'node:vm';
+import {webcrypto} from 'node:crypto';
 import {initializeTestEnvironment} from '@firebase/rules-unit-testing';
 import {doc,collection,query,where,orderBy,limit,getDocsFromServer,getDocFromServer,getDoc,setDoc,runTransaction,writeBatch,serverTimestamp,arrayUnion,arrayRemove,deleteField} from 'firebase/firestore';
 let env;
-const source=await readFile(new URL('../js/data-api.js',import.meta.url),'utf8');
+const source=await readFile(new URL('../js/data-api.js',import.meta.url),'utf8'),friendSource=await readFile(new URL('../js/friend-requests.js',import.meta.url),'utf8');
 before(async()=>{env=await initializeTestEnvironment({projectId:'demo-lyria',firestore:{host:'127.0.0.1',port:8085,rules:await readFile(new URL('../firestore.rules',import.meta.url),'utf8')}})});
 after(async()=>{await env?.cleanup()});beforeEach(async()=>{await env.clearFirestore()});
 function transport(uid){
@@ -16,7 +17,7 @@ function transport(uid){
   let q=collection(db,path);const wrapped={where:(...args)=>{q=query(q,where(...args));return wrapped},orderBy:(...args)=>{q=query(q,orderBy(...args));return wrapped},limit:n=>{q=query(q,limit(n));return wrapped},get:()=>getDocsFromServer(q)};return wrapped;
  },runTransaction:fn=>runTransaction(db,t=>fn({get:async r=>{const d=await t.get(r.native);return {exists:d.exists(),data:()=>d.data()}},set:(r,data)=>t.set(r.native,plain(data)),update:(r,data)=>t.update(r.native,plain(data)),delete:r=>t.delete(r.native)}))};
  const window={firebaseConfig:{getFirestore:()=>compat,getAuth:()=>({currentUser:{uid,getIdToken:async()=>'fixture-token'}}),getApp:()=>({options:{projectId:'demo-lyria'}})},firebase:{firestore:{FieldValue:{serverTimestamp,arrayUnion,arrayRemove,delete:deleteField}}}};
- runInNewContext(source,{window,Date,AbortController,setTimeout,clearTimeout,console:{info(){},warn(){},error(){}},fetch:async()=>({ok:false,status:503,json:async()=>({error:{message:'REST deliberately unavailable'}})})});return {API:window.LyriaDataAPI,db};
+ const context={window,crypto:webcrypto,Date,AbortController,setTimeout,clearTimeout,console:{info(){},warn(){},error(){}},fetch:async()=>({ok:false,status:503,json:async()=>({error:{message:'REST deliberately unavailable'}})})};runInNewContext(source,context);runInNewContext(friendSource,context);return {API:window.LyriaDataAPI,Friends:window.LyriaFriendRequests,db};
 }
 test('real SDK fallback writes, reads, queries and reconciles one exact message under real rules',async()=>{
  const {API:A,db}=transport('alice'),path='channels/community/messages/stable-id';
@@ -28,7 +29,7 @@ test('real SDK fallback writes, reads, queries and reconciles one exact message 
 test('friend request send and atomic acceptance work when REST is unavailable',async()=>{
  await env.withSecurityRulesDisabled(async context=>{for(const uid of ['alice','bob'])await setDoc(doc(context.firestore(),'users/'+uid),{displayName:uid,friends:[],badges:[]})});
  const {API:A}=transport('alice'),{API:B,db:bob}=transport('bob');
- await A.commit([{update:{name:A.name('friendRequests/request-1'),fields:A.fields({from:'alice',to:'bob',status:'pending'})},currentDocument:{exists:false}}]);
+ await A.commit([{update:{name:A.name('friendRequestSlots/alice/recipients/bob'),fields:A.fields({requestId:'request-1'})}},{update:{name:A.name('friendRequests/request-1'),fields:A.fields({from:'alice',to:'bob',status:'pending'})},currentDocument:{exists:false}}]);
  await assert.rejects(A.commit([{update:{name:A.name('friendRequests/request-1'),fields:A.fields({from:'alice',to:'bob',status:'pending'})},currentDocument:{exists:false}}]),e=>e.code==='permission-denied');
  const incoming=await B.query('friendRequests',{where:B.equal('to','bob')});assert.equal(incoming.docs.length,1);
  await B.commit([
@@ -43,4 +44,10 @@ test('SDK fallback never grants access to a private room or another user profile
  await env.withSecurityRulesDisabled(async context=>{await setDoc(doc(context.firestore(),'channels/private'),{name:'Private',createdBy:'owner',members:['owner']});await setDoc(doc(context.firestore(),'users/owner'),{bio:'Private'})});
  const {API:A}=transport('outsider');await assert.rejects(A.read('users/owner'),e=>e.code==='permission-denied');
  await assert.rejects(A.commit([{update:{name:A.name('channels/private/messages/attempt'),fields:A.fields({senderId:'outsider',message:'blocked'})},currentDocument:{exists:false}}]),e=>e.code==='permission-denied');
+});
+
+test('concurrent real friend helpers retain uniqueness during REST transport failure',async()=>{
+ await env.withSecurityRulesDisabled(async c=>{for(const uid of ['alice','bob'])await setDoc(doc(c.firestore(),'users/'+uid),{friends:[],badges:[]})});
+ const a=transport('alice'),b=transport('alice');let count=0,release;const ready=new Promise(r=>release=r);for(const c of [a,b]){const commit=c.API.commit;c.API.commit=async writes=>{if(++count===2)release();await ready;return commit(writes)}}
+ const result=await Promise.allSettled([a.Friends.send('bob'),b.Friends.send('bob')]);assert.equal(result.filter(r=>r.status==='fulfilled').length,1);assert.match(result.find(r=>r.status==='rejected').reason.message,/already sent/);assert.equal((await a.API.query('friendRequests',{where:{compositeFilter:{op:'AND',filters:[a.API.equal('from','alice'),a.API.equal('to','bob')]}}})).docs.length,1);
 });

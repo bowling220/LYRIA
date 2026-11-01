@@ -27,10 +27,11 @@
     const ref=db.collection('channels').doc(id),doc=await bounded(ref.get({source:'server'})),channel=doc.data();
     if(!doc.exists || channel.createdBy!==user.uid || !channel.members?.includes(user.uid))throw new Error('Only the conversation owner can manage invitations.');
     const bytes=crypto.getRandomValues(new Uint8Array(16)),code=Array.from(bytes,n=>n.toString(16).padStart(2,'0')).join('').toUpperCase();
-    const batch=db.batch();
+    const save=async(batch,legacy)=>{
     if(channel.activeInvite){const old=await bounded(db.collection('channelInvites').doc(channel.activeInvite).get({source:'server'}));if(old.exists)batch.update(db.collection('channelInvites').doc(channel.activeInvite),{revoked:true})}
     const data={channelId:id,name:channel.name || 'Conversation',createdBy:user.uid,createdAt:firebase.firestore.FieldValue.serverTimestamp(),expiresAt:Number(hours)?new Date(Date.now()+Number(hours)*3600000):null,revoked:false};
-    batch.set(db.collection('channelInvites').doc(code),data);batch.update(ref,{activeInvite:code});await bounded(batch.commit());return {code,link:url(code),owner:true,expiresAt:data.expiresAt};
+    batch.set(db.collection('channelInvites').doc(code),data);batch.update(ref,{activeInvite:code});if(legacy)await bounded(batch.commit());return {code,link:url(code),owner:true,expiresAt:data.expiresAt};};
+    return window.LyriaWriteLimits?window.LyriaWriteLimits.run('invites',code,save):save(db.batch(),true);
   }
   async function current(db,user,id){
     if(id==='community')return {code:'EVERYONE',link:url('EVERYONE'),owner:false,expiresAt:null};
