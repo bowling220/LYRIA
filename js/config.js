@@ -40,14 +40,16 @@ class FirebaseConfig {
             this.auth = firebase.auth();
             this.db = firebase.firestore();
             // Regular long-poll requests tolerate mobile network switches and buffering proxies.
-            // Configure transport before persistence or any Firestore read/write starts.
-            this.db.settings({experimentalForceLongPolling: true, useFetchStreams: false});
+            // Configure transport and any emulator host together, before persistence or reads.
+            // Firestore warns when useEmulator() replaces a host configured by settings().
+            const firestoreSettings={experimentalForceLongPolling: true, useFetchStreams: false};
+            if(runtime?.emulators){firestoreSettings.host=runtime.emulators.host+':'+runtime.emulators.firestorePort;firestoreSettings.ssl=false;}
+            this.db.settings(firestoreSettings);
             
-            if(runtime?.emulators){this.auth.useEmulator?.('http://'+runtime.emulators.host+':'+runtime.emulators.authPort,{disableWarnings:true});this.db.useEmulator?.(runtime.emulators.host,runtime.emulators.firestorePort);}
-            // Enable offline persistence
-            this.db.enablePersistence({
-                synchronizeTabs: true
-            }).catch((err) => {
+            if(runtime?.emulators)this.auth.useEmulator?.('http://'+runtime.emulators.host+':'+runtime.emulators.authPort,{disableWarnings:true});
+            // Emulator sessions are disposable and should not retain IndexedDB data. The compat
+            // persistence API is retained for production until the modular SDK migration.
+            if(!runtime?.emulators)this.db.enablePersistence({synchronizeTabs: true}).catch((err) => {
                 console.warn('Firestore persistence failed:', err.code);
             });
 

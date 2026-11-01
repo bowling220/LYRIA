@@ -1,8 +1,8 @@
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js';
 import {connectFirestoreEmulator,initializeFirestore,doc,onSnapshot,getDoc,collection,addDoc,query,orderBy,getDocs,limit,startAfter,runTransaction,serverTimestamp,writeBatch} from 'https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js';
 import {connectAuthEmulator,getAuth,onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js';
-import {archiveStories} from './news-archive.js?v=b51710d80e8ae71e';
-import {categories,categoryOf,dateValue,readingMinutes,excerptOf,safeImage,normalizeStory,newestFirst} from './news-model.js?v=7671fc6656542c4b';
+import {archiveStories} from './news-archive.js?v=375ee7c00b3e1bdd';
+import {categories,categoryOf,dateValue,readingMinutes,excerptOf,safeImage,normalizeStory,newestFirst} from './news-model.js?v=7044d34ba40adfff';
         // Load environment variables for security
         window.env = window.env || {
             VITE_FIREBASE_API_KEY: "AIzaSyDWpApnJ-mfHQJZhkbNDdsJ7l8-8rVHHTc",

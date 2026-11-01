@@ -13,6 +13,7 @@ GIFs, friends, channels, and voice. Universal technical safeguards still apply.
 - **Channel System**: Create and join channels for organized conversations
 - **Friend System**: Add friends and see their online status
 - **Personal Profiles**: Avatars, animated GIF avatars/banners, bios, and community badges for everyone
+- **Community Identity**: Per-conversation profiles, room accents/icons/banners, bundled sticker packs, and animated reactions
 - **Mobile Responsive**: Works seamlessly on desktop and mobile devices
 - **Community Safety**: Block/report controls and a private review queue for trusted moderators
 - **Connection Recovery**: Clear send status, per-conversation tab drafts, and safe retry IDs
@@ -99,73 +100,45 @@ for reproducible browser checks and the remaining live-service checks.
    cd LYRIA
    ```
 
-2. **Configure Firebase**
-   - Create a Firebase project at https://console.firebase.google.com
-   - Enable Authentication (Google and Anonymous providers)
-   - Enable Firestore Database
-   - Replace Firebase config in `js/config.js` with your project credentials
-
-3. **Set up environment variables** (Optional but recommended)
-   Create a `.env` file or configure your hosting environment with:
-   ```
-   VITE_FIREBASE_API_KEY=your_api_key
-   VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
-   VITE_FIREBASE_PROJECT_ID=your_project_id
-   VITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
-   VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
-   VITE_FIREBASE_APP_ID=your_app_id
-   VITE_FIREBASE_MEASUREMENT_ID=your_measurement_id
-   ```
-
-4. **Serve the application**
+2. **Install and configure the documented local environment**
    ```bash
-   # Using Python 3
-   python -m http.server 8000
-   
-   # Using Node.js
-   npx http-server
-   
-   # Or use any static file server
+   npm ci
+   npm ci --prefix tests
+   cp .env.example .env
+   ```
+   On Windows PowerShell, use `Copy-Item .env.example .env`. The checked-in
+   development configuration uses the local Auth and Firestore emulators and the
+   `demo-lyria` project ID. Do not replace `js/config.js` or use production account data.
+
+3. **Start the Firebase emulators**
+   ```bash
+   npm run emulators
+   ```
+
+4. **In another terminal, build and serve the website**
+   ```bash
+   npm run dev
    ```
 
 5. **Access the application**
-   Open your browser to `http://localhost:8000`
+   Open `http://127.0.0.1:8000`. See [CONTRIBUTING.md](CONTRIBUTING.md) for the
+   required Python, Java, Playwright, and optional coturn setup used by the full test suite.
 
 ## 🔧 Configuration
 
 ### Firebase Security Rules
 
-Update your Firestore security rules:
+`firestore.rules` is the authoritative policy. It keeps account documents private,
+checks room membership, validates community identity fields and sticker metadata,
+and protects reaction updates. Validate it locally before any owner-approved release:
 
-```javascript
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    // Users can read/write their own data
-    match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-      allow read: if request.auth != null; // Allow reading other users for friends
-    }
-    
-    // Channel access
-    match /channels/{channelId} {
-      allow read, write: if request.auth != null 
-        && request.auth.uid in resource.data.members;
-    }
-    
-    // Messages within channels
-    match /channels/{channelId}/messages/{messageId} {
-      allow read, write: if request.auth != null;
-    }
-    
-    // Friend requests
-    match /friendRequests/{requestId} {
-      allow read, write: if request.auth != null 
-        && (request.auth.uid == resource.data.from || request.auth.uid == resource.data.to);
-    }
-  }
-}
+```bash
+npm run test:rules
 ```
+
+Publishing rules changes production authorization and is intentionally not part of
+ordinary local setup. Follow [docs/ACTIVATION.md](docs/ACTIVATION.md) when coordinating
+a reviewed release; never paste simplified example rules over the checked-in policy.
 
 ## 🎨 Customization
 
@@ -310,7 +283,7 @@ The application includes Firebase Analytics integration. Monitor:
 **Built with ❤️ by the LYRIA Team**
 
 For questions or support, please contact the development team or create an issue on GitHub.
-The web Firebase SDK is pinned to 11.10.0. All Firestore clients use forced long
+The web Firebase SDK is pinned to 13.1.0. All Firestore clients use forced long
 polling with fetch streams disabled, before reads or persistence are initialized,
 to avoid buffering issues on mobile connections and proxies. Account HTTPS calls
 use the current Firebase user's ID token; credentials are never stored by the

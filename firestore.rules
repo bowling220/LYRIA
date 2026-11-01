@@ -54,7 +54,7 @@ service cloud.firestore {
           || (request.method == 'update' && request.resource.data.get('feedbackSubmissions',[]) == resource.data.get('feedbackSubmissions',[])));
     }
     function messageBounds() {
-      return request.resource.data.keys().hasOnly(['message','content','sender','senderId','senderPhotoURL','timestamp','type','gif','mentions','reactions','isCode'])
+      return request.resource.data.keys().hasOnly(['message','content','sender','senderId','senderPhotoURL','timestamp','type','gif','sticker','mentions','reactions','isCode'])
         && textBound(request.resource.data, 'message', 4000)
         && textBound(request.resource.data, 'content', 4000)
         && textBound(request.resource.data, 'sender', 120)
@@ -66,7 +66,13 @@ service cloud.firestore {
           && textBound(request.resource.data.gif,'title',200) && textBound(request.resource.data.gif,'url',4096)
           && textBound(request.resource.data.gif,'previewUrl',4096) && textBound(request.resource.data.gif,'stillUrl',4096)
           && textBound(request.resource.data.gif,'sourceUrl',4096) && textBound(request.resource.data.gif,'id',160)
-          && textBound(request.resource.data.gif,'providerId',160) && textBound(request.resource.data.gif,'provider',32)));
+          && textBound(request.resource.data.gif,'providerId',160) && textBound(request.resource.data.gif,'provider',32)))
+        && (!('sticker' in request.resource.data) || (request.resource.data.type == 'sticker'
+          && request.resource.data.sticker is map
+          && request.resource.data.sticker.keys().hasOnly(['id','pack','label','emoji'])
+          && textBound(request.resource.data.sticker,'id',32) && textBound(request.resource.data.sticker,'pack',20)
+          && request.resource.data.sticker.pack in ['lyria','critters','cosmic']
+          && textBound(request.resource.data.sticker,'label',80) && textBound(request.resource.data.sticker,'emoji',16)));
     }
     match /systemConfig/freeLimits { allow get: if signedIn(); allow list, write: if false; }
     match /usageLimits/{uid}/actions/{action} {
@@ -237,7 +243,12 @@ service cloud.firestore {
           && ((request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members'])
               && request.resource.data.members == resource.data.members.removeAll([request.auth.uid]))
             || (resource.data.createdBy == request.auth.uid
-              && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'activeInvite', 'updatedAt']))))
+              && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'description', 'accent', 'icon', 'bannerStyle', 'stickerPack', 'activeInvite', 'updatedAt'])
+              && textBound(request.resource.data,'description',160)
+              && request.resource.data.get('accent','#7dd3a7') in ['#7dd3a7','#7db8ff','#c5a3ff','#ff9f80','#ffd166','#ff89b5']
+              && request.resource.data.get('icon','💬') in ['💬','🌿','🎨','🎮','🎵','🚀']
+              && request.resource.data.get('bannerStyle','glow') in ['glow','waves','grid','sunset']
+              && request.resource.data.get('stickerPack','lyria') in ['lyria','critters','cosmic'])))
           || (channelId == 'personal-' + request.auth.uid && resource.data.createdBy == request.auth.uid
             && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members'])
             && request.resource.data.members.size() == resource.data.members.size() + 1
@@ -271,7 +282,11 @@ service cloud.firestore {
               || (next.diff(old).affectedKeys().hasOnly(['sad']) && reactionStep('sad'))
               || (next.diff(old).affectedKeys().hasOnly(['celebrate']) && reactionStep('celebrate'))
               || (next.diff(old).affectedKeys().hasOnly(['fire']) && reactionStep('fire'))
-              || (next.diff(old).affectedKeys().hasOnly(['eyes']) && reactionStep('eyes')));
+              || (next.diff(old).affectedKeys().hasOnly(['eyes']) && reactionStep('eyes'))
+              || (next.diff(old).affectedKeys().hasOnly(['clap']) && reactionStep('clap'))
+              || (next.diff(old).affectedKeys().hasOnly(['rocket']) && reactionStep('rocket'))
+              || (next.diff(old).affectedKeys().hasOnly(['hundred']) && reactionStep('hundred'))
+              || (next.diff(old).affectedKeys().hasOnly(['sparkles']) && reactionStep('sparkles')));
         }
         allow create: if channelMember(channelId) && messageBounds() && rateAllowed('messages',messageId)
           && request.resource.data.get('senderId', '') == request.auth.uid
@@ -289,6 +304,18 @@ service cloud.firestore {
       match /typingStatus/{uid} {
         allow read: if channelMember(channelId);
         allow write: if channelMember(channelId) && isSelf(uid);
+      }
+
+      match /memberProfiles/{uid} {
+        allow get, list: if channelMember(channelId);
+        allow create, update: if channelMember(channelId) && isSelf(uid) && rateAllowed('profiles',uid)
+          && request.resource.data.keys().hasOnly(['displayName','bio','photoURL','bannerURL','updatedAt'])
+          && textBound(request.resource.data,'displayName',48) && textBound(request.resource.data,'bio',240)
+          && textBound(request.resource.data,'photoURL',4096) && textBound(request.resource.data,'bannerURL',4096)
+          && (request.resource.data.get('photoURL','') == '' || request.resource.data.photoURL.matches('https://.*'))
+          && (request.resource.data.get('bannerURL','') == '' || request.resource.data.bannerURL.matches('https://.*'))
+          && request.resource.data.updatedAt == request.time;
+        allow delete: if channelMember(channelId) && isSelf(uid) && rateAllowed('profiles',uid);
       }
     }
 

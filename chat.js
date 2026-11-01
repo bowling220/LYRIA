@@ -43,6 +43,7 @@ function renderChannelIdentity(id){
     document.getElementById('message-input').placeholder=id===COMMUNITY_CHANNEL_ID?'Message everyone…':'Message #'+name;
     window.setupCallListeners?.(id,name);
     window.LyriaShell?.select(id,name,currentUser,hubChannels);
+    window.LyriaCommunityIdentity?.select(id);
 }
 let lastMessageTimestamp = null;
 let unsubscribeFromMessages = null;
@@ -529,12 +530,13 @@ async function sendMessage(messageText, isCode = false) {
     const retryKey='lyria:message-retry:'+currentUser.uid+':'+channelId;
     if(!pending)try{const saved=JSON.parse(sessionStorage.getItem(retryKey));const write=saved?.writes?.[0];if(saved?.writes?.length===1 && saved.message===messageText.trim() && write?.update?.fields?.senderId?.stringValue===currentUser.uid && write.update.name.startsWith(window.LyriaDataAPI.name('channels/'+channelId+'/messages/')))pending=saved}catch{}
     if (!pending || pending.message !== messageText.trim()) {
+        const identity=window.LyriaCommunityIdentity?.currentProfile(window.LyriaAccount.getProfile()) || window.LyriaAccount.getProfile();
         pending = {message: messageText.trim(), writes: [{update:{name:window.LyriaDataAPI.name('channels/'+channelId+'/messages/'+crypto.randomUUID()),fields:window.LyriaDataAPI.fields({
             message: messageText.trim(),
-            sender: document.getElementById('user-name').textContent || currentUser.displayName || 'LYRIA member',
+            sender: identity.displayName || document.getElementById('user-name').textContent || currentUser.displayName || 'LYRIA member',
             senderId: currentUser.uid,
             mentions: window.LyriaMentions.ids(messageText),
-            senderPhotoURL: window.LyriaMedia.messageAvatar(document.getElementById('user-avatar').src)
+            senderPhotoURL: window.LyriaMedia.messageAvatar(identity.photoURL || document.getElementById('user-avatar').src)
         })},updateTransforms:[{fieldPath:'timestamp',setToServerValue:'REQUEST_TIME'}],currentDocument:{exists:false}}]};
     }
     pendingMessageSends.set(pendingKey,pending);
@@ -563,7 +565,7 @@ window.sendLibraryGif = async function sendLibraryGif(id) {
     const gif = window.LyriaGifLibrary.metadata(id);
     const channel = currentChannel;
     const user = currentUser;
-    const profile = window.LyriaAccount.getProfile();
+    const profile = window.LyriaCommunityIdentity?.currentProfile(window.LyriaAccount.getProfile()) || window.LyriaAccount.getProfile();
     const key=JSON.stringify(['gif',user.uid,channel,id]),storageKey='lyria:message-retry:'+user.uid+':'+channel+':gif';
     let pending=pendingMessageSends.get(key);
     if(!pending)try{const saved=JSON.parse(sessionStorage.getItem(storageKey)),write=saved?.writes?.[0];if(saved?.gifId===id && saved.writes.length===1 && write?.update?.fields?.senderId?.stringValue===user.uid && write.update.name.startsWith(window.LyriaDataAPI.name('channels/'+channel+'/messages/')))pending=saved}catch{}
@@ -580,6 +582,15 @@ window.sendLibraryGif = async function sendLibraryGif(id) {
     const status=document.getElementById('message-send-status');status.textContent='Sending GIF…';
     try{await window.LyriaDataAPI.commit(pending.writes);pendingMessageSends.delete(key);try{sessionStorage.removeItem(storageKey)}catch{};if(currentChannel===channel){unsubscribeFromMessages?.refresh?.();status.textContent='Sent.'}}
     catch(error){if(currentChannel===channel)status.textContent='GIF not confirmed. Retry your selection when connected.';throw error}
+};
+
+window.sendSticker = async function sendSticker(sticker) {
+    if (!currentUser || !currentChannel) throw new Error('Wait for your conversation to finish loading.');
+    if(!sticker || !/^[a-z0-9-]{1,32}$/.test(sticker.id || '') || !/^[a-z]{1,20}$/.test(sticker.pack || ''))throw new Error('Unknown sticker.');
+    const channel=currentChannel,user=currentUser,profile=window.LyriaCommunityIdentity?.currentProfile(window.LyriaAccount.getProfile()) || window.LyriaAccount.getProfile();
+    const write={update:{name:window.LyriaDataAPI.name('channels/'+channel+'/messages/'+crypto.randomUUID()),fields:window.LyriaDataAPI.fields({message:sticker.label,type:'sticker',sticker:{id:sticker.id,pack:sticker.pack,label:String(sticker.label).slice(0,80),emoji:String(sticker.emoji).slice(0,16)},sender:profile.displayName || user.displayName || 'LYRIA member',senderId:user.uid,senderPhotoURL:window.LyriaMedia.messageAvatar(profile.photoURL || user.photoURL)})},updateTransforms:[{fieldPath:'timestamp',setToServerValue:'REQUEST_TIME'}],currentDocument:{exists:false}};
+    const status=document.getElementById('message-send-status');status.textContent='Sending sticker…';
+    await window.LyriaDataAPI.commit([write]);if(currentChannel===channel){unsubscribeFromMessages?.refresh?.();status.textContent='Sent.'}
 };
 
 function escapeHtml(unsafe) {
@@ -781,19 +792,19 @@ function loadMessages(channelId,{unreadOnly=false}={}) {
             if(data.senderId){
                 const inlineBadges=document.createElement('span');inlineBadges.className='message-badges';inlineBadges.dataset.userId=data.senderId;sender.append(inlineBadges);
                 if(!users.has(data.senderId))users.set(data.senderId,window.LyriaDataAPI.read((data.senderId===currentUser.uid?'users/':'profiles/')+data.senderId));
-                users.get(data.senderId).then(user=>{
-                    if(!message.isConnected || !user.exists)return;
-                    avatar.src=window.LyriaMedia.profileSource(user.data());
-                    name.textContent=user.data().displayName || name.textContent;
+                users.get(data.senderId).then(user=>window.LyriaCommunityIdentity?.resolveProfile(channelId,data.senderId,user.data()) || user.data()).then(profile=>{
+                    if(!message.isConnected || !profile)return;
+                    avatar.src=window.LyriaMedia.profileSource(profile);
+                    name.textContent=profile.displayName || name.textContent;
                     const ownProfile=window.LyriaAccount.getProfile();
-                    const badgeProfile=data.senderId===firebase.auth().currentUser?.uid && Object.keys(ownProfile).length?ownProfile:user.data();
+                    const badgeProfile=data.senderId===firebase.auth().currentUser?.uid && Object.keys(ownProfile).length?ownProfile:profile;
                     window.LyriaBadges.render(inlineBadges,badgeProfile,data.senderId,{inline:true});
                 }).catch(error=>console.warn('Badges unavailable',error));
             }
             const content=document.createElement('div');content.className='message-content';
             if(data.type==='gif'){
                 window.LyriaMedia.renderGif(content,data,{onLoad:()=>{if(nearBottom && container.scrollHeight-container.scrollTop-container.clientHeight<140)container.scrollTop=container.scrollHeight}});
-            }else{content.textContent=data.message || data.content || ''}
+            }else if(data.type==='sticker' && data.sticker){content.classList.add('sticker-message');const sticker=document.createElement('span');sticker.className='sticker-art';sticker.textContent=data.sticker.emoji || '✨';sticker.setAttribute('role','img');sticker.setAttribute('aria-label',data.sticker.label || 'Sticker');const label=document.createElement('small');label.textContent=data.sticker.label || 'Sticker';content.append(sticker,label)}else{content.textContent=data.message || data.content || ''}
             const at=data.timestamp?.toMillis?.() || data.timestamp?.toDate?.().getTime() || 0;
             if(!firstUnread && at>readAt && data.senderId!==currentUser.uid){firstUnread=document.createElement('div');firstUnread.id='first-unread-marker';firstUnread.className='first-unread-marker';firstUnread.textContent='New since your last read';container.append(firstUnread)}
             if(Array.isArray(data.mentions) && data.mentions.includes(currentUser.uid)){message.classList.add('message-mentioned');const label=document.createElement('span');label.className='mention-label';label.textContent='Mentioned you';sender.append(label)}
@@ -914,6 +925,7 @@ window.addEventListener('lyria:profile-updated',event=>{
     document.querySelectorAll('.message-badges').forEach(container=>{if(container.dataset.userId===uid)window.LyriaBadges.render(container,profile,uid,{inline:true})});
     if(document.getElementById('profile-modal')?.dataset.userId===uid)renderProfileBadges(profile,uid);
 });
+window.addEventListener('lyria:room-identity-updated',event=>{if(event.detail?.roomId===currentChannel)loadMessages(currentChannel)});
 
 window.addEventListener('lyria:open-member-profile',event=>{const uid=event.detail?.uid;if(typeof uid==='string' && uid.length<=128)showUserProfileModal(uid)});
 
@@ -923,10 +935,10 @@ function showUserProfileModal(uid,{canOpen=()=>true}={}) {
     const viewer=currentUser?.uid;
     profileUserId = uid; // Set the profileUserId to the ID of the user being viewed
 
-    return window.LyriaDataAPI.read((uid===currentUser?.uid?'users/':'profiles/')+uid).then(doc => {
+    return window.LyriaDataAPI.read((uid===currentUser?.uid?'users/':'profiles/')+uid).then(async doc => {
         if(profileUserId!==uid || firebase.auth().currentUser?.uid!==viewer || !canOpen())return;
         if (doc.exists) {
-            const userData = doc.data();
+            const userData = await (window.LyriaCommunityIdentity?.resolveProfile(currentChannel,uid,doc.data()) || doc.data());
             const profileName = userData.displayName || 'User';
             const profileImage = document.getElementById('profile-modal-image');
             profileImage.src = window.LyriaMedia.profileSource(userData);

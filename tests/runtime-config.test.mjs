@@ -13,12 +13,12 @@ test('preview refuses production and hosted builds fail closed with missing conf
  assert.equal(runtimeConfig({...configured,LYRIA_ENV:'preview'}).emulators,undefined);
  assert.throws(()=>runtimeConfig({...configured,LYRIA_ENV:'preview',LYRIA_SITE_ORIGIN:'http://localhost'}),/HTTPS/);
 });
-test('compat SDK transport settings precede emulator routing',async()=>{
+test('compat SDK configures transport and emulator host atomically',async()=>{
  const {readFile}=await import('node:fs/promises');const {runInNewContext}=await import('node:vm');
- const calls=[],auth={useEmulator:()=>calls.push('auth-emulator')},db={settings:()=>calls.push('settings'),useEmulator:()=>calls.push('firestore-emulator'),enablePersistence:()=>Promise.resolve()};
+ const calls=[],auth={useEmulator:()=>calls.push('auth-emulator')},db={settings:value=>calls.push(['settings',value]),useEmulator:()=>calls.push('firestore-emulator'),enablePersistence:()=>Promise.resolve()};
  const window={},context={window,location:{origin:'http://localhost:8000'},document:{addEventListener:()=>{}},console:{log:()=>{},warn:()=>{},error:()=>{}},firebase:{apps:[],initializeApp:options=>({options}),auth:()=>auth,firestore:()=>db}};
  runInNewContext(await readFile(new URL('../js/runtime-config.js',import.meta.url),'utf8'),context);
  runInNewContext(await readFile(new URL('../js/config.js',import.meta.url),'utf8'),context);
- await window.firebaseConfig.initialize();assert.ok(calls.indexOf('settings')<calls.indexOf('firestore-emulator'));
+ await window.firebaseConfig.initialize();assert.equal(calls.filter(value=>value==='firestore-emulator').length,0);assert.equal(calls[0][0],'settings');assert.equal(calls[0][1].host,'127.0.0.1:8085');assert.equal(calls[0][1].ssl,false);assert.equal(calls[0][1].experimentalForceLongPolling,true);assert.equal(calls[0][1].useFetchStreams,false);
  assert.equal(window.firebaseConfig.getApp().options.projectId,'demo-lyria');
 });
