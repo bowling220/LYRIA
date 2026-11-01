@@ -1,6 +1,6 @@
 /* Atomic per-person reactions preserve simultaneous updates from other members. */
 (() => {
- const choices=[['like','👍','Like'],['heart','❤️','Love'],['laugh','😂','Laugh'],['wow','😮','Wow'],['sad','😢','Sad'],['celebrate','🎉','Celebrate'],['fire','🔥','Fire'],['eyes','👀','Watching']];
+ const choices=[['like','👍','Like'],['heart','❤️','Love'],['laugh','😂','Laugh'],['wow','😮','Wow'],['sad','😢','Sad'],['celebrate','🎉','Celebrate'],['fire','🔥','Fire'],['eyes','👀','Watching'],['clap','👏','Applause'],['rocket','🚀','Launch'],['hundred','💯','One hundred'],['sparkles','✨','Sparkles']];
  function mount(message,data,channel,id,refresh){
   if(data.type==='system')return;
   const bar=document.createElement('div');bar.className='message-reactions';
@@ -17,7 +17,7 @@
   }
   for(const [key,emoji,label]of choices){
    const members=Array.isArray(data.reactions?.[key])?[...new Set(data.reactions[key].filter(v=>typeof v==='string'))]:[];
-   if(members.length){const b=document.createElement('button');b.type='button';b.textContent=emoji+' '+members.length;b.setAttribute('aria-label',label+': '+members.length+'. '+(members.includes(uid)?'Remove your reaction':'Add your reaction'));b.setAttribute('aria-pressed',String(members.includes(uid)));b.onclick=()=>toggle(key,b);bar.append(b)}
+   if(members.length){const b=document.createElement('button');b.type='button';b.textContent=emoji+' '+members.length;b.setAttribute('aria-label',label+': '+members.length+'. '+(members.includes(uid)?'Remove your reaction':'Add your reaction'));b.setAttribute('aria-pressed',String(members.includes(uid)));if(members.includes(uid))b.classList.add('super-reaction');b.onclick=()=>toggle(key,b);bar.append(b)}
    const b=document.createElement('button');b.type='button';b.textContent=emoji;b.setAttribute('aria-label',label);b.setAttribute('aria-pressed',String(members.includes(uid)));b.onclick=()=>toggle(key,b);menu.append(b);
   }
   bar.append(picker);message.append(bar);

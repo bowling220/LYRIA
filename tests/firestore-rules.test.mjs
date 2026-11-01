@@ -207,6 +207,27 @@ test('members react atomically to messages without replacing other reactions or 
  await assertFails(updateDoc(doc(bob,'channels/private/messages/react'),{'reactions.heart':arrayUnion('bob')}));
 });
 
+test('conversation identity, member profiles, stickers, and expanded reactions stay scoped to members',async()=>{
+ const alice=member('alice'),bob=member('bob'),eve=member('eve');
+ const room=doc(alice,'channels/identity-room');
+ await env.withSecurityRulesDisabled(async context=>setDoc(doc(context.firestore(),'channels/identity-room'),{name:'Identity room',createdBy:'alice',members:['alice','bob']}));
+ await assertSucceeds(updateDoc(room,{description:'A colorful shared corner',accent:'#c5a3ff',icon:'🎨',bannerStyle:'grid',stickerPack:'critters',updatedAt:serverTimestamp()}));
+ await assertFails(updateDoc(doc(bob,room.path),{accent:'#ff89b5',updatedAt:serverTimestamp()}));
+ await assertFails(updateDoc(room,{accent:'#000000',updatedAt:serverTimestamp()}));
+ const aliceProfile=doc(alice,'channels/identity-room/memberProfiles/alice');
+ await assertSucceeds(setDoc(aliceProfile,{displayName:'Artful Alice',bio:'Painting here.',photoURL:'https://example.test/alice.png',bannerURL:'',updatedAt:serverTimestamp()}));
+ assert.equal((await assertSucceeds(getDoc(doc(bob,aliceProfile.path)))).data().displayName,'Artful Alice');
+ await assertSucceeds(setDoc(doc(bob,'channels/identity-room/memberProfiles/bob'),{displayName:'Builder Bob',bio:'',photoURL:'',bannerURL:'',updatedAt:serverTimestamp()}));
+ await assertFails(setDoc(doc(bob,'channels/identity-room/memberProfiles/bob'),{displayName:'Builder Bob',bio:'',photoURL:'http://insecure.example/avatar.png',bannerURL:'',updatedAt:serverTimestamp()}));
+ await assertFails(getDoc(doc(eve,aliceProfile.path)));
+ await assertFails(setDoc(doc(bob,aliceProfile.path),{displayName:'Spoofed',bio:'',photoURL:'',bannerURL:'',updatedAt:serverTimestamp()}));
+ const sticker=await assertSucceeds(addDoc(collection(bob,'channels/identity-room/messages'),{senderId:'bob',sender:'Builder Bob',message:'Friendly frog',type:'sticker',sticker:{id:'frog',pack:'critters',label:'Friendly frog',emoji:'🐸'},timestamp:serverTimestamp()}));
+ await assertSucceeds(updateDoc(doc(alice,sticker.path),{'reactions.sparkles':arrayUnion('alice')}));
+ assert.deepEqual((await getDoc(sticker)).data().reactions.sparkles,['alice']);
+ await assertFails(addDoc(collection(bob,'channels/identity-room/messages'),{senderId:'bob',type:'sticker',sticker:{id:'x'.repeat(40),pack:'critters',label:'Bad',emoji:'🐸'}}));
+ await assertFails(addDoc(collection(bob,'channels/identity-room/messages'),{senderId:'bob',type:'sticker',sticker:{id:'frog',pack:'untrusted',label:'Bad pack',emoji:'🐸'}}));
+});
+
 test('profile HTTPS edits preserve ignored legacy membership fields and unrelated data',async()=>{
  const {runInNewContext}=await import('node:vm');
  const window={firebaseConfig:{getApp:()=>({options:{projectId:'demo-lyria'}})}};
