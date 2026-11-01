@@ -15,11 +15,12 @@ with sync_playwright() as p:
   page.wait_for_function("document.querySelector('.message-reactions>button[aria-pressed=true]')")
   assert message.get_by_role('button',name='Love: 1. Remove your reaction').count()==1
   message.get_by_role('button',name='Love: 1. Remove your reaction').click()
-  page.wait_for_function("!document.querySelector('.message-reactions>button')")
+  page.wait_for_function("!document.querySelector('.message-reactions>button[aria-pressed]')")
   page.evaluate("__failCommit=true")
   message.locator('summary').click();message.get_by_role('button',name='Fire',exact=True).click()
   page.wait_for_function("document.body.textContent.includes('Reaction wasn’t saved')")
-  assert message.locator('.message-reactions>button').count()==0
+  assert message.locator('.message-reactions>button[aria-pressed]').count()==0
+  assert message.get_by_role('button',name='Report message from Maya').count()==1
   page.evaluate("__failCommit=false;LyriaUI.openModal(document.getElementById('settings-modal'))")
   page.get_by_role('button',name='Midnight',exact=True).click()
   assert page.evaluate('LyriaAppearance.get().hue')==235

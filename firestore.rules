@@ -251,14 +251,39 @@ service cloud.firestore {
       match /messages/{messageId} {
         allow get: if channelMember(channelId);
         allow list: if channelMember(channelId) && queryBound(1000);
+        function reactionStep(key) {
+          let old = resource.data.get('reactions',{}).get(key,[]);
+          let next = request.resource.data.get('reactions',{}).get(key,[]);
+          return old is list && next is list
+            && ((next.size() == old.size() + 1 && next.hasAll(old)
+              && next.toSet().difference(old.toSet()) == [request.auth.uid].toSet())
+              || next == old.removeAll([request.auth.uid]));
+        }
+        function reactionChange() {
+          let old = resource.data.get('reactions',{});
+          let next = request.resource.data.get('reactions',{});
+          return old is map && next is map
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions'])
+            && ((next.diff(old).affectedKeys().hasOnly(['like']) && reactionStep('like'))
+              || (next.diff(old).affectedKeys().hasOnly(['heart']) && reactionStep('heart'))
+              || (next.diff(old).affectedKeys().hasOnly(['laugh']) && reactionStep('laugh'))
+              || (next.diff(old).affectedKeys().hasOnly(['wow']) && reactionStep('wow'))
+              || (next.diff(old).affectedKeys().hasOnly(['sad']) && reactionStep('sad'))
+              || (next.diff(old).affectedKeys().hasOnly(['celebrate']) && reactionStep('celebrate'))
+              || (next.diff(old).affectedKeys().hasOnly(['fire']) && reactionStep('fire'))
+              || (next.diff(old).affectedKeys().hasOnly(['eyes']) && reactionStep('eyes')));
+        }
         allow create: if channelMember(channelId) && messageBounds() && rateAllowed('messages',messageId)
-          && (request.resource.data.get('senderId', '') == request.auth.uid
-            || (channelId != 'community' && request.resource.data.get('type', '') == 'system'));
+          && request.resource.data.get('senderId', '') == request.auth.uid
+          && request.resource.data.get('reactions',{}) is map && request.resource.data.get('reactions',{}).size() == 0;
         allow update, delete: if channelMember(channelId) && rateAllowed('reactions',messageId)
-          && ((request.method == 'delete' && moderator()) || resource.data.get('senderId', '') == request.auth.uid
-            || (channelId != 'community' && resource.data.get('type', '') == 'system')
-            || (request.method == 'update'
-              && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions'])));
+          && ((request.method == 'delete' && moderator())
+            || (resource.data.get('senderId', '') == request.auth.uid
+              && (request.method == 'delete' || (messageBounds()
+                && request.resource.data.get('senderId','') == request.auth.uid
+                && request.resource.data.get('type','') == resource.data.get('type','')
+                && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['reactions']))))
+            || (request.method == 'update' && reactionChange()));
       }
 
       match /typingStatus/{uid} {

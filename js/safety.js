@@ -17,7 +17,7 @@
     const p = window.LyriaAccount?.getProfile() || {};
     return (
       ["admin", "moderator"].includes(p.role) ||
-      (p.badges || []).some((b) =>
+      (Array.isArray(p.badges) ? p.badges : []).some((b) =>
         ["admin", "administrator", "moderator", "mod"].includes(
           typeof b === "string" ? b.trim().toLowerCase() : "",
         ),

@@ -30,6 +30,11 @@ with sync_playwright() as p:
   page.screenshot(path=str(ART/f'community-{width}.png'),full_page=True)
   assert not errors,errors
   page.close()
+ # Malformed old badge fields must not break ordinary profile startup.
+ page=make_page(browser,ROOT);legacy_errors=[];page.on('pageerror',lambda e:legacy_errors.append(str(e)))
+ page.add_init_script("__testData.get('users/test-member').badges='unknown legacy value';")
+ page.goto('http://localhost:8124/home.html?view=hub');page.wait_for_function("document.getElementById('account-load-status').dataset.state==='ready'")
+ assert page.locator('#open-moderation').is_hidden();assert not legacy_errors,legacy_errors;page.close()
  # Moderator queue uses the same real API adapter and cannot invent report counts.
  page=make_page(browser,ROOT,1440,1000)
  page.add_init_script("__testData.get('users/test-member').role='moderator';__testData.set('abuseReports/review',{reporterId:'maya',targetUserId:'test-member',status:'open',reason:'spam',details:'Fixture-only concern'});")
