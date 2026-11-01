@@ -42,14 +42,14 @@ test('Superstatic hosting source patterns work with the callable compatibility e
  assert.equal(configMatcher('/assets/icon.png',{glob:'/assets/*.{png,svg}'}),true);assert.equal(configMatcher('/assets/icon.exe',{glob:'/assets/*.{png,svg}'}),false);
 });
 test('archiver globs, readdir filtering and Exegesis controller discovery stay compatible',()=>withFiles(async root=>{
- const expand=tooling('archiver-utils/file.js').expand;assert.deepEqual(expand({cwd:root,nodir:true},['**/*.js','!ignored/**']).sort(),['index.js','nested/controller.js']);
+ const expand=tooling('archiver-utils/file.js').expand;assert.deepEqual(expand({cwd:root,nodir:true},['**/*.js','!ignored/**']).map(path=>path.replaceAll('\\','/')).sort(),['index.js','nested/controller.js']);
  const readdir=tooling('readdir-glob');const matches=await new Promise((resolve,reject)=>{const found=[];const reader=readdir(root,{pattern:'**/*.js',nodir:true,ignore:'ignored/**'});reader.on('match',m=>found.push(m.relative));reader.on('end',()=>resolve(found.sort()));reader.on('error',reject)});assert.deepEqual(matches,['index.js','nested/controller.js']);
- const {loadControllersSync}=tooling('exegesis/lib/controllers/loadControllers.js');const controllers=loadControllersSync(root,'**/*.js');assert.equal(controllers['nested/controller'].ok,true);assert.equal(controllers.index.ok,true);
+ const {loadControllersSync}=tooling('exegesis/lib/controllers/loadControllers.js');const controllers=Object.fromEntries(Object.entries(loadControllersSync(root,'**/*.js')).map(([key,value])=>[key.replaceAll('\\','/'),value]));assert.equal(controllers['nested/controller'].ok,true);assert.equal(controllers.index.ok,true);
  const archiver=tooling('archiver');const archive=archiver('zip');let bytes=0;archive.on('data',chunk=>bytes+=chunk.length);const ended=new Promise((resolve,reject)=>{archive.on('end',resolve);archive.on('error',reject)});archive.glob('**/*.js',{cwd:root});await archive.finalize();await ended;assert.ok(bytes>0);
 }));
 test('patched glob aborts canceled traversal and rimraf still removes an explicit glob target',()=>withFiles(async root=>{
  const glob=tooling('glob'),controller=new AbortController();controller.abort(new Error('fixture cancellation'));
  await assert.rejects(glob.glob('**/*',{cwd:root,signal:controller.signal}),/fixture cancellation/);
  assert.equal(tooling('glob/package.json').version,'14.0.3');
- const {rimraf}=tooling('rimraf');await rimraf(join(root,'ignored','*.txt'),{glob:true});assert.equal(glob.globSync('ignored/*.txt',{cwd:root}).length,0);assert.equal(glob.globSync('nested/*.md',{cwd:root}).length,1);
+ const {rimraf}=tooling('rimraf');await rimraf(root.replaceAll('\\','/')+'/ignored/*.txt',{glob:true});assert.equal(glob.globSync('ignored/*.txt',{cwd:root}).length,0);assert.equal(glob.globSync('nested/*.md',{cwd:root}).length,1);
 }));

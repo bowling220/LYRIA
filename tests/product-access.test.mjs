@@ -29,7 +29,7 @@ test('all five page links resolve; retired addresses cannot ship their old imple
   const retired=await readFile(resolve(root,'dist/client',path));
   assert.deepEqual(await readFile(resolve(root,path)),retired,'source and built compatibility response must match');
   if(path.endsWith('.html')){assert.match(retired.toString(),/location.replace\("\/"\)/);assert.doesNotMatch(retired.toString(),forbidden)}
-  else if(path.endsWith('.css'))assert.equal(retired.toString(),'/* Retired stylesheet. LYRIA uses css/theme.css. */\n');
+  else if(path.endsWith('.css'))assert.equal(retired.toString().replaceAll('\r\n','\n'),'/* Retired stylesheet. LYRIA uses css/theme.css. */\n');
   else assert.ok(retired.length<100,'retired badge must not retain its image');
  }
 });
