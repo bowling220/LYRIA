@@ -9,7 +9,8 @@ ROOT=Path(__file__).resolve().parents[1]
 for html in ROOT.glob('*.html'):
  for path,version in re.findall(r'(?:src|href)="([^"?#]+\.(?:js|css))\?v=([a-f0-9]+)"',html.read_text()):
   if path.startswith('http'):continue
-  assert hashlib.sha256((ROOT/path).read_bytes()).hexdigest().startswith(version),(html.name,path)
+  content=(ROOT/path).read_bytes().replace(b'\r\n',b'\n')
+  assert hashlib.sha256(content).hexdigest().startswith(version),(html.name,path)
 with sync_playwright() as p:
  browser=p.chromium.launch(executable_path=CHROMIUM,headless=True,args=['--no-sandbox'])
  page=make_page(browser,ROOT);errors=[];page.on('pageerror',lambda e:errors.append(str(e)))

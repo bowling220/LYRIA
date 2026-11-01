@@ -47,6 +47,23 @@ Never use live LYRIA accounts to test a fork. If you serve source directly, the 
 runtime config still defaults to emulators. Serve `dist/client`, not the repository
 root, when publishing a static build.
 
+On Windows PowerShell, use the Python launcher and PowerShell's copy command during
+the one-time setup:
+
+```powershell
+npm ci
+npm ci --prefix tests
+py -3 -m pip install -r tests/requirements.txt
+py -3 -m playwright install chromium
+Copy-Item .env.example .env
+npm run emulators
+# In another PowerShell window:
+npm run dev
+```
+
+The npm development, emulator, rules-test, and browser-test launchers are
+cross-platform; contributors do not need to create a `python3` alias on Windows.
+
 ## Branches, code, and commits
 
 Use names such as `fix/chat-reconnect`, `feature/channel-search`, or `docs/setup`.
