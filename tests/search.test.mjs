@@ -1,0 +1,3 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {readFile} from 'node:fs/promises';import {runInNewContext} from 'node:vm';
+const window={};runInNewContext(await readFile(new URL('../js/search.js',import.meta.url),'utf8'),{window});
+test('conversation matching handles composed/decomposed accents and preserves other scripts',()=>{for(const name of ['Café créatif','Cafe\u0301 cre\u0301atif'])assert.equal(window.LyriaSearch.matches(name,'CAFE'),true);assert.equal(window.LyriaSearch.matches('東京の友達','東京'),true);assert.equal(window.LyriaSearch.matches('Study group','music'),false)});

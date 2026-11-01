@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Connection &amp; voice help · LYRIA</title>
+    <link rel="icon" href="assets/favicon.svg" />
+    <link rel="stylesheet" href="css/theme.css?v=d0ecbd5f3d6fee78" />
+    <link rel="stylesheet" href="css/main.css?v=5bba39992f20c4d2" />
+    <script src="js/ui.js?v=437ef1abbb20a4b6" defer></script>
+  </head>
+  <body>
+    <header class="top-header">
+      <a class="brand" href="home.html?view=hub">LYRIA</a>
+      <nav class="header-nav" aria-label="Main navigation">
+        <a href="home.html?view=hub">Conversations</a
+        ><a href="News.html">News</a>
+      </nav>
+    </header>
+    <main
+      class="help-page"
+      style="max-width: 760px; margin: 32px auto; padding: 24px"
+    >
+      <h1>A little help getting connected.</h1>
+      <p>Keep your people close, even when your connection has other plans.</p>
+      <section id="connection">
+        <h2>Messages and reconnection</h2>
+        <p>
+          <strong>Connecting</strong> means LYRIA is waiting for your account or
+          conversation. <strong>Offline</strong> means your browser has lost its
+          network connection. Choose Reconnect when you are online again.
+        </p>
+        <p>
+          <strong>Sent</strong> means the server confirmed your message.
+          <strong>Not confirmed</strong> means the result is uncertain. Keep
+          your draft and retry after reconnecting; LYRIA reuses the original
+          message ID to avoid sending it twice.
+        </p>
+        <p>
+          Text drafts stay in this browser tab, separately for each account and
+          conversation. Reloading restores them. Closing the tab or clearing
+          browser storage can remove drafts. Signing out clears saved message
+          drafts. Private browsing or full storage may prevent draft backup.
+        </p>
+        <p>
+          If a cooldown appears, wait for the stated time. Do not repeatedly
+          reload or send. Technical limits apply equally to everyone and help
+          LYRIA stay on its free infrastructure.
+        </p>
+      </section>
+      <section id="voice">
+        <h2>Voice and microphone</h2>
+        <ol>
+          <li>
+            Open Settings → Voice &amp; devices. Choose your microphone and use
+            Test microphone. The test stops automatically and does not send
+            audio to anyone.
+          </li>
+          <li>
+            If access is blocked, allow the microphone in your browser’s site
+            settings. On iPhone/iPad, also check Safari’s microphone permissions
+            in device settings.
+          </li>
+          <li>
+            If the microphone is busy, close other calls and retry. If your
+            device disappears, choose System default or reconnect the
+            microphone.
+          </li>
+          <li>
+            Use Check connection to test the relay without opening the
+            microphone. A missing TURN relay can make calls fail across phone
+            networks, school Wi-Fi, or restrictive routers even when the
+            microphone works.
+          </li>
+          <li>
+            After an interruption, choose Join voice again. LYRIA does not
+            automatically reopen your microphone on reload.
+          </li>
+        </ol>
+        <p>
+          Show safe diagnostics in Settings when asking for help. It excludes
+          API keys, account and device IDs, relay credentials, and IP addresses.
+          Never post an entire credentials URL or private conversation.
+        </p>
+      </section>
+      <section id="safety">
+        <h2>Blocking and reporting</h2>
+        <p>
+          Open a member’s profile to block or report them, or use Report on a
+          message. Blocking hides their messages and requests, and server rules
+          reject new direct requests and call invitations between you. It does
+          not erase existing history, remove either person from shared
+          conversations, or isolate audio in a shared voice room. Leave a shared
+          call if needed.
+        </p>
+        <p>
+          Manage blocked members in Settings. Reports include the selected
+          message text when applicable and your optional details. Moderators can
+          review reports; reporting does not automatically punish someone. Do
+          not include passwords or unrelated private information.
+        </p>
+      </section>
+      <p><a href="home.html?view=hub">Back to your conversations</a></p>
+    </main>
+  </body>
+</html>

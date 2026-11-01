@@ -14,7 +14,7 @@
         <link rel="preconnect" href="https://www.gstatic.com">
         <link rel="preload" href="assets/icon.png" as="image">
 
-        <script src="js/connection.js?v=09ce54ab67b808bc"></script>
+        <script src="js/connection.js?v=265ca95a1f1a9567"></script>
         <!-- Firebase SDKs -->
         <script src="https://www.gstatic.com/firebasejs/13.1.0/firebase-app-compat.js"></script>
         <script src="https://www.gstatic.com/firebasejs/13.1.0/firebase-auth-compat.js"></script>
@@ -31,7 +31,7 @@
         <script src="js/mobile.js?v=7bc57fa148e5fe28" defer></script>
       <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
   <link rel="stylesheet" href="css/theme.css?v=d0ecbd5f3d6fee78">
-  <link rel="stylesheet" href="css/community-shell.css?v=722594af25bf7afe">
+  <link rel="stylesheet" href="css/community-shell.css?v=43914006cf2b8976">
   <script src="js/ui.js?v=437ef1abbb20a4b6"></script>
   <script src="js/gif-library.js?v=e044e9068584ea6b"></script>
   <script src="js/badges.js?v=40763ed5718c4e15"></script>
@@ -136,7 +136,7 @@
             </section>
             <p id="community-notice" class="chat-room-notice" hidden>Everyone signed in can read this room · Latest 100 messages</p>
             <div id="unread-actions" class="unread-actions" hidden><button id="jump-first-unread" type="button">Jump to first unread</button><button id="back-to-latest" type="button" hidden>Back to latest</button><button id="mark-room-read" type="button">Mark as read</button></div>
-            <div class="messages" id="messages" role="log" aria-label="Conversation messages" aria-live="polite"><div class="empty-state"><span class="empty-icon"><span data-icon="chat" aria-hidden="true"></span></span><h2>Getting your space ready.</h2><p>Your conversations will appear here in a moment.</p></div></div>
+            <p id="message-send-status" class="message-send-status" role="status" aria-live="polite"></p><div class="messages" id="messages" role="log" aria-label="Conversation messages" aria-live="polite"><div class="empty-state"><span class="empty-icon"><span data-icon="chat" aria-hidden="true"></span></span><h2>Getting your space ready.</h2><p>Your conversations will appear here in a moment.</p></div></div>
             <!-- Typing Status Indicator -->
             <div id="typing-status" class="typing-status" style="display: none;"></div>
             <div id="mention-suggestions" class="mention-suggestions" role="listbox" aria-label="Mention a member" hidden></div>
@@ -201,7 +201,7 @@
                     <div id="profile-modal-badges" class="badges-container"></div>
                     <p id="profile-badges-empty" class="profile-empty">No badges yet</p>
                 </section>
-                <button id="call-profile-user" class="action-btn" type="button">Call</button>
+                <div id="profile-safety-actions" class="safety-actions"></div><button id="call-profile-user" class="action-btn" type="button">Call</button>
                 <button id="send-friend-request" class="action-btn profile-friend-action" type="button">Send friend request</button>
             </div>
         </div>
@@ -265,8 +265,10 @@
             <p id="contrast-save-status" class="save-status" role="status" aria-live="polite"></p>
         </div>
 
+        <section class="modal-section" aria-labelledby="safety-title"><h3 id="safety-title">Safety &amp; privacy</h3><a href="help.html">Connection, voice &amp; safety help</a><p>Blocking hides messages, requests, and direct call invitations. Shared rooms remain visible to their members.</p><div id="blocked-users"></div><button id="open-moderation" type="button" hidden>Review abuse reports</button></section>
         <section id="voice-device-settings" class="modal-section" aria-labelledby="voice-device-title">
           <h3 id="voice-device-title">Voice &amp; devices</h3>
+          <p id="voice-relay-status" class="save-status"></p><button id="voice-copy-diagnostics" type="button">Show safe diagnostics</button><pre id="voice-safe-diagnostics" tabindex="0" hidden></pre><a href="help.html#voice">Voice troubleshooting</a>
           <label for="voice-input-device">Microphone</label><select id="voice-input-device"><option value="">System default microphone</option></select>
           <div class="voice-device-actions"><button id="voice-test-input" type="button">Test microphone</button><button id="voice-stop-test" type="button" hidden>Stop test</button><button id="voice-test-connection" type="button">Check connection</button></div>
           <meter id="voice-device-level" min="0" max="1" value="0" aria-label="Microphone test level"></meter>
@@ -352,26 +354,29 @@
   </div>
 </div>
 
+<div id="report-modal" class="modal" inert aria-labelledby="report-title"><div class="modal-content compact-modal"><button id="close-report" type="button" class="close-button" aria-label="Close report"><span data-icon="close" aria-hidden="true"></span></button><h2 id="report-title">Help keep LYRIA welcoming.</h2><p>Reports are visible to moderators. Include only what they need to review the problem.</p><form id="report-form"><label for="report-reason">Reason</label><select id="report-reason"><option value="spam">Spam</option><option value="harassment">Harassment</option><option value="unsafe">Unsafe content</option><option value="other">Other</option></select><label for="report-details">Additional details (optional)</label><textarea id="report-details" maxlength="1000" rows="3"></textarea><button id="report-submit" type="submit">Submit report</button><p id="report-status" role="status"></p></form></div></div><div id="moderation-modal" class="modal" inert aria-labelledby="moderation-title"><div class="modal-content"><button id="close-moderation" type="button" class="close-button" aria-label="Close moderation"><span data-icon="close" aria-hidden="true"></span></button><h2 id="moderation-title">Community reports</h2><p>Review up to 30 open reports. Removal requires membership of the reported conversation.</p><div id="moderation-reports"></div></div></div>
     <!-- Include voiceCall.js before chat.js -->
     <script src="js/account-api.js?v=8e261892c127331e"></script>
     <script src="js/account.js?v=46b39182ae121ff3"></script>
-    <script src="js/write-limits.js?v=27e7c23dbf9f2d4a"></script>
+    <script src="js/write-limits.js?v=4354e8e75787e284"></script>
     <script src="js/data-api.js?v=2406f7c697e41f88"></script>
     <script src="js/read-state.js?v=d5762820fff273d4"></script>
     <script src="js/mentions.js?v=e94175b6db7380f0"></script>
-    <script src="js/friend-requests.js?v=4470f2c97746df28"></script>
+    <script src="js/safety.js?v=c963670685bfbf0f"></script>
+    <script src="js/friend-requests.js?v=eb13e5c621d30076"></script>
     <script src="js/voice-config.js?v=119a5da781b271fd"></script>
     <script src="js/voice-transport.js?v=fa2ca1547533d069"></script>
     <script src="js/voice-presence.js?v=85fa57d785e67145"></script>
     <script src="voiceCall.js?v=5a9d4dd8462a54f5"></script>
-    <script src="js/voice-devices.js?v=bcc60610780043c3"></script>
+    <script src="js/voice-devices.js?v=fb876d8455ee8f84"></script>
     <script src="js/voice-view.js?v=9a6f2e727cbda043"></script>
     <script src="js/reactions.js?v=f349c3d736f2ee8c"></script>
     <script src="js/invites.js?v=9ca9a291c962ae2b"></script>
-    <script src="js/community-shell.js?v=ff4d0ea94aedf284"></script>
-    <script src="chat.js?v=5339c8db79740840"></script>
-    <script src="js/call-invites.js?v=7fa101a84eecac1e"></script>
-    <script src="js/community.js?v=76e1a5acda0d84b9"></script>
+    <script src="js/search.js?v=70cd7800e033c508"></script>
+    <script src="js/community-shell.js?v=95f0e8fca45ec2ba"></script>
+    <script src="chat.js?v=d7896be2095f68b3"></script>
+    <script src="js/call-invites.js?v=92b8ec6d9e2b0912"></script>
+    <script src="js/community.js?v=40713f9d65bd6db8"></script>
     <script src="js/emoji-picker.js?v=e6b92d4b9d06ae15"></script>
     <script src="js/gif-picker.js?v=3fe0c5214cacac5d"></script>
     <script src="js/profile-media.js?v=fe26a608f0a61b46"></script>

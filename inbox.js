@@ -9,7 +9,7 @@
       if(current!==version)return;window.LyriaConnection.ready('requests');container.replaceChildren();
       if(snapshot.empty){container.innerHTML='<div class="empty-state"><span class="empty-icon">'+window.LyriaUI.icon('inbox')+'</span><h2>You’re all caught up.</h2><p>New friend requests will appear here.</p><a href="home.html?view=hub">Back to community</a></div>';return}
       for(const doc of snapshot.docs){
-        const request=doc.data(),row=document.createElement('div');row.className='inbox-message';row.dataset.requestId=doc.id;
+        const request=doc.data();if(window.LyriaSafety?.isBlocked(request.from))continue;const row=document.createElement('div');row.className='inbox-message';row.dataset.requestId=doc.id;row.dataset.senderId=request.from || '';
         const message=document.createElement('p');
         const incoming=request.to===user.uid && (!request.status || request.status==='pending');
         message.textContent=incoming?(request.fromName || 'A member')+' sent you a friend request!':request.to==='accepted_'+user.uid?(request.acceptedByName || 'A member')+' accepted your friend request!':'You '+(['decline','declined'].includes(request.status)?'declined':'accepted')+' the request from '+(request.fromName || 'a member')+'.';row.append(message);container.append(row);
@@ -27,8 +27,10 @@
         // This lookup never delays rendering the request or its controls.
         window.LyriaDataAPI.read('profiles/'+request.from).then(profile=>{if(current===version && row.isConnected && profile.exists)message.textContent=(profile.data().displayName || request.fromName || 'A member')+' sent you a friend request!'}).catch(()=>{});
       }
+      if(!container.children.length)empty('Requests from blocked members are hidden.');
     },error=>{if(current!==version)return;console.warn('Request loading failed',error);window.LyriaConnection.fail('requests','Friend requests couldn’t load. Try reconnecting.')});
   }
+  window.addEventListener('lyria:blocks-updated',()=>{if(auth?.currentUser)load()});
   (async()=>{
     try{
       await window.firebaseConfig.initialize();auth=window.firebaseConfig.getAuth();db=window.firebaseConfig.getFirestore();

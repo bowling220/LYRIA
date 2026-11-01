@@ -95,3 +95,5 @@ Keep discussions constructive and respond to review feedback. CI runs with read-
 permissions on ephemeral GitHub-hosted runners; forks receive no production secrets.
 There is no automatic PR deployment or automatic Dependabot merge. Optional previews
 are owner-operated against an isolated Firebase staging project, not live LYRIA.
+
+For a concrete first contribution, follow [the fork-to-reviewed-PR walkthrough](docs/FIRST_CONTRIBUTION.md). Issues marked `good first issue` describe the expected behavior and verification. Maintainer review remains required.

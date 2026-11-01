@@ -21,9 +21,9 @@ service cloud.firestore {
       return exists(/databases/$(database)/documents/systemConfig/freeLimits)
         && get(/databases/$(database)/documents/systemConfig/freeLimits).data.get('enabled', false) == true;
     }
-    function shortCap(a) { return a == 'messages' ? 10 : a == 'friends' ? 10 : a in ['channels','articles'] ? 3 : a == 'invites' ? 5 : a == 'profiles' ? 15 : a == 'reactions' ? 30 : 10; }
+    function shortCap(a) { return a == 'messages' ? 10 : a == 'friends' ? 10 : a in ['channels','articles','reports'] ? 3 : a == 'invites' ? 5 : a == 'profiles' ? 15 : a == 'reactions' ? 30 : 10; }
     function shortSeconds(a) { return a in ['messages','reactions'] ? 10 : 60; }
-    function longCap(a) { return a == 'messages' ? 60 : a == 'friends' ? 50 : a == 'channels' ? 15 : a == 'invites' ? 100 : a == 'profiles' ? 500 : a == 'reactions' ? 300 : a == 'articles' ? 20 : a == 'comments' ? 100 : 200; }
+    function longCap(a) { return a == 'messages' ? 60 : a == 'friends' ? 50 : a == 'channels' ? 15 : a == 'invites' ? 100 : a == 'profiles' ? 500 : a == 'reactions' ? 300 : a == 'articles' ? 20 : a == 'comments' ? 100 : a == 'reports' ? 10 : 200; }
     function longSeconds(a) { return a in ['messages','reactions'] ? 60 : 86400; }
     function stepWindow(start, count, oldStart, oldCount, seconds, cap) {
       return count is int && count > 0 && count <= cap && start is timestamp
@@ -71,13 +71,13 @@ service cloud.firestore {
     match /systemConfig/freeLimits { allow get: if signedIn(); allow list, write: if false; }
     match /usageLimits/{uid}/actions/{action} {
       allow get: if isSelf(uid); allow list, delete: if false;
-      allow create: if isSelf(uid) && action in ['messages','friends','channels','invites','profiles','calls','reactions','articles','comments']
+      allow create: if isSelf(uid) && action in ['messages','friends','channels','invites','profiles','calls','reactions','articles','comments','reports']
         && request.resource.data.keys().hasOnly(['operation','updatedAt','shortAt','shortCount','longAt','longCount'])
         && request.resource.data.operation is string && request.resource.data.operation.size() <= 200
         && request.resource.data.updatedAt == request.time
         && request.resource.data.shortAt == request.time && request.resource.data.longAt == request.time
         && request.resource.data.shortCount == 1 && request.resource.data.longCount == 1;
-      allow update: if isSelf(uid) && action in ['messages','friends','channels','invites','profiles','calls','reactions','articles','comments']
+      allow update: if isSelf(uid) && action in ['messages','friends','channels','invites','profiles','calls','reactions','articles','comments','reports']
         && request.resource.data.keys().hasOnly(['operation','updatedAt','shortAt','shortCount','longAt','longCount'])
         && request.resource.data.operation is string && request.resource.data.operation.size() <= 200
         && request.resource.data.updatedAt == request.time
@@ -134,6 +134,47 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/channels/$(resource.data.channelId)).data.createdBy == request.auth.uid
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['revoked'])
         && request.resource.data.revoked == true;
+      allow delete: if false;
+    }
+    function moderator() {
+      let own = get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+      return signedIn() && (own.get('role','user') in ['admin','moderator']
+        || own.get('badges',[]).hasAny(['admin','Admin','administrator','ADMIN','moderator','Moderator','MODERATOR','Mod','mod','MOD']));
+    }
+    function contactAllowed(sender,recipient) {
+      return !exists(/databases/$(database)/documents/users/$(sender)/blocks/$(recipient))
+        && !exists(/databases/$(database)/documents/users/$(recipient)/blocks/$(sender));
+    }
+    match /users/{uid}/blocks/{other} {
+      allow get: if isSelf(uid);
+      allow list: if isSelf(uid) && queryBound(100);
+      allow create, update: if isSelf(uid) && uid != other && rateAllowed('profiles',uid)
+        && request.resource.data.keys().hasOnly(['createdAt']) && request.resource.data.createdAt == request.time;
+      allow delete: if isSelf(uid) && rateAllowed('profiles',uid);
+    }
+    function validReport() {
+      let d=request.resource.data;
+      return d.keys().hasOnly(['reporterId','targetUserId','channelId','messageId','reason','details','evidenceText','status','createdAt'])
+        && d.reporterId == request.auth.uid && d.targetUserId is string && d.targetUserId != request.auth.uid
+        && d.targetUserId.size() <= 128 && d.reason in ['spam','harassment','unsafe','other']
+        && d.status == 'open' && d.createdAt == request.time
+        && textBound(d,'details',1000) && textBound(d,'evidenceText',4000)
+        && (('channelId' in d && 'messageId' in d && d.channelId is string && d.messageId is string
+          && d.channelId.matches('[A-Za-z0-9_-]{1,180}') && d.messageId.matches('[A-Za-z0-9_-]{1,200}')
+          && channelMember(d.channelId)
+          && get(/databases/$(database)/documents/channels/$(d.channelId)/messages/$(d.messageId)).data.senderId == d.targetUserId
+          && d.evidenceText == get(/databases/$(database)/documents/channels/$(d.channelId)/messages/$(d.messageId)).data.get('message',get(/databases/$(database)/documents/channels/$(d.channelId)/messages/$(d.messageId)).data.get('content','GIF message')))
+          || (!('channelId' in d) && !('messageId' in d) && !('evidenceText' in d)
+            && exists(/databases/$(database)/documents/profiles/$(d.targetUserId))));
+    }
+    match /abuseReports/{reportId} {
+      allow create: if signedIn() && rateAllowed('reports',reportId) && validReport();
+      allow get: if signedIn() && (!exists(/databases/$(database)/documents/abuseReports/$(reportId)) || resource.data.reporterId == request.auth.uid || moderator());
+      allow list: if signedIn() && queryBound(30) && (resource.data.reporterId == request.auth.uid || moderator());
+      allow update: if moderator() && resource.data.status == 'open'
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','reviewedBy','reviewedAt'])
+        && request.resource.data.status in ['resolved','dismissed']
+        && request.resource.data.reviewedBy == request.auth.uid && request.resource.data.reviewedAt == request.time;
       allow delete: if false;
     }
     match /friendshipApprovals/{sender}/recipients/{recipient} {
@@ -214,7 +255,7 @@ service cloud.firestore {
           && (request.resource.data.get('senderId', '') == request.auth.uid
             || (channelId != 'community' && request.resource.data.get('type', '') == 'system'));
         allow update, delete: if channelMember(channelId) && rateAllowed('reactions',messageId)
-          && (resource.data.get('senderId', '') == request.auth.uid
+          && ((request.method == 'delete' && moderator()) || resource.data.get('senderId', '') == request.auth.uid
             || (channelId != 'community' && resource.data.get('type', '') == 'system')
             || (request.method == 'update'
               && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions'])));
@@ -242,7 +283,7 @@ service cloud.firestore {
       allow create, update: if isSelf(sender) && sender != recipient
         && request.resource.data.keys().hasOnly(['requestId'])
         && request.resource.data.requestId is string && request.resource.data.requestId.size() <= 200
-        && available()
+        && available() && contactAllowed(sender,recipient)
         && nextRequest().from == sender && nextRequest().to == recipient && nextRequest().status == 'pending'
         && (!exists(/databases/$(database)/documents/users/$(sender))
           || !(recipient in getAfter(/databases/$(database)/documents/users/$(sender)).data.get('friends',[])));
@@ -271,6 +312,7 @@ service cloud.firestore {
     match /inbox/{messageId} {
       allow get: if signedIn() && (!exists(/databases/$(database)/documents/inbox/$(messageId)) || resource.data.recipientId == request.auth.uid);
       allow create: if signedIn() && rateAllowed('calls',messageId) && request.resource.data.senderId == request.auth.uid
+        && (request.resource.data.get('type','') in ['callReply','callCancel'] || contactAllowed(request.auth.uid,request.resource.data.recipientId))
         && textBound(request.resource.data,'message',4000) && textBound(request.resource.data,'recipientId',128);
       allow list, update, delete: if signedIn()
         && resource.data.recipientId == request.auth.uid;

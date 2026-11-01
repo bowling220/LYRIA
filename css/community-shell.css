@@ -1494,3 +1494,28 @@ html[data-density="compact"] .lyria-community .message {
     height: 100%;
   }
 }
+
+/* A compact list with touch-sized controls and a fixed profile rail. */
+.lyria-community .channel-btn[data-channel-id] { min-height:52px; padding-block:6px; border-radius:11px; }
+.lyria-community .channel-btn[data-channel-id] > .icon { width:18px;height:18px;padding:6px; }
+.lyria-community .channel-name {font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.lyria-community .conversation-panel-heading {padding-block:18px 12px;}
+.lyria-community .conversation-panel-heading h1 {font-size:21px;}
+.lyria-community .conversation-search {min-height:42px;}
+.lyria-community .sidebar-scroll {min-height:0;overscroll-behavior:contain;}
+.message-send-status {font-size:12px;color:var(--muted);margin:0;padding:3px 16px;min-height:0;}
+.message-send-status:empty {display:none;}
+.connection-notice[data-state="connected"] {border-color:var(--accent);}
+.connection-notice[data-state="offline"] {border-style:dashed;}
+@media(prefers-reduced-motion:reduce){.connection-notice {transition:none;}}
+.safety-actions,.message-safety-actions {display:flex;gap:8px;flex-wrap:wrap;}
+.message-report-button {font-size:11px;padding:4px 8px;min-height:28px;opacity:.7;}
+.message-report-button:focus-visible,.message-report-button:hover {opacity:1;}
+.safety-actions button,#blocked-users button {min-height:44px;}
+#blocked-users>div {display:flex;align-items:center;justify-content:space-between;gap:12px;margin-block:8px;}
+.moderation-report {padding:16px;border:1px solid var(--line);border-radius:14px;margin-block:12px;}
+.moderation-report p {white-space:pre-wrap;overflow-wrap:anywhere;}
+#report-form {display:grid;gap:10px;}
+/* Keep the profile close control above its positioned banner. */
+.profile-close {z-index:3;}
+#voice-safe-diagnostics {white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;}

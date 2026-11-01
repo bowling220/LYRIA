@@ -1,7 +1,10 @@
 /* Explicit local diagnostics. Never capture or connect automatically on reload. */
 (() => {
  const $=id=>document.getElementById(id),input=$('voice-input-device'),status=$('voice-device-status');
- let version=0,stream,context,source,analyser,timer,meterTimer,testing=false;
+ let version=0,stream,context,source,analyser,timer,meterTimer,testing=false,lastRelay='Not tested';
+ const relayConfigured=()=>!!window.LYRIA_VOICE_CONFIG?.credentialsUrl || (window.LYRIA_VOICE_CONFIG?.iceServers || []).some(s=>(Array.isArray(s.urls)?s.urls:[s.urls]).some(url=>/^turns?:/.test(url)));
+ $('voice-relay-status').textContent=relayConfigured()?'A voice relay is configured. Run the connection test to verify it.':'Direct connections only. Reliable calls across different networks need a TURN relay.';
+ $('voice-copy-diagnostics').addEventListener('click',()=>{const node=$('voice-safe-diagnostics');node.hidden=false;node.textContent=['LYRIA voice diagnostics','Network: '+(navigator.onLine?'Online':'Offline'),'Secure context: '+(isSecureContext?'Yes':'No'),'WebRTC: '+(typeof RTCPeerConnection==='function'?'Available':'Unavailable'),'Microphone API: '+(navigator.mediaDevices?.getUserMedia?'Available':'Unavailable'),'Relay configured: '+(relayConfigured()?'Yes':'No'),'Last relay test: '+lastRelay,'No keys, credentials, account IDs, device IDs, or IP addresses included.'].join('\n')});
  function stop(){++version;clearTimeout(timer);clearInterval(meterTimer);stream?.getTracks().forEach(t=>t.stop());stream=null;source?.disconnect();context?.close().catch(()=>{});context=null;testing=false;input.disabled=false;$('voice-test-input').disabled=false;$('voice-stop-test').hidden=true;$('voice-device-level').value=0}
  async function devices(){
   if(!navigator.mediaDevices?.enumerateDevices)return;
@@ -22,7 +25,7 @@
   }catch(error){if(run!==version)return;stop();status.textContent=error.name==='NotAllowedError'?'Microphone permission was denied. Allow it in your browser’s site settings and try again.':error.message || 'The microphone could not open.'}
  });
  $('voice-stop-test').addEventListener('click',()=>{stop();status.textContent='Microphone test stopped.'});
- $('voice-test-connection').addEventListener('click',async event=>{const button=event.currentTarget;button.disabled=true;status.textContent='Checking the voice relay…';try{const result=await window.LyriaVoiceTransport.probe();status.textContent=result.ready?'Voice relay verified. Your microphone was not opened.':'No voice relay is configured. Calls across different networks may fail; the owner needs to finish TURN setup.'}catch(error){window.LyriaVoiceTransport.clear();status.textContent=error.message || 'Could not verify the voice relay. Please retry.'}finally{button.disabled=false}});
+ $('voice-test-connection').addEventListener('click',async event=>{const button=event.currentTarget;button.disabled=true;status.textContent='Checking the voice relay…';try{const result=await window.LyriaVoiceTransport.probe();lastRelay=result.ready?'Verified':'No relay';status.textContent=result.ready?'Voice relay verified. Your microphone was not opened.':'No voice relay is configured. Calls across different networks may fail; the owner needs to finish TURN setup.'}catch(error){lastRelay='Failed';window.LyriaVoiceTransport.clear();status.textContent=error.message || 'Could not verify the voice relay. Please retry.'}finally{button.disabled=false}});
  new MutationObserver(()=>{if($('settings-modal').style.display==='none' && testing){stop();status.textContent='Microphone test stopped.'}}).observe($('settings-modal'),{attributes:true,attributeFilter:['style']});
  navigator.mediaDevices?.addEventListener?.('devicechange',devices);window.addEventListener('pagehide',stop);devices();
 })();

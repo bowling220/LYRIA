@@ -68,7 +68,7 @@
         descriptionNode.textContent = description;
       const unread = Boolean(button.querySelector(".channel-unread"));
       const match =
-        (!query || name.textContent.toLowerCase().includes(query)) &&
+        (!query || window.LyriaSearch.matches(name.textContent,query)) &&
         (filter === "all" ||
           (filter === "unread" && unread) ||
           (filter === "favorites" && room?.favorite) ||
@@ -77,6 +77,7 @@
       if (match) visible++;
       button.classList.toggle("conversation-pinned", pinned.includes(id));
     }
+    $("conversation-filter-empty").textContent=query?"No matches. Try a shorter name or clear your search.":filter==="unread"?"You’re all caught up. No unread conversations.":filter==="favorites"?"Star a conversation to keep it here.":filter==="pinned"?"Pin a conversation from its details to keep it here.":"Create a conversation or join with an invitation.";
     $("conversation-filter-empty").hidden =
       Boolean(visible) || !$("channels-list").children.length;
   }

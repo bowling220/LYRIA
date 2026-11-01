@@ -14,6 +14,8 @@ GIFs, friends, channels, and voice. Universal technical safeguards still apply.
 - **Friend System**: Add friends and see their online status
 - **Personal Profiles**: Avatars, animated GIF avatars/banners, bios, and community badges for everyone
 - **Mobile Responsive**: Works seamlessly on desktop and mobile devices
+- **Community Safety**: Block/report controls and a private review queue for trusted moderators
+- **Connection Recovery**: Clear send status, per-conversation tab drafts, and safe retry IDs
 - **Personal Appearance**: Shared design with presets, custom colors, light/dark modes, spacing, and contrast controls
 
 ## Website on desktop and mobile
@@ -49,7 +51,7 @@ LYRIA/
 
 ## Shared chat and account saves
 
-Every signed-in user (including guests) starts in **Everyone**. It uses the fixed
+**Everyone** is available to every signed-in user, including guests. It uses the fixed
 `channels/community/messages` path, with no growing membership document. Messages
 show the latest 100 entries. Personal and invite-only conversations stay separate;
 voice is available in both Everyone and private conversations (up to six people per room).
@@ -634,3 +636,5 @@ GIPHY search and trending can be enabled with a new public browser app key; see 
 ### Free-tier safeguards
 
 LYRIA can stay on Firebase Spark. See [Free-tier safeguards](docs/FREE_TIER_GUARDS.md) for equal action budgets, reduced background reads/writes, payload limits, activation steps, and the remaining abuse risks. These safeguards do not require paid services and cannot guarantee that free quotas will never be exhausted.
+
+For everyday connection, microphone, and privacy questions, see the website’s [help guide](help.html). Contributors can start with [their first contribution](docs/FIRST_CONTRIBUTION.md); maintainers can review the [community safety design](docs/COMMUNITY_SAFETY.md).

@@ -21,6 +21,7 @@
   }
   async function send(to){
     const user=current();if(!user || !to || to===user.uid)throw new Error('Choose another member.');
+    if(window.LyriaSafety && await window.LyriaSafety.check(to))throw new Error('Unblock this member before sending a request.');
     const [existing,profile]=await Promise.all([API.query('friendRequests',{where:{compositeFilter:{op:'AND',filters:[API.equal('from',user.uid),API.equal('to',to)]}}}),API.read('users/'+user.uid)]);
     if(profile.data()?.friends?.includes(to))throw new Error('You are already friends with this member.');
     if(existing.docs.some(d=>!d.data().status || d.data().status==='pending'))throw new Error('You already sent this person a friend request.');

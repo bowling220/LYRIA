@@ -1,6 +1,6 @@
 /* Spark-compatible write budgets. Server rules are authoritative, not this module. */
 (() => {
- const policy={messages:[10,10,60,60],friends:[10,60,50,86400],channels:[3,60,15,86400],invites:[5,60,100,86400],profiles:[15,60,500,86400],calls:[10,60,200,86400],reactions:[30,10,300,60],articles:[3,60,20,86400],comments:[10,60,100,86400]};
+ const policy={messages:[10,10,60,60],friends:[10,60,50,86400],channels:[3,60,15,86400],invites:[5,60,100,86400],profiles:[15,60,500,86400],calls:[10,60,200,86400],reactions:[30,10,300,60],articles:[3,60,20,86400],comments:[10,60,100,86400],reports:[3,60,10,86400]};
  let adapter;const db=()=>adapter?.db || window.firebaseConfig.getFirestore(),user=()=>adapter?adapter.auth.currentUser:window.firebaseConfig.getAuth().currentUser;
  let cached;const clock=value=>value?.toMillis?.() ?? value?.toDate?.().getTime() ?? Date.parse(value);
  async function bounded(p){let timer;try{return await Promise.race([p,new Promise((_,reject)=>timer=setTimeout(()=>reject(Object.assign(new Error('Limit status could not connect.'),{code:'unavailable'})),8000))])}finally{clearTimeout(timer)}}
@@ -38,7 +38,8 @@
    else if(/^friendRequests\/[^/]+$/.test(p) && f.status?.stringValue==='pending')action='friends';
    else if(/^inbox\/[^/]+$/.test(p))action='calls';
    else if(/^channels\/[^/]+$/.test(p) && w.currentDocument?.exists===false)action=p.startsWith('channels/personal-')?null:f.isDirectCall?.booleanValue===true?'calls':'channels';
-   else if(/^profiles\/[^/]+$/.test(p))action='profiles';
+   else if(/^profiles\/[^/]+$/.test(p) || /^users\/[^/]+\/blocks\/[^/]+$/.test(p))action='profiles';
+   else if(/^abuseReports\/[^/]+$/.test(p) && w.currentDocument?.exists===false)action='reports';
    if(action){const operation=action==='profiles'?user().uid:p.split('/').at(-1);if(result.has(action) && result.get(action).operation!==operation)throw new Error('Submit these actions separately.');result.set(action,{action,operation})}
   }return [...result.values()];
  }

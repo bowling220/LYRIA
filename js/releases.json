@@ -2,10 +2,42 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "id": "2026-11-01-community-care",
+      "date": "2026-11-01",
+      "title": "A little more peace of mind.",
+      "summary": "Clearer connections, safer conversations, and room for your ideas.",
+      "changes": [
+        {
+          "type": "New",
+          "icon": "users",
+          "title": "More control over your corner",
+          "description": "Block or report a member, report a message, and manage blocked members in Settings. Trusted moderators have a private review queue."
+        },
+        {
+          "type": "Improved",
+          "icon": "chat",
+          "title": "Your words can wait for you",
+          "description": "Drafts stay with each conversation after a reload. Clear send status and retry tracking help you reconnect without sending the same message twice."
+        },
+        {
+          "type": "Improved",
+          "icon": "mic",
+          "title": "Know what voice needs",
+          "description": "Settings now explains relay readiness and shows safe diagnostics. A new help guide covers connection, microphone, and privacy questions."
+        },
+        {
+          "type": "Improved",
+          "icon": "star",
+          "title": "Less clutter, more conversations",
+          "description": "Tighter conversation rows, accent-friendly search, and helpful empty states make it easier to find your people."
+        }
+      ]
+    },
+    {
       "id": "2026-10-30-a-warmer-welcome",
       "date": "2026-10-30",
       "title": "A little more at home.",
-      "summary": "A friendlier welcome and fewer moments wondering what’s loading.",
+      "summary": "A friendlier welcome and fewer moments wondering what\u2019s loading.",
       "changes": [
         {
           "type": "Improved",
@@ -37,7 +69,7 @@
           "type": "New",
           "icon": "smile",
           "title": "All the expression, less clutter",
-          "description": "One clear GIF button replaces the duplicate image control. The smiley opens 3,781 emojis, with search, categories, and recent choices—even on mobile."
+          "description": "One clear GIF button replaces the duplicate image control. The smiley opens 3,781 emojis, with search, categories, and recent choices\u2014even on mobile."
         }
       ]
     },
@@ -70,7 +102,7 @@
     {
       "id": "2026-10-30-build-status",
       "date": "2026-10-30",
-      "title": "Know what’s running.",
+      "title": "Know what\u2019s running.",
       "summary": "A clearer version check and update notes that fit your screen.",
       "changes": [
         {
@@ -143,7 +175,7 @@
           "type": "New",
           "icon": "news",
           "title": "Your own community publication",
-          "description": "Featured stories, categories, and a cleaner way to browse what’s happening around LYRIA."
+          "description": "Featured stories, categories, and a cleaner way to browse what\u2019s happening around LYRIA."
         },
         {
           "type": "Improved",
@@ -155,7 +187,7 @@
           "type": "New",
           "icon": "sparkles",
           "title": "A welcome with every update",
-          "description": "See what changed once per release, then get back to your space. Reopen What’s new beside your profile whenever you like."
+          "description": "See what changed once per release, then get back to your space. Reopen What\u2019s new beside your profile whenever you like."
         }
       ]
     },
