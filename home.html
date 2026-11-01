@@ -93,6 +93,7 @@
                 </div></details>
 
             </div>
+            <button id="join-developers" class="sidebar-feedback" type="button"><span data-icon="edit" aria-hidden="true"></span><span id="developer-join-label">Join Developers</span><span data-icon="arrow" aria-hidden="true"></span></button>
             <button id="open-suggestions-modal" class="sidebar-feedback" type="button"><span data-icon="chat" aria-hidden="true"></span><span>Ideas &amp; feedback</span><span data-icon="arrow" aria-hidden="true"></span></button>
 
 
@@ -239,7 +240,7 @@
         <button id="close-channel-action-modal" class="close-button" type="button" aria-label="Close channel dialog"><span data-icon="close" aria-hidden="true"></span></button>
         <p class="modal-eyebrow">Conversations</p>
         <h2 id="channel-action-title">Start a conversation</h2>
-        <p id="channel-action-description">Give your new conversation a short, memorable name.</p>
+        <p id="channel-action-description">Give your new conversation a short, memorable name.</p><p id="create-public-hint" class="details-empty" hidden>Building LYRIA? <button id="create-public-developers" class="release-text-trigger" type="button">Open public Developers</button> instead of creating a private conversation.</p>
         <div id="channel-action-field" class="channel-action-field">
             <label id="channel-action-label" for="channel-action-input" class="modal-label">Conversation name</label>
             <input id="channel-action-input" class="modal-input" type="text" autocomplete="off" maxlength="48">
@@ -343,7 +344,7 @@
   <div class="modal-content compact-modal">
     <button class="close-button" type="button" aria-label="Close invite link"><span data-icon="close" aria-hidden="true"></span></button>
     <h2 id="share-invite-title">Invite your people</h2>
-    <p>Share this link with your people. Only the owner can replace or revoke it.</p>
+    <p id="share-invite-description">Share this link with your people. Only the owner can replace or revoke it.</p>
     <label class="modal-label" for="share-invite-link">Invitation link</label>
     <input id="share-invite-link" class="modal-input" type="text" readonly autocomplete="off">
     <button id="copy-invite-link" type="button" class="primary-action">Copy link</button>
@@ -359,7 +360,8 @@
     <script src="js/account-api.js?v=8e261892c127331e"></script>
     <script src="js/account.js?v=46b39182ae121ff3"></script>
     <script src="js/write-limits.js?v=4354e8e75787e284"></script>
-    <script src="js/data-api.js?v=2406f7c697e41f88"></script>
+    <script src="js/data-api.js?v=63dd835f391f9304"></script>
+    <script src="js/conversations.js?v=0566b9f827d6a0c6"></script>
     <script src="js/read-state.js?v=d5762820fff273d4"></script>
     <script src="js/mentions.js?v=e94175b6db7380f0"></script>
     <script src="js/safety.js?v=b950f73a86742f98"></script>
@@ -371,10 +373,10 @@
     <script src="js/voice-devices.js?v=fb876d8455ee8f84"></script>
     <script src="js/voice-view.js?v=9a6f2e727cbda043"></script>
     <script src="js/reactions.js?v=f349c3d736f2ee8c"></script>
-    <script src="js/invites.js?v=9ca9a291c962ae2b"></script>
+    <script src="js/invites.js?v=da08293c059085cf"></script>
     <script src="js/search.js?v=70cd7800e033c508"></script>
-    <script src="js/community-shell.js?v=95f0e8fca45ec2ba"></script>
-    <script src="chat.js?v=d7896be2095f68b3"></script>
+    <script src="js/community-shell.js?v=a9a0723c0bfc5821"></script>
+    <script src="chat.js?v=bddb947b65ed5802"></script>
     <script src="js/call-invites.js?v=92b8ec6d9e2b0912"></script>
     <script src="js/community.js?v=40713f9d65bd6db8"></script>
     <script src="js/emoji-picker.js?v=e6b92d4b9d06ae15"></script>

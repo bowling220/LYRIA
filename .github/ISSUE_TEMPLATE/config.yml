@@ -3,3 +3,6 @@ contact_links:
   - name: Report a security vulnerability privately
     url: https://github.com/bowling220/LYRIA/security/advisories/new
     about: Use private vulnerability reporting when enabled; otherwise follow SECURITY.md without posting sensitive details.
+  - name: Join the LYRIA Developers conversation
+    url: https://lyria.onrender.com/invite.html?code=DEVELOPERS
+    about: Talk about contributing in our public space. Sign in or use a guest account; no personal invitation is needed.
