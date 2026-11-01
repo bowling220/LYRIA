@@ -226,8 +226,30 @@ service cloud.firestore {
       }
     }
 
+    // One active outgoing lifecycle per sender/recipient. Old random request IDs
+    // and accepted receipts remain valid; clients never delete or reset the slot.
+    match /friendRequestSlots/{sender}/recipients/{recipient} {
+      function nextRequest() {
+        return getAfter(/databases/$(database)/documents/friendRequests/$(request.resource.data.requestId)).data;
+      }
+      function available() {
+        return request.method == 'create'
+          || !exists(/databases/$(database)/documents/friendRequests/$(resource.data.requestId))
+          || get(/databases/$(database)/documents/friendRequests/$(resource.data.requestId)).data.get('status','pending') == 'accepted';
+      }
+      allow get: if isSelf(sender);
+      allow list, delete: if false;
+      allow create, update: if isSelf(sender) && sender != recipient
+        && request.resource.data.keys().hasOnly(['requestId'])
+        && request.resource.data.requestId is string && request.resource.data.requestId.size() <= 200
+        && available()
+        && nextRequest().from == sender && nextRequest().to == recipient && nextRequest().status == 'pending'
+        && (!exists(/databases/$(database)/documents/users/$(sender))
+          || !(recipient in getAfter(/databases/$(database)/documents/users/$(sender)).data.get('friends',[])));
+    }
     match /friendRequests/{requestId} {
       allow create: if signedIn() && rateAllowed('friends',requestId)
+        && getAfter(/databases/$(database)/documents/friendRequestSlots/$(request.auth.uid)/recipients/$(request.resource.data.to)).data.requestId == requestId
         && request.resource.data.keys().hasOnly(['from','to','status','fromName','timestamp'])
         && textBound(request.resource.data,'fromName',120) && textBound(request.resource.data,'to',128)
         && request.resource.data.from == request.auth.uid

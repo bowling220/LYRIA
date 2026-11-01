@@ -48,4 +48,4 @@ Cooldown errors retain message drafts. Deliberate repeated messages remain possi
 
 Firestore rules cannot throttle arbitrary repeated authorized reads per IP, or stop distributed account creation. App Check requires real provider registration and enforcement planning; it has not been silently enabled. Notifications and ongoing presence still rely on their existing permissions rather than these action budgets. A malicious signed-in user can still exhaust some free read quota, and many accounts have separate write budgets. Monitor Firebase usage and authentication activity. Do not enable billing merely to avoid quota errors.
 
-Tests run only against local fixtures and the Firestore emulator, never production accounts. The existing pending friend-request uniqueness issue across simultaneous requests is separate from these per-account caps.
+Tests run only against local fixtures and the Firestore emulator, never production accounts. Per-pair friend-request uniqueness is separate from these per-account caps; see [Friend-request lifecycle](FRIEND_REQUESTS.md) for its atomic slot implementation and rollout requirements.

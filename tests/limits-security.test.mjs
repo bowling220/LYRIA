@@ -30,7 +30,7 @@ test('channel and invitation creation reserve their own budgets atomically',asyn
 test('friend and inbox creation plus profile saves work with the enforced policy',async()=>{
  const {API:A,db}=client('alice');
  await A.commit([{update:{name:A.name('users/alice'),fields:A.fields({displayName:'Alice',bio:'Hello',friends:[],badges:[]})},currentDocument:{exists:false}},{update:{name:A.name('profiles/alice'),fields:A.fields({displayName:'Alice',bio:'Hello',badges:[]})}}]);
- await A.commit([{update:{name:A.name('friendRequests/one'),fields:A.fields({from:'alice',to:'bob',status:'pending'})},currentDocument:{exists:false}}]);
+ await A.commit([{update:{name:A.name('friendRequestSlots/alice/recipients/bob'),fields:A.fields({requestId:'one'})}},{update:{name:A.name('friendRequests/one'),fields:A.fields({from:'alice',to:'bob',status:'pending'})},currentDocument:{exists:false}}]);
  await A.commit([{update:{name:A.name('inbox/call'),fields:A.fields({senderId:'alice',recipientId:'bob',type:'callInvite'})},currentDocument:{exists:false}}]);
  assert.equal((await getDoc(doc(db,'usageLimits/alice/actions/profiles'))).data().shortCount,1);assert.equal((await getDoc(doc(db,'usageLimits/alice/actions/friends'))).data().shortCount,1);assert.equal((await getDoc(doc(db,'usageLimits/alice/actions/calls'))).data().shortCount,1);
  await assertFails(getDoc(doc(db,'inbox/call')));
