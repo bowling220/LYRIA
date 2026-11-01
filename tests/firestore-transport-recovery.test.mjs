@@ -51,3 +51,7 @@ test('concurrent real friend helpers retain uniqueness during REST transport fai
  const a=transport('alice'),b=transport('alice');let count=0,release;const ready=new Promise(r=>release=r);for(const c of [a,b]){const commit=c.API.commit;c.API.commit=async writes=>{if(++count===2)release();await ready;return commit(writes)}}
  const result=await Promise.allSettled([a.Friends.send('bob'),b.Friends.send('bob')]);assert.equal(result.filter(r=>r.status==='fulfilled').length,1);assert.match(result.find(r=>r.status==='rejected').reason.message,/already sent/);assert.equal((await a.API.query('friendRequests',{where:{compositeFilter:{op:'AND',filters:[a.API.equal('from','alice'),a.API.equal('to','bob')]}}})).docs.length,1);
 });
+test('ordinary members can submit a verified report through SDK fallback without REST',async()=>{
+ await env.withSecurityRulesDisabled(async c=>{await setDoc(doc(c.firestore(),'users/alice'),{friends:[],badges:[]});await setDoc(doc(c.firestore(),'channels/community/messages/reported'),{senderId:'bob',message:'Review this message'})});
+ const {API:A,db}=transport('alice');await A.commit([{update:{name:A.name('abuseReports/sdk-report'),fields:A.fields({reporterId:'alice',targetUserId:'bob',channelId:'community',messageId:'reported',evidenceText:'Review this message',reason:'spam',details:'Fixture only',status:'open'})},updateTransforms:[{fieldPath:'createdAt',setToServerValue:'REQUEST_TIME'}],currentDocument:{exists:false}}]);assert.equal((await getDoc(doc(db,'abuseReports/sdk-report'))).data().status,'open');
+});

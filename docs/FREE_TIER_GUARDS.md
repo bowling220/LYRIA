@@ -28,6 +28,7 @@ Limits apply per authenticated UID, across tabs/devices, to atomic operations. L
 | Reactions/message edits/deletes | 30 / 10 seconds | 300 / minute |
 | Articles | 3 / minute | 20 / 24 hours |
 | Comments | 10 / minute | 100 / 24 hours |
+| Abuse reports | 3 / minute | 10 / 24 hours |
 
 Call setup counts individual setup/inbox writes, not voice audio packets. Creating a direct-call room and sending its invitation can consume two operations. The deterministic personal workspace is exempt from new-conversation quotas. Presence, read receipts, and ongoing voice heartbeats do not consume these budgets.
 
@@ -49,3 +50,5 @@ Cooldown errors retain message drafts. Deliberate repeated messages remain possi
 Firestore rules cannot throttle arbitrary repeated authorized reads per IP, or stop distributed account creation. App Check requires real provider registration and enforcement planning; it has not been silently enabled. Notifications and ongoing presence still rely on their existing permissions rather than these action budgets. A malicious signed-in user can still exhaust some free read quota, and many accounts have separate write budgets. Monitor Firebase usage and authentication activity. Do not enable billing merely to avoid quota errors.
 
 Tests run only against local fixtures and the Firestore emulator, never production accounts. Per-pair friend-request uniqueness is separate from these per-account caps; see [Friend-request lifecycle](FRIEND_REQUESTS.md) for its atomic slot implementation and rollout requirements.
+
+Block changes use the profile budget. Report review is restricted to trusted moderators. See [community safety](COMMUNITY_SAFETY.md) for scope, privacy, and moderation limits.

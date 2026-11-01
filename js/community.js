@@ -50,11 +50,12 @@
     window.LyriaConnection.pending('requests');
     unsubscribeRequests=window.LyriaFriendRequests.watch(false,snapshot=>{
       window.LyriaConnection.ready('requests');
-      const count=snapshot.docs.filter(doc=>!doc.data().status || doc.data().status==='pending').length;
+      const count=snapshot.docs.filter(doc=>(!doc.data().status || doc.data().status==='pending') && !window.LyriaSafety?.isBlocked(doc.data().from)).length;
       const badge=$('friend-request-count');badge.textContent=count;badge.style.display=count?'inline-block':'none';
       $('inbox-btn').setAttribute('aria-label',count?`Friend requests: ${count} pending`:'Open friend requests');
     },error=>{console.warn('Friend requests unavailable',error);window.LyriaConnection.fail('requests','Friend requests couldn’t load. Try reconnecting.')});
   }
+  window.addEventListener('lyria:blocks-updated',()=>{if(current())refreshRequests()});
   async function init(){
     try{
       await window.firebaseConfig.initialize();auth=window.firebaseConfig.getAuth();db=window.firebaseConfig.getFirestore();

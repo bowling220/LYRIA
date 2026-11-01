@@ -60,6 +60,7 @@
   }
   async function callFriend(uid,name='your friend'){
     if(!current() || uid===current().uid){UI.notify('Choose a friend to call.');return}
+    try{if(window.LyriaSafety && await window.LyriaSafety.check(uid)){UI.notify('Unblock this member before calling.');return}}catch(e){UI.notify(e.message,'error');return}
     if(outgoing || incoming){UI.notify('Finish the current call invitation first.');return}
     const item={uid,name:String(name).slice(0,60),phase:'preparing',cancelled:false};outgoing=item;render();
     // Request microphone access from this click, while room checks run independently.
@@ -107,8 +108,10 @@
       if(pendingChecks.get(value.id)===epoch)continue;
       if(!/^call-[a-f0-9]{64}$/.test(value.room) || value.channel!=='lounge' || !/^v[a-f0-9]{32}$/.test(value.sessionId))continue;
       if(docs.some(d=>d.type==='callCancel' && d.inviteId===value.id && d.senderId===value.senderId))continue;
+      if(window.LyriaSafety?.isBlocked(value.senderId))continue;
       pendingChecks.set(value.id,epoch);
       try{
+        if(window.LyriaSafety && await window.LyriaSafety.check(value.senderId))continue;
         const profile=await API.read('users/'+current().uid);
         if(epoch!==version)continue;
         seen.add(value.id);
@@ -130,6 +133,7 @@
     if(event.detail?.id!==item.sessionId){finishOutgoing('Call ended.');return}
     if(event.detail.connectedUserIds.includes(item.uid)){item.phase='accepted';finishOutgoing('',false)}
   });
+  window.addEventListener('lyria:blocks-updated',()=>{if(incoming && window.LyriaSafety?.isBlocked(incoming.uid))finishIncoming('declined');if(outgoing && window.LyriaSafety?.isBlocked(outgoing.uid))finishOutgoing('Member blocked.')});
   window.addEventListener('pagehide',()=>{if(outgoing)finishOutgoing('Call ended.');if(incoming)finishIncoming('expired',false);off?.()});
   window.LyriaCalls={callFriend,refresh};
   (async()=>{
