@@ -39,6 +39,7 @@
   function errorMessage(error) {
     if (error?.code === 'permission-denied') return 'Not saved. Your account does not have permission to save changes yet.';
     if (error?.code === 'unauthenticated') return 'Not saved. Sign in again, then retry.';
+    if (error?.code === 'resource-exhausted') return error.message;
     if (error?.code === 'unavailable' || error?.code === 'deadline-exceeded') return 'Not confirmed. Check your connection and try again.';
     return error?.userMessage || 'Not saved. Your changes are still here. Please try again.';
   }

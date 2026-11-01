@@ -82,7 +82,7 @@
     }catch(error){return querySdkFallback(collectionId,options,error)}
   }
   async function count(collectionId,{parent='',where}={}){
-    const result=await request((parent?'/'+parent:'')+':runAggregationQuery',{structuredAggregationQuery:{structuredQuery:{from:[{collectionId}],...(where?{where}:{})},aggregations:[{alias:'total',count:{}}]}});
+    const result=await request((parent?'/'+parent:'')+':runAggregationQuery',{structuredAggregationQuery:{structuredQuery:{from:[{collectionId}],...(where?{where}:{}),limit:1000},aggregations:[{alias:'total',count:{}}]}});
     return Number(result.find(row=>row.result)?.result.aggregateFields.total.integerValue || 0);
   }
   async function sdkReadFallback(path,restError,uid){
@@ -138,7 +138,7 @@
     stop.refresh=()=>poll(true);return stop;
   }
   function messageCreate(write){return write.currentDocument?.exists===false && /^channels\/[^/]+\/messages\/[^/]+$/.test(write.update?.name?.slice(root().length+1) || '')}
-  async function sdkCommit(writes,restError,uid){
+  async function sdkCommit(writes,restError,uid,limits=[]){
     checkAccount(uid);
     const db=window.firebaseConfig.getFirestore?.(),values=window.firebase?.firestore?.FieldValue;
     if(!db?.runTransaction || !db.doc || !values)throw restError;
@@ -198,17 +198,35 @@
       && write.update.fields.to.stringValue!==uid && write.update.fields.status?.stringValue==='pending';
     const blind=writes.every(w=>friendCreate(w) || (!w.currentDocument && w.update && !w.updateMask)
       || (w.currentDocument?.exists===true && !w.delete && (w.updateMask || w.transform)));
-    if(blind && db.batch){
+    if(blind && db.batch && !limits.length){
       const batch=db.batch(),docs=new Map(writes.map(w=>[pathOf(w),{exists:!friendCreate(w)}]));
       const result=apply(batch,docs);await bounded(batch.commit());checkAccount(uid);return result;
     }
     const result=await bounded(db.runTransaction(async transaction=>{
-      const docs=new Map(await Promise.all([...refs].map(async([path,ref])=>[path,await transaction.get(ref)])));
+      const docs=new Map(await Promise.all([...refs].map(async([path,ref])=>{
+        const w=writes.find(item=>pathOf(item)===path);
+        const blindTarget=friendCreate(w) || (!w.currentDocument && w.update && !w.updateMask) || (w.currentDocument?.exists===true && !w.delete && (w.updateMask || w.transform));
+        return [path,blindTarget?{exists:!friendCreate(w)}:await transaction.get(ref)];
+      })));
+      if(limits.length){
+        const snapshots=await Promise.all(limits.map(g=>transaction.get(window.LyriaWriteLimits.ref(uid,g.action))));
+        const already=writes.every(w=>messageCreate(w) && docs.get(pathOf(w))?.exists && Object.entries(w.update.fields).every(([key,value])=>JSON.stringify(canonical(docs.get(pathOf(w)).data()[key]))===JSON.stringify(canonical(decode(value)))));
+        if(!already)window.LyriaWriteLimits.stage(transaction,uid,limits,snapshots);
+      }
       return apply(transaction,docs);
     }));checkAccount(uid);return result;
   }
   async function commit(writes){
     const uid=currentUid();
+    const limits=window.LyriaWriteLimits?await window.LyriaWriteLimits.plan(writes,window.LyriaDataAPI):[];
+    if(limits.length){
+      try{return await sdkCommit(writes,Object.assign(new Error('Rate-limited SDK transport unavailable.'),{code:'unavailable'}),uid,limits)}
+      catch(error){if(error.rateLimited || !networkError(error))throw error;
+        const quotas=await window.LyriaWriteLimits.restWrites(limits,uid,window.LyriaDataAPI);checkAccount(uid);
+        try{return await request(':commit',{writes:[...quotas,...writes]})}
+        catch(restError){if(errorCode(restError)!=='already-exists')throw restError;/* Existing message reconciliation below uses the original writes. */}
+      }
+    }
     try{return await request(':commit',{writes})}
     catch(error){
       if(errorCode(error)==='already-exists' && writes.every(messageCreate)){

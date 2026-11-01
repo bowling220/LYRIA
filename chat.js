@@ -415,7 +415,7 @@ function setupUIEventListeners() {
             if (mode === 'create') {
                 const channelId = `${Date.now()}-${currentUser.uid}`;
                 const channelRef = db.collection('channels').doc(channelId);
-                const batch = db.batch();
+                const save = async (batch,legacy) => {
                 batch.set(channelRef, {
                     name: value,
                     id: channelId,
@@ -427,19 +427,16 @@ function setupUIEventListeners() {
                 batch.set(userDocRefForCurrentUser(), {
                     channels: firebase.firestore.FieldValue.arrayUnion(channelId)
                 }, { merge: true });
-                await batch.commit();
+                if(legacy)await batch.commit();
+                };
+                await window.LyriaWriteLimits.run('channels',channelId,save);
 
                 switchChannel(channelId,value);
                 loadChannels();
                 closeChannelActionModal();
 
                 // A welcome message is helpful but should never make channel creation appear to fail.
-                channelRef.collection('messages').add({
-                    message: `Welcome to ${value}, ${currentUser.displayName || 'User'}!`,
-                    sender: 'System',
-                    type: 'system',
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                }).catch(error => console.warn('Welcome message could not be posted:', error));
+                window.LyriaDataAPI.commit([{update:{name:window.LyriaDataAPI.name('channels/'+channelId+'/messages/'+crypto.randomUUID()),fields:window.LyriaDataAPI.fields({message:`Welcome to ${value}, ${currentUser.displayName || 'User'}!`,sender:'System',senderId:currentUser.uid,type:'system'})},updateTransforms:[{fieldPath:'timestamp',setToServerValue:'REQUEST_TIME'}],currentDocument:{exists:false}}]).catch(error=>console.warn('Welcome message could not be posted:',error));
             } else if (mode === 'join') {
                 const channel = await window.LyriaInvites.join(db,currentUser,value);
                 const channelId = channel.id;
@@ -465,7 +462,7 @@ function setupUIEventListeners() {
             }
         } catch (error) {
             console.error(`Channel ${mode} failed:`, error);
-            channelActionFeedback.textContent = error.code === 'permission-denied'
+            channelActionFeedback.textContent = error.code === 'resource-exhausted' ? error.message : error.code === 'permission-denied'
                 ? 'LYRIA could not save that change. Please sign out, sign back in, and try once more.'
                 : 'That action could not be completed. Please try again.';
         } finally {
@@ -535,7 +532,7 @@ async function sendMessage(messageText, isCode = false) {
             sender: document.getElementById('user-name').textContent || currentUser.displayName || 'LYRIA member',
             senderId: currentUser.uid,
             mentions: window.LyriaMentions.ids(messageText),
-            senderPhotoURL: document.getElementById('user-avatar').src || 'assets/avatar.svg'
+            senderPhotoURL: window.LyriaMedia.messageAvatar(document.getElementById('user-avatar').src)
         })},updateTransforms:[{fieldPath:'timestamp',setToServerValue:'REQUEST_TIME'}],currentDocument:{exists:false}}]};
         pendingMessageSends.set(pendingKey, pending);
     }
@@ -547,7 +544,7 @@ async function sendMessage(messageText, isCode = false) {
         if (input.value === draft && currentChannel === channelId) { input.value = ''; input.style.height = ''; }
         setTypingStatus(false);
     } catch (error) {
-        console.error(error); window.LyriaUI.notify('Couldn’t confirm the message. Your draft is still here; reconnect before trying again.', 'error');
+        console.error(error); window.LyriaUI.notify(error.code==='resource-exhausted'?error.message:'Couldn’t confirm the message. Your draft is still here; reconnect before trying again.', 'error');
     } finally {
         isSendingMessage = false; button.disabled = false; button.removeAttribute('aria-busy');
     }
@@ -566,7 +563,7 @@ window.sendLibraryGif = async function sendLibraryGif(id) {
         gif,
         sender: profile.displayName || user.displayName || 'LYRIA member',
         senderId: user.uid,
-        senderPhotoURL: profile.photoURL || user.photoURL || 'assets/avatar.svg',
+        senderPhotoURL: window.LyriaMedia.messageAvatar(profile.photoURL || user.photoURL),
     })},updateTransforms:[{fieldPath:'timestamp',setToServerValue:'REQUEST_TIME'}],currentDocument:{exists:false}}]);
     if(currentChannel===channel)unsubscribeFromMessages?.refresh?.();
 };
@@ -580,8 +577,13 @@ function escapeHtml(unsafe) {
         .replace(/'/g, "&#039;");
 }
 
+let typingSent = {key:null,on:false,at:0};
 function setTypingStatus(isTyping) {
     if (currentChannel && currentUser) {
+        const key=JSON.stringify([currentUser.uid,currentChannel]),now=Date.now();
+        if(isTyping && typingSent.key===key && typingSent.on && now-typingSent.at<3000)return;
+        if(!isTyping && (typingSent.key!==key || !typingSent.on))return;
+        typingSent={key,on:isTyping,at:now};
         const typingRef = db.collection('channels').doc(currentChannel)
             .collection('typingStatus').doc(currentUser.uid);
 

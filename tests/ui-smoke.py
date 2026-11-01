@@ -42,7 +42,7 @@ with sync_playwright() as p:
                 if file.is_file():r.fulfill(body=file.read_bytes(),content_type=mimetypes.guess_type(str(file))[0] or 'text/plain')
                 else:r.fulfill(status=404,body='')
             elif 'www.gstatic.com/firebasejs/' in url and not '-compat' in url:
-                names={'firebase-app.js':['initializeApp'],'firebase-auth.js':['getAuth','connectAuthEmulator','onAuthStateChanged'],'firebase-firestore.js':['connectFirestoreEmulator','initializeFirestore','getFirestore','doc','increment','onSnapshot','setDoc','getDoc','collection','addDoc','query','orderBy','getDocs','limit','startAfter','runTransaction']}.get(url.split('/')[-1],[])
+                names={'firebase-app.js':['initializeApp'],'firebase-auth.js':['getAuth','connectAuthEmulator','onAuthStateChanged'],'firebase-firestore.js':['connectFirestoreEmulator','initializeFirestore','getFirestore','doc','increment','onSnapshot','setDoc','getDoc','collection','addDoc','query','orderBy','getDocs','limit','startAfter','runTransaction','serverTimestamp','writeBatch']}.get(url.split('/')[-1],[])
                 r.fulfill(body='\n'.join('export const '+name+'=window.__firebaseModule.'+name+';' for name in names),content_type='text/javascript')
             elif ('www.gstatic.com/firebasejs/' in url and '-compat.js' in url) or 'cdnjs.cloudflare.com/ajax/libs/peerjs/' in url:r.fulfill(body='/* SDK supplied by fixture. */',content_type='text/javascript')
             else:r.abort()

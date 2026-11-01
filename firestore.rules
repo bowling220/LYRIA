@@ -16,6 +16,74 @@ service cloud.firestore {
           || request.auth.uid in get(/databases/$(database)/documents/channels/$(channelId)).data.members);
     }
 
+    // Off until the owner publishes matching rules/client and enables this policy.
+    function limitsEnabled() {
+      return exists(/databases/$(database)/documents/systemConfig/freeLimits)
+        && get(/databases/$(database)/documents/systemConfig/freeLimits).data.get('enabled', false) == true;
+    }
+    function shortCap(a) { return a == 'messages' ? 10 : a == 'friends' ? 10 : a in ['channels','articles'] ? 3 : a == 'invites' ? 5 : a == 'profiles' ? 15 : a == 'reactions' ? 30 : 10; }
+    function shortSeconds(a) { return a in ['messages','reactions'] ? 10 : 60; }
+    function longCap(a) { return a == 'messages' ? 60 : a == 'friends' ? 50 : a == 'channels' ? 15 : a == 'invites' ? 100 : a == 'profiles' ? 500 : a == 'reactions' ? 300 : a == 'articles' ? 20 : a == 'comments' ? 100 : 200; }
+    function longSeconds(a) { return a in ['messages','reactions'] ? 60 : 86400; }
+    function stepWindow(start, count, oldStart, oldCount, seconds, cap) {
+      return count is int && count > 0 && count <= cap && start is timestamp
+        && ((start == oldStart && request.time < oldStart + duration.value(seconds, 's') && count == oldCount + 1)
+          || (request.time >= oldStart + duration.value(seconds, 's') && start == request.time && count == 1));
+    }
+    function rateProof(action, operation) {
+      let row = getAfter(/databases/$(database)/documents/usageLimits/$(request.auth.uid)/actions/$(action)).data;
+      return row.operation == operation && row.updatedAt == request.time;
+    }
+    function rateAllowed(action, operation) { return !limitsEnabled() || rateProof(action, operation); }
+    function queryBound(maximum) { return !limitsEnabled() || (request.query.limit != null && request.query.limit <= maximum); }
+    function textBound(data, key, maximum) {
+      return !(key in data) || data[key] == null || (data[key] is string && data[key].size() <= maximum);
+    }
+    function profileField(key,maximum) {
+      return textBound(request.resource.data,key,maximum)
+        || (request.method == 'update' && resource.data.get(key,null) == request.resource.data.get(key,null))
+        || (request.method == 'create' && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+          && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get(key,null) == request.resource.data.get(key,null));
+    }
+    function profileBounds() {
+      return profileField('displayName',120)
+        && profileField('bio',2000)
+        && profileField('photoURL',400000)
+        && profileField('bannerURL',400000)
+        && (request.resource.data.get('feedbackSubmissions',[]) is list && request.resource.data.get('feedbackSubmissions',[]).size() <= 50
+          || (request.method == 'update' && request.resource.data.get('feedbackSubmissions',[]) == resource.data.get('feedbackSubmissions',[])));
+    }
+    function messageBounds() {
+      return request.resource.data.keys().hasOnly(['message','content','sender','senderId','senderPhotoURL','timestamp','type','gif','mentions','reactions','isCode'])
+        && textBound(request.resource.data, 'message', 4000)
+        && textBound(request.resource.data, 'content', 4000)
+        && textBound(request.resource.data, 'sender', 120)
+        && textBound(request.resource.data, 'senderId', 128)
+        && textBound(request.resource.data, 'senderPhotoURL', 4096)
+        && (!('mentions' in request.resource.data) || (request.resource.data.mentions is list && request.resource.data.mentions.size() <= 50))
+        && (!('gif' in request.resource.data) || (request.resource.data.gif is map
+          && request.resource.data.gif.keys().hasOnly(['id','provider','providerId','title','url','previewUrl','stillUrl','sourceUrl','width','height'])
+          && textBound(request.resource.data.gif,'title',200) && textBound(request.resource.data.gif,'url',4096)
+          && textBound(request.resource.data.gif,'previewUrl',4096) && textBound(request.resource.data.gif,'stillUrl',4096)
+          && textBound(request.resource.data.gif,'sourceUrl',4096) && textBound(request.resource.data.gif,'id',160)
+          && textBound(request.resource.data.gif,'providerId',160) && textBound(request.resource.data.gif,'provider',32)));
+    }
+    match /systemConfig/freeLimits { allow get: if signedIn(); allow list, write: if false; }
+    match /usageLimits/{uid}/actions/{action} {
+      allow get: if isSelf(uid); allow list, delete: if false;
+      allow create: if isSelf(uid) && action in ['messages','friends','channels','invites','profiles','calls','reactions','articles','comments']
+        && request.resource.data.keys().hasOnly(['operation','updatedAt','shortAt','shortCount','longAt','longCount'])
+        && request.resource.data.operation is string && request.resource.data.operation.size() <= 200
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.shortAt == request.time && request.resource.data.longAt == request.time
+        && request.resource.data.shortCount == 1 && request.resource.data.longCount == 1;
+      allow update: if isSelf(uid) && action in ['messages','friends','channels','invites','profiles','calls','reactions','articles','comments']
+        && request.resource.data.keys().hasOnly(['operation','updatedAt','shortAt','shortCount','longAt','longCount'])
+        && request.resource.data.operation is string && request.resource.data.operation.size() <= 200
+        && request.resource.data.updatedAt == request.time
+        && stepWindow(request.resource.data.shortAt,request.resource.data.shortCount,resource.data.shortAt,resource.data.shortCount,shortSeconds(action),shortCap(action))
+        && stepWindow(request.resource.data.longAt,request.resource.data.longCount,resource.data.longAt,resource.data.longCount,longSeconds(action),longCap(action));
+    }
     function friendAcceptance(uid) {
       let approval = getAfter(/databases/$(database)/documents/friendshipApprovals/$(uid)/recipients/$(request.auth.uid)).data;
       let before = get(/databases/$(database)/documents/friendRequests/$(approval.requestId)).data;
@@ -54,7 +122,7 @@ service cloud.firestore {
     match /channelInvites/{code} {
       allow get: if signedIn();
       allow list: if false;
-      allow create: if signedIn() && code.matches('[A-F0-9]{32}')
+      allow create: if signedIn() && rateAllowed('invites',code) && code.matches('[A-F0-9]{32}')
         && request.resource.data.keys().hasOnly(['channelId','name','createdBy','createdAt','expiresAt','revoked'])
         && request.resource.data.createdBy == request.auth.uid
         && request.resource.data.revoked == false
@@ -79,18 +147,18 @@ service cloud.firestore {
       allow delete: if false;
     }
     match /profiles/{uid} {
-      allow read: if signedIn();
-      allow create, update: if isSelf(uid)
+      allow get: if signedIn(); allow list: if signedIn() && queryBound(50);
+      allow create, update: if isSelf(uid) && profileBounds() && rateAllowed('profiles',uid)
         && request.resource.data.keys().hasOnly(['displayName','photoURL','avatarGif','bannerURL','bannerGif','bio','status','showBadges','badges','appearance','updatedAt'])
         && request.resource.data.get('badges', []) == getAfter(/databases/$(database)/documents/users/$(uid)).data.get('badges', []);
       allow delete: if isSelf(uid);
     }
     match /users/{uid} {
       allow read: if isSelf(uid);
-      allow create: if isSelf(uid) && request.resource.data.get('badges', []) == []
+      allow create: if isSelf(uid) && profileBounds() && request.resource.data.get('badges', []) == []
         && request.resource.data.get('role', 'user') in ['user','guest'];
       allow delete: if isSelf(uid);
-      allow update: if (isSelf(uid) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['badges','role']))
+      allow update: if (isSelf(uid) && profileBounds() && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['badges','role']))
         || friendChange(uid);
     }
 
@@ -113,9 +181,11 @@ service cloud.firestore {
         && !existsAfter(/databases/$(database)/documents/channels/$(channelId));
     }
     match /channels/{channelId} {
-      allow get: if signedIn() && (channelId == 'community' || channelId == 'personal-' + request.auth.uid || request.auth.uid in resource.data.members);
+      allow get: if signedIn() && (!exists(/databases/$(database)/documents/channels/$(channelId)) || channelId == 'community' || channelId == 'personal-' + request.auth.uid || request.auth.uid in resource.data.members);
       allow list: if signedIn() && request.auth.uid in resource.data.members;
       allow create: if channelId != 'community' && signedIn()
+        && (channelId == 'personal-' + request.auth.uid || (request.resource.data.get('isDirectCall',false) == true ? rateAllowed('calls',channelId) : rateAllowed('channels',channelId)))
+        && textBound(request.resource.data,'name',120)
         && !exists(/databases/$(database)/documents/channelTombstones/$(channelId))
         && (!channelId.matches('personal-.*') || channelId == 'personal-' + request.auth.uid)
         && request.resource.data.createdBy == request.auth.uid
@@ -138,11 +208,12 @@ service cloud.firestore {
         && getAfter(/databases/$(database)/documents/channelTombstones/$(channelId)).data.deletedAt == request.time;
 
       match /messages/{messageId} {
-        allow read: if channelMember(channelId);
-        allow create: if channelMember(channelId)
+        allow get: if channelMember(channelId);
+        allow list: if channelMember(channelId) && queryBound(1000);
+        allow create: if channelMember(channelId) && messageBounds() && rateAllowed('messages',messageId)
           && (request.resource.data.get('senderId', '') == request.auth.uid
             || (channelId != 'community' && request.resource.data.get('type', '') == 'system'));
-        allow update, delete: if channelMember(channelId)
+        allow update, delete: if channelMember(channelId) && rateAllowed('reactions',messageId)
           && (resource.data.get('senderId', '') == request.auth.uid
             || (channelId != 'community' && resource.data.get('type', '') == 'system')
             || (request.method == 'update'
@@ -156,7 +227,9 @@ service cloud.firestore {
     }
 
     match /friendRequests/{requestId} {
-      allow create: if signedIn()
+      allow create: if signedIn() && rateAllowed('friends',requestId)
+        && request.resource.data.keys().hasOnly(['from','to','status','fromName','timestamp'])
+        && textBound(request.resource.data,'fromName',120) && textBound(request.resource.data,'to',128)
         && request.resource.data.from == request.auth.uid
         && request.resource.data.to is string && request.resource.data.to != request.auth.uid
         && request.resource.data.status == 'pending';
@@ -174,39 +247,49 @@ service cloud.firestore {
     }
 
     match /inbox/{messageId} {
-      allow create: if signedIn() && request.resource.data.senderId == request.auth.uid;
-      allow read, update, delete: if signedIn()
+      allow get: if signedIn() && (!exists(/databases/$(database)/documents/inbox/$(messageId)) || resource.data.recipientId == request.auth.uid);
+      allow create: if signedIn() && rateAllowed('calls',messageId) && request.resource.data.senderId == request.auth.uid
+        && textBound(request.resource.data,'message',4000) && textBound(request.resource.data,'recipientId',128);
+      allow list, update, delete: if signedIn()
         && resource.data.recipientId == request.auth.uid;
     }
 
     match /notifications/{notificationId} {
-      allow create: if signedIn() && request.resource.data.userId is string;
+      allow create: if signedIn() && request.resource.data.userId is string
+        && textBound(request.resource.data,'message',4000) && textBound(request.resource.data,'title',160);
       allow read, update, delete: if signedIn()
         && resource.data.userId == request.auth.uid;
     }
 
     match /posts/{postId} {
       allow read: if true;
-      allow create: if signedIn()
-        && request.resource.data.keys().hasOnly(['likes']);
-      allow update: if signedIn()
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes']);
+      allow create: if signedIn() && rateAllowed('reactions',postId)
+        && request.resource.data.keys().hasOnly(['likes']) && request.resource.data.likes is number && request.resource.data.likes >= 0 && request.resource.data.likes <= 1000000000;
+      allow update: if signedIn() && rateAllowed('reactions',postId)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes']) && request.resource.data.likes is number && request.resource.data.likes >= 0 && request.resource.data.likes <= 1000000000;
       allow delete: if false;
     }
 
     match /userLikes/{uid}/likes/{postId} {
-      allow read, write: if isSelf(uid);
+      allow read: if isSelf(uid);
+      allow write: if isSelf(uid) && rateAllowed('reactions',postId) && (request.method == 'delete' || (request.resource.data.keys().hasOnly(['liked']) && request.resource.data.liked is bool));
     }
 
     match /articles/{articleId}/comments/{commentId} {
-      allow read: if true;
-      allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
+      allow get: if true; allow list: if queryBound(1000);
+      allow create: if signedIn() && rateAllowed('comments',commentId) && request.resource.data.userId == request.auth.uid
+        && textBound(request.resource.data,'text',2000) && textBound(request.resource.data,'username',120);
       allow update, delete: if signedIn() && resource.data.userId == request.auth.uid;
     }
 
     match /userArticles/{articleId} {
-      allow read: if true;
-      allow create: if signedIn();
+      allow get: if true; allow list: if queryBound(100);
+      allow create: if signedIn() && rateAllowed('articles',articleId) && request.resource.data.authorId == request.auth.uid
+        && request.resource.data.keys().hasOnly(['authorName','authorId','authorPhotoURL','title','body','category','excerpt','imageURL','tags','readingMinutes','timestamp'])
+        && textBound(request.resource.data,'authorName',120) && textBound(request.resource.data,'authorPhotoURL',400000)
+        && textBound(request.resource.data,'title',160) && textBound(request.resource.data,'body',30000)
+        && textBound(request.resource.data,'excerpt',500) && textBound(request.resource.data,'imageURL',4096)
+        && (!('tags' in request.resource.data) || (request.resource.data.tags is list && request.resource.data.tags.size() <= 10 && request.resource.data.tags.join(',').size() <= 500));
       allow update, delete: if false;
     }
   }

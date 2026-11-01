@@ -1,6 +1,6 @@
 /* Private, monotonic read markers; bounded count refreshes, no message-history downloads. */
 (() => {
- const API=window.LyriaDataAPI;let user,rooms=[],active,latest=0,generation=0,refreshing=false,earlier=false,navigation={},off,interval,saveTimer;
+ const API=window.LyriaDataAPI;let user,rooms=[],active,latest=0,generation=0,refreshing=false,earlier=false,cursor=0,navigation={},off,interval,saveTimer;
  let remoteReady=false,lastRefresh=0;let markers={},counts=new Map(),pending=new Map();let initializedAt=Date.now();
  const key=()=> 'lyria:read-state:'+user.uid;
  const cache=()=>{try{localStorage.setItem(key(),JSON.stringify(markers))}catch{}};
@@ -16,12 +16,12 @@
  const status=text=>{const element=document.getElementById('read-state-status');if(element)element.textContent=text};
  const after=at=>({fieldFilter:{field:{fieldPath:'timestamp'},op:'GREATER_THAN',value:{timestampValue:new Date(at).toISOString()}}});
  async function refresh(force=false){
-  if(!user || !rooms.length || !remoteReady || refreshing || document.hidden || !navigator.onLine)return;if(Date.now()-lastRefresh<(force?10000:60000))return;lastRefresh=Date.now();refreshing=true;let failed=0;const run=generation;
-  try{const work=rooms.slice();await Promise.all(Array.from({length:Math.min(4,work.length)},async()=>{
+  if(!user || !rooms.length || !remoteReady || refreshing || document.hidden || !navigator.onLine)return;if(Date.now()-lastRefresh<(force?30000:60000))return;lastRefresh=Date.now();refreshing=true;let failed=0;const run=generation;
+  try{const box=document.getElementById('messages'),readingEarlier=earlier || (box && box.scrollHeight-box.scrollTop-box.clientHeight>=48),eligible=rooms.filter(r=>r.id!==active || readingEarlier),work=Array.from({length:Math.min(20,eligible.length)},(_,i)=>eligible[(cursor+i)%eligible.length]);cursor=eligible.length?(cursor+work.length)%eligible.length:0;await Promise.all(Array.from({length:Math.min(2,work.length)},async()=>{
    while(work.length){const room=work.shift(),at=lastRead(room.id);try{
     const filter=after(at),parent='channels/'+room.id;
-    const results=await Promise.allSettled([API.count('messages',{parent,where:filter}),API.count('messages',{parent,where:{compositeFilter:{op:'AND',filters:[filter,API.equal('mentions',user.uid,'ARRAY_CONTAINS')]}}})]);
-    const rejected=results.find(r=>r.status==='rejected');if(rejected)throw rejected.reason;const [unread,mentions]=results.map(r=>r.value);
+    const unread=await API.count('messages',{parent,where:filter});
+    const mentions=unread?await API.count('messages',{parent,where:{compositeFilter:{op:'AND',filters:[filter,API.equal('mentions',user.uid,'ARRAY_CONTAINS')]}}}):0;
     if(run!==generation)return;if(lastRead(room.id)!==at)continue;const old=counts.get(room.id);counts.set(room.id,{unread,mentions});
     if(old && mentions>old.mentions && room.id!==active && window.LyriaAccount?.getProfile()?.notificationsEnabled)window.LyriaUI.notify('You were mentioned in '+room.name+'.');
    }catch(error){failed++;if(error.code==='permission-denied')counts.delete(room.id);/* Failed counts never become false zeroes. */}
