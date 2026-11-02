@@ -49,7 +49,7 @@
     if(url)show();else{img.hidden=true;error.hidden=false;retry.hidden=true;toggle.hidden=true;}
     return card;
   }
-  const messageAvatar=value=>{const url=safeUrl(value);return url && !url.startsWith('data:') && url.length<=4096?url:'assets/avatar.svg'};
+  const messageAvatar=value=>{const url=safeUrl(value);if(!url || url.startsWith('data:') || url.length>4096)return 'assets/avatar.svg';const parsed=new URL(url);return parsed.origin===location.origin && parsed.pathname.endsWith('/assets/avatar.svg')?'assets/avatar.svg':url};
   const profileBadges=(profile,uid)=>(window.LyriaBadges?.forProfile(profile,uid) || []).map(badge=>badge.id);
   window.LyriaMedia={messageAvatar,profileBadges,safeUrl,profileSource,profileBanner,image,renderGif,reduced};
 })();

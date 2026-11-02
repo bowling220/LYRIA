@@ -22,10 +22,10 @@ test('cover images reject script, insecure, credentialed and traversal URLs',()=
 });
 
 test('module dependency changes invalidate the HTML entry point without stale cache hashes',async()=>{
- const {mkdtemp,mkdir,writeFile,readFile,rm}=await import('node:fs/promises');const {tmpdir}=await import('node:os');const {join}=await import('node:path');const {versionAssets}=await import('../scripts/version-assets.mjs');
+ const {mkdtemp,mkdir,writeFile,readFile,rm}=await import('node:fs/promises');const {createHash}=await import('node:crypto');const {tmpdir}=await import('node:os');const {join}=await import('node:path');const {versionAssets}=await import('../scripts/version-assets.mjs');
  const dir=await mkdtemp(join(tmpdir(),'lyria-news-cache-'));
- try{await mkdir(join(dir,'js'));await writeFile(join(dir,'News.html'),'<script type="module" src="js/news.js"></script>');await writeFile(join(dir,'js/news.js'),"import {value} from './model.js';");await writeFile(join(dir,'js/model.js'),'export const value=1;');
- await versionAssets(dir);const first=await readFile(join(dir,'News.html'),'utf8');assert.match(await readFile(join(dir,'js/news.js'),'utf8'),/model\.js\?v=[a-f0-9]{16}/);
+ try{await mkdir(join(dir,'js'));await mkdir(join(dir,'css'));await writeFile(join(dir,'News.html'),'<link rel="stylesheet" href="css/news.css"><script type="module" src="js/news.js"></script>');await writeFile(join(dir,'css/news.css'),'body {\r\n  color: green;\r\n}\r\n');await writeFile(join(dir,'js/news.js'),"import {value} from './model.js';");await writeFile(join(dir,'js/model.js'),'export const value=1;');
+ await versionAssets(dir);const first=await readFile(join(dir,'News.html'),'utf8');assert.match(await readFile(join(dir,'js/news.js'),'utf8'),/model\.js\?v=[a-f0-9]{16}/);const cssHash=createHash('sha256').update('body {\n  color: green;\n}\n').digest('hex').slice(0,16);assert.match(first,new RegExp('news\\.css\\?v='+cssHash));
  await writeFile(join(dir,'js/model.js'),'export const value=2;');await versionAssets(dir);const second=await readFile(join(dir,'News.html'),'utf8');assert.notEqual(first,second);await versionAssets(dir);assert.equal(await readFile(join(dir,'News.html'),'utf8'),second);
  }finally{await rm(dir,{recursive:true,force:true})}
 });
