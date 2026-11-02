@@ -14,33 +14,33 @@
         <link rel="preconnect" href="https://www.gstatic.com">
         <link rel="preload" href="assets/icon.png" as="image">
 
-        <script src="js/connection.js?v=720a9464a9fb4ea5"></script>
+        <script src="js/connection.js?v=265ca95a1f1a9567"></script>
         <!-- Firebase SDKs -->
         <script src="https://www.gstatic.com/firebasejs/13.1.0/firebase-app-compat.js"></script>
         <script src="https://www.gstatic.com/firebasejs/13.1.0/firebase-auth-compat.js"></script>
         <script src="https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore-compat.js"></script>
 
         <!-- Utility Scripts -->
-        <script src="js/runtime-config.js?v=c94a7e84cf796961"></script>
-        <script src="js/config.js?v=b12413f54af406b8"></script>
-        <script src="js/utils.js?v=e8149acc9133a646"></script>
-        <script src="js/performance.js?v=1c34dc76dc8da3c2"></script>
+        <script src="js/runtime-config.js?v=2d5215ca595a64fe"></script>
+        <script src="js/config.js?v=3d381bab98aa7407"></script>
+        <script src="js/utils.js?v=35ef4bfc11346489"></script>
+        <script src="js/performance.js?v=b75533a7c9e9fa36"></script>
 
         <!-- PeerJS powers voice calls -->
         <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.5/peerjs.min.js"></script>
-        <script src="js/mobile.js?v=9a513f0ea95142b8" defer></script>
+        <script src="js/mobile.js?v=7bc57fa148e5fe28" defer></script>
       <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
-  <link rel="stylesheet" href="css/theme.css?v=1f31ac308265a05a">
-  <link rel="stylesheet" href="css/community-shell.css?v=66b8844b99583ffd">
-  <script src="js/ui.js?v=be55941d3baadab5"></script>
-  <script src="js/gif-library.js?v=fdf7dd47a367828b"></script>
-  <script src="js/badges.js?v=de6d16e8dd90672a"></script>
-  <script src="js/media.js?v=279282e84f973382"></script>
-  <script src="js/appearance.js?v=de83efe3dbbf10ee"></script>
-<link rel="stylesheet" href="css/emoji-picker.css?v=112182ff1df45695">
-<link rel="stylesheet" href="css/loading-screen.css?v=68a596ae1be5311e">
-<script src="js/loading-screen.js?v=c4c096ec2092dfa6" defer></script>
-<link rel="stylesheet" href="css/releases.css?v=4460b8c970c12411">
+  <link rel="stylesheet" href="css/theme.css?v=e81749b848434807">
+  <link rel="stylesheet" href="css/community-shell.css?v=43914006cf2b8976">
+  <script src="js/ui.js?v=437ef1abbb20a4b6"></script>
+  <script src="js/gif-library.js?v=e044e9068584ea6b"></script>
+  <script src="js/badges.js?v=40763ed5718c4e15"></script>
+  <script src="js/media.js?v=7d28049987f6ecb3"></script>
+  <script src="js/appearance.js?v=f2b3fb9699b59da3"></script>
+<link rel="stylesheet" href="css/emoji-picker.css?v=b6f78b2f59cd7c0f">
+<link rel="stylesheet" href="css/loading-screen.css?v=c1a69fd7f590e47c">
+<script src="js/loading-screen.js?v=2948cc5d8827eac7" defer></script>
+<link rel="stylesheet" href="css/releases.css?v=b8b3912ed49c124a">
 </head>
 <body class="app-page lyria-community">
 
@@ -359,32 +359,32 @@
 
 <div id="report-modal" class="modal" inert aria-labelledby="report-title"><div class="modal-content compact-modal"><button id="close-report" type="button" class="close-button" aria-label="Close report"><span data-icon="close" aria-hidden="true"></span></button><h2 id="report-title">Help keep LYRIA welcoming.</h2><p>Reports are visible to moderators. Include only what they need to review the problem.</p><form id="report-form"><label for="report-reason">Reason</label><select id="report-reason"><option value="spam">Spam</option><option value="harassment">Harassment</option><option value="unsafe">Unsafe content</option><option value="other">Other</option></select><label for="report-details">Additional details (optional)</label><textarea id="report-details" maxlength="1000" rows="3"></textarea><button id="report-submit" type="submit">Submit report</button><p id="report-status" role="status"></p></form></div></div><div id="moderation-modal" class="modal" inert aria-labelledby="moderation-title"><div class="modal-content"><button id="close-moderation" type="button" class="close-button" aria-label="Close moderation"><span data-icon="close" aria-hidden="true"></span></button><h2 id="moderation-title">Community reports</h2><p>Review up to 30 open reports. Removal requires membership of the reported conversation.</p><div id="moderation-reports"></div></div></div>
     <!-- Include voiceCall.js before chat.js -->
-    <script src="js/account-api.js?v=9a1aa261ae55b831"></script>
-    <script src="js/account.js?v=a7e593febaee3e2c"></script>
-    <script src="js/write-limits.js?v=9dc7cfb26cef0411"></script>
-    <script src="js/data-api.js?v=f3b5d916c95e69e8"></script>
-    <script src="js/conversations.js?v=34726dabf8c2d404"></script>
-    <script src="js/read-state.js?v=fca1907b7c470ad5"></script>
-    <script src="js/mentions.js?v=b653e5654b3825af"></script>
-    <script src="js/safety.js?v=34e006b20c3f78b9"></script>
-    <script src="js/friend-requests.js?v=6f45dca0f6a4c360"></script>
-    <script src="js/voice-config.js?v=fdcc02d8043bdf1c"></script>
-    <script src="js/voice-transport.js?v=c48a4bb2b4b814c5"></script>
-    <script src="js/voice-presence.js?v=00e276cec81edc53"></script>
-    <script src="voiceCall.js?v=9d08466e4bbc524d"></script>
-    <script src="js/voice-devices.js?v=568a8290549aa5a1"></script>
-    <script src="js/voice-view.js?v=0a28d69edfdf0741"></script>
-    <script src="js/reactions.js?v=993502d2f64b89a4"></script>
-    <script src="js/community-identity.js?v=9457fba901646382"></script>
-    <script src="js/invites.js?v=eb83c8ef9b020e22"></script>
-    <script src="js/search.js?v=d8635e18fe47cc3f"></script>
-    <script src="js/community-shell.js?v=abb3df6a0d346dda"></script>
-    <script src="chat.js?v=cdc04070da6dc6ec"></script>
-    <script src="js/call-invites.js?v=72b1b375e04e4ab4"></script>
-    <script src="js/community.js?v=64b7ed91a8a71c6c"></script>
-    <script src="js/emoji-picker.js?v=0fe41fa7181ca985"></script>
-    <script src="js/gif-picker.js?v=8ca169efbee95830"></script>
-    <script src="js/profile-media.js?v=bf01ff4956c91db9"></script>
+    <script src="js/account-api.js?v=8e261892c127331e"></script>
+    <script src="js/account.js?v=46b39182ae121ff3"></script>
+    <script src="js/write-limits.js?v=4354e8e75787e284"></script>
+    <script src="js/data-api.js?v=63dd835f391f9304"></script>
+    <script src="js/conversations.js?v=0566b9f827d6a0c6"></script>
+    <script src="js/read-state.js?v=d5762820fff273d4"></script>
+    <script src="js/mentions.js?v=e94175b6db7380f0"></script>
+    <script src="js/safety.js?v=b950f73a86742f98"></script>
+    <script src="js/friend-requests.js?v=eb13e5c621d30076"></script>
+    <script src="js/voice-config.js?v=119a5da781b271fd"></script>
+    <script src="js/voice-transport.js?v=fa2ca1547533d069"></script>
+    <script src="js/voice-presence.js?v=85fa57d785e67145"></script>
+    <script src="voiceCall.js?v=5a9d4dd8462a54f5"></script>
+    <script src="js/voice-devices.js?v=fb876d8455ee8f84"></script>
+    <script src="js/voice-view.js?v=9a6f2e727cbda043"></script>
+    <script src="js/reactions.js?v=d920019fd77e2e8c"></script>
+    <script src="js/community-identity.js?v=110d1ad318838197"></script>
+    <script src="js/invites.js?v=da08293c059085cf"></script>
+    <script src="js/search.js?v=70cd7800e033c508"></script>
+    <script src="js/community-shell.js?v=a9a0723c0bfc5821"></script>
+    <script src="chat.js?v=9d536208f73a354b"></script>
+    <script src="js/call-invites.js?v=92b8ec6d9e2b0912"></script>
+    <script src="js/community.js?v=40713f9d65bd6db8"></script>
+    <script src="js/emoji-picker.js?v=e6b92d4b9d06ae15"></script>
+    <script src="js/gif-picker.js?v=3fe0c5214cacac5d"></script>
+    <script src="js/profile-media.js?v=fe26a608f0a61b46"></script>
 
     <!-- Firebase initialization check -->
 
@@ -406,8 +406,8 @@
     </div>
 
 
-<script src="js/feedback.js?v=fca7c58fc1cf71f6" defer></script>
-<script src="js/releases-ui.js?v=848d0a6d7c57f832" defer></script>
+<script src="js/feedback.js?v=752e3790207d8004" defer></script>
+<script src="js/releases-ui.js?v=65c6e7956442d0ab" defer></script>
 </body>
 </html>
 

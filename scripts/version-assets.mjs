@@ -4,6 +4,7 @@ import { readFile, readdir, writeFile } from 'node:fs/promises';
 import { resolve, dirname, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
+const hash=value=>createHash('sha256').update((Buffer.isBuffer(value)?value.toString('utf8'):value).replace(/\r\n/g,'\n')).digest('hex').slice(0,16);
 export async function versionAssets(directory=root){
   // Version local ES-module dependencies before hashing their HTML entry point.
   const done=new Set();
@@ -15,8 +16,8 @@ export async function versionAssets(directory=root){
       const dependency=resolve(dirname(path),match[2]);
       if(!dependency.startsWith(resolve(directory)+sep))throw new Error('Module import escapes the client directory');
       const bytes=await moduleFile(dependency,chain);
-      const hash=createHash('sha256').update(bytes).digest('hex').slice(0,16);
-      source=source.replace(match[0],match[1]+match[2]+'?v='+hash+match[3]);
+      const version=hash(bytes);
+      source=source.replace(match[0],match[1]+match[2]+'?v='+version+match[3]);
     }
     await writeFile(path,source);done.add(path);return source;
   }
@@ -28,8 +29,8 @@ export async function versionAssets(directory=root){
     for(const match of matches){
       const path=match[2];if(/^(?:https?:|\/\/|data:)/.test(path))continue;
       const bytes=await readFile(resolve(directory,path));
-      const hash=createHash('sha256').update(bytes).digest('hex').slice(0,16);
-      html=html.replace(match[0],match[0].slice(0,match[0].indexOf('=')+1)+match[1]+path+'?v='+hash+match[1]);
+      const version=hash(bytes);
+      html=html.replace(match[0],match[0].slice(0,match[0].indexOf('=')+1)+match[1]+path+'?v='+version+match[1]);
     }
     await writeFile(resolve(directory,name),html);
   }

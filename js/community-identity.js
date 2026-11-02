@@ -58,8 +58,8 @@
   }
   async function resolveProfile(roomId,uid,base={}) {
     if(!roomId || !uid)return base;const key=roomId+':'+uid;
-    if(!cache.has(key))cache.set(key,window.LyriaDataAPI.read(`channels/${roomId}/memberProfiles/${uid}`).then(doc=>doc.exists?mergeProfile(base,doc.data()):base).catch(()=>base));
-    return cache.get(key);
+    if(!cache.has(key))cache.set(key,window.LyriaDataAPI.read(`channels/${roomId}/memberProfiles/${uid}`).then(doc=>doc.exists?doc.data():{}).catch(()=>({})));
+    return mergeProfile(base,await cache.get(key));
   }
   const currentProfile = base => mergeProfile(base,ownOverride);
   async function saveProfile() {
