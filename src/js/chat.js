@@ -942,6 +942,7 @@ function showUserProfileModal(uid,{canOpen=()=>true}={}) {
             const profileName = userData.displayName || 'User';
             const profileImage = document.getElementById('profile-modal-image');
             profileImage.src = window.LyriaMedia.profileSource(userData);
+            window.LyriaProfileDecorations?.renderProfile(userData);
             document.getElementById('profile-modal').dataset.userId=uid;
             window.LyriaMedia.profileBanner(document.getElementById('profile-banner-image'),userData);
             profileImage.alt = `${profileName} avatar`;

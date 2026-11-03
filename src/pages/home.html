@@ -52,7 +52,7 @@
     <div class="app-container lyria-shell">
         <nav class="app-rail" aria-label="LYRIA navigation"><a class="rail-brand" href="home.html?view=hub" aria-label="LYRIA conversations"><img src="assets/favicon.svg" width="38" height="38" alt=""><strong>LYRIA</strong></a><div class="rail-destinations"><button id="rail-chats" class="rail-destination is-active" aria-current="page" type="button"><span data-icon="chat" aria-hidden="true"></span><span>Chats</span></button><button id="rail-discover" class="rail-destination" type="button"><span data-icon="news" aria-hidden="true"></span><span>Discover</span></button><button id="rail-activity" class="rail-destination" type="button"><span data-icon="inbox" aria-hidden="true"></span><span>Activity</span></button><button id="rail-settings" class="rail-destination" type="button"><span data-icon="settings" aria-hidden="true"></span><span>Settings</span></button></div>            <div class="user-profile">
                 <button class="user-profile-trigger" id="user-profile-trigger" type="button" aria-label="Open your profile">
-                    <img class="avatar" id="user-avatar" src="assets/avatar.svg" alt="User avatar" width="40" height="40">
+                    <span class="avatar-decoration avatar-decoration-rail" id="user-avatar-decoration" data-decoration="none"><img class="avatar" id="user-avatar" src="assets/avatar.svg" alt="User avatar" width="40" height="40"></span>
                     <span class="username" id="user-name">User</span>
                 </button>
                 <button class="settings-btn release-trigger" type="button" data-open-release aria-label="What’s new" title="What’s new"><span data-icon="sparkles" aria-hidden="true"></span><span class="release-unread" hidden></span></button>
@@ -189,7 +189,7 @@
                 <i></i>
             </div>
             <div class="profile-card-body">
-                <div class="profile-avatar-shell">
+                <div class="profile-avatar-shell avatar-decoration" id="profile-avatar-decoration" data-decoration="none">
                     <img id="profile-modal-image" src="assets/avatar.svg" alt="User avatar" width="96" height="96">
                     <span class="profile-presence" aria-hidden="true"></span>
                 </div>
@@ -282,7 +282,8 @@
         </section>
         <section class="modal-section appearance-editor" aria-label="Profile appearance">
             <h3>Your look</h3><p>Make it yours with an image or an animated GIF.</p>
-            <div class="appearance-preview"><img id="appearance-banner" class="appearance-banner" alt="Your profile banner" hidden><img id="appearance-avatar" class="appearance-avatar" src="assets/avatar.svg" alt="Your profile picture"><span>Profile preview</span></div>
+            <div class="appearance-preview"><img id="appearance-banner" class="appearance-banner" alt="Your profile banner" hidden><span class="avatar-decoration appearance-avatar-decoration" id="appearance-avatar-decoration" data-decoration="none"><img id="appearance-avatar" class="appearance-avatar" src="assets/avatar.svg" alt="Your profile picture"></span><span>Profile preview</span></div>
+            <button id="open-avatar-decoration" class="action-btn decoration-open-button" type="button"><span data-icon="sparkles" aria-hidden="true"></span><span><strong>Avatar decoration</strong><small id="current-decoration-name">None selected</small></span></button>
             <div class="appearance-target" data-media-target="avatar">
                 <label class="modal-label" for="profile-image-input">Profile picture</label>
                 <button id="choose-avatar-gif" class="action-btn" type="button"><span data-icon="image" aria-hidden="true"></span> Choose a library GIF</button>
@@ -345,6 +346,25 @@
     </div>
 </div>
 
+<div id="avatar-decoration-modal" class="modal" inert aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="avatar-decoration-title">
+  <div class="modal-content decoration-picker">
+    <button id="close-avatar-decoration" class="close-button" type="button" aria-label="Close avatar decorations"><span data-icon="close" aria-hidden="true"></span></button>
+    <div class="decoration-heading"><p class="modal-eyebrow">Profile customization</p><h2 id="avatar-decoration-title">Choose your frame</h2><p>Every decoration is free. Pick one and preview it before applying.</p></div>
+    <div class="decoration-layout">
+      <section class="decoration-choices" aria-labelledby="decoration-choices-title">
+        <h3 id="decoration-choices-title">Your decorations</h3>
+        <div id="decoration-grid" class="decoration-grid" role="radiogroup" aria-label="Avatar decorations"></div>
+      </section>
+      <section class="decoration-live-preview" aria-label="Selected decoration preview">
+        <div class="avatar-decoration decoration-preview-avatar" id="decoration-preview" data-decoration="none"><img id="decoration-preview-image" src="assets/avatar.svg" alt="Your avatar with the selected decoration"></div>
+        <div><h3 id="decoration-preview-name">No decoration</h3><p id="decoration-preview-description">Keep your avatar clean and simple.</p></div>
+      </section>
+    </div>
+    <p id="decoration-save-status" class="save-status decoration-save-status" role="status" aria-live="polite"></p>
+    <div class="decoration-footer"><button id="cancel-avatar-decoration" type="button">Cancel</button><button id="apply-avatar-decoration" class="primary-action" type="button">Apply decoration</button></div>
+  </div>
+</div>
+
 <div id="share-invite-modal" class="modal" aria-hidden="true" inert role="dialog" aria-labelledby="share-invite-title">
   <div class="modal-content compact-modal">
     <button class="close-button" type="button" aria-label="Close invite link"><span data-icon="close" aria-hidden="true"></span></button>
@@ -388,6 +408,7 @@
     <script src="js/emoji-picker.js?v=e6b92d4b9d06ae15"></script>
     <script src="js/gif-picker.js?v=3fe0c5214cacac5d"></script>
     <script src="js/profile-media.js?v=fe26a608f0a61b46"></script>
+    <script src="js/profile-decorations.js"></script>
 
     <!-- Firebase initialization check -->
 

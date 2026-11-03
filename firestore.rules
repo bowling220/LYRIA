@@ -196,7 +196,7 @@ service cloud.firestore {
     match /profiles/{uid} {
       allow get: if signedIn(); allow list: if signedIn() && queryBound(50);
       allow create, update: if isSelf(uid) && profileBounds() && rateAllowed('profiles',uid)
-        && request.resource.data.keys().hasOnly(['displayName','photoURL','avatarGif','bannerURL','bannerGif','bio','status','showBadges','badges','appearance','updatedAt'])
+        && request.resource.data.keys().hasOnly(['displayName','photoURL','avatarGif','bannerURL','bannerGif','avatarDecoration','bio','status','showBadges','badges','appearance','updatedAt'])
         && request.resource.data.get('badges', []) == getAfter(/databases/$(database)/documents/users/$(uid)).data.get('badges', []);
       allow delete: if isSelf(uid);
     }
