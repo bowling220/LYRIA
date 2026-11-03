@@ -8,19 +8,33 @@
     {id:'ember',name:'Warm ember',short:'Ember',description:'A warm glow that feels lively without shouting.'},
     {id:'tidepool',name:'Tidepool',short:'Tidepool',description:'Cool blue ripples around your profile picture.'},
     {id:'blossom',name:'Wild blossom',short:'Blossom',description:'A playful pink frame with a tiny flower detail.'},
-    {id:'eclipse',name:'Silver eclipse',short:'Eclipse',description:'A calm monochrome orbit with moonlit contrast.'}
+    {id:'eclipse',name:'Silver eclipse',short:'Eclipse',description:'A calm monochrome orbit with moonlit contrast.'},
+    {id:'aurora',name:'Northern aurora',short:'Aurora',description:'Shifting polar ribbons in teal and violet.'},
+    {id:'prism',name:'Crystal prism',short:'Prism',description:'Iridescent geometric facets catching the light.'},
+    {id:'firefly',name:'Firefly lantern',short:'Firefly',description:'Warm golden sparks drifting through twilight.'},
+    {id:'nebula',name:'Cosmic nebula',short:'Nebula',description:'Deep-space stardust in magenta and cyan.'},
+    {id:'goldleaf',name:'Sunlit crown',short:'Sunlit',description:'Radiant golden botanicals with a warm shimmer.'}
   ]);
+  const effects=new Set(['none','aurora','starfall','fireflies','waves','sunset']);
+  const cleanEffect=value=>effects.has(value)?value:'none';
+  const effectFrom=value=>cleanEffect(value?.appearance?.profileEffect || value?.profileEffect);
   const ids=new Set(decorations.map(item=>item.id));
   const clean=value=>ids.has(value)?value:'none';
   const selectedFrom=value=>clean(value?.appearance?.avatarDecoration || value?.avatarDecoration);
   const item=value=>decorations.find(entry=>entry.id===clean(value));
   let selected='none',profile={};
   function decorate(host,value){if(host)host.dataset.decoration=clean(value)}
-  function renderProfile(value){decorate($('profile-avatar-decoration'),selectedFrom(value))}
+  function decorateEffect(host,value){if(host)host.dataset.profileEffect=cleanEffect(value)}
+  function renderProfile(value){
+    decorate($('profile-avatar-decoration'),selectedFrom(value));
+    decorateEffect(document.querySelector('#profile-modal .profile-cover'),effectFrom(value));
+    decorateEffect(document.querySelector('#profile-modal .profile-card'),effectFrom(value));
+  }
   function renderOwn(value){
     profile=value || {};const decoration=item(selectedFrom(profile));
     decorate($('user-avatar-decoration'),decoration.id);
     decorate($('appearance-avatar-decoration'),decoration.id);
+    decorateEffect(document.querySelector('.appearance-preview'),effectFrom(profile));
     if($('current-decoration-name'))$('current-decoration-name').textContent=decoration.name;
   }
   function preview(value){
@@ -58,6 +72,6 @@
   $('cancel-avatar-decoration').addEventListener('click',close);
   $('apply-avatar-decoration').addEventListener('click',apply);
   window.addEventListener('lyria:profile-updated',event=>{renderOwn(event.detail?.profile);if($('profile-modal')?.dataset.userId===event.detail?.uid)renderProfile(event.detail?.profile)});
-  window.LyriaProfileDecorations={registry:decorations,clean,renderOwn,renderProfile};
+  window.LyriaProfileDecorations={registry:decorations,clean,selectedFrom,effectFrom,renderOwn,renderProfile};
   renderOwn(window.LyriaAccount.getProfile());
 })();

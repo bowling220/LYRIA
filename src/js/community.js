@@ -23,9 +23,9 @@
       friends.forEach((doc,index)=>{
         const friend=doc.exists?doc.data():{displayName:'LYRIA member'};
         const li=document.createElement('li');
-        const avatar=document.createElement('img');avatar.src=window.LyriaMedia.profileSource(friend);avatar.alt='';avatar.className='friend-avatar';
+        const avatarWrap=document.createElement('span');avatarWrap.className='avatar-decoration avatar-decoration-chat';avatarWrap.dataset.decoration=window.LyriaProfileDecorations?.selectedFrom?.(friend) || 'none';const avatar=document.createElement('img');avatar.src=window.LyriaMedia.profileSource(friend);avatar.alt='';avatar.className='friend-avatar';avatarWrap.append(avatar);
         const name=document.createElement('span');name.className='friend-name';name.textContent=friend.displayName || 'LYRIA member';
-        const status=document.createElement('span');status.className='friend-status';status.textContent=friend.status || 'Member';
+        const statusLabels={available:'Available',busy:'Busy',away:'Away',vibing:'✨ Vibing',building:'🛠️ Building',gaming:'🎮 Gaming',studying:'📚 Studying',cozy:'☕ Cozy',listening:'🎧 Listening'};const status=document.createElement('span');status.className='friend-status';status.textContent=statusLabels[friend.status] || friend.status || 'Member';
         const remove=document.createElement('button');remove.className='remove-friend-btn';remove.type='button';remove.innerHTML=UI.icon('close');remove.setAttribute('aria-label','Remove '+name.textContent+' from friends');
         remove.addEventListener('click',async()=>{
           remove.disabled=true;
@@ -37,7 +37,7 @@
           }catch(error){report('Could not remove this friend. Please try again.',error);remove.disabled=false}
         });
         const call=document.createElement('button');call.type='button';call.className='friend-call-btn';call.textContent='Call';call.setAttribute('aria-label','Call '+name.textContent);call.addEventListener('click',()=>{close('friends-modal');window.LyriaCalls.callFriend(ids[index],name.textContent)});
-        li.append(avatar,name,status,call,remove);list.append(li);
+        li.append(avatarWrap,name,status,call,remove);list.append(li);
       });
     }catch(error){list.innerHTML='<li>Friends couldn’t load. Close this panel and try again.</li>';console.error(error)}
   }

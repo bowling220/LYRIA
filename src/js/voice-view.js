@@ -6,6 +6,26 @@
   let state=null,expanded=false,lastSession=null;
   const tiles=new Map(),speaking=new Map(),profiles=new Map(),loading=new Set();
   document.body.classList.add('voice-ui-ready');
+  function mountSoundboard(){
+    if(!Voice?.soundboard?.length || stage.querySelector('.call-soundboard'))return;
+    const picker=document.createElement('details');picker.className='call-soundboard';
+    const summary=document.createElement('summary');summary.className='call-soundboard-toggle';summary.textContent='✨ Sounds';summary.setAttribute('aria-label','Open call soundboard');
+    const tray=document.createElement('div');tray.className='call-soundboard-tray';tray.setAttribute('role','group');tray.setAttribute('aria-label','Call soundboard');
+    for(const item of Voice.soundboard){
+      const button=document.createElement('button');button.type='button';button.className='soundboard-btn';button.dataset.soundboard=item.id;
+      button.innerHTML=`<span aria-hidden="true">${item.emoji}</span><span>${item.label}</span>`;
+      button.setAttribute('aria-label','Play '+item.label+' sound');
+      button.addEventListener('click',()=>{
+        button.classList.remove('is-playing');void button.offsetWidth;button.classList.add('is-playing');
+        Voice.playSoundboard(item.id);
+      });
+      tray.append(button);
+    }
+    picker.append(summary,tray);
+    const meta=stage.querySelector('.call-stage-meta');
+    if(meta)meta.append(picker);
+  }
+  mountSoundboard();
   function show(open,focus=true){
     expanded=!!open && !!state;stage.hidden=!expanded;document.querySelector('.chat-area').classList.toggle('call-focused',expanded);
     $('voice-open-view')?.setAttribute('aria-expanded',String(expanded));
@@ -21,6 +41,11 @@
     if(!tile.isConnected)return;
     const name=profile.displayName || person.name || 'Member';
     tile.querySelector('.call-avatar-initials').textContent=initials(name);tile.querySelector('.call-person-name').textContent=name;
+    const avatarBox=tile.querySelector('.call-person-avatar');
+    if(avatarBox && window.LyriaProfileDecorations){
+      avatarBox.classList.add('avatar-decoration');
+      avatarBox.dataset.decoration=window.LyriaProfileDecorations.selectedFrom(profile);
+    }
     const image=tile.querySelector('img');const url=window.LyriaMedia?.profileSource(profile) || '';
     const source=url && !url.includes('assets/avatar.svg')?url:'';
     if(image.getAttribute('src')!==(source || null)){
@@ -79,6 +104,15 @@
   window.addEventListener('lyria:voice-speaking',event=>{
     const value=event.detail;if(!state || value.sessionId!==state.id)return;speaking.set(value.participantId,value);
     const tile=tiles.get(value.participantId);if(tile)paintActivity(tile,value);
+  });
+  window.addEventListener('lyria:soundboard',event=>{
+    const clip=event.detail;if(!clip)return;
+    const selfTile=grid.querySelector('.call-person[data-self="true"]');
+    if(!selfTile)return;
+    const floater=document.createElement('span');floater.className='call-sound-floater';floater.setAttribute('aria-hidden','true');
+    floater.textContent=`${clip.emoji} ${clip.label}`;
+    selfTile.append(floater);
+    setTimeout(()=>floater.remove(),1100);
   });
   document.addEventListener('keydown',event=>{if(event.key==='Escape' && expanded && !document.querySelector('.modal[aria-hidden="false"]'))show(false)});
   setInterval(duration,1000);
