@@ -5,9 +5,21 @@
   const icons = ['💬','🌿','🎨','🎮','🎵','🚀'];
   const banners = ['glow','waves','grid','sunset'];
   const packs = {
-    lyria: [['hello','Hello','👋'],['love','Lots of love','💚'],['spark','Brilliant','✨'],['party','Celebrate','🎉'],['idea','Great idea','💡'],['cozy','Cozy','☕'],['wow','Amazing','🤩'],['thanks','Thank you','🙌']],
-    critters: [['cat','Happy cat','😺'],['fox','Clever fox','🦊'],['frog','Friendly frog','🐸'],['bear','Bear hug','🐻'],['bee','Busy bee','🐝'],['owl','Wise owl','🦉'],['panda','Panda hello','🐼'],['otter','Otterly delighted','🦦']],
-    cosmic: [['rocket','Launch','🚀'],['moon','Good night','🌙'],['star','Superstar','🌟'],['planet','Out of this world','🪐'],['alien','Hello earthling','👽'],['comet','On my way','☄️'],['sun','Bright day','🌞'],['satellite','Message received','🛰️']]
+    lyria: [
+      ['hello','Hello','👋'],['love','Lots of love','💚'],['spark','Brilliant','✨'],['party','Celebrate','🎉'],
+      ['idea','Great idea','💡'],['cozy','Cozy','☕'],['wow','Amazing','🤩'],['thanks','Thank you','🙌'],
+      ['fire','On fire','🔥'],['crown','Legend','👑'],['peace','Good vibes','✌️'],['music','Vibing','🎶']
+    ],
+    critters: [
+      ['cat','Happy cat','😺'],['fox','Clever fox','🦊'],['frog','Friendly frog','🐸'],['bear','Bear hug','🐻'],
+      ['bee','Busy bee','🐝'],['owl','Wise owl','🦉'],['panda','Panda hello','🐼'],['otter','Otterly delighted','🦦'],
+      ['butterfly','Flutter','🦋'],['duck','Quack','🦆'],['hedgehog','Cozy curl','🦔'],['wolf','Night howl','🐺']
+    ],
+    cosmic: [
+      ['rocket','Launch','🚀'],['moon','Good night','🌙'],['star','Superstar','🌟'],['planet','Out of this world','🪐'],
+      ['alien','Hello earthling','👽'],['comet','On my way','☄️'],['sun','Bright day','🌞'],['satellite','Message received','🛰️'],
+      ['galaxy','Milky way','🌌'],['crystal','Magic orb','🔮'],['ufo','Beam me up','🛸'],['bolt','High voltage','⚡']
+    ]
   };
   let auth, db, currentId, currentRoom, ownOverride = {}, selection = 0, profileRevision = 0;
   const cache = new Map();

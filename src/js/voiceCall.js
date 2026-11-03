@@ -28,6 +28,24 @@
     const notes={join:[440,660],leave:[660,440],mute:[330,220],unmute:[440,550]}[kind];if(!notes)return;
     unlockSound().then(ready=>{if(ready && soundEnabled)notes.forEach((frequency,index)=>note(frequency,audioContext.currentTime+index*.15,.14))});
   }
+  const SOUNDBOARD=Object.freeze([
+    {id:'chime',label:'Chime',emoji:'✨',notes:[[587,0,.14],[880,.1,.14],[1174,.2,.24]]},
+    {id:'cheer',label:'Fanfare',emoji:'🎉',notes:[[523,0,.12],[659,.09,.12],[784,.18,.12],[1046,.27,.28]]},
+    {id:'boing',label:'Bounce',emoji:'🎈',notes:[[280,0,.09],[420,.07,.1],[620,.14,.18]]},
+    {id:'drum',label:'Rimshot',emoji:'🥁',notes:[[180,0,.09],[180,.11,.09],[540,.24,.22]]},
+    {id:'gong',label:'Zen bell',emoji:'🔔',notes:[[432,0,.45],[864,.02,.32]]},
+    {id:'laser',label:'Cosmic',emoji:'🚀',notes:[[980,0,.08],[640,.06,.08],[320,.12,.14]]}
+  ]);
+  function playSoundboard(id){
+    const clip=SOUNDBOARD.find(item=>item.id===id);if(!clip)return Promise.resolve(false);
+    return enableSounds().then(ready=>{
+      if(!ready)return false;
+      const base=audioContext.currentTime;
+      for(const [freq,offset,dur] of clip.notes)note(freq,base+offset,dur,.13);
+      window.dispatchEvent(new CustomEvent('lyria:soundboard',{detail:clip}));
+      return true;
+    });
+  }
   function ringPattern(){
     if(!ringKind || !soundEnabled || audioContext?.state!=='running')return;
     const start=audioContext.currentTime;
@@ -423,5 +441,5 @@
     try{localStorage.setItem('lyria-voice-input',inputDevice)}catch{}
     if(live(session) && await repairMic({force:inputDevice!==previous})===false){inputDevice=previous;try{localStorage.setItem('lyria-voice-input',previous)}catch{};throw new Error('The microphone could not be changed. Your previous input is still selected.')}
   }
-  window.LyriaVoice={getInputDevice:()=>inputDevice,setInputDevice,join,leave,setRoom,prepare,repairMic,toggleAudio,getSession,startRinging,stopRinging,enableSounds,soundReady:()=>soundEnabled && audioContext?.state==='running',refreshDirectory:watchDirectory,refreshConnection,leaveRoom:room=>{if(session?.room===room)leave()}};
+  window.LyriaVoice={getInputDevice:()=>inputDevice,setInputDevice,join,leave,setRoom,prepare,repairMic,toggleAudio,getSession,startRinging,stopRinging,enableSounds,soundboard:SOUNDBOARD,playSoundboard,soundReady:()=>soundEnabled && audioContext?.state==='running',refreshDirectory:watchDirectory,refreshConnection,leaveRoom:room=>{if(session?.room===room)leave()}};
 })();

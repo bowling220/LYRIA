@@ -780,9 +780,9 @@ function loadMessages(channelId,{unreadOnly=false}={}) {
             const message = document.createElement('article'); message.className = 'message';message.dataset.senderId=data.senderId || '';if(data.type==='system' || !data.senderId)message.classList.add('system-message');
             const sender = document.createElement('div'); sender.className = 'sender';
             const profile = document.createElement(data.senderId ? 'button' : 'span');profile.className='sender-profile';
-            const avatar = document.createElement('img');avatar.className='sender-avatar';avatar.src=data.senderPhotoURL || 'assets/avatar.svg';avatar.alt='';avatar.width=34;avatar.height=34;
+            const avatarWrap = document.createElement('span');avatarWrap.className='avatar-decoration avatar-decoration-chat';avatarWrap.dataset.decoration='none';if(data.senderId)avatarWrap.dataset.userId=data.senderId;const avatar = document.createElement('img');avatar.className='sender-avatar';avatar.src=data.senderPhotoURL || 'assets/avatar.svg';avatar.alt='';avatar.width=34;avatar.height=34;avatarWrap.append(avatar);
             const name = document.createElement('span');name.className='sender-name';name.textContent=data.sender || data.displayName || 'LYRIA member';
-            profile.append(avatar,name);
+            profile.append(avatarWrap,name);
             if(data.senderId){profile.type='button';profile.setAttribute('aria-label','View '+name.textContent+'’s profile');profile.addEventListener('click',()=>showUserProfileModal(data.senderId))}
             sender.append(profile);
             const time=document.createElement('time');time.className='message-timestamp';
@@ -798,7 +798,7 @@ function loadMessages(channelId,{unreadOnly=false}={}) {
                     name.textContent=profile.displayName || name.textContent;
                     const ownProfile=window.LyriaAccount.getProfile();
                     const badgeProfile=data.senderId===firebase.auth().currentUser?.uid && Object.keys(ownProfile).length?ownProfile:profile;
-                    window.LyriaBadges.render(inlineBadges,badgeProfile,data.senderId,{inline:true});
+                    if(window.LyriaProfileDecorations)avatarWrap.dataset.decoration=window.LyriaProfileDecorations.selectedFrom(badgeProfile);window.LyriaBadges.render(inlineBadges,badgeProfile,data.senderId,{inline:true});
                 }).catch(error=>console.warn('Badges unavailable',error));
             }
             const content=document.createElement('div');content.className='message-content';
@@ -920,9 +920,9 @@ function renderProfileBadges(profile,uid){
     const count=window.LyriaBadges.render(document.getElementById('profile-modal-badges'),profile,uid);
     const empty=document.getElementById('profile-badges-empty');empty.hidden=count>0;empty.textContent=profile.showBadges===false?'Badges hidden':'No badges yet';
 }
-window.addEventListener('lyria:profile-updated',event=>{
+const STATUS_LABELS={available:'Available',busy:'Busy',away:'Away',vibing:'✨ Vibing',building:'🛠️ Building',gaming:'🎮 Gaming',studying:'📚 Studying',cozy:'☕ Cozy',listening:'🎧 Listening to music'};window.addEventListener('lyria:profile-updated',event=>{
     const {uid,profile}=event.detail;
-    document.querySelectorAll('.message-badges').forEach(container=>{if(container.dataset.userId===uid)window.LyriaBadges.render(container,profile,uid,{inline:true})});
+    document.querySelectorAll('.message-badges').forEach(container=>{if(container.dataset.userId===uid)window.LyriaBadges.render(container,profile,uid,{inline:true})});document.querySelectorAll('.avatar-decoration-chat').forEach(el=>{if(el.dataset.userId===uid && window.LyriaProfileDecorations)el.dataset.decoration=window.LyriaProfileDecorations.selectedFrom(profile)});
     if(document.getElementById('profile-modal')?.dataset.userId===uid)renderProfileBadges(profile,uid);
 });
 window.addEventListener('lyria:room-identity-updated',event=>{if(event.detail?.roomId===currentChannel)loadMessages(currentChannel)});
@@ -947,9 +947,9 @@ function showUserProfileModal(uid,{canOpen=()=>true}={}) {
             window.LyriaMedia.profileBanner(document.getElementById('profile-banner-image'),userData);
             profileImage.alt = `${profileName} avatar`;
             document.getElementById('profile-modal-name').textContent = profileName;
-            document.getElementById('profile-modal-status').textContent = userData.status
+            document.getElementById('profile-modal-status').textContent = STATUS_LABELS[userData.status] || (userData.status
                 ? userData.status.charAt(0).toUpperCase() + userData.status.slice(1)
-                : 'LYRIA member';
+                : 'LYRIA member');document.querySelector('#profile-modal .profile-presence')?.setAttribute('data-status',userData.status || 'available');
             document.getElementById('profile-modal-bio').textContent = userData.bio || 'No bio added yet.';
 
             renderProfileBadges(userData,uid);
