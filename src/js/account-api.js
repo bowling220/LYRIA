@@ -87,7 +87,7 @@
     try {return await request(user,'GET','/'+encodeURIComponent(user.uid));}
     catch(error){if(errorCode(error)==='not-found')return {exists:false,data:{},transport:'rest'};return sdkRead(user,error)}
   }
-  const publicKeys=['displayName','photoURL','avatarGif','bannerURL','bannerGif','avatarDecoration','bio','status','showBadges','badges','appearance','updatedAt'];
+  const publicKeys=['displayName','photoURL','avatarGif','bannerURL','bannerGif','bio','status','showBadges','badges','appearance','updatedAt'];
   function publicProfile(user,merged){
     return {displayName:user.displayName || 'LYRIA member',photoURL:user.photoURL || 'assets/avatar.svg',...Object.fromEntries(Object.entries(merged).filter(([key])=>publicKeys.includes(key)))};
   }

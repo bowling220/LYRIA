@@ -14,8 +14,11 @@ test('profile decorations stay free, bounded and available in the account UI',as
   assert.match(css,/@media\(max-width:700px\)/);
 });
 
-test('the selected decoration is published through the bounded profile schema',async()=>{
+test('the selected decoration reuses the already-public appearance profile field',async()=>{
   const [account,rules]=await Promise.all([source('src/js/account-api.js'),source('firestore.rules')]);
-  assert.match(account,/publicKeys=\[[^\]]*'avatarDecoration'/);
-  assert.match(rules,/hasOnly\(\[[^\]]*'avatarDecoration'/);
+  const script=await source('src/js/profile-decorations.js');
+  assert.match(account,/publicKeys=\[[^\]]*'appearance'/);
+  assert.match(rules,/hasOnly\(\[[^\]]*'appearance'/);
+  assert.match(script,/appearance:\{\.\.\.\(profile\.appearance \|\| \{\}\),avatarDecoration:selected\}/);
+  assert.doesNotMatch(account,/publicKeys=\[[^\]]*'avatarDecoration'/);
 });
