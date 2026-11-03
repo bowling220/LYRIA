@@ -13,7 +13,7 @@
     displayName: user.displayName || (user.isAnonymous ? 'Guest' : 'LYRIA member'),
     email: user.email || null, photoURL: user.photoURL || 'assets/avatar.svg',
     role: user.isAnonymous ? 'guest' : 'user', friends: [], channels: [], badges: [],
-    bio: '', status: 'available', darkMode: false, notificationsEnabled: false, showBadges: true
+    bio: '', status: 'available', avatarDecoration: 'none', darkMode: false, notificationsEnabled: false, showBadges: true
   });
   const draftKey=uid=>'lyria-profile-draft:'+uid;
   function rememberDraft(field){
