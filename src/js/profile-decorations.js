@@ -12,12 +12,13 @@
   ]);
   const ids=new Set(decorations.map(item=>item.id));
   const clean=value=>ids.has(value)?value:'none';
+  const selectedFrom=value=>clean(value?.appearance?.avatarDecoration || value?.avatarDecoration);
   const item=value=>decorations.find(entry=>entry.id===clean(value));
   let selected='none',profile={};
   function decorate(host,value){if(host)host.dataset.decoration=clean(value)}
-  function renderProfile(value){decorate($('profile-avatar-decoration'),value?.avatarDecoration)}
+  function renderProfile(value){decorate($('profile-avatar-decoration'),selectedFrom(value))}
   function renderOwn(value){
-    profile=value || {};const decoration=item(profile.avatarDecoration);
+    profile=value || {};const decoration=item(selectedFrom(profile));
     decorate($('user-avatar-decoration'),decoration.id);
     decorate($('appearance-avatar-decoration'),decoration.id);
     if($('current-decoration-name'))$('current-decoration-name').textContent=decoration.name;
@@ -28,9 +29,9 @@
     $('decoration-preview-name').textContent=decoration.name;
     $('decoration-preview-description').textContent=decoration.description;
     document.querySelectorAll('.decoration-option').forEach(button=>button.setAttribute('aria-checked',String(button.dataset.decoration===selected)));
-    $('apply-avatar-decoration').disabled=selected===clean(profile.avatarDecoration);
-    $('decoration-save-status').textContent=selected===clean(profile.avatarDecoration)?'This decoration is already applied.':'Preview ready. Apply to save it to your profile.';
-    $('decoration-save-status').dataset.state=selected===clean(profile.avatarDecoration)?'saved':'dirty';
+    $('apply-avatar-decoration').disabled=selected===selectedFrom(profile);
+    $('decoration-save-status').textContent=selected===selectedFrom(profile)?'This decoration is already applied.':'Preview ready. Apply to save it to your profile.';
+    $('decoration-save-status').dataset.state=selected===selectedFrom(profile)?'saved':'dirty';
   }
   function tile(decoration){
     const button=document.createElement('button');button.type='button';button.className='decoration-option';button.dataset.decoration=decoration.id;button.setAttribute('role','radio');
@@ -40,7 +41,7 @@
     button.addEventListener('click',()=>preview(decoration.id));return button;
   }
   function open(){
-    profile=window.LyriaAccount.getProfile() || {};selected=clean(profile.avatarDecoration);
+    profile=window.LyriaAccount.getProfile() || {};selected=selectedFrom(profile);
     $('decoration-preview-image').src=window.LyriaMedia.profileSource(profile);
     document.querySelectorAll('.decoration-option img').forEach(image=>image.src=window.LyriaMedia.profileSource(profile));
     preview(selected);UI.openModal($('avatar-decoration-modal'));
@@ -48,7 +49,7 @@
   function close(){UI.closeModal($('avatar-decoration-modal'))}
   async function apply(){
     const button=$('apply-avatar-decoration');if(button.disabled)return;
-    const saved=await window.LyriaAccount.save({avatarDecoration:selected},{button,statusId:'decoration-save-status'});
+    const saved=await window.LyriaAccount.save({appearance:{...(profile.appearance || {}),avatarDecoration:selected}},{button,statusId:'decoration-save-status'});
     if(saved){profile=window.LyriaAccount.getProfile();renderOwn(profile);renderProfile(profile);close();}
   }
   const grid=$('decoration-grid');decorations.forEach(decoration=>grid.append(tile(decoration)));
