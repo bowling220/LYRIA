@@ -1,13 +1,13 @@
 # Community presentation layer
 
-The signed-in `home.html` now uses a navigation rail, card-based conversation
-panel, message panel and contextual details panel. `css/community-shell.css` is
+The signed-in `src/pages/home.html` now uses a navigation rail, card-based conversation
+panel, message panel and contextual details panel. `src/css/community-shell.css` is
 scoped to `.lyria-community`; News, login and shared dialogs retain the shared
 theme. All colors come from existing appearance variables so light/custom/high-
 contrast modes remain usable. A local SVG canopy supplies the decorative banner.
 
-`chat.js` still owns authentication, channel lists, selection, message listeners,
-sending and invitation actions. `js/community-shell.js` consumes those loaded
+`src/js/chat.js` still owns authentication, channel lists, selection, message listeners,
+sending and invitation actions. `src/js/community-shell.js` consumes those loaded
 rooms through `LyriaShell.rooms/select/hub`, decorates existing card controls and
 uses the existing Data API for public profiles. It does not write channel fields
 or change membership/Firestore permissions. Existing selectors and IDs remain.

@@ -60,8 +60,8 @@ with sync_playwright() as p:
  page=make_page(browser,ROOT);page.add_init_script("firebase.auth().currentUser.uid='dOVyjlLfVXPA9cWO2VCxR5zfgKW2'");page.goto('http://localhost:8124/News.html');page.wait_for_function("document.getElementById('create-article-button').hidden");page.evaluate('toggleUserArticles()');assert page.locator('#user-article-section').is_hidden();page.close()
  # Supplied images and author avatars load; failed optional imagery does not break the article.
  page=make_page(browser,ROOT);page.add_init_script("__testData.set('userArticles/illustrated',{title:'An illustrated story',body:'A complete story.',authorName:'Maya Chen',authorPhotoURL:'https://images.example.test/avatar.svg',imageURL:'https://images.example.test/cover.png',timestamp:'2026-10-29T10:00:00Z'});")
- page.route('https://images.example.test/avatar.svg',lambda r:r.fulfill(body=(ROOT/'assets/avatar.svg').read_bytes(),content_type='image/svg+xml'))
- page.route('https://images.example.test/cover.png',lambda r:r.fulfill(body=(ROOT/'assets/status-feature.png').read_bytes(),content_type='image/png'))
+ page.route('https://images.example.test/avatar.svg',lambda r:r.fulfill(body=(ROOT/'src/assets/avatar.svg').read_bytes(),content_type='image/svg+xml'))
+ page.route('https://images.example.test/cover.png',lambda r:r.fulfill(body=(ROOT/'src/assets/status-feature.png').read_bytes(),content_type='image/png'))
  page.goto('http://localhost:8124/News.html');page.wait_for_selector('.journal-feature .journal-cover.has-image');assert page.locator('.journal-feature .journal-author-avatar img').count()==1;page.close()
  # Signed-out reading remains public; writing and interactions require authentication.
  page=make_page(browser,ROOT);page.add_init_script("firebase.auth().currentUser=null;firebase.auth().onAuthStateChanged=fn=>{queueMicrotask(()=>fn(null));return()=>{}}")

@@ -18,6 +18,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="apple-touch-icon" href="assets/pwa-192.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <script src="js/pwa.js" defer></script>
   <link rel="stylesheet" href="css/theme.css?v=e81749b848434807">
   <script src="js/ui.js?v=437ef1abbb20a4b6"></script>
   <script src="js/appearance.js?v=f2b3fb9699b59da3"></script>
@@ -34,6 +37,7 @@
       <a href="News.html">What's new</a>
     </nav>
     <div class="site-actions">
+      <button id="pwa-install" class="button button-small button-quiet" type="button" hidden>Install app</button>
       <a class="text-link" href="login.html">Sign in</a>
       <a class="button button-small button-primary" href="login.html?mode=signup">Join LYRIA <span aria-hidden="true"><span data-icon="arrow" aria-hidden="true"></span></span></a>
     </div>

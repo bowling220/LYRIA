@@ -1,6 +1,6 @@
 import {test} from 'node:test';import assert from 'node:assert/strict';import {readFile} from 'node:fs/promises';import {runInNewContext} from 'node:vm';import {webcrypto} from 'node:crypto';
 const window={},location={origin:'https://lyria.example',href:'https://lyria.example/home.html'};
-runInNewContext(await readFile(new URL('../js/invites.js',import.meta.url),'utf8'),{window,location,URL,crypto:webcrypto,Date,setTimeout,clearTimeout,firebase:{firestore:{FieldValue:{serverTimestamp:()=>0}}}});const api=window.LyriaInvites;
+runInNewContext(await readFile(new URL('../src/js/invites.js',import.meta.url),'utf8'),{window,location,URL,crypto:webcrypto,Date,setTimeout,clearTimeout,firebase:{firestore:{FieldValue:{serverTimestamp:()=>0}}}});const api=window.LyriaInvites;
 test('invitation parsing rejects foreign origins and script URLs',()=>{assert.equal(api.parse('STUDIO'),'STUDIO');assert.equal(api.parse('https://evil.example/invite.html?code=STUDIO'),null);assert.equal(api.parse('javascript:alert(1)'),null);assert.equal(api.url('studio'),'https://lyria.example/invite.html?code=STUDIO')});
 test('expired and revoked bearer invitations never become available',()=>{assert.equal(api.available({revoked:false,expiresAt:null}),true);assert.equal(api.available({revoked:true,expiresAt:null}),false);assert.equal(api.available({revoked:false,expiresAt:new Date(1)}),false)});
 test('replacement creates a cryptographic token and revokes the old link atomically',async()=>{

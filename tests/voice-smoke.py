@@ -26,7 +26,7 @@ HTML='''<!doctype html><meta charset="utf-8"><meta name="viewport" content="widt
 <button id="make-voice-call">Join voice</button><button id="end-call">Leave voice</button>
 <section id="voice-panel" hidden><strong id="voice-room-name"></strong><p id="voice-status"></p><ul id="voice-participants"></ul><meter id="voice-mic-level" min="0" max="1"></meter><span id="voice-mic-status"></span><button id="voice-repair-mic" hidden>Reconnect microphone</button><button id="voice-mute">Mute</button><button id="voice-enable-sound" hidden>Enable sound</button><button id="voice-retry" hidden>Rejoin voice</button></section>
 <script src="/fixture.js"></script><script src="/peer.js"></script><script>window.__peerObjects=[];const NativePeer=Peer;window.Peer=class extends NativePeer{constructor(...args){super(...args);__peerObjects.push(this)}};</script><script src="/js/data-api.js"></script><script src="/js/voice-presence.js"></script><script src="/js/voice-transport.js"></script><script src="/voiceCall.js"></script><script>LyriaVoice.setRoom('community');</script>'''
-HOME=(ROOT/'home.html').read_text()
+HOME=(ROOT/'src/pages/home.html').read_text()
 CALL_STAGE=HOME[HOME.index('            <section id="call-stage"'):HOME.index('            <p id="community-notice"')]
 HTML=HTML.replace('<body>','<body><main class="chat-area">').replace('<button id="voice-mute">','<button id="voice-open-view">View call</button><button id="voice-mute">').replace('<script src="/fixture.js">',CALL_STAGE+'</main><script src="/fixture.js">').replace('<script>LyriaVoice.setRoom', '<script src="/js/voice-view.js"></script><script>LyriaVoice.setRoom')
 FIXTURE=r'''
@@ -76,8 +76,8 @@ class Handler(BaseHTTPRequestHandler):
   elif url.path=='/peer.js':body=PEER;content='text/javascript'
   elif url.path=='/fixture.js':body=FIXTURE.encode();content='text/javascript'
   elif url.path.startswith('/js/'):
-   body=(ROOT/url.path.lstrip('/')).read_bytes();content='text/javascript'
-  elif url.path=='/voiceCall.js':body=(ROOT/'voiceCall.js').read_bytes();content='text/javascript'
+   body=(ROOT/'src'/url.path.lstrip('/')).read_bytes();content='text/javascript'
+  elif url.path=='/voiceCall.js':body=(ROOT/'src/js/voiceCall.js').read_bytes();content='text/javascript'
   else:body=HTML.encode();content='text/html'
   self.send_response(200);self.send_header('Content-Type',content);self.end_headers();self.wfile.write(body)
  def do_POST(self):

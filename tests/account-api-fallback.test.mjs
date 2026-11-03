@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { runInNewContext } from 'node:vm';
 
-const source = await readFile(new URL('../js/account-api.js', import.meta.url), 'utf8');
+const source = await readFile(new URL('../src/js/account-api.js', import.meta.url), 'utf8');
 
 function makeContext() {
   const warnings=[];

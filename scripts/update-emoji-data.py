@@ -24,7 +24,7 @@ def main():
     license_data = urllib.request.urlopen('https://www.unicode.org/license.txt', timeout=30).read()
     if b'UNICODE LICENSE' not in license_data:
         raise ValueError('Unicode license unavailable')
-    folder = ROOT / 'assets' / 'emoji'
+    folder = ROOT / 'src' / 'assets' / 'emoji'
     folder.mkdir(parents=True, exist_ok=True)
     value = {'version': VERSION, 'source': SOURCE, 'groups': groups, 'emojis': emojis}
     (folder / f'emoji-{VERSION}.json').write_text(json.dumps(value, ensure_ascii=False, separators=(',', ':')) + '\n', encoding='utf-8')

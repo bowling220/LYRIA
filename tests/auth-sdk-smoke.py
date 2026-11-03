@@ -15,7 +15,7 @@ class Handler(BaseHTTPRequestHandler):
  def log_message(self,*args):pass
  def do_GET(self):
   version='11.10.0' if 'sdk=11.10.0' in self.path else '13.1.0'
-  body=(ROOT/'js/config.js').read_bytes() if self.path=='/config.js' else HTML.replace('/13.1.0/','/'+version+'/').encode()
+  body=(ROOT/'src/js/config.js').read_bytes() if self.path=='/config.js' else HTML.replace('/13.1.0/','/'+version+'/').encode()
   self.send_response(200);self.send_header('Content-Type','text/javascript' if self.path=='/config.js' else 'text/html');self.end_headers();self.wfile.write(body)
 server=ThreadingHTTPServer(('127.0.0.1',0),Handler);Thread(target=server.serve_forever,daemon=True).start()
 try:

@@ -3,17 +3,20 @@ from pathlib import Path
 import base64,mimetypes,urllib.request,json
 
 def make_page(browser,root,width=390,height=844,touch=True,gif_options=None,release_seen=True):
+    web=root/'dist'/'client'
     page=browser.new_page(viewport={'width':width,'height':height},has_touch=touch)
     page.add_init_script(path=str(root/'tests/firebase-fixture.js'))
     if release_seen:
-        release=json.loads((root/'js/releases.json').read_text())['releases'][0]['id']
+        release=json.loads((root/'src/js/releases.json').read_text())['releases'][0]['id']
         page.add_init_script("try{localStorage.setItem('lyria:release-seen',"+json.dumps(release)+")}catch{}")
     options=gif_options if gif_options is not None else {}
     gif=base64.b64decode((root/'tests/fixtures/animated.gif.base64').read_text())
     def route(r):
         url=r.request.url
         if url.startswith('http://localhost:8124/'):
-            file=root/url.split('8124/')[1].split('?')[0]
+            relative=url.split('8124/')[1].split('?')[0]
+            if relative=='sw.js':r.abort();return
+            file=web/relative
             if file.is_file():r.fulfill(body=file.read_bytes(),content_type=mimetypes.guess_type(str(file))[0] or 'text/plain')
             else:r.fulfill(status=404,body='')
         elif 'www.gstatic.com/firebasejs/' in url and not '-compat' in url:

@@ -64,7 +64,7 @@ test('the real account HTTPS adapter merges and verifies profiles without a live
   const {runInNewContext}=await import('node:vm');
   const window={firebaseConfig:{getApp:()=>({options:{projectId:'demo-lyria'}})}};
   const nativeFetch=globalThis.fetch;
-  runInNewContext(await readFile(new URL('../js/account-api.js',import.meta.url),'utf8'),{
+  runInNewContext(await readFile(new URL('../src/js/account-api.js',import.meta.url),'utf8'),{
     window,AbortController,URLSearchParams,setTimeout,clearTimeout,
     fetch:(url,options)=>nativeFetch(url.replace('https://firestore.googleapis.com','http://127.0.0.1:8085'),options)
   });
@@ -100,7 +100,7 @@ test('GIF avatar metadata and original animated banner bytes persist under the e
   const {runInNewContext}=await import('node:vm');
   const window={firebaseConfig:{getApp:()=>({options:{projectId:'demo-lyria'}})}};
   const nativeFetch=globalThis.fetch;
-  runInNewContext(await readFile(new URL('../js/account-api.js',import.meta.url),'utf8'),{window,AbortController,URLSearchParams,setTimeout,clearTimeout,fetch:(url,options)=>nativeFetch(url.replace('https://firestore.googleapis.com','http://127.0.0.1:8085'),options)});
+  runInNewContext(await readFile(new URL('../src/js/account-api.js',import.meta.url),'utf8'),{window,AbortController,URLSearchParams,setTimeout,clearTimeout,fetch:(url,options)=>nativeFetch(url.replace('https://firestore.googleapis.com','http://127.0.0.1:8085'),options)});
   const now=Math.floor(Date.now()/1000);
   const token=Buffer.from(JSON.stringify({alg:'none',typ:'JWT'})).toString('base64url')+'.'+Buffer.from(JSON.stringify({aud:'demo-lyria',iss:'https://securetoken.google.com/demo-lyria',sub:'gif-alice',user_id:'gif-alice',iat:now,exp:now+3600,auth_time:now,firebase:{sign_in_provider:'google.com'}})).toString('base64url')+'.';
   const user={uid:'gif-alice',getIdToken:async()=>token};
@@ -119,7 +119,7 @@ test('bounded HTTPS chat and friend requests work with existing rules, including
   const user=uid=>({uid,displayName:uid,getIdToken:async()=>token(uid)});let active=user('alice');
   const window={firebaseConfig:{getApp:()=>({options:{projectId:'demo-lyria'}}),getAuth:()=>({currentUser:active})}};
   const context={window,AbortController,setTimeout,clearTimeout,crypto:webcrypto,fetch:(url,options)=>fetch(url.replace('https://firestore.googleapis.com','http://127.0.0.1:8085'),options)};
-  for(const path of ['../js/data-api.js','../js/friend-requests.js'])runInNewContext(await readFile(new URL(path,import.meta.url),'utf8'),context);
+  for(const path of ['../src/js/data-api.js','../src/js/friend-requests.js'])runInNewContext(await readFile(new URL(path,import.meta.url),'utf8'),context);
   const API=window.LyriaDataAPI,Friends=window.LyriaFriendRequests;
   await setDoc(doc(member('alice'),'users/alice'),{displayName:'Alice',friends:[],bio:'Keep my bio'});
   await setDoc(doc(member('bob'),'users/bob'),{displayName:'Bob',friends:[]});
@@ -152,7 +152,7 @@ test('call invitations, replies, and cancellations use existing inbox permission
   const {runInNewContext}=await import('node:vm');let uid='alice';
   const token=()=>{const now=Math.floor(Date.now()/1000);return Buffer.from(JSON.stringify({alg:'none',typ:'JWT'})).toString('base64url')+'.'+Buffer.from(JSON.stringify({aud:'demo-lyria',iss:'https://securetoken.google.com/demo-lyria',sub:uid,user_id:uid,iat:now,exp:now+3600,auth_time:now,firebase:{sign_in_provider:'google.com'}})).toString('base64url')+'.'};
   const window={firebaseConfig:{getApp:()=>({options:{projectId:'demo-lyria'}}),getAuth:()=>({currentUser:{uid,getIdToken:async()=>token()}})}};
-  runInNewContext(await readFile(new URL('../js/data-api.js',import.meta.url),'utf8'),{window,AbortController,setTimeout,clearTimeout,fetch:(url,options)=>fetch(url.replace('https://firestore.googleapis.com','http://127.0.0.1:8085'),options)});
+  runInNewContext(await readFile(new URL('../src/js/data-api.js',import.meta.url),'utf8'),{window,AbortController,setTimeout,clearTimeout,fetch:(url,options)=>fetch(url.replace('https://firestore.googleapis.com','http://127.0.0.1:8085'),options)});
   const API=window.LyriaDataAPI;
   const create=(id,data)=>API.commit([{update:{name:API.name('inbox/'+id),fields:API.fields(data)},updateTransforms:[{fieldPath:'timestamp',setToServerValue:'REQUEST_TIME'}],currentDocument:{exists:false}}]);
   await setDoc(doc(member('alice'),'users/alice'),{friends:['bob']});await setDoc(doc(member('bob'),'users/bob'),{friends:['alice']});
@@ -176,7 +176,7 @@ test('HTTPS voice presence preserves typing and prevents old cleanup from deleti
  const token=Buffer.from(JSON.stringify({alg:'none',typ:'JWT'})).toString('base64url')+'.'+Buffer.from(JSON.stringify({aud:'demo-lyria',iss:'https://securetoken.google.com/demo-lyria',sub:uid,user_id:uid,iat:now,exp:now+3600,auth_time:now,firebase:{sign_in_provider:'google.com'}})).toString('base64url')+'.';
  const window={firebaseConfig:{getApp:()=>({options:{projectId:'demo-lyria'}}),getAuth:()=>({currentUser:{uid,displayName:'Alice',getIdToken:async()=>token}})}};
  const context={window,AbortController,setTimeout,clearTimeout,fetch:(url,options)=>fetch(url.replace('https://firestore.googleapis.com','http://127.0.0.1:8085'),options)};
- for(const file of ['../js/data-api.js','../js/voice-presence.js'])runInNewContext(await readFile(new URL(file,import.meta.url),'utf8'),context);
+ for(const file of ['../src/js/data-api.js','../src/js/voice-presence.js'])runInNewContext(await readFile(new URL(file,import.meta.url),'utf8'),context);
  const API=window.LyriaDataAPI,Presence=window.LyriaVoicePresence,path='channels/community/typingStatus/'+uid;
  await setDoc(doc(member(uid),path),{isTyping:true,displayName:'Alice'});
  const first={room:'community',userId:uid,id:'v'+'a'.repeat(32),peerId:'lyria-v'+'a'.repeat(32),channel:'gaming'};
@@ -231,7 +231,7 @@ test('conversation identity, member profiles, stickers, and expanded reactions s
 test('profile HTTPS edits preserve ignored legacy membership fields and unrelated data',async()=>{
  const {runInNewContext}=await import('node:vm');
  const window={firebaseConfig:{getApp:()=>({options:{projectId:'demo-lyria'}})}};
- runInNewContext(await readFile(new URL('../js/account-api.js',import.meta.url),'utf8'),{window,AbortController,URLSearchParams,setTimeout,clearTimeout,fetch:(url,options)=>fetch(url.replace('https://firestore.googleapis.com','http://127.0.0.1:8085'),options)});
+ runInNewContext(await readFile(new URL('../src/js/account-api.js',import.meta.url),'utf8'),{window,AbortController,URLSearchParams,setTimeout,clearTimeout,fetch:(url,options)=>fetch(url.replace('https://firestore.googleapis.com','http://127.0.0.1:8085'),options)});
  for(const [index,value]of [false,true,{unexpected:true}].entries()){
   const uid='legacy-'+index,ref=doc(member(uid),'users/'+uid);
   await env.withSecurityRulesDisabled(async context=>setDoc(doc(context.firestore(),'users/'+uid),{displayName:'Member',email:'keep@example.test',isPremium:value,premiumTier:'retired',subscriptionStatus:'old',badges:['premium','Beta'],friends:['friend'],unrelated:{keep:true}}));

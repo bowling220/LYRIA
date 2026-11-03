@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto';
 import { readFile, readdir, writeFile } from 'node:fs/promises';
 import { resolve, dirname, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
-const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
+const root=resolve(dirname(fileURLToPath(import.meta.url)),'..','dist','client');
 const hash=value=>createHash('sha256').update((Buffer.isBuffer(value)?value.toString('utf8'):value).replace(/\r\n/g,'\n')).digest('hex').slice(0,16);
 export async function versionAssets(directory=root){
   // Version local ES-module dependencies before hashing their HTML entry point.

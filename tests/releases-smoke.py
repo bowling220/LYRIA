@@ -4,7 +4,7 @@ import json
 from browser_executable import CHROMIUM
 from playwright.sync_api import sync_playwright
 from browser_fixture import make_page
-ROOT=Path(__file__).resolve().parents[1];release=json.loads((ROOT/'js/releases.json').read_text())['releases'][0]['id']
+ROOT=Path(__file__).resolve().parents[1];release=json.loads((ROOT/'src/js/releases.json').read_text())['releases'][0]['id']
 with sync_playwright() as p:
  browser=p.chromium.launch(executable_path=CHROMIUM,args=['--no-sandbox'])
  for width,height in [(320,480),(320,568),(390,844),(667,375),(768,1024),(1440,1000)]:
@@ -27,7 +27,7 @@ with sync_playwright() as p:
   assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1')
   assert 'channel=studio' in page.url
   if (width,height) in [(320,480),(667,375)]:
-   for index,entry in enumerate(json.loads((ROOT/'js/releases.json').read_text())['releases']):
+   for index,entry in enumerate(json.loads((ROOT/'src/js/releases.json').read_text())['releases']):
     page.locator('#release-select').select_option(str(index))
     for change in range(len(entry['changes'])):
      if change:page.locator('#release-change-next').click()
@@ -41,7 +41,7 @@ with sync_playwright() as p:
   page.reload();page.wait_for_selector('.message-input',state='visible');page.wait_for_timeout(150)
   assert page.locator('#release-modal[data-ui-open=true]').count()==0
   if width<=768:page.locator('#header-menu-toggle').click()
-  page.locator('[data-open-release]').click();page.wait_for_selector('#release-changes',state='visible');page.locator('#release-select').select_option('1');assert page.locator('#release-title').inner_text()==json.loads((ROOT/'js/releases.json').read_text())['releases'][1]['title'];page.locator('#release-select').select_option('0')
+  page.locator('[data-open-release]').click();page.wait_for_selector('#release-changes',state='visible');page.locator('#release-select').select_option('1');assert page.locator('#release-title').inner_text()==json.loads((ROOT/'src/js/releases.json').read_text())['releases'][1]['title'];page.locator('#release-select').select_option('0')
   page.keyboard.press('Escape');page.wait_for_selector('#release-modal[data-ui-open=false]',state='attached')
   assert not errors,errors
   page.close()

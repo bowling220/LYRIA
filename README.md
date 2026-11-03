@@ -30,24 +30,22 @@ Mobile browser navigation, chat, profiles, GIFs, and voice remain supported.
 
 ```
 LYRIA/
-├── assets/
-│   └── images/          # Image assets (logos, icons, etc.)
-├── css/
-│   └── theme.css        # Shared design tokens, components, and responsive layouts
-├── js/
-│   ├── config.js        # Firebase configuration
-│   ├── utils.js         # Utility functions and error handling
-│   ├── ui.js            # Shared local SVG icons, dialogs, and feedback
-│   ├── community.js     # Profile settings, friends, and GIF controls
-│   └── mobile.js        # Keyboard-aware visual viewport handling
-├── chat.js              # Main chat functionality
-├── voiceCall.js         # Voice calling features
-├── tests/               # Browser smoke checks with an in-memory Firebase fixture
-├── index.html           # Landing page
-├── home.html            # Main chat application
-├── login.html           # Authentication page
-├── inbox.html           # Inbox page
-└── News.html            # News feed
+├── src/                         # Browser application source
+│   ├── pages/                   # HTML entry points
+│   │   ├── index.html           # Landing page
+│   │   ├── home.html            # Main chat application
+│   │   ├── login.html           # Authentication page
+│   │   ├── inbox.html           # Inbox page
+│   │   └── News.html            # Community journal
+│   ├── assets/                  # Icons, artwork, badges, and emoji data
+│   ├── css/                     # Shared and feature-specific styles
+│   ├── js/                      # Application controllers and browser modules
+│   └── pwa/                     # Install manifest and offline service worker
+├── scripts/                     # Build and configuration tooling
+├── tests/                       # Unit, security, and browser regression tests
+├── docs/                        # Architecture, operations, and feature guides
+├── build.mjs                    # Produces the public dist/client tree
+└── dist/client/                 # Generated deployment output (ignored by Git)
 ```
 
 ## Shared chat and account saves
@@ -57,7 +55,7 @@ LYRIA/
 show the latest 100 entries. Personal and invite-only conversations stay separate;
 voice is available in both Everyone and private conversations (up to six people per room).
 
-`js/account.js` is the single profile-save controller. `js/account-api.js` sends
+`src/js/account.js` is the single profile-save controller. `src/js/account-api.js` sends
 regular authenticated HTTPS requests to Firestore, merges changes into
 `users/{auth.uid}`, and verifies the server response. Requests time out after 15
 seconds, independently of live chat streams. The UI shows unsaved, saving, saved,
@@ -82,7 +80,7 @@ against the deployed project's rules.
 
 ## Shared web interface
 
-All five web pages load `css/theme.css` and `js/ui.js`. Edit the theme's root
+All five web pages load `src/css/theme.css` and `src/js/ui.js`. Edit the theme's root
 variables for colors and typography; reuse the shared button, dialog, card, and
 navigation classes instead of adding per-page style blocks. `LyriaUI.icon(name)`
 and `data-icon` use the same local SVG icon set. Routine feedback uses
@@ -108,7 +106,7 @@ for reproducible browser checks and the remaining live-service checks.
    ```
    On Windows PowerShell, use `Copy-Item .env.example .env`. The checked-in
    development configuration uses the local Auth and Firestore emulators and the
-   `demo-lyria` project ID. Do not replace `js/config.js` or use production account data.
+   `demo-lyria` project ID. Do not replace `src/js/config.js` or use production account data.
 
 3. **Start the Firebase emulators**
    ```bash
@@ -125,6 +123,11 @@ for reproducible browser checks and the remaining live-service checks.
    required Python, Java, Playwright, and optional coturn setup used by the full test suite.
 
 ## 🔧 Configuration
+
+`src/js/runtime-config.js` is the single browser source for public Firebase web
+configuration. Login, News, and the shared compatibility layer all consume
+`window.LYRIA_RUNTIME`; they do not carry their own fallback copies. Hosted builds
+can replace this public object from the documented `PUBLIC_FIREBASE_*` values.
 
 ### Firebase Security Rules
 
@@ -144,7 +147,7 @@ a reviewed release; never paste simplified example rules over the checked-in pol
 
 ### Themes
 
-The application supports theme customization through CSS custom properties. Modify `css/theme.css`:
+The application supports theme customization through CSS custom properties. Modify `src/css/theme.css`:
 
 ```css
 :root {
@@ -157,8 +160,8 @@ The application supports theme customization through CSS custom properties. Modi
 
 ### Adding New Features
 
-1. Create new modules in `js/modules/`
-2. Add component-specific styles in `css/components/`
+1. Create new modules in `src/js/`
+2. Add component-specific styles in `src/css/`
 3. Follow the existing patterns for error handling and user feedback
 
 ## 📱 Mobile Support
@@ -168,6 +171,13 @@ The application is fully responsive and includes:
 - Responsive sidebar
 - Optimized layouts for small screens
 - Progressive Web App (PWA) features
+
+`manifest.webmanifest` provides LYRIA's install identity, shortcuts, colors, and
+dedicated 192px/512px icons. `src/js/pwa.js` registers `src/pwa/sw.js` and reveals the landing
+page's Install app control only when the browser supplies an install prompt. The
+service worker keeps a same-origin app shell for offline startup, uses network-first
+HTML navigation, and never intercepts Firebase or other cross-origin requests. Live
+messages and account data still require a connection.
 
 ## 🔐 Security Features
 
@@ -310,8 +320,8 @@ configuration. The build reads `METERED_APP_NAME` and `METERED_TURN_API_KEY` fro
 Render and configures only the generated app in `dist/client`. Use Metered’s
 browser TURN credentials key, never its management `secretKey`.
 
-`js/voice-transport.js` validates and caches credential responses, with a request
-deadline. `js/voice-presence.js` uses bounded HTTPS reads/writes and live snapshots
+`src/js/voice-transport.js` validates and caches credential responses, with a request
+deadline. `src/js/voice-presence.js` uses bounded HTTPS reads/writes and live snapshots
 with a polling fallback. Heartbeat, mute, and cleanup writes compare both the
 session ID and the server document version, so old cleanup cannot delete a new
 session. Typing fields remain intact.
@@ -340,7 +350,7 @@ With a configured public GIPHY API key, the shared GIF picker initially fills up
 to 100 results using provider-sized pages, with search and further batches through
 **Load more GIFs**. A curated 31-GIF collection remains available without a key.
 GIFs are previewed before sending and remain hosted by their credited GIPHY source.
-`js/gif-library.js` resolves media metadata; `js/gif-picker.js` handles chat/avatar/banner selection.
+`src/js/gif-library.js` resolves media metadata; `src/js/gif-picker.js` handles chat/avatar/banner selection.
 The smiley opens 3,781 bundled Unicode emojis with search, categories and local
 recent choices; it inserts at the cursor without sending the message. The dataset
 loads only when needed. See [emoji maintenance and attribution](docs/EMOJIS.md).
@@ -392,7 +402,7 @@ user’s device; browser/network-specific failures still need their symptoms.
 
 ## Chat and friend-request loading
 
-`js/data-api.js` supplies authenticated, bounded Firestore HTTPS queries and
+`src/js/data-api.js` supplies authenticated, bounded Firestore HTTPS queries and
 commits using the same Firebase ID token and existing database rules. Chat
 history and request lists can load even if the SDK’s live stream never opens.
 The live listener remains the fast path; a 15-second HTTPS poll runs only while
@@ -401,7 +411,7 @@ server snapshots resume. Subscription generations reject late responses from
 previous rooms. New text and GIF messages use server-confirmed HTTPS commits and
 refresh the current history immediately after confirmation.
 
-`js/friend-requests.js` shares request reads and actions between the community
+`src/js/friend-requests.js` shares request reads and actions between the community
 badge, profile actions, and `inbox.js`. Reconnect restarts request subscriptions
 as well as chat. Inbox rows and controls render before optional sender-profile
 lookups. Acceptance commits both friend arrays and the request status together;
@@ -478,7 +488,7 @@ replace retired styles/images with harmless empty content. These contain none of
 page, badge artwork, or style rules and are never linked by normal navigation. There are no feature gates based on account payment
 state. Non-payment role and community badges remain; canonical badge IDs are
 `admin`, `moderator`, `developer`, `beta`, `early-access`, and `featured`.
-`js/badges.js` owns metadata, legacy aliases, visibility, and rendering. All old
+`src/js/badges.js` owns metadata, legacy aliases, visibility, and rendering. All old
 badge arrays resolve automatically without database edits. See [the badge design
 guide](docs/BADGES.md) before adding community awards.
 
@@ -502,7 +512,7 @@ still applies to reliable calling across different networks.
 
 ## Badge system
 
-Profile badges use one six-piece SVG family under `assets/badges/`, with 32px profile
+Profile badges use one six-piece SVG family under `src/assets/badges/`, with 32px profile
 art and 20px inline chat art. Every badge has a keyboard/touch-accessible description,
 a category, a safe missing-image fallback, and an immutable registry entry. Legacy
 identifiers normalize and deduplicate at read time; unknown identifiers are ignored.
@@ -566,7 +576,7 @@ Reliable cross-network calling still requires the owner's working TURN configura
 
 ### Conversation home and saved login
 
-Opening `home.html` shows the conversation hub without selecting a chat. Explicit `?channel=` links and reloads preserve an opened room; the Conversations button returns to the hub. App navigation keeps Firebase authentication intact. Firebase Auth uses local persistence, falling back to session storage where browser restrictions require it. Clearing browser data, private browsing restrictions, or signing out can still require a new login. No passwords or authentication tokens are stored manually.
+Opening the built `home.html` from `src/pages/home.html` shows the conversation hub without selecting a chat. Explicit `?channel=` links and reloads preserve an opened room; the Conversations button returns to the hub. App navigation keeps Firebase authentication intact. Firebase Auth uses local persistence, falling back to session storage where browser restrictions require it. Clearing browser data, private browsing restrictions, or signing out can still require a new login. No passwords or authentication tokens are stored manually.
 
 ### Sidebar and feedback
 
@@ -574,7 +584,7 @@ The sidebar keeps profile/settings controls fixed while conversations and voice 
 
 ### The Community Journal
 
-`News.html` is an editorial homepage with a featured story, category filters, and explicit More stories pagination. A `?story=` link opens the dedicated reading view; browser back/forward and direct links work without another framework. `js/news-archive.js` preserves the 13 original release posts and their exact old reaction/comment IDs. Archive stories are labelled with their original publication dates. `js/news.js` continues using the existing Firebase Auth, `userArticles`, `posts`, `userLikes`, and article comment collections. No rule or index deployment is required.
+`src/pages/News.html` is an editorial homepage with a featured story, category filters, and explicit More stories pagination. A `?story=` link opens the dedicated reading view; browser back/forward and direct links work without another framework. `src/js/news-archive.js` preserves the 13 original release posts and their exact old reaction/comment IDs. Archive stories are labelled with their original publication dates. `src/js/news.js` continues using the existing Firebase Auth, `userArticles`, `posts`, `userLikes`, and article comment collections. No rule or index deployment is required.
 
 New member articles add optional `category`, `excerpt`, `imageURL`, `authorId`, `authorPhotoURL`, and `readingMinutes` fields alongside existing title/body/byline/tags/timestamp data. Old documents remain readable with derived excerpts/read time and a Community category. No migration or record deletion occurs. Cover images use safe HTTPS URLs or packaged artwork; a branded illustration replaces unavailable imagery. User content is rendered as text, with simple headings/lists/quotes/code blocks; arbitrary HTML is not executed.
 
@@ -610,6 +620,6 @@ GIPHY search and trending can be enabled with a new public browser app key; see 
 
 LYRIA can stay on Firebase Spark. See [Free-tier safeguards](docs/FREE_TIER_GUARDS.md) for equal action budgets, reduced background reads/writes, payload limits, activation steps, and the remaining abuse risks. These safeguards do not require paid services and cannot guarantee that free quotas will never be exhausted.
 
-For everyday connection, microphone, and privacy questions, see the website’s [help guide](help.html). Contributors can start with [their first contribution](docs/FIRST_CONTRIBUTION.md); maintainers can review the [community safety design](docs/COMMUNITY_SAFETY.md).
+For everyday connection, microphone, and privacy questions, see the website’s [help guide](src/pages/help.html). Contributors can start with [their first contribution](docs/FIRST_CONTRIBUTION.md); maintainers can review the [community safety design](docs/COMMUNITY_SAFETY.md).
 
 Interested in building LYRIA? [Join the public Developers conversation](https://lyria.onrender.com/invite.html?code=DEVELOPERS). Signed-in members and guests can join without an individual invitation. Chat access does not grant staff badges or repository permissions.
