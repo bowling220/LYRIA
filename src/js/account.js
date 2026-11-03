@@ -70,7 +70,11 @@
     await window.firebaseConfig.initialize();
     const result=await API.read(user);
     if(!result.exists){
-      try{await API.create(user,defaults(user));}
+      try{
+        await API.create(user,defaults(user));
+        try{sessionStorage.setItem('lyria:onboarding-pending:'+user.uid,'1')}catch{}
+        window.dispatchEvent(new CustomEvent('lyria:account-created',{detail:{uid:user.uid}}));
+      }
       catch(error){if(error.code!=='already-exists')throw error}
     }else await API.publish(user);
   }

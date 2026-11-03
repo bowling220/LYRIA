@@ -264,6 +264,11 @@
         <h2 id="settings-modal-title">Your account</h2>
         <div class="account-summary"><p id="account-identity"></p><p id="account-load-status" role="status" aria-live="polite"></p><button id="reconnect-account" class="action-btn" type="button" hidden>Reconnect account</button></div>
 
+        <section class="modal-section guide-settings" aria-labelledby="guide-settings-title">
+            <div><h3 id="guide-settings-title">Need a quick tour?</h3><p>Revisit the four places that help you get comfortable in LYRIA.</p></div>
+            <button id="replay-welcome-guide" class="action-btn" type="button"><span data-icon="sparkles" aria-hidden="true"></span> Show me around</button>
+        </section>
+
         <!-- Toggle Dark Mode -->
         <div class="modal-section">
             <section id="appearance-settings" class="theme-editor"></section>
@@ -381,6 +386,17 @@
 </div>
 
 <div id="report-modal" class="modal" inert aria-labelledby="report-title"><div class="modal-content compact-modal"><button id="close-report" type="button" class="close-button" aria-label="Close report"><span data-icon="close" aria-hidden="true"></span></button><h2 id="report-title">Help keep LYRIA welcoming.</h2><p>Reports are visible to moderators. Include only what they need to review the problem.</p><form id="report-form"><label for="report-reason">Reason</label><select id="report-reason"><option value="spam">Spam</option><option value="harassment">Harassment</option><option value="unsafe">Unsafe content</option><option value="other">Other</option></select><label for="report-details">Additional details (optional)</label><textarea id="report-details" maxlength="1000" rows="3"></textarea><button id="report-submit" type="submit">Submit report</button><p id="report-status" role="status"></p></form></div></div><div id="moderation-modal" class="modal" inert aria-labelledby="moderation-title"><div class="modal-content"><button id="close-moderation" type="button" class="close-button" aria-label="Close moderation"><span data-icon="close" aria-hidden="true"></span></button><h2 id="moderation-title">Community reports</h2><p>Review up to 30 open reports. Removal requires membership of the reported conversation.</p><div id="moderation-reports"></div></div></div>
+    <div id="welcome-guide" class="welcome-guide" hidden aria-hidden="true">
+        <div id="guide-spotlight" class="guide-shade" aria-hidden="true"></div>
+        <section class="guide-card" role="dialog" aria-modal="true" aria-labelledby="guide-title" aria-describedby="guide-description">
+            <div class="guide-topline"><span id="guide-step-label">1 of 4</span><button id="skip-welcome-guide" type="button">Skip tour</button></div>
+            <div class="guide-icon" aria-hidden="true"><span id="guide-icon" data-icon="chat"></span></div>
+            <h2 id="guide-title">Your conversations</h2>
+            <p id="guide-description">Chats keeps your conversations, favorites, and community rooms together.</p>
+            <div id="guide-progress" class="guide-progress" aria-label="Tour progress"></div>
+            <div class="guide-actions"><button id="guide-back" type="button">Back</button><button id="guide-next" class="primary-action" type="button">Next</button></div>
+        </section>
+    </div>
     <!-- Include voiceCall.js before chat.js -->
     <script src="js/account-api.js?v=8e261892c127331e"></script>
     <script src="js/account.js?v=46b39182ae121ff3"></script>
@@ -409,6 +425,7 @@
     <script src="js/gif-picker.js?v=3fe0c5214cacac5d"></script>
     <script src="js/profile-media.js?v=fe26a608f0a61b46"></script>
     <script src="js/profile-decorations.js"></script>
+    <script src="js/onboarding.js"></script>
 
     <!-- Firebase initialization check -->
 
