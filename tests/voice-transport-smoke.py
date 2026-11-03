@@ -11,7 +11,7 @@ with sync_playwright() as p:
    calls.append(r.request.url);r.fulfill(json=[{'urls':'stun:fixture.test:3478'},{'urls':'turns:fixture.test:443?transport=tcp','username':'fixture','credential':'fixture-only'}])
   else:r.fulfill(body='<html></html>',content_type='text/html')
  page.route('**/*',route);page.goto('http://localhost:8126/')
- page.add_script_tag(content=(ROOT/'js/voice-config.js').read_text());page.add_script_tag(content=(ROOT/'js/voice-transport.js').read_text())
+ page.add_script_tag(content=(ROOT/'src/js/voice-config.js').read_text());page.add_script_tag(content=(ROOT/'src/js/voice-transport.js').read_text())
  assert not page.evaluate('(async()=> (await LyriaVoiceTransport.get()).relay)()')
  page.evaluate("LYRIA_VOICE_CONFIG.credentialsUrl='https://fixture-app.metered.live/api/v1/turn/credentials?apiKey=fixture-only'")
  assert page.evaluate('(async()=>{const a=await Promise.all([LyriaVoiceTransport.get(),LyriaVoiceTransport.get()]);return a.every(v=>v.relay)})()')

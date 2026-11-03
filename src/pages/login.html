@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
   <title>Sign in — LYRIA</title>
   <meta name="description" content="Sign in to LYRIA and return to your conversations.">
+  <meta name="theme-color" content="#101b17">
 
   <!-- Firebase CDN Links -->
   <script src="https://www.gstatic.com/firebasejs/13.1.0/firebase-app-compat.js"></script>
@@ -16,6 +17,9 @@
         <script src="js/config.js?v=3d381bab98aa7407"></script>
   <script src="js/utils.js?v=35ef4bfc11346489"></script>
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="apple-touch-icon" href="assets/pwa-192.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <script src="js/pwa.js" defer></script>
   <link rel="stylesheet" href="css/theme.css?v=e81749b848434807">
   <script src="js/ui.js?v=437ef1abbb20a4b6"></script>
   <script src="js/appearance.js?v=f2b3fb9699b59da3"></script>
@@ -61,18 +65,6 @@
 
   <script src="js/invites.js?v=da08293c059085cf"></script>
   <script>
-    // Load environment variables for security
-    // In production, these should be loaded from a secure source
-    window.env = window.env || {
-      VITE_FIREBASE_API_KEY: "AIzaSyDWpApnJ-mfHQJZhkbNDdsJ7l8-8rVHHTc",
-      VITE_FIREBASE_AUTH_DOMAIN: "lyria-49a54.firebaseapp.com",
-      VITE_FIREBASE_PROJECT_ID: "lyria-49a54",
-      VITE_FIREBASE_STORAGE_BUCKET: "lyria-49a54.firebasestorage.app",
-      VITE_FIREBASE_MESSAGING_SENDER_ID: "704449928785",
-      VITE_FIREBASE_APP_ID: "1:704449928785:web:5b3c58c8f82d31d3f1a270",
-      VITE_FIREBASE_MEASUREMENT_ID: "G-KV5FRFN63T"
-    };
-
     const invitation=window.LyriaInvites.parse(new URLSearchParams(location.search).get('invite'));
     const loginDestination=invitation ? window.LyriaInvites.url(invitation) : 'home.html?view=hub';
     // Initialize Firebase for login page
@@ -87,18 +79,7 @@
             return window.firebaseConfig.getAuth();
         }
 
-        // Fallback: initialize directly if config.js wasn't loaded
-        const fallbackConfig = {
-            apiKey: window.env.VITE_FIREBASE_API_KEY,
-            authDomain: window.env.VITE_FIREBASE_AUTH_DOMAIN,
-            projectId: window.env.VITE_FIREBASE_PROJECT_ID,
-            storageBucket: window.env.VITE_FIREBASE_STORAGE_BUCKET,
-            messagingSenderId: window.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-            appId: window.env.VITE_FIREBASE_APP_ID,
-            measurementId: window.env.VITE_FIREBASE_MEASUREMENT_ID
-        };
-        firebase.initializeApp(window.LYRIA_RUNTIME?.firebase || fallbackConfig);
-        return firebase.auth();
+        throw new Error('LYRIA configuration did not load. Reload to try again.');
     }
 
     const auth = initializeLoginFirebase();

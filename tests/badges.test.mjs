@@ -2,7 +2,7 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile,access} from 'node:fs/promises';
 import {runInNewContext} from 'node:vm';
-const window={};runInNewContext(await readFile(new URL('../js/badges.js',import.meta.url),'utf8'),{window});const badges=window.LyriaBadges;
+const window={};runInNewContext(await readFile(new URL('../src/js/badges.js',import.meta.url),'utf8'),{window});const badges=window.LyriaBadges;
 test('legacy and canonical identifiers resolve without a data migration',()=>{
  for(const [legacy,id]of [['admin','admin'],['Admin','admin'],['Mod','moderator'],['DevBadge','developer'],['Beta','beta'],['EarlyAccess','early-access'],['feature','featured'],['Early Access','early-access'],['early_access','early-access']]){
   assert.equal(badges.normalize(legacy),id);assert.equal(badges.normalize(id),id);assert.equal(badges.normalize(' '+legacy+' '),id);
@@ -24,7 +24,7 @@ test('registry artwork is local SVG with one canvas, silhouette and no text or e
  assert.ok(Object.isFrozen(badges.registry));assert.equal(Object.keys(badges.registry).length,6);
  for(const badge of Object.values(badges.registry)){
   assert.match(badge.id,/^[a-z]+(?:-[a-z]+)*$/);assert.ok(badges.categories[badge.category]);assert.ok(badge.description);assert.ok(Object.isFrozen(badge.aliases));
-  await access(new URL('../'+badge.asset,import.meta.url));const svg=await readFile(new URL('../'+badge.asset,import.meta.url),'utf8');
+  await access(new URL('../src/'+badge.asset,import.meta.url));const svg=await readFile(new URL('../src/'+badge.asset,import.meta.url),'utf8');
   assert.match(svg,/width="128" height="128" viewBox="0 0 64 64"/);assert.match(svg,/<rect x="4" y="4" width="56" height="56" rx="18"/);
   assert.doesNotMatch(svg,/<(?:text|script|image|foreignObject)\b|href=|url\(/);
  }

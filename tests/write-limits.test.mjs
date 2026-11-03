@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';import {readFile} from 'node:fs/promises';import {runInNewContext} from 'node:vm';
-const source=await readFile(new URL('../js/write-limits.js',import.meta.url),'utf8');
+const source=await readFile(new URL('../src/js/write-limits.js',import.meta.url),'utf8');
 function fixture(enabled=true){let now=Date.now();const rows=new Map(),auth={currentUser:{uid:'alice'}};class Ref{constructor(path){this.path=path}doc(id){return new Ref(this.path+'/'+id)}collection(id){return new Ref(this.path+'/'+id)}async get(){return {exists:this.path==='systemConfig/freeLimits'||rows.has(this.path),data:()=>this.path==='systemConfig/freeLimits'?{enabled}:rows.get(this.path)}}}
  const stamp=()=>{const t=now;return {toMillis:()=>t,toDate:()=>new Date(t)}};const db={collection:path=>new Ref(path),batch:()=>({commit:async()=>true}),runTransaction:async work=>{const pending=[];const result=await work({get:ref=>ref.get(),set:(ref,value)=>pending.push([ref.path,value])});for(const [p,v]of pending)rows.set(p,v);return result}};
  const window={firebaseConfig:{getAuth:()=>auth,getFirestore:()=>db},firebase:{firestore:{FieldValue:{serverTimestamp:stamp}}}};runInNewContext(source,{window,setTimeout,clearTimeout,Date:class extends Date{static now(){return now}}});return {limits:window.LyriaWriteLimits,rows,advance:ms=>now+=ms};
@@ -10,7 +10,7 @@ test('daily friend budget persists across minute resets',async()=>{const h=fixtu
 test('operation planner covers messages, reactions, requests, calls and profiles without metering heartbeats',async()=>{const h=fixture(),API={name:p=>'root/'+p};const groups=await h.limits.plan([{update:{name:'root/channels/room/messages/id',fields:{}},currentDocument:{exists:false}},{transform:{document:'root/channels/room/messages/other',fieldTransforms:[]}},{update:{name:'root/friendRequests/r',fields:{status:{stringValue:'pending'}}}},{update:{name:'root/inbox/call',fields:{}}},{update:{name:'root/profiles/alice',fields:{}}},{update:{name:'root/channels/room/typingStatus/alice',fields:{}}}],API);assert.deepEqual(Array.from(groups,g=>g.action),['messages','reactions','friends','calls','profiles'])});
 
 test('count aggregations cap scanned matching messages at the existing 999+ display threshold',async()=>{
- const code=await readFile(new URL('../js/data-api.js',import.meta.url),'utf8');let body;
+ const code=await readFile(new URL('../src/js/data-api.js',import.meta.url),'utf8');let body;
  const window={firebaseConfig:{getAuth:()=>({currentUser:{uid:'alice',getIdToken:async()=>'fixture'}}),getApp:()=>({options:{projectId:'demo-lyria'}})}};
  runInNewContext(code,{window,AbortController,setTimeout,clearTimeout,fetch:async(url,options)=>{body=JSON.parse(options.body);return {ok:true,status:200,json:async()=>[{result:{aggregateFields:{total:{integerValue:'1000'}}}}]}}});
  assert.equal(await window.LyriaDataAPI.count('messages',{parent:'channels/community'}),1000);assert.equal(body.structuredAggregationQuery.structuredQuery.limit,1000);

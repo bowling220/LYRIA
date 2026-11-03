@@ -14,7 +14,7 @@ function client(uid){
  const now=Math.floor(Date.now()/1000),token=Buffer.from('{"alg":"none","typ":"JWT"}').toString('base64url')+'.'+Buffer.from(JSON.stringify({aud:'demo-lyria',iss:'https://securetoken.google.com/demo-lyria',sub:uid,user_id:uid,iat:now,exp:now+3600,firebase:{sign_in_provider:'anonymous'}})).toString('base64url')+'.';
  const window={firebaseConfig:{getApp:()=>({options:{projectId:'demo-lyria'}}),getAuth:()=>({currentUser:{uid,displayName:uid,getIdToken:async()=>token}})}};
  const context={window,crypto:webcrypto,AbortController,setTimeout,clearTimeout,fetch:(u,o)=>fetch(u.replace('https://firestore.googleapis.com','http://127.0.0.1:8085'),o)};
- return Promise.all(['data-api','friend-requests'].map(p=>readFile(new URL('../js/'+p+'.js',import.meta.url),'utf8'))).then(s=>{s.forEach(code=>runInNewContext(code,context));return {API:window.LyriaDataAPI,Friends:window.LyriaFriendRequests,db:env.authenticatedContext(uid).firestore()}});
+ return Promise.all(['data-api','friend-requests'].map(p=>readFile(new URL('../src/js/'+p+'.js',import.meta.url),'utf8'))).then(s=>{s.forEach(code=>runInNewContext(code,context));return {API:window.LyriaDataAPI,Friends:window.LyriaFriendRequests,db:env.authenticatedContext(uid).firestore()}});
 }
 const requests=async c=>(await c.API.query('friendRequests',{where:{compositeFilter:{op:'AND',filters:[c.API.equal('from','alice'),c.API.equal('to','bob')]}}})).docs;
 function gateCommits(clients){let release;const ready=new Promise(r=>release=r);let count=0;for(const c of clients){const commit=c.API.commit;c.API.commit=async writes=>{if(++count===clients.length)release();await ready;return commit(writes)}}}

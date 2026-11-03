@@ -68,7 +68,7 @@ cross-platform; contributors do not need to create a `python3` alias on Windows.
 
 Use names such as `fix/chat-reconnect`, `feature/channel-search`, or `docs/setup`.
 Keep commits focused and explain the resulting behavior. Use local SVG icons,
-`css/theme.css`, shared dialogs, and bounded Firebase helpers. Preserve mobile
+`src/css/theme.css`, shared dialogs, and bounded Firebase helpers. Preserve mobile
 layouts, keyboard navigation, accessible labels, confirmed-save feedback, technical
 limits, and legacy data compatibility. Don't add another frontend framework or a
 second version of a shared subsystem. See docs/BADGES.md for badge design changes.

@@ -6,7 +6,7 @@ No new packages, database migration, rules changes, or account writes are requir
 
 ## Registry and compatibility
 
-`js/badges.js` is the only metadata and name-mapping source. Every definition has
+`src/js/badges.js` is the only metadata and name-mapping source. Every definition has
 an ID, name, description, category, local asset, aliases, and a symbol; Early Access
 also has `legacy: true`. Registry entries, aliases, and category labels are frozen.
 
@@ -38,7 +38,7 @@ the registry rather than maintaining another allowlist.
 
 ## Visual anatomy
 
-All artwork lives in `assets/badges/<canonical-id>.svg`:
+All artwork lives in `src/assets/badges/<canonical-id>.svg`:
 
 - Production dimensions: **128 × 128**, with a **64 × 64 viewBox**. SVG is the scalable
   master; no separate raster master or export dependency is necessary.

@@ -6,7 +6,7 @@ LYRIA continues to use the free Spark plan. This implementation adds no Cloud Fu
 
 The browser and rules use a staged rollout to avoid breaking a live site during deployment:
 
-1. Deploy the matching website code, including `js/write-limits.js`.
+1. Deploy the matching website code, including `src/js/write-limits.js`.
 2. Publish this revision of `firestore.rules` to the correct Firebase project. Run `npm run test:rules` first. With an authorized Firebase CLI, use `firebase deploy --only firestore:rules --project YOUR_PROJECT_ID`.
 3. In the Firestore console, create document `systemConfig/freeLimits` with Boolean field `enabled: true`.
 4. Reload the site and test sending, friends, profile saves, invitations, News, and voice setup with your own test accounts. Clients cache the flag for up to 60 seconds.

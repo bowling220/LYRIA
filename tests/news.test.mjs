@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {archiveStories} from '../js/news-archive.js';
-import {categoryOf,readingMinutes,excerptOf,safeImage,normalizeStory,newestFirst,dateValue} from '../js/news-model.js';
+import {archiveStories} from '../src/js/news-archive.js';
+import {categoryOf,readingMinutes,excerptOf,safeImage,normalizeStory,newestFirst,dateValue} from '../src/js/news-model.js';
 test('all 13 real archive stories retain their old comment and reaction identifiers',()=>{
  assert.equal(archiveStories.length,13);assert.equal(new Set(archiveStories.map(s=>s.id)).size,13);
  const voice=archiveStories.find(s=>s.postId==='voice-call-feature');assert.equal(voice.commentId,'voice-call');

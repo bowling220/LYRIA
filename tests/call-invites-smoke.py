@@ -50,7 +50,7 @@ with sync_playwright() as p:
   def route(r):
    if not r.request.url.startswith('http://localhost:8125/'):r.abort();return
    path=r.request.url.split('8125/')[1].split('?')[0]
-   body=FIXTURE if path=='fixture.js' else MOCK if path=='mock-join.js' else (ROOT/path).read_text() if path and (ROOT/path).is_file() else HTML
+   body=FIXTURE if path=='fixture.js' else MOCK if path=='mock-join.js' else (ROOT/'dist/client'/path).read_text() if path and (ROOT/'dist/client'/path).is_file() else HTML
    r.fulfill(body=body,content_type='text/css' if path.endswith('.css') else 'text/javascript' if path.endswith('.js') else 'text/html')
   page.route('**/*',route);page.goto('http://localhost:8125/?user='+uid);return page
  alice=make('alice',1440);bob=make('bob',390);errors=[]

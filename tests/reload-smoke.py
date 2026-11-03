@@ -6,10 +6,11 @@ from playwright.sync_api import sync_playwright
 from browser_fixture import make_page
 ROOT=Path(__file__).resolve().parents[1]
 # Every first-party script and style carries its actual content hash.
-for html in ROOT.glob('*.html'):
+WEB=ROOT/'dist'/'client'
+for html in WEB.glob('*.html'):
  for path,version in re.findall(r'(?:src|href)="([^"?#]+\.(?:js|css))\?v=([a-f0-9]+)"',html.read_text()):
   if path.startswith('http'):continue
-  content=(ROOT/path).read_bytes().replace(b'\r\n',b'\n')
+  content=(WEB/path).read_bytes().replace(b'\r\n',b'\n')
   assert hashlib.sha256(content).hexdigest().startswith(version),(html.name,path)
 with sync_playwright() as p:
  browser=p.chromium.launch(executable_path=CHROMIUM,headless=True,args=['--no-sandbox'])

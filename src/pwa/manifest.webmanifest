@@ -1,0 +1,43 @@
+{
+  "id": "/",
+  "name": "LYRIA — Community and conversation",
+  "short_name": "LYRIA",
+  "description": "A calmer real-time place for community, conversation, and the people who matter.",
+  "start_url": "/home.html?view=hub&utm_source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#101b17",
+  "theme_color": "#101b17",
+  "categories": ["social", "communication"],
+  "icons": [
+    {
+      "src": "/assets/pwa-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/pwa-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Conversations",
+      "short_name": "Chats",
+      "url": "/home.html?view=hub"
+    },
+    {
+      "name": "Community Journal",
+      "short_name": "Journal",
+      "url": "/News.html"
+    },
+    {
+      "name": "Activity",
+      "short_name": "Activity",
+      "url": "/inbox.html"
+    }
+  ]
+}

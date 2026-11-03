@@ -8,7 +8,7 @@ retains drafts, and never sends automatically. Escape returns focus to the trigg
 selecting returns focus to writing. Recent choices stay in browser local storage,
 not Firebase, and unavailable local storage does not prevent insertion.
 
-`assets/emoji/emoji-16.0.json` contains all 3,781 fully qualified Unicode Emoji 16.0
+`src/assets/emoji/emoji-16.0.json` contains all 3,781 fully qualified Unicode Emoji 16.0
 sequences, including flags, skin tones and composite sequences. Native device
 fonts render the artwork; support for newer sequences depends on the device.
 Data loads from LYRIA only when the picker first opens. There are no third-party
@@ -17,7 +17,7 @@ The grid renders 120 results at a time with Show more, keeping large categories
 responsive without limiting the available catalog. Search checks the entire catalog.
 
 The Unicode data is redistributed under the included
-[Unicode License v3](../assets/emoji/LICENSE.txt); its source URL and version also
+[Unicode License v3](../src/assets/emoji/LICENSE.txt); its source URL and version also
 appear in the JSON. This license covers the bundled Unicode data, not the entire
 LYRIA project. Refresh the pinned data with:
 

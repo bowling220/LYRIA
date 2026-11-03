@@ -18,7 +18,7 @@ class Structure(HTMLParser):
         attrs=dict(attrs)
         if 'id' in attrs:self.ids.append(attrs['id'])
 for name in PAGES:
-    text=(ROOT/name).read_text();parser=Structure();parser.feed(text)
+    text=(ROOT/'dist/client'/name).read_text();parser=Structure();parser.feed(text)
     assert len(parser.ids)==len(set(parser.ids)), f'Duplicate IDs in {name}'
     assert text.count('css/theme.css')==1
     assert not re.search('<style>|rel="stylesheet"[^>]+(?:main|chat|v6)',text)
@@ -32,13 +32,15 @@ with sync_playwright() as p:
     def make_page(width=390,height=844,touch=True):
         page=browser.new_page(viewport={'width':width,'height':height},has_touch=touch)
         page.add_init_script(path=str(ROOT/'tests/firebase-fixture.js'))
-        release=json.loads((ROOT/'js/releases.json').read_text())['releases'][0]['id']
+        release=json.loads((ROOT/'src/js/releases.json').read_text())['releases'][0]['id']
         page.add_init_script("try{localStorage.setItem('lyria:release-seen',"+json.dumps(release)+")}catch{}")
         page.add_init_script("if(location.pathname.endsWith('login.html'))firebase.auth().onAuthStateChanged=fn=>{queueMicrotask(()=>fn(null));return()=>{}}")
         def route(r):
             url=r.request.url
             if url.startswith('http://localhost:8124/'):
-                file=ROOT/url.split('8124/')[1].split('?')[0]
+                relative=url.split('8124/')[1].split('?')[0]
+                if relative=='sw.js':r.abort();return
+                file=ROOT/'dist/client'/relative
                 if file.is_file():r.fulfill(body=file.read_bytes(),content_type=mimetypes.guess_type(str(file))[0] or 'text/plain')
                 else:r.fulfill(status=404,body='')
             elif 'www.gstatic.com/firebasejs/' in url and not '-compat' in url:

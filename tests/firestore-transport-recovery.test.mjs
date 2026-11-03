@@ -7,7 +7,7 @@ import {webcrypto} from 'node:crypto';
 import {initializeTestEnvironment} from '@firebase/rules-unit-testing';
 import {doc,collection,query,where,orderBy,limit,getDocsFromServer,getDocFromServer,getDoc,setDoc,runTransaction,writeBatch,serverTimestamp,arrayUnion,arrayRemove,deleteField} from 'firebase/firestore';
 let env;
-const source=await readFile(new URL('../js/data-api.js',import.meta.url),'utf8'),friendSource=await readFile(new URL('../js/friend-requests.js',import.meta.url),'utf8');
+const source=await readFile(new URL('../src/js/data-api.js',import.meta.url),'utf8'),friendSource=await readFile(new URL('../src/js/friend-requests.js',import.meta.url),'utf8');
 before(async()=>{env=await initializeTestEnvironment({projectId:'demo-lyria',firestore:{host:'127.0.0.1',port:8085,rules:await readFile(new URL('../firestore.rules',import.meta.url),'utf8')}})});
 after(async()=>{await env?.cleanup()});beforeEach(async()=>{await env.clearFirestore()});
 function transport(uid){

@@ -3,31 +3,11 @@ import {connectFirestoreEmulator,initializeFirestore,doc,onSnapshot,getDoc,colle
 import {connectAuthEmulator,getAuth,onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/13.1.0/firebase-auth.js';
 import {archiveStories} from './news-archive.js?v=b51710d80e8ae71e';
 import {categories,categoryOf,dateValue,readingMinutes,excerptOf,safeImage,normalizeStory,newestFirst} from './news-model.js?v=7671fc6656542c4b';
-        // Load environment variables for security
-        window.env = window.env || {
-            VITE_FIREBASE_API_KEY: "AIzaSyDWpApnJ-mfHQJZhkbNDdsJ7l8-8rVHHTc",
-            VITE_FIREBASE_AUTH_DOMAIN: "lyria-49a54.firebaseapp.com",
-            VITE_FIREBASE_PROJECT_ID: "lyria-49a54",
-            VITE_FIREBASE_STORAGE_BUCKET: "lyria-49a54.firebasestorage.app",
-            VITE_FIREBASE_MESSAGING_SENDER_ID: "704449928785",
-            VITE_FIREBASE_APP_ID: "1:704449928785:web:5b3c58c8f82d31d3f1a270",
-            VITE_FIREBASE_MEASUREMENT_ID: "G-KV5FRFN63T"
-        };
-
-        const firebaseConfig = {
-            apiKey: window.env.VITE_FIREBASE_API_KEY,
-            authDomain: window.env.VITE_FIREBASE_AUTH_DOMAIN,
-            projectId: window.env.VITE_FIREBASE_PROJECT_ID,
-            storageBucket: window.env.VITE_FIREBASE_STORAGE_BUCKET,
-            messagingSenderId: window.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-            appId: window.env.VITE_FIREBASE_APP_ID,
-            measurementId: window.env.VITE_FIREBASE_MEASUREMENT_ID
-        };
-
         // Initialize Firebase
         const runtime=window.LYRIA_RUNTIME;
+        if(!runtime?.firebase)throw new Error('Public Firebase runtime configuration is missing.');
         if(runtime?.origin && location.origin!==runtime.origin)throw new Error('This build is configured for a different site.');
-        const app = initializeApp(runtime?.firebase || firebaseConfig);
+        const app = initializeApp(runtime.firebase);
         const db = initializeFirestore(app, {experimentalForceLongPolling:true,useFetchStreams:false});
         const auth = getAuth(app);
         const quotaRef=path=>({get native(){return doc(db,path)},collection:key=>quotaRef(path+'/'+key),doc:key=>quotaRef(path+'/'+key),get:async()=>{const value=await getDoc(doc(db,path));return {exists:value.exists(),data:()=>value.data()}}});

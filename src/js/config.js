@@ -20,20 +20,10 @@ class FirebaseConfig {
             throw new Error('Firebase SDK not loaded');
         }
 
-        // Firebase configuration - using secure values
-        const config = {
-            apiKey: "AIzaSyDWpApnJ-mfHQJZhkbNDdsJ7l8-8rVHHTc",
-            authDomain: "lyria-49a54.firebaseapp.com",
-            projectId: "lyria-49a54",
-            storageBucket: "lyria-49a54.firebasestorage.app",
-            messagingSenderId: "704449928785",
-            appId: "1:704449928785:web:5b3c58c8f82d31d3f1a270",
-            measurementId: "G-KV5FRFN63T"
-        };
-
         const runtime=window.LYRIA_RUNTIME;
+        if(!runtime?.firebase)throw new Error('Public Firebase runtime configuration is missing.');
         if(runtime?.origin && location.origin!==runtime.origin)return Promise.reject(new Error('This build is configured for a different site.'));
-        if(runtime?.firebase){for(const key of Object.keys(config))delete config[key];Object.assign(config,runtime.firebase);}
+        const config={...runtime.firebase};
         try {
             // Initialize Firebase
             this.app = firebase.apps.length ? firebase.app() : firebase.initializeApp(config);
@@ -65,25 +55,6 @@ class FirebaseConfig {
             console.error('Firebase initialization failed:', error);
             throw error;
         }
-    }
-
-    // Safely get environment variables with fallbacks
-    getEnvVar(name, fallback) {
-        // Try different ways to access environment variables
-        if (typeof process !== 'undefined' && process.env) {
-            return process.env[name] || fallback;
-        }
-        
-        if (typeof window !== 'undefined' && window.env) {
-            return window.env[name] || fallback;
-        }
-        
-        // In development, log which fallback is being used
-        if (console && console.warn && fallback) {
-            console.warn(`Using fallback value for ${name}`);
-        }
-        
-        return fallback;
     }
 
     // Get Firebase auth instance

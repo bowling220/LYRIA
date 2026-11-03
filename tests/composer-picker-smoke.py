@@ -80,7 +80,7 @@ with sync_playwright() as p:
  def emoji_data(route):
   attempts[0]+=1
   if attempts[0]==1:route.fulfill(status=503,body='')
-  else:route.fulfill(body=(ROOT/'assets/emoji/emoji-16.0.json').read_bytes(),content_type='application/json')
+  else:route.fulfill(body=(ROOT/'src/assets/emoji/emoji-16.0.json').read_bytes(),content_type='application/json')
  page.route('**/assets/emoji/emoji-16.0.json',emoji_data)
  page.goto('http://localhost:8124/home.html?channel=community');page.wait_for_selector('#send-button')
  page.locator('#message-input').fill('Keep this draft');page.locator('#composer-emoji').click()

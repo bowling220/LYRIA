@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';import {readFile} from 'node:fs/promises';import {runInNewContext} from 'node:vm';
-const source=await readFile(new URL('../js/connection.js',import.meta.url),'utf8');
+const source=await readFile(new URL('../src/js/connection.js',import.meta.url),'utf8');
 function fixture(){let now=10000,id=0;const timers=new Map(),nodes=new Map(['connection-notice','connection-message','retry-connection'].map(id=>[id,{hidden:true,dataset:{},textContent:'',addEventListener(){}}])),window=new EventTarget(),document=new EventTarget(),navigator={onLine:true};document.getElementById=id=>nodes.get(id);document.hidden=false;
  runInNewContext(source,{window,document,navigator,Event,console,location:{reload(){throw Error('Unexpected reload')}},Date:{now:()=>now},setTimeout:(fn,ms)=>{timers.set(++id,{fn,at:now+ms});return id},clearTimeout:id=>timers.delete(id)});
  return {connection:window.LyriaConnection,window,navigator,nodes,advance:ms=>{now+=ms;for(const [id,t]of [...timers])if(t.at<=now){timers.delete(id);t.fn()}}};

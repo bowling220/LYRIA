@@ -6,7 +6,7 @@ import {join} from 'node:path';
 import vm from 'node:vm';
 import {configureGifs} from '../scripts/configure-gifs.mjs';
 import {prepareRender} from '../scripts/prepare-render.mjs';
-const source=await readFile(new URL('../js/gif-library.js',import.meta.url),'utf8');
+const source=await readFile(new URL('../src/js/gif-library.js',import.meta.url),'utf8');
 test('GIPHY discovery paginates, encodes queries, validates IDs and retains selected metadata',async()=>{
   const urls=[];const window={LYRIA_GIPHY_API_KEY:'public-test-key'};
   vm.runInNewContext(source,{window,URL,URLSearchParams,fetch:async url=>{urls.push(url);return {ok:true,json:async()=>({data:[{id:'Safe123',title:'A GIF',images:{fixed_width:{width:'200',height:'150'}}},{id:'../unsafe'}],pagination:{total_count:100}})}}});
@@ -55,10 +55,10 @@ test('install generates deployment assets on Render only and propagates build er
 });
 
 test('bundled Unicode emoji catalog is complete, unique and attributed',async()=>{
-  const data=JSON.parse(await readFile(new URL('../assets/emoji/emoji-16.0.json',import.meta.url),'utf8'));
+  const data=JSON.parse(await readFile(new URL('../src/assets/emoji/emoji-16.0.json',import.meta.url),'utf8'));
   assert.equal(data.version,'16.0');assert.equal(data.emojis.length,3781);
   assert.equal(new Set(data.emojis.map(item=>item.emoji)).size,data.emojis.length);
   for(const item of data.emojis){assert.ok(item.name);assert.ok(data.groups.includes(item.group));}
   for(const emoji of ['🌿','😊','👍🏽','🇺🇸'])assert.ok(data.emojis.some(item=>item.emoji===emoji));
-  assert.match(await readFile(new URL('../assets/emoji/LICENSE.txt',import.meta.url),'utf8'),/UNICODE LICENSE/);
+  assert.match(await readFile(new URL('../src/assets/emoji/LICENSE.txt',import.meta.url),'utf8'),/UNICODE LICENSE/);
 });
